@@ -15,12 +15,12 @@
   "license": "ISC",
   "dependencies": {
     "@types/three": "^0.92.25",
-    "three": "^0.94.0",
+    "three": "^0.112.1",
     "ts-loader": "^4.5.0",
     "typescript": "^2.9.2"
   },
   "devDependencies": {
-    "webpack": "^4.41.4",
+    "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10",
     "webpack-dev-server": "^3.10.1"
   }

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { init } from '../src/Cornell_Box';
 
 class App {
 
@@ -42,4 +43,5 @@ class App {
     }
 }
 
-const app = new App();
+//const app = new App();
+init();
