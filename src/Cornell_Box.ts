@@ -30,7 +30,6 @@ var quadCamera: THREE.OrthographicCamera;
 var worldCamera: THREE.PerspectiveCamera;
 var renderer: THREE.WebGLRenderer;
 var fovScale;
-var apertureSize = 0.0;
 var focusDistance = 132.0;
 var pixelRatio = 0.5;
 var windowIsBeingResized = false;
@@ -39,21 +38,6 @@ var sampleCounter = 1.0;
 var frameCounter = 1.0;
 var cameraIsMoving = false;
 var cameraRecentlyMoving = false;
-var oldYawRotation: number;
-var oldPitchRotation: number;
-var oldDeltaX = 0;
-var oldDeltaY = 0;
-var newDeltaX = 0;
-var newDeltaY = 0;
-var mobileControlsMoveX = 0;
-var mobileControlsMoveY = 0;
-var stillFlagX = true;
-var stillFlagY = true;
-var oldPinchWidthX = 0;
-var oldPinchWidthY = 0;
-var pinchDeltaX = 0;
-var pinchDeltaY = 0;
-var fontAspect;
 
 // the following variables will be used to calculate rotations and directions from the camera
 var cameraDirectionVector = new THREE.Vector3(); //for moving where the camera is looking
@@ -82,11 +66,6 @@ function onWindowResize(event: any) {
 
    renderer.setPixelRatio(pixelRatio);
    renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-
-   fontAspect = (SCREEN_WIDTH / 175) * (SCREEN_HEIGHT / 200);
-   if (fontAspect > 25) fontAspect = 25;
-   if (fontAspect < 4) fontAspect = 4;
-   fontAspect *= 2;
 
    pathTracingUniforms.uResolution.value.x = context.drawingBufferWidth;
    pathTracingUniforms.uResolution.value.y = context.drawingBufferHeight;
