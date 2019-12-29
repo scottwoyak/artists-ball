@@ -1,48 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
+<html><head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <meta http-equiv="X-UA-Compatible" content="ie=edge">
    <link rel="stylesheet" href="styles.css">
+
    <title>Artist's Ball</title>
-</head>
 
-<body>
-   <div id="container"> </div>
+  <script type="text/javascript" src="src/sylvester.src.js"></script>
+  <script type="text/javascript" src="src/glUtils.js"></script>
+  <script type="text/javascript" src="src/webgl-path-tracing.js"></script>
+</head><body>
+  <div id="main">
+    <canvas id="canvas" width="512" height="512"></canvas>
+    <div id="error"></div>
 
-   <button class="tablink" onclick="openCity('London', this, 'red')" id="defaultOpen">Value</button>
-   <button class="tablink" onclick="openCity('Paris', this, 'green')">Chroma</button>
-   <button class="tablink" onclick="openCity('Tokyo', this, 'blue')">3-Value</button>
-   <button class="tablink" onclick="openCity('Oslo', this, 'orange')">5-Value</button>
+    <p>
+      <button onclick="javascript:ui.selectLight()">Select Light</button>
+      <button onclick="javascript:ui.addSphere()">Add Sphere</button>
+      <button onclick="javascript:ui.addCube()">Add Cube</button>
+    </p>
 
-   <label for="range1">Light Intensity</label>
-   <input id="range1" type="range" min="1" max="100" value="50" class="slider">
-   <br>
-   <label for="range2">Ambient Light</label>
-   <input id="range2" type="range" min="1" max="100" value="50" class="slider">
-   <br>
-   <label for="range3">Roughness</label>
-   <input id="range3" type="range" min="1" max="100" value="50" class="slider">
-   <br>
-   <label for="range4">Shininess</label>
-   <input id="range4" type="range" min="1" max="100" value="50" class="slider">
-   <br>
+    <p>
+      <b>Material:</b>
+      <select id="material">
+        <option value="0" selected>Diffuse</option>
+        <option value="1">Mirror</option>
+        <option value="2">Glossy</option>
+      </select>
+      <span id="glossiness-factor">
+        <br>with glossiness factor: 0 &lt; <input id="glossiness" value="0.6"> &lt; 1
+      </span>
+      <br>
 
-   <label for="picker1">Overhead Light Color</label>
-   <input id="picker1" type="color">
-   <br>
-   <label for="picker2">Ambient Light Color</label>
-   <input id="picker2" type="color">
-   <br>
-   <label for="picker3">Ball Color</label>
-   <input id="picker3" type="color">
-   <br>
-   <label for="picker4">Floor Color</label>
-   <input id="picker4" type="color">
+      <b>Environment:</b>
+      <select id="environment">
+        <option value="0" selected>Cornell Box - Yellow and Blue</option>
+        <option value="1">Cornell Box - Red and Green</option>
+      </select>
+    </p>
 
-   <script src="bundle.js"></script>
-</body>
+    <p>
+      <b>Load preset scene:</b>
+      <br><button onclick="javascript:ui.setObjects(makeSphereColumn())">Sphere Column</button>
+      <br><button onclick="javascript:ui.setObjects(makeSpherePyramid())">Sphere Pyramid</button>
+      <br><button onclick="javascript:ui.setObjects(makeSphereAndCube())">Sphere and Cube</button>
+      <br><button onclick="javascript:ui.setObjects(makeCubeAndSpheres())">Cube and Spheres</button>
+      <br><button onclick="javascript:ui.setObjects(makeTableAndChair())">Table and Chair</button>
+      <br><button onclick="javascript:ui.setObjects(makeStacks())">Stacks</button>
+    </p>
+  </div>
 
-</html>
+  <button class="tablink" onclick="openCity('London', this, 'red')" id="defaultOpen">Value</button>
+  <button class="tablink" onclick="openCity('Paris', this, 'green')">Chroma</button>
+  <button class="tablink" onclick="openCity('Tokyo', this, 'blue')">3-Value</button>
+  <button class="tablink" onclick="openCity('Oslo', this, 'orange')">5-Value</button>
+
+  <label for="range1">Light Intensity</label>
+  <input id="range1" type="range" min="1" max="100" value="50" class="slider">
+  <br>
+  <label for="range2">Ambient Light</label>
+  <input id="range2" type="range" min="1" max="100" value="50" class="slider">
+  <br>
+  <label for="range3">Roughness</label>
+  <input id="range3" type="range" min="1" max="100" value="50" class="slider">
+  <br>
+  <label for="range4">Shininess</label>
+  <input id="range4" type="range" min="1" max="100" value="50" class="slider">
+  <br>
+
+  <label for="picker1">Overhead Light Color</label>
+  <input id="picker1" type="color">
+  <br>
+  <label for="picker2">Ambient Light Color</label>
+  <input id="picker2" type="color">
+  <br>
+  <label for="picker3">Ball Color</label>
+  <input id="picker3" type="color">
+  <br>
+  <label for="picker4">Floor Color</label>
+  <input id="picker4" type="color">
+
+</body></html>

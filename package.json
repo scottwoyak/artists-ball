@@ -14,8 +14,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/three": "^0.92.25",
-    "three": "^0.112.1",
     "ts-loader": "^4.5.0",
     "typescript": "^2.9.2"
   },
