@@ -9,7 +9,14 @@
 
   <script type="text/javascript" src="src/sylvester.src.js"></script>
   <script type="text/javascript" src="src/glUtils.js"></script>
+  <script type="text/javascript" src="src/Shaders.js"></script>
+  <script type="text/javascript" src="src/Vector.js"></script>
+  <script type="text/javascript" src="src/Sphere.js"></script>
+  <script type="text/javascript" src="src/Cube.js"></script>
   <script type="text/javascript" src="src/webgl-path-tracing.js"></script>
+  <script type="text/javascript" src="src/PathTracer.js"></script>
+  <script type="text/javascript" src="src/Renderer.js"></script>
+  <script type="text/javascript" src="src/ui.js"></script>
 </head><body>
   <div id="main">
     <canvas id="canvas" width="512" height="512"></canvas>
@@ -17,8 +24,6 @@
 
     <p>
       <button onclick="javascript:ui.selectLight()">Select Light</button>
-      <button onclick="javascript:ui.addSphere()">Add Sphere</button>
-      <button onclick="javascript:ui.addCube()">Add Cube</button>
     </p>
 
     <p>
@@ -33,21 +38,6 @@
       </span>
       <br>
 
-      <b>Environment:</b>
-      <select id="environment">
-        <option value="0" selected>Cornell Box - Yellow and Blue</option>
-        <option value="1">Cornell Box - Red and Green</option>
-      </select>
-    </p>
-
-    <p>
-      <b>Load preset scene:</b>
-      <br><button onclick="javascript:ui.setObjects(makeSphereColumn())">Sphere Column</button>
-      <br><button onclick="javascript:ui.setObjects(makeSpherePyramid())">Sphere Pyramid</button>
-      <br><button onclick="javascript:ui.setObjects(makeSphereAndCube())">Sphere and Cube</button>
-      <br><button onclick="javascript:ui.setObjects(makeCubeAndSpheres())">Cube and Spheres</button>
-      <br><button onclick="javascript:ui.setObjects(makeTableAndChair())">Table and Chair</button>
-      <br><button onclick="javascript:ui.setObjects(makeStacks())">Stacks</button>
     </p>
   </div>
 
