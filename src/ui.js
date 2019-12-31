@@ -64,6 +64,14 @@ function UI() {
      var start = new Date();
      setInterval(function(){ tick((new Date() - start) * 0.001); }, 1000 / 60);
    }
+
+   var slider = document.getElementById("range1");
+   slider.value = this.ui.renderer.pathTracer.uniforms.lightIntensity*100;
+   slider.oninput = function() {
+      ui.renderer.pathTracer.uniforms.lightIntensity = slider.value/100;
+      ui.renderer.pathTracer.setu
+      ui.renderer.pathTracer.sampleCount = 0;
+   }   
  };
  
  function elementPos(element) {
@@ -99,7 +107,7 @@ function UI() {
    oldX = mouse.x;
    oldY = mouse.y;
  
-   if(mouse.x >= 0 && mouse.y >= 0) {
+   if(mouse.x >= 0 && mouse.y >= 0 && mouse.x < 512 && mouse.y < 512) {
  
     mouseDown = true;
  

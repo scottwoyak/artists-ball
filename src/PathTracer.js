@@ -9,7 +9,7 @@ function PathTracer() {
      +1, -1,
      +1, +1
    ];
- 
+
    // create vertex buffer
    this.vertexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -47,6 +47,7 @@ function PathTracer() {
  
  PathTracer.prototype.setObjects = function(objects) {
    this.uniforms = {};
+   this.uniforms.lightIntensity = 0.8;
    this.sampleCount = 0;
    this.objects = objects;
  

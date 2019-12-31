@@ -32,7 +32,6 @@ var bounces = '5';
 var epsilon = '0.0001';
 var infinity = '10000.0';
 var lightSize = 0.1;
-var lightVal = 0.8;  // SAW light intensity
 
 // vertex shader, interpolate ray per-pixel
 var tracerVertexSource =
@@ -55,6 +54,7 @@ var tracerFragmentSourceHeader =
    ' uniform float timeSinceStart;\n' +
    ' uniform sampler2D texture;\n' +
    ' uniform vec3 light;\n' +
+   ' uniform float lightIntensity;\n' +
    ' uniform vec3 sphereCenter0;\n' +
    ' uniform float sphereRadius0;\n';
 
@@ -235,7 +235,7 @@ function makeCalculateColor(objects) {
       '\n' +
       '     // do light bounce\n' +
       '     colorMask *= surfaceColor;\n' +
-      '     accumulatedColor += colorMask * (' + lightVal + ' * diffuse * shadowIntensity);\n' +
+      '     accumulatedColor += colorMask * (lightIntensity * diffuse * shadowIntensity);\n' +
       '     accumulatedColor += colorMask * specularHighlight * shadowIntensity;\n' +
       '\n' +
       '     // calculate next origin\n' +
