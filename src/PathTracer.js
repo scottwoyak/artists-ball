@@ -20,15 +20,19 @@ function PathTracer() {
  
    // create textures
    var type = gl.getExtension('OES_texture_float') ? gl.FLOAT : gl.UNSIGNED_BYTE;
+//   gl.getExtension('EXT_color_buffer_float');   
+//alert('here');
+   type = gl.UNSIGNED_BYTE;
    this.textures = [];
    for(var i = 0; i < 2; i++) {
-       this.textures.push(gl.createTexture());
+     this.textures.push(gl.createTexture());
      gl.bindTexture(gl.TEXTURE_2D, this.textures[i]);
      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 512, 512, 0, gl.RGB, type, null);
    }
    gl.bindTexture(gl.TEXTURE_2D, null);
+//   gl.viewport(0, 0, 300, 300);
  
    // create render shader
    this.renderProgram = compileShader(renderVertexSource, renderFragmentSource);

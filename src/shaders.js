@@ -22,21 +22,3 @@ var renderFragmentSource =
 '   gl_FragColor = texture2D(texture, texCoord);\n' +
 ' }\n';
 
-// vertex shader for drawing a line
-var lineVertexSource =
-' attribute vec3 vertex;\n' +
-' uniform vec3 cubeMin;\n' +
-' uniform vec3 cubeMax;\n' +
-' uniform mat4 modelviewProjection;\n' +
-' void main()\n' +
-' {\n' +
-'   gl_Position = modelviewProjection * vec4(mix(cubeMin, cubeMax, vertex), 1.0);\n' +
-' }\n';
-
-// fragment shader for drawing a line
-var lineFragmentSource =
-' precision highp float;\n' +
-' void main()\n' +
-' {\n' +
-'   gl_FragColor = vec4(1.0);\n' +
-' }\n';

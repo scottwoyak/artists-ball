@@ -292,14 +292,6 @@ function setUniforms(program, uniforms) {
    }
 }
 
-function concat(objects, func) {
-   var text = '';
-   for (var i = 0; i < objects.length; i++) {
-      text += func(objects[i]);
-   }
-   return text;
-}
-
 function compileSource(source, type) {
    console.log('-----------------------------------------------------------------------------');
    console.log(source);

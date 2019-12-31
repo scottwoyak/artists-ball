@@ -23,27 +23,17 @@ function UI() {
    this.renderer.render();
  };
  
- UI.prototype.selectLight = function() {
-   this.renderer.selectedObject = this.objects[0];
- };
- 
  UI.prototype.addSphere = function() {
    this.objects.push(new Sphere(Vector.create([0, 0, 0]), 0.25, nextObjectId++));
    this.renderer.setObjects(this.objects);
  };
  
- UI.prototype.addCube = function() {
-   this.objects.push(new Cube(Vector.create([-0.25, -0.25, -0.25]), Vector.create([0.25, 0.25, 0.25]), nextObjectId++));
-   this.renderer.setObjects(this.objects);
- };
-  
  ////////////////////////////////////////////////////////////////////////////////
  // main program
  ////////////////////////////////////////////////////////////////////////////////
  
  var gl;
  var ui;
- var error;
  var canvas;
  
  var angleX = 0;
@@ -65,20 +55,14 @@ function UI() {
  
  window.onload = function() {
    gl = null;
-   error = document.getElementById('error');
    canvas = document.getElementById('canvas');
-   try { gl = canvas.getContext('experimental-webgl'); } catch(e) {}
+   try { gl = canvas.getContext('webgl'); } catch(e) {}
  
    if(gl) {
-     error.innerHTML = 'Loading...';
-  
      ui = new UI();
      ui.setObjects([new Sphere(Vector.create([0, -0.5, 0]), 0.5, nextObjectId++)]); // SAW initial object
      var start = new Date();
-     error.style.zIndex = -1;
      setInterval(function(){ tick((new Date() - start) * 0.001); }, 1000 / 60);
-   } else {
-     error.innerHTML = 'Your browser does not support WebGL.<br>Please see <a href="http://www.khronos.org/webgl/wiki/Getting_a_WebGL_Implementation">Getting a WebGL Implementation</a>.';
    }
  };
  
@@ -115,7 +99,7 @@ function UI() {
    oldX = mouse.x;
    oldY = mouse.y;
  
-   if(mouse.x >= 0 && mouse.x < 512 && mouse.y >= 0 && mouse.y < 512) {
+   if(mouse.x >= 0 && mouse.y >= 0) {
  
     mouseDown = true;
  
