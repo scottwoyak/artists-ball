@@ -38,9 +38,9 @@ function UI() {
  
  var angleX = 0;
  var angleY = 0;
- var zoomZ = 2.5;
+ var zoomZ = 3.0;
  var eye = Vector.create([0, 0, 0]);
- var light = Vector.create([0.4, 0.5, -0.6]);
+ var light = Vector.create([-0.4, 0.5, 0.6]); // SAW light position
  
  var nextObjectId = 0;
   
