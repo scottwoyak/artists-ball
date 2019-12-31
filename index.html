@@ -12,33 +12,15 @@
   <script type="text/javascript" src="src/Shaders.js"></script>
   <script type="text/javascript" src="src/Vector.js"></script>
   <script type="text/javascript" src="src/Sphere.js"></script>
-  <script type="text/javascript" src="src/Cube.js"></script>
   <script type="text/javascript" src="src/webgl-path-tracing.js"></script>
   <script type="text/javascript" src="src/PathTracer.js"></script>
   <script type="text/javascript" src="src/Renderer.js"></script>
+  <script type="text/javascript" src="src/Light.js"></script>
   <script type="text/javascript" src="src/ui.js"></script>
 </head><body>
   <div id="main">
     <canvas id="canvas" width="512" height="512"></canvas>
     <div id="error"></div>
-
-    <p>
-      <button onclick="javascript:ui.selectLight()">Select Light</button>
-    </p>
-
-    <p>
-      <b>Material:</b>
-      <select id="material">
-        <option value="0" selected>Diffuse</option>
-        <option value="1">Mirror</option>
-        <option value="2">Glossy</option>
-      </select>
-      <span id="glossiness-factor">
-        <br>with glossiness factor: 0 &lt; <input id="glossiness" value="0.6"> &lt; 1
-      </span>
-      <br>
-
-    </p>
   </div>
 
   <button class="tablink" onclick="openCity('London', this, 'red')" id="defaultOpen">Value</button>

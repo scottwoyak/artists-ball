@@ -61,7 +61,6 @@ function PathTracer() {
      this.objects[i].setUniforms(this);
    }
    this.uniforms.eye = eye;
-   this.uniforms.glossiness = glossiness;
    this.uniforms.ray00 = getEyeRay(matrix, -1, -1);
    this.uniforms.ray01 = getEyeRay(matrix, -1, +1);
    this.uniforms.ray10 = getEyeRay(matrix, +1, -1);

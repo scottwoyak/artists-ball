@@ -4,34 +4,9 @@
  uniform float textureWeight;
  uniform float timeSinceStart;
  uniform sampler2D texture;
- uniform float glossiness;
- vec3 roomCubeMin = vec3(-5.0, -1.0, -5.0);
- vec3 roomCubeMax = vec3(5.0, 5.0, 5.0);
  uniform vec3 light;
  uniform vec3 sphereCenter0;
  uniform float sphereRadius0;
- 
- vec2 intersectCube(vec3 origin, vec3 ray, vec3 cubeMin, vec3 cubeMax)
- {
-   vec3 tMin = (cubeMin - origin) / ray;
-   vec3 tMax = (cubeMax - origin) / ray;
-   vec3 t1 = min(tMin, tMax);
-   vec3 t2 = max(tMin, tMax);
-   float tNear = max(max(t1.x, t1.y), t1.z);
-   float tFar = min(min(t2.x, t2.y), t2.z);
-   return vec2(tNear, tFar);
- }
-
- vec3 normalForCube(vec3 hit, vec3 cubeMin, vec3 cubeMax)
- {
-   if(hit.x < cubeMin.x + 0.0001) return vec3(-1.0, 0.0, 0.0);
-   else if(hit.x > cubeMax.x - 0.0001) return vec3(1.0, 0.0, 0.0);
-   else if(hit.y < cubeMin.y + 0.0001) return vec3(0.0, -1.0, 0.0);
-   else if(hit.y > cubeMax.y - 0.0001) return vec3(0.0, 1.0, 0.0);
-   else if(hit.z < cubeMin.z + 0.0001) return vec3(0.0, 0.0, -1.0);
-   else return vec3(0.0, 0.0, 1.0);
- }
-
  float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadius)
  {
    vec3 toSphere = origin - sphereCenter;
@@ -62,6 +37,7 @@
    float v = random(vec3(63.7264, 10.873, 623.6736), seed);
    float r = sqrt(u);
    float angle = 6.283185307179586 * v;
+   // compute basis from normal
    vec3 sdir, tdir;
    if (abs(normal.x)<.5) 
    {
@@ -93,8 +69,14 @@
  float shadow(vec3 origin, vec3 ray) 
  {
    float tSphere0 = intersectSphere(origin, ray, sphereCenter0, sphereRadius0);
-   if(tSphere0 < 1.0) return 0.0;
+   if(tSphere0 < 1.0)
+   {
+     return 0.0;
+   }
+   else
+   {
      return 1.0;
+   }
  }
 
  vec3 calculateColor(vec3 origin, vec3 ray, vec3 light) 
@@ -105,40 +87,52 @@
    // main raytracing loop
    for(int bounce = 0; bounce < 5; bounce++) 
    {
+
      // compute the intersection with everything
-     vec2 tRoom = intersectCube(origin, ray, roomCubeMin, roomCubeMax);
      float tSphere0 = intersectSphere(origin, ray, sphereCenter0, sphereRadius0);
      vec3 surfaceColor = vec3(0.5);
 
      // find the closest intersection
      float t = 10000.0;
-     if(tRoom.x < tRoom.y) t = tRoom.y;
+     float tfloor = 10000.0;
+
+     // check for intersection with the ground
+     if (ray.y < 0.0)
+     {
+       // distance to floor = num unit vectors required to reach the floor
+       tfloor = -(origin.y+1.0)/ray.y;
+       if (tfloor < t )
+       {
+         t = tfloor;
+       }
+     }
+
      if(tSphere0 < t)
      {
        surfaceColor = vec3(0.5, 0.5, 0.8);
        t = tSphere0;
      }
+
      // info about hit
      vec3 hit = origin + ray * t;
      float specularHighlight = 0.0;
      vec3 normal;
 
      // calculate the normal
-     if(t == tRoom.y) 
+     if(t == tfloor)
      {
-       normal = -normalForCube(hit, roomCubeMin, roomCubeMax);
-       ray = cosineWeightedDirection(timeSinceStart + float(bounce), normal);
+       normal = vec3(0.0,1.0,0.0);
      }
-     else if(t == 10000.0) 
+     else if(t == tSphere0)
+     {
+       normal = normalForSphere(hit, sphereCenter0, sphereRadius0);
+     }
+     else
      {
        break;
      }
-     else 
-     {
-       if(false) ;
-       else if(t == tSphere0) normal = normalForSphere(hit, sphereCenter0, sphereRadius0);
-       ray = cosineWeightedDirection(timeSinceStart + float(bounce), normal);
-     }
+
+     ray = cosineWeightedDirection(timeSinceStart + float(bounce), normal);
 
      // compute diffuse lighting contribution
      vec3 toLight = light - hit;
@@ -149,7 +143,7 @@
 
      // do light bounce
      colorMask *= surfaceColor;
-     accumulatedColor += colorMask * (0.5 * diffuse * shadowIntensity);
+     accumulatedColor += colorMask * (0.8 * diffuse * shadowIntensity);
      accumulatedColor += colorMask * specularHighlight * shadowIntensity;
 
      // calculate next origin

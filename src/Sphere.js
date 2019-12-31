@@ -19,27 +19,30 @@ function Sphere(center, radius, id) {
  
  Sphere.prototype.getIntersectCode = function() {
    return '' +
- ' float ' + this.intersectStr + ' = intersectSphere(origin, ray, ' + this.centerStr + ', ' + this.radiusStr + ');\n';
+ '     float ' + this.intersectStr + ' = intersectSphere(origin, ray, ' + this.centerStr + ', ' + this.radiusStr + ');\n';
  };
  
  Sphere.prototype.getShadowTestCode = function() {
    return '' +
    this.getIntersectCode() + 
- ' if(' + this.intersectStr + ' < 1.0) return 0.0;\n';
+ '       if(' + this.intersectStr + ' < 1.0) return 0.0;\n';
  };
  
  Sphere.prototype.getMinimumIntersectCode = function() {
    return '' +
- ' if(' + this.intersectStr + ' < t)\n' +
- ' {\n' +
- '    surfaceColor = vec3(0.5, 0.5, 0.8);\n' + // SAW sphere material color
- '    t = ' + this.intersectStr + ';\n' +
- ' }\n';
+ '     if(' + this.intersectStr + ' < t)\n' +
+ '     {\n' +
+ '       surfaceColor = vec3(0.5, 0.5, 0.8);\n' + // SAW sphere material color
+ '       t = ' + this.intersectStr + ';\n' +
+ '     }\n';
  };
  
  Sphere.prototype.getNormalCalculationCode = function() {
    return '' +
- ' else if(t == ' + this.intersectStr + ') normal = normalForSphere(hit, ' + this.centerStr + ', ' + this.radiusStr + ');\n';
+ '       else if(t == ' + this.intersectStr + ')\n' +
+ '       {\n' +
+ '         normal = normalForSphere(hit, ' + this.centerStr + ', ' + this.radiusStr + ');\n' +
+ '       }\n';
  };
  
  Sphere.prototype.setUniforms = function(renderer) {
