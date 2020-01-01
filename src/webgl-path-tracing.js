@@ -55,6 +55,8 @@ var tracerFragmentSourceHeader =
    ' uniform sampler2D texture;\n' +
    ' uniform vec3 light;\n' +
    ' uniform float lightIntensity;\n' +
+   ' uniform vec3 lightColor;\n' +
+   ' uniform vec3 ballColor;\n' +
    ' uniform vec3 sphereCenter0;\n' +
    ' uniform float sphereRadius0;\n';
 
@@ -173,7 +175,7 @@ function makeCalculateColor(objects) {
    return '' +
          ' vec3 calculateColor(vec3 origin, vec3 ray, vec3 light) \n' +
       ' {\n' +
-         '   vec3 colorMask = vec3(1.0);\n' +
+         '   vec3 colorMask = lightColor;\n' +
       '   vec3 accumulatedColor = vec3(0.0);\n' +
       '\n' +
       '   // main raytracing loop\n' +
@@ -201,7 +203,7 @@ function makeCalculateColor(objects) {
       '\n' + 
       '     if(tSphere0 < t)\n' +
       '     {\n' +
-      '       surfaceColor = vec3(0.5, 0.5, 0.8);\n' +
+      '       surfaceColor = vec3(ballColor);\n' +
       '       t = tSphere0;\n' +
       '     }\n' +
       '\n' + 

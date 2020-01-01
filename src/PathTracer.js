@@ -48,6 +48,8 @@ function PathTracer() {
  PathTracer.prototype.setObjects = function(objects) {
    this.uniforms = {};
    this.uniforms.lightIntensity = 0.8;
+   this.uniforms.lightColor = Vector.create([1.0, 1.0, 1.0]);
+   this.uniforms.ballColor = Vector.create([0.5, 0.5, 0.8]);
    this.sampleCount = 0;
    this.objects = objects;
  
