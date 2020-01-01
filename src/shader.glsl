@@ -5,6 +5,9 @@
  uniform float timeSinceStart;
  uniform sampler2D texture;
  uniform vec3 light;
+ uniform float lightIntensity;
+ uniform vec3 lightColor;
+ uniform vec3 ballColor;
  uniform vec3 sphereCenter0;
  uniform float sphereRadius0;
  float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadius)
@@ -81,7 +84,7 @@
 
  vec3 calculateColor(vec3 origin, vec3 ray, vec3 light) 
  {
-   vec3 colorMask = vec3(1.0);
+   vec3 colorMask = lightColor;
    vec3 accumulatedColor = vec3(0.0);
 
    // main raytracing loop
@@ -109,7 +112,7 @@
 
      if(tSphere0 < t)
      {
-       surfaceColor = vec3(0.5, 0.5, 0.8);
+       surfaceColor = vec3(ballColor);
        t = tSphere0;
      }
 
@@ -143,7 +146,7 @@
 
      // do light bounce
      colorMask *= surfaceColor;
-     accumulatedColor += colorMask * (0.8 * diffuse * shadowIntensity);
+     accumulatedColor += colorMask * (lightIntensity * diffuse * shadowIntensity);
      accumulatedColor += colorMask * specularHighlight * shadowIntensity;
 
      // calculate next origin

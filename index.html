@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html><head>
+<html>
+
+<head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -7,26 +9,30 @@
 
    <title>Artist's Ball</title>
 
-  <script type="text/javascript" src="src/sylvester.src.js"></script>
-  <script type="text/javascript" src="src/glUtils.js"></script>
-  <script type="text/javascript" src="src/Shaders.js"></script>
-  <script type="text/javascript" src="src/Vector.js"></script>
-  <script type="text/javascript" src="src/Sphere.js"></script>
-  <script type="text/javascript" src="src/webgl-path-tracing.js"></script>
-  <script type="text/javascript" src="src/PathTracer.js"></script>
-  <script type="text/javascript" src="src/Renderer.js"></script>
-  <script type="text/javascript" src="src/Light.js"></script>
-  <script type="text/javascript" src="src/ui.js"></script>
-</head><body>
-  <div id="main">
-    <canvas id="canvas" width="512" height="512"></canvas>
-  </div>
+   <script type="text/javascript" src="src/Vector.js"></script>
+   <script type="text/javascript" src="src/Matrix.js"></script>
+   <script type="text/javascript" src="src/glUtils.js"></script>
+   <script type="text/javascript" src="src/Shaders.js"></script>
+   <script type="text/javascript" src="src/Sphere.js"></script>
+   <script type="text/javascript" src="src/webgl-path-tracing.js"></script>
+   <script type="text/javascript" src="src/PathTracer.js"></script>
+   <script type="text/javascript" src="src/Renderer.js"></script>
+   <script type="text/javascript" src="src/Light.js"></script>
+   <script type="text/javascript" src="src/ui.js"></script>
+</head>
 
-  <label for="range1">Light</label>
-  <input id="range1" type="range" min="1" max="100" value="50" class="slider">
-  <input id="picker1" type="color">
-<br>
-<label for="picker2">Ball</label>
-<input id="picker2" type="color">
+<body>
+   <div id="main">
+      <canvas id="canvas" width="512" height="512"></canvas>
+   </div>
 
-</body></html>
+   <label for="range1">Light</label>
+   <input id="range1" type="range" min="1" max="100" value="50" class="slider">
+   <input id="picker1" type="color">
+   <br>
+   <label for="picker2">Ball</label>
+   <input id="picker2" type="color">
+
+</body>
+
+</html>
