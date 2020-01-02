@@ -16,11 +16,11 @@ export class UI {
 
    public update(timeSinceStart: number) {
       this.modelview = makeLookAt(
-         Uniforms.eye.elements[0], 
-         Uniforms.eye.elements[1], 
-         Uniforms.eye.elements[2], 
+         Uniforms.eye.elements[0],
+         Uniforms.eye.elements[1],
+         Uniforms.eye.elements[2],
          0, 0, 0, 0, 1, 0
-         );
+      );
       this.projection = makePerspective(55, 1, 0.1, 100);
       this.modelviewProjection = this.projection.x(this.modelview);
       this.renderer.update(this.modelviewProjection, timeSinceStart);

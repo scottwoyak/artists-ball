@@ -1,6 +1,33 @@
-////////////////////////////////////////////////////////////////////////////////
-// class PathTracer
-////////////////////////////////////////////////////////////////////////////////
+
+/*
+ WebGL Path Tracing (http://madebyevan.com/webgl-path-tracing/)
+ License: MIT License (see below)
+
+ Copyright (c) 2010 Evan Wallace
+
+ Permission is hereby granted, free of charge, to any person
+ obtaining a copy of this software and associated documentation
+ files (the "Software"), to deal in the Software without
+ restriction, including without limitation the rights to use,
+ copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following
+ conditions:
+
+ The above copyright notice and this permission notice shall be
+ included in all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+
 
 import { gl } from './app';
 import { Shaders } from './Shaders';
@@ -37,8 +64,9 @@ export class PathTracer {
 
       // create textures
       var type = gl.getExtension('OES_texture_float') ? gl.FLOAT : gl.UNSIGNED_BYTE;
-      //   gl.getExtension('EXT_color_buffer_float');   
-      type = gl.UNSIGNED_BYTE;
+         gl.getExtension('EXT_color_buffer_float');   
+//      type = gl.UNSIGNED_BYTE;
+      type = gl.FLOAT;
       this.textures = [];
       for (var i = 0; i < 2; i++) {
          this.textures.push(gl.createTexture());
@@ -61,12 +89,13 @@ export class PathTracer {
       gl.enableVertexAttribArray(this.tracerVertexAttribute);
    };
 
-   public restart() : void {
+   public restart(): void {
       this.sampleCount = 0;
    }
 
    public update(matrix: Matrix, timeSinceStart: number): void {
 
+      let u = Uniforms;
       Uniforms.ray00 = Shaders.getEyeRay(matrix, -1, -1);
       Uniforms.ray01 = Shaders.getEyeRay(matrix, -1, +1);
       Uniforms.ray10 = Shaders.getEyeRay(matrix, +1, -1);

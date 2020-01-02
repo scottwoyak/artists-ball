@@ -11,21 +11,23 @@ export function makeLookAt(ex: number, ey: number, ez: number,
    var center = new Vector([cx, cy, cz]);
    var up = new Vector([ux, uy, uz]);
 
-   var mag;
-
    var z = eye.subtract(center).toUnitVector();
    var x = up.cross(z).toUnitVector();
    var y = z.cross(x).toUnitVector();
 
-   var m = new Matrix([[x.elements[1], x.elements[2], x.elements[3], 0],
-   [y.elements[1], y.elements[2], y.elements[3], 0],
-   [z.elements[1], z.elements[2], z.elements[3], 0],
-   [0, 0, 0, 1]]);
+   var m = new Matrix([
+      [x.elements[0], x.elements[1], x.elements[2], 0],
+      [y.elements[0], y.elements[1], y.elements[2], 0],
+      [z.elements[0], z.elements[1], z.elements[2], 0],
+      [0, 0, 0, 1]
+   ]);
 
-   var t = new Matrix([[1, 0, 0, -ex],
-   [0, 1, 0, -ey],
-   [0, 0, 1, -ez],
-   [0, 0, 0, 1]]);
+   var t = new Matrix([
+      [1, 0, 0, -ex],
+      [0, 1, 0, -ey],
+      [0, 0, 1, -ez],
+      [0, 0, 0, 1]
+   ]);
    return m.x(t);
 }
 

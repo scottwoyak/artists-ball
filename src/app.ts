@@ -4,12 +4,12 @@ import { Uniforms } from "./Uniforms";
 
 class App {
 
-    constructor() {
-    }
+   constructor() {
+   }
 }
 
 export var gl: WebGLRenderingContext;
-export var ui : UI;
+export var ui: UI;
 export var canvas: HTMLCanvasElement;
 
 export var angleX = 0;
@@ -18,7 +18,7 @@ export var zoomZ = 3.0;
 
 export var nextObjectId = 0;
 
-function tick(timeSinceStart:number) {
+function tick(timeSinceStart: number) {
    Uniforms.eye.elements[0] = zoomZ * Math.sin(angleY) * Math.cos(angleX);
    Uniforms.eye.elements[1] = zoomZ * Math.sin(angleX);
    Uniforms.eye.elements[2] = zoomZ * Math.cos(angleY) * Math.cos(angleX);
@@ -45,16 +45,16 @@ window.onload = function () {
       ui.renderer.pathTracer.restart();
    }
 
-   function componentToHex(c:number) : string {
+   function componentToHex(c: number): string {
       var hex = c.toString(16);
       return hex.length == 1 ? "0" + hex : hex;
    }
 
-   function rgbToHex(r:number, g:number, b:number) : string {
+   function rgbToHex(r: number, g: number, b: number): string {
       return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
    }
 
-   function hexToRgb(hex:string) {
+   function hexToRgb(hex: string) {
       var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return result ? {
          r: parseInt(result[1], 16),
@@ -86,7 +86,7 @@ window.onload = function () {
    }
 };
 
-function elementPos(element: HTMLElement):any {
+function elementPos(element: HTMLElement): any {
    var x = 0, y = 0;
    while (element.offsetParent) {
       x += element.offsetLeft;
@@ -96,14 +96,14 @@ function elementPos(element: HTMLElement):any {
    return { x: x, y: y };
 }
 
-function eventPos(event:any) {
+function eventPos(event: any) {
    return {
       x: event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft,
       y: event.clientY + document.body.scrollTop + document.documentElement.scrollTop
    };
 }
 
-function canvasMousePos(event:MouseEvent) {
+function canvasMousePos(event: MouseEvent) {
    var mousePos = eventPos(event);
    var canvasPos = elementPos(canvas);
    return {
@@ -113,10 +113,10 @@ function canvasMousePos(event:MouseEvent) {
 }
 
 var mouseDown = false;
-var oldX : number;
+var oldX: number;
 var oldY: number;
 
-document.onmousedown = function (event:MouseEvent) {
+document.onmousedown = function (event: MouseEvent) {
    var mouse = canvasMousePos(event);
    oldX = mouse.x;
    oldY = mouse.y;
@@ -132,7 +132,7 @@ document.onmousedown = function (event:MouseEvent) {
    return true;
 };
 
-document.onmousemove = function (event:MouseEvent) {
+document.onmousemove = function (event: MouseEvent) {
    var mouse = canvasMousePos(event);
 
    if (mouseDown) {

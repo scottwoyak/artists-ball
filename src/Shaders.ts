@@ -14,6 +14,7 @@ export class Shaders {
    // vertex shader for drawing a textured quad
    public static get renderVertexSource(): string {
       return '' +
+         ' attribute vec3 vertex;\n' +
          ' varying vec2 texCoord;\n' +
          ' void main()\n' +
          ' {\n' +
@@ -282,7 +283,11 @@ export class Shaders {
    ////////////////////////////////////////////////////////////////////////////////
 
    public static getEyeRay(matrix: Matrix, x: number, y: number): Vector {
-      return matrix.multiply(new Vector([x, y, 0, 1])).divideByW().ensure3().subtract(Uniforms.eye);
+      let v = matrix.multiply(new Vector([x, y, 0, 1]));
+      let v2 = v.divideByW();
+      let v3 = v2.ensure3();
+      let v4 = v3.subtract(Uniforms.eye);
+      return v4;
    }
 
    public static setUniforms(program: WebGLProgram) {

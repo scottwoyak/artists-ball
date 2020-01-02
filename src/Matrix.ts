@@ -47,7 +47,8 @@ export class Matrix {
       this.elements = [];
       do {
          i = ki - ni;
-         nj = els[i].length; kj = nj;
+         nj = els[i].length;
+         kj = nj;
          this.elements[i] = [];
          do {
             j = kj - nj;
@@ -78,9 +79,13 @@ export class Matrix {
    // col(1) on the result.
    public multiply(vector: Vector): Vector {
       let elems = [];
-      elems.push(vector.elements);
+      for (let i = 0; i < vector.elements.length; i++) {
+         elems[i] = [vector.elements[i]];
+      }
+      //      elems.push(vector.elements);
       let m = new Matrix(elems);
-      return this.x(m).col(0);
+      let m2 = this.x(m);
+      return m2.col(1);
    }
 
    public x(matrix: Matrix) {
