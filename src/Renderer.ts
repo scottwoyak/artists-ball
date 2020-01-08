@@ -3,15 +3,23 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 import { PathTracer } from './PathTracer';
-import { Matrix } from "./Matrix";
-import { Vector } from "./Vector";
+import { jsMat4 } from './jsMat';
+import { jsVec3 } from './jsVec';
 
 export class Renderer {
    public pathTracer = new PathTracer();
 
-   public update(modelviewProjection: Matrix, timeSinceStart: number) {
-      var jitter = Matrix.Translation(new Vector([Math.random() * 2 - 1, Math.random() * 2 - 1, 0]).multiply(1 / 512));
-      var inverse = jitter.x(modelviewProjection).inverse();
+   public update(modelviewProjection: jsMat4, timeSinceStart: number) {
+
+      let x = Math.random() * 2 - 1;
+      let y = Math.random() * 2 - 1;
+      let z = 0;
+
+      let size = 512.0;
+      let v = new jsVec3([x/size,y/size,z/size]);
+      let jitter = jsMat4.fromTranslation(v);
+      let inverse = modelviewProjection.multM(jitter).inverse();
+
       this.pathTracer.update(inverse, timeSinceStart);
    };
 

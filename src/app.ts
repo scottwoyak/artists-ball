@@ -1,6 +1,6 @@
-import { Vector } from "./Vector";
 import { UI } from "./ui";
 import { Uniforms } from "./Uniforms";
+import { jsVec3 } from "./jsVec";
 
 class App {
 
@@ -19,9 +19,9 @@ export var zoomZ = 3.0;
 export var nextObjectId = 0;
 
 function tick(timeSinceStart: number) {
-   Uniforms.eye.elements[0] = zoomZ * Math.sin(angleY) * Math.cos(angleX);
-   Uniforms.eye.elements[1] = zoomZ * Math.sin(angleX);
-   Uniforms.eye.elements[2] = zoomZ * Math.cos(angleY) * Math.cos(angleX);
+   Uniforms.eye.set(0, zoomZ * Math.sin(angleY) * Math.cos(angleX));
+   Uniforms.eye.set(1, zoomZ * Math.sin(angleX));
+   Uniforms.eye.set(2, zoomZ * Math.cos(angleY) * Math.cos(angleX));
 
    ui.update(timeSinceStart);
    ui.render();
@@ -64,24 +64,24 @@ window.onload = function () {
    }
 
    var lightPicker = document.getElementById("picker1") as HTMLInputElement;
-   var r = Math.round(255 * Uniforms.lightColor.elements[0]);
-   var g = Math.round(255 * Uniforms.lightColor.elements[1]);
-   var b = Math.round(255 * Uniforms.lightColor.elements[2]);
+   var r = Math.round(255 * Uniforms.lightColor.get(0));
+   var g = Math.round(255 * Uniforms.lightColor.get(1));
+   var b = Math.round(255 * Uniforms.lightColor.get(2));
    lightPicker.value = rgbToHex(r, g, b)
    lightPicker.oninput = function () {
       var color = hexToRgb(lightPicker.value);
-      Uniforms.lightColor.elements = [color.r / 255.0, color.g / 255.0, color.b / 255.0];
+      Uniforms.lightColor = new jsVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
       ui.renderer.pathTracer.restart();
    }
 
    var ballPicker = document.getElementById("picker2") as HTMLInputElement;
-   r = Math.round(255 * Uniforms.ballColor.elements[0]);
-   g = Math.round(255 * Uniforms.ballColor.elements[1]);
-   b = Math.round(255 * Uniforms.ballColor.elements[2]);
+   r = Math.round(255 * Uniforms.ballColor.get(0));
+   g = Math.round(255 * Uniforms.ballColor.get(1));
+   b = Math.round(255 * Uniforms.ballColor.get(2));
    ballPicker.value = rgbToHex(r, g, b);
    ballPicker.oninput = function () {
       var color = hexToRgb(ballPicker.value);
-      Uniforms.ballColor.elements = [color.r / 255.0, color.g / 255.0, color.b / 255.0];
+      Uniforms.ballColor = new jsVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
       ui.renderer.pathTracer.restart();
    }
 };

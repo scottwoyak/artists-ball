@@ -1,7 +1,7 @@
-import { Matrix } from "./Matrix";
 import { gl } from "./app";
 import { Uniforms } from "./Uniforms";
-import { Vector } from "./Vector";
+import { jsVec3, jsVec4 } from "./jsVec";
+import { jsMat4 } from "./jsMat";
 
 // constants for the shaders
 var bounces = '5';
@@ -282,12 +282,9 @@ export class Shaders {
    // utility functions
    ////////////////////////////////////////////////////////////////////////////////
 
-   public static getEyeRay(matrix: Matrix, x: number, y: number): Vector {
-      let v = matrix.multiply(new Vector([x, y, 0, 1]));
-      let v2 = v.divideByW();
-      let v3 = v2.ensure3();
-      let v4 = v3.subtract(Uniforms.eye);
-      return v4;
+   public static getEyeRay(matrix: jsMat4, x: number, y: number): jsVec3 {
+      let vec = new jsVec4([x, y, 0, 1]);
+      return matrix.multV(vec).divideByW().subtract(Uniforms.eye);
    }
 
    public static setUniforms(program: WebGLProgram) {
@@ -295,10 +292,8 @@ export class Shaders {
          var value = Uniforms[name];
          var location = gl.getUniformLocation(program, name);
          if (location == null) continue;
-         if (value instanceof Vector) {
-            gl.uniform3fv(location, new Float32Array([value.elements[0], value.elements[1], value.elements[2]]));
-         } else if (value instanceof Matrix) {
-            gl.uniformMatrix4fv(location, false, new Float32Array(value.flatten()));
+         else if (value instanceof jsVec3) {
+            gl.uniform3fv(location, new Float32Array([value.get(0), value.get(1), value.get(2)]));
          } else {
             gl.uniform1f(location, value);
          }
