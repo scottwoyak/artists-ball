@@ -1,30 +1,54 @@
-import { UI } from "./ui";
 import { glVec3 } from "./glVec";
 import { Uniforms } from "./Shaders";
+import { PathTracer } from "./PathTracer";
+import { glMat4 } from "./glMat";
 
 class App {
+   public tracer = new PathTracer();
+   private modelview: glMat4;
+   private projection: glMat4;
+   private modelviewProjection: glMat4;
 
    constructor() {
    }
+
+   public update(timeSinceStart: number) {
+      this.modelview = glMat4.makeLookAt(
+         Uniforms.eye,
+         new glVec3([0, 0, 0]),  // center point
+         new glVec3([0, 1, 0])   // up vector
+      );
+
+      this.projection = glMat4.makePerspective(55, 1, 0.1, 100);
+      this.modelviewProjection = this.projection.multM(this.modelview);
+      this.tracer.update(this.modelviewProjection, timeSinceStart);
+   };
+
+   public render(): void {
+      this.tracer.render();
+   };
+
+   public restart(): void {
+      this.tracer.restart();
+   }
+
 }
 
-export var gl: WebGLRenderingContext;
-export var ui: UI;
-export var canvas: HTMLCanvasElement;
+let app: App;
+export let gl: WebGLRenderingContext;
+let canvas: HTMLCanvasElement;
 
-export var angleX = 0;
-export var angleY = 0;
-export var zoomZ = 3.0;
-
-export var nextObjectId = 0;
+let angleX = 0;
+let angleY = 0;
+let zoomZ = 3.0;
 
 function tick(timeSinceStart: number) {
    Uniforms.eye.set(0, zoomZ * Math.sin(angleY) * Math.cos(angleX));
    Uniforms.eye.set(1, zoomZ * Math.sin(angleX));
    Uniforms.eye.set(2, zoomZ * Math.cos(angleY) * Math.cos(angleX));
 
-   ui.update(timeSinceStart);
-   ui.render();
+   app.update(timeSinceStart);
+   app.render();
 }
 
 window.onload = function () {
@@ -33,7 +57,7 @@ window.onload = function () {
    try { gl = canvas.getContext('webgl'); } catch (e) { }
 
    if (gl) {
-      ui = new UI();
+      app = new App();
       var start = new Date().getTime();
       setInterval(function () { tick(((new Date()).getTime() - start) * 0.001); }, 1000 / 60);
    }
@@ -42,7 +66,7 @@ window.onload = function () {
    slider.value = "" + Uniforms.lightIntensity * 50;
    slider.oninput = function () {
       Uniforms.lightIntensity = parseFloat(slider.value) / 50;
-      ui.tracer.restart();
+      app.restart();
    }
 
    function componentToHex(c: number): string {
@@ -71,7 +95,7 @@ window.onload = function () {
    lightPicker.oninput = function () {
       var color = hexToRgb(lightPicker.value);
       Uniforms.lightColor = new glVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
-      ui.tracer.restart();
+      app.restart();
    }
 
    var ballPicker = document.getElementById("picker2") as HTMLInputElement;
@@ -82,7 +106,7 @@ window.onload = function () {
    ballPicker.oninput = function () {
       var color = hexToRgb(ballPicker.value);
       Uniforms.ballColor = new glVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
-      ui.tracer.restart();
+      app.restart();
    }
 };
 
@@ -145,7 +169,7 @@ document.onmousemove = function (event: MouseEvent) {
       angleX = Math.min(angleX, Math.PI / 2 - 0.01);
 
       // clear the sample buffer
-      ui.tracer.restart();
+      app.restart();
 
       // remember this coordinate
       oldX = mouse.x;
