@@ -1,8 +1,16 @@
 import { glVec4, glVec3 } from "./glVec";
 
+/**
+ * An x-y-z-w matrix for use in WebGL applications.
+ */
 export class glMat4 {
+   /** The matrix value stored as a 16 element array */
    private values: number[];
 
+   /**
+    * @param values If supplied, the initial matrix values. If not supplied, the matrix is 
+    * initialized as an identity matrix.
+    */
    public constructor(values?: number[]) {
       if (values) {
          this.values = [...values];
@@ -16,27 +24,53 @@ export class glMat4 {
       }
    }
 
+   /**
+    * Gets a value in the matrix.
+    * 
+    * @param row The row index.
+    * @param col The column index.
+    * @returns The matrix value.
+    */
    public get(row: number, col: number): number {
       return this.values[4 * row + col];
    }
 
+   /**
+    * Sets a value in the matrix.
+    * 
+    * @param row The row index.
+    * @param col The column index.
+    * @param val The value.
+    */
    public set(row: number, col: number, val: number): void {
       this.values[4 * row + col] = val;
    }
 
-   public multV(v: glVec4): glVec4 {
+   /**
+    * Multiplies this matrix against a vector and returns the result.
+    * 
+    * @param vec The vector.
+    * @return The result of the multiplication. 
+    */
+   public multV(vec: glVec4): glVec4 {
       let vals: number[] = [];
 
       for (let row = 0; row < 4; row++) {
          let sum = 0;
          for (let col = 0; col < 4; col++) {
-            sum += this.values[row * 4 + col] * v.get(col);
+            sum += this.values[row * 4 + col] * vec.get(col);
          }
          vals.push(sum);
       }
       return new glVec4(vals);
    }
 
+   /**
+    * Multiplies this matrix against another matrix and returns the result.
+    * 
+    * @param other The matrix.
+    * @return The result of the multiplication. 
+    */
    public multM(other: glMat4): glMat4 {
 
       let result = new glMat4();
@@ -54,6 +88,11 @@ export class glMat4 {
       return result;
    }
 
+   /**
+    * Inverts this matrix and returns the result (this).
+    * 
+    * @returns This.
+    */
    public invert(): glMat4 {
 
       let a00 = this.values[0], a01 = this.values[1], a02 = this.values[2], a03 = this.values[3];
@@ -102,6 +141,11 @@ export class glMat4 {
       return this;
    }
 
+   /**
+    * Transposes this matrix and returns the result (this).
+    * 
+    * @returns This.
+    */
    public transpose(): glMat4 {
       let result = new glMat4();
 
@@ -115,6 +159,12 @@ export class glMat4 {
       return this;
    }
 
+   /**
+    * Creates a matrix that contains a translation operation.
+    * 
+    * @param vec The translations.
+    * @returns The translation matrix.
+    */
    public static fromTranslation(v: glVec3): glMat4 {
 
       let result = new glMat4([
