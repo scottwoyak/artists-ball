@@ -1,5 +1,5 @@
-import { jsVec3 } from './jsVec';
-import { jsMat4 } from './jsMat';
+import { glVec3 } from './glVec';
+import { glMat4 } from './glMat';
 
 //
 // gluLookAt
@@ -10,35 +10,35 @@ export function makeLookAt(
    ux: number, uy: number, uz: number
 ) {
 
-   var eye = new jsVec3([ex, ey, ez]);
-   var center = new jsVec3([cx, cy, cz]);
-   var up = new jsVec3([ux, uy, uz]);
+   var eye = new glVec3([ex, ey, ez]);
+   var center = new glVec3([cx, cy, cz]);
+   var up = new glVec3([ux, uy, uz]);
 
-   let z = eye.subtract(center).toUnitVector();
-   let x = up.cross(z).toUnitVector();
-   let y = z.cross(x).toUnitVector();
+   let z = eye.subtract(center).normalize();
+   let x = up.cross(z).normalize();
+   let y = z.cross(x).normalize();
 
-   let m = new jsMat4([
+   let m = new glMat4([
       x.get(0), x.get(1), x.get(2), 0,
       y.get(0), y.get(1), y.get(2), 0,
       z.get(0), z.get(1), z.get(2), 0,
       0, 0, 0, 1
    ]);
 
-   var t = new jsMat4([
+   var t = new glMat4([
       1, 0, 0, -ex,
       0, 1, 0, -ey,
       0, 0, 1, -ez,
       0, 0, 0, 1
    ]);
 
-   let result = t.multM(m);
+   let result = m.multM(t);
 
    return result;
 }
 
 /*
-function compare(title: string, oldM: Matrix, newM: jsMat4) {
+function compare(title: string, oldM: Matrix, newM: glMat4) {
    console.log(title);
    for (let row = 0; row < 4; row++) {
       for (let col = 0; col < 4; col++) {
@@ -56,7 +56,7 @@ function compare(title: string, oldM: Matrix, newM: jsMat4) {
 //
 // gluPerspective
 //
-export function makePerspective(fovy: number, aspect: number, znear: number, zfar: number): jsMat4 {
+export function makePerspective(fovy: number, aspect: number, znear: number, zfar: number): glMat4 {
    var ymax = znear * Math.tan(fovy * Math.PI / 360.0);
    var ymin = -ymax;
    var xmin = ymin * aspect;
@@ -70,7 +70,7 @@ export function makePerspective(fovy: number, aspect: number, znear: number, zfa
 //
 export function makeFrustum(left: number, right: number,
    bottom: number, top: number,
-   znear: number, zfar: number): jsMat4 {
+   znear: number, zfar: number): glMat4 {
    var X = 2 * znear / (right - left);
    var Y = 2 * znear / (top - bottom);
    var A = (right + left) / (right - left);
@@ -78,7 +78,7 @@ export function makeFrustum(left: number, right: number,
    var C = -(zfar + znear) / (zfar - znear);
    var D = -2 * zfar * znear / (zfar - znear);
 
-   return new jsMat4([
+   return new glMat4([
       X, 0, A, 0,
       0, Y, B, 0,
       0, 0, C, D,

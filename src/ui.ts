@@ -2,7 +2,7 @@ import { makeLookAt } from './glUtils';
 import { makePerspective } from './glUtils';
 import { Renderer } from "./Renderer";
 import { Uniforms } from "./Uniforms";
-import { jsMat4 } from "./jsMat";
+import { glMat4 } from "./glMat";
 
 ////////////////////////////////////////////////////////////////////////////////
 // class UI
@@ -10,9 +10,9 @@ import { jsMat4 } from "./jsMat";
 
 export class UI {
    public renderer = new Renderer();
-   private modelview: jsMat4;
-   private projection: jsMat4;
-   private modelviewProjection: jsMat4;
+   private modelview: glMat4;
+   private projection: glMat4;
+   private modelviewProjection: glMat4;
 
    public update(timeSinceStart: number) {
       this.modelview = makeLookAt(
@@ -22,8 +22,7 @@ export class UI {
          0, 0, 0, 0, 1, 0
       );
       this.projection = makePerspective(55, 1, 0.1, 100);
-//      this.modelviewProjection = this.projection.multM(this.modelview);
-      this.modelviewProjection = this.modelview.multM(this.projection);
+      this.modelviewProjection = this.projection.multM(this.modelview);
       this.renderer.update(this.modelviewProjection, timeSinceStart);
    };
 

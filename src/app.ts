@@ -1,6 +1,6 @@
 import { UI } from "./ui";
 import { Uniforms } from "./Uniforms";
-import { jsVec3 } from "./jsVec";
+import { glVec3 } from "./glVec";
 
 class App {
 
@@ -70,7 +70,7 @@ window.onload = function () {
    lightPicker.value = rgbToHex(r, g, b)
    lightPicker.oninput = function () {
       var color = hexToRgb(lightPicker.value);
-      Uniforms.lightColor = new jsVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
+      Uniforms.lightColor = new glVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
       ui.renderer.pathTracer.restart();
    }
 
@@ -81,7 +81,7 @@ window.onload = function () {
    ballPicker.value = rgbToHex(r, g, b);
    ballPicker.oninput = function () {
       var color = hexToRgb(ballPicker.value);
-      Uniforms.ballColor = new jsVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
+      Uniforms.ballColor = new glVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
       ui.renderer.pathTracer.restart();
    }
 };

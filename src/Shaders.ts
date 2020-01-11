@@ -1,7 +1,7 @@
 import { gl } from "./app";
 import { Uniforms } from "./Uniforms";
-import { jsVec3, jsVec4 } from "./jsVec";
-import { jsMat4 } from "./jsMat";
+import { glVec3, glVec4 } from "./glVec";
+import { glMat4 } from "./glMat";
 
 // constants for the shaders
 var bounces = '5';
@@ -282,8 +282,8 @@ export class Shaders {
    // utility functions
    ////////////////////////////////////////////////////////////////////////////////
 
-   public static getEyeRay(matrix: jsMat4, x: number, y: number): jsVec3 {
-      let vec = new jsVec4([x, y, 0, 1]);
+   public static getEyeRay(matrix: glMat4, x: number, y: number): glVec3 {
+      let vec = new glVec4([x, y, 0, 1]);
       return matrix.multV(vec).divideByW().subtract(Uniforms.eye);
    }
 
@@ -292,7 +292,7 @@ export class Shaders {
          var value = Uniforms[name];
          var location = gl.getUniformLocation(program, name);
          if (location == null) continue;
-         else if (value instanceof jsVec3) {
+         else if (value instanceof glVec3) {
             gl.uniform3fv(location, new Float32Array([value.get(0), value.get(1), value.get(2)]));
          } else {
             gl.uniform1f(location, value);

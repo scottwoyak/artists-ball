@@ -32,7 +32,7 @@
 import { gl } from './app';
 import { Shaders } from './Shaders';
 import { Uniforms } from "./Uniforms";
-import { jsMat4 } from './jsMat';
+import { glMat4 } from './glMat';
 
 
 export class PathTracer {
@@ -93,7 +93,7 @@ export class PathTracer {
       this.sampleCount = 0;
    }
 
-   public update(matrix: jsMat4, timeSinceStart: number): void {
+   public update(matrix: glMat4, timeSinceStart: number): void {
 
       let u = Uniforms;
       Uniforms.ray00 = Shaders.getEyeRay(matrix, -1, -1);
