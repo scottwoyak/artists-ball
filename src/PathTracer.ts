@@ -30,10 +30,9 @@
 
 
 import { gl } from './app';
-import { Shaders } from './Shaders';
-import { Uniforms } from "./Uniforms";
+import { Shaders, Uniforms } from './Shaders';
 import { glMat4 } from './glMat';
-
+import { glVec3 } from './glVec';
 
 export class PathTracer {
 
@@ -64,8 +63,8 @@ export class PathTracer {
 
       // create textures
       var type = gl.getExtension('OES_texture_float') ? gl.FLOAT : gl.UNSIGNED_BYTE;
-         gl.getExtension('EXT_color_buffer_float');   
-//      type = gl.UNSIGNED_BYTE;
+      gl.getExtension('EXT_color_buffer_float');
+      //      type = gl.UNSIGNED_BYTE;
       type = gl.FLOAT;
       this.textures = [];
       for (var i = 0; i < 2; i++) {
@@ -93,9 +92,17 @@ export class PathTracer {
       this.sampleCount = 0;
    }
 
-   public update(matrix: glMat4, timeSinceStart: number): void {
+   public update(modelviewProjection: glMat4, timeSinceStart: number): void {
 
-      let u = Uniforms;
+      let x = Math.random() * 2 - 1;
+      let y = Math.random() * 2 - 1;
+      let z = 0;
+
+      let size = 512.0;
+      let v = new glVec3([x / size, y / size, z / size]);
+      let jitter = glMat4.fromTranslation(v);
+      let matrix = jitter.multM(modelviewProjection).invert();
+
       Uniforms.ray00 = Shaders.getEyeRay(matrix, -1, -1);
       Uniforms.ray01 = Shaders.getEyeRay(matrix, -1, +1);
       Uniforms.ray10 = Shaders.getEyeRay(matrix, +1, -1);

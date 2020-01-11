@@ -1,6 +1,6 @@
 import { UI } from "./ui";
-import { Uniforms } from "./Uniforms";
 import { glVec3 } from "./glVec";
+import { Uniforms } from "./Shaders";
 
 class App {
 
@@ -42,7 +42,7 @@ window.onload = function () {
    slider.value = "" + Uniforms.lightIntensity * 50;
    slider.oninput = function () {
       Uniforms.lightIntensity = parseFloat(slider.value) / 50;
-      ui.renderer.pathTracer.restart();
+      ui.tracer.restart();
    }
 
    function componentToHex(c: number): string {
@@ -71,7 +71,7 @@ window.onload = function () {
    lightPicker.oninput = function () {
       var color = hexToRgb(lightPicker.value);
       Uniforms.lightColor = new glVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
-      ui.renderer.pathTracer.restart();
+      ui.tracer.restart();
    }
 
    var ballPicker = document.getElementById("picker2") as HTMLInputElement;
@@ -82,7 +82,7 @@ window.onload = function () {
    ballPicker.oninput = function () {
       var color = hexToRgb(ballPicker.value);
       Uniforms.ballColor = new glVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
-      ui.renderer.pathTracer.restart();
+      ui.tracer.restart();
    }
 };
 
@@ -145,7 +145,7 @@ document.onmousemove = function (event: MouseEvent) {
       angleX = Math.min(angleX, Math.PI / 2 - 0.01);
 
       // clear the sample buffer
-      ui.renderer.pathTracer.restart();
+      ui.tracer.restart();
 
       // remember this coordinate
       oldX = mouse.x;

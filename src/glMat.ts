@@ -25,6 +25,15 @@ export class glMat4 {
    }
 
    /**
+    * Creates a copy of the matrix.
+    * 
+    * @returns A copy of the matrix.
+    */
+   public clone(): glMat4 {
+      return new glMat4(this.values);
+   }
+
+   /**
     * Gets a value in the matrix.
     * 
     * @param row The row index.
@@ -176,4 +185,99 @@ export class glMat4 {
 
       return result;
    }
+
+   /**
+    * Creates a viewing matrix. See gluLookAt.
+    * 
+    * @param eye The eye position.
+    * @param center The point of interest.
+    * @param up The up vector.
+    * @returns The viewing matrix.
+    */
+   public static makeLookAt(
+      eye: glVec3,
+      center: glVec3,
+      up: glVec3,
+   ): glMat4 {
+
+      // clone so we don't modify the origonals
+      let z = eye.clone().subtract(center).normalize();
+      let x = up.clone().cross(z).normalize();
+      let y = z.clone().cross(x).normalize();
+
+      let m = new glMat4([
+         x.get(0), x.get(1), x.get(2), 0,
+         y.get(0), y.get(1), y.get(2), 0,
+         z.get(0), z.get(1), z.get(2), 0,
+         0, 0, 0, 1
+      ]);
+
+      var t = new glMat4([
+         1, 0, 0, -eye.get(0),
+         0, 1, 0, -eye.get(1),
+         0, 0, 1, -eye.get(2),
+         0, 0, 0, 1
+      ]);
+
+      let result = m.multM(t);
+
+      return result;
+   }
+
+   /**
+    * Creates a perspective matrix. See gluPerspective.
+    * 
+    * @param fovy Field of view (in degrees).
+    * @param aspect View aspect ratio.
+    * @param znear Near clipping plane.
+    * @param zfar Far clipping plane.
+    */
+   public static makePerspective(
+      fovy: number,
+      aspect: number,
+      znear: number,
+      zfar: number): glMat4 {
+
+      var ymax = znear * Math.tan(fovy * Math.PI / 360.0);
+      var ymin = -ymax;
+      var xmin = ymin * aspect;
+      var xmax = ymax * aspect;
+
+      return glMat4.makeFrustum(xmin, xmax, ymin, ymax, znear, zfar);
+   }
+
+   /**
+    * Creates a perspective matrix. See gluFrustum.
+    * 
+    * @param left The left clipping plane.
+    * @param right The right clipping plane.
+    * @param bottom The bottom clipping plane.
+    * @param top The top clipping plane.
+    * @param znear The near clipping plane.
+    * @param zfar The far clipping plane.
+    * @returns the perspective matrix.
+    */
+   public static makeFrustum(
+      left: number,
+      right: number,
+      bottom: number,
+      top: number,
+      znear: number,
+      zfar: number): glMat4 {
+
+      var X = 2 * znear / (right - left);
+      var Y = 2 * znear / (top - bottom);
+      var A = (right + left) / (right - left);
+      var B = (top + bottom) / (top - bottom);
+      var C = -(zfar + znear) / (zfar - znear);
+      var D = -2 * zfar * znear / (zfar - znear);
+
+      return new glMat4([
+         X, 0, A, 0,
+         0, Y, B, 0,
+         0, 0, C, D,
+         0, 0, -1, 0
+      ]);
+   }
+
 }

@@ -1,5 +1,4 @@
 import { gl } from "./app";
-import { Uniforms } from "./Uniforms";
 import { glVec3, glVec4 } from "./glVec";
 import { glMat4 } from "./glMat";
 
@@ -8,6 +7,45 @@ var bounces = '5';
 var epsilon = '0.0001';
 var infinity = '10000.0';
 var lightSize = 0.1;
+
+/**
+ * Types for the uniform values
+ */
+interface IUniforms {
+   lightIntensity: number,
+   lightColor: glVec3,
+   ballColor: glVec3,
+   eye: glVec3,
+   light: glVec3,
+   textureWeight: number,
+   timeSinceStart: number,
+   sphereCenter0: glVec3,
+   sphereRadius0: number,
+   ray00: glVec3,
+   ray01: glVec3,
+   ray10: glVec3,
+   ray11: glVec3,
+   [propName: string]: any
+}
+
+/**
+ * Values that are passed to the shader
+ */
+export var Uniforms: IUniforms = {
+   lightIntensity: 0.8,
+   lightColor: new glVec3([1.0, 1.0, 1.0]),
+   ballColor: new glVec3([0.5, 0.5, 0.8]),
+   eye: new glVec3([0, 0, 0]),
+   light: new glVec3([-0.4, 0.5, 0.6]), // SAW light position
+   textureWeight: 0,
+   timeSinceStart: 0,
+   sphereCenter0: new glVec3([0, -0.5, 0]),
+   sphereRadius0: 0.5,
+   ray00: new glVec3([0, 0, 0]),
+   ray01: new glVec3([0, 0, 0]),
+   ray10: new glVec3([0, 0, 0]),
+   ray11: new glVec3([0, 0, 0]),
+}
 
 export class Shaders {
 
@@ -35,9 +73,6 @@ export class Shaders {
          ' }\n';
    }
 
-
-
-
    // vertex shader, interpolate ray per-pixel
    public static get tracerVertexSource(): string {
       return "" +
@@ -51,95 +86,6 @@ export class Shaders {
          '   gl_Position = vec4(vertex, 1.0);\n' +
          ' }\n';
    }
-
-   // start of fragment shader
-   private static tracerFragmentSourceHeader =
-      ' precision highp float;\n' +
-      ' uniform vec3 eye;\n' +
-      ' varying vec3 initialRay;\n' +
-      ' uniform float textureWeight;\n' +
-      ' uniform float timeSinceStart;\n' +
-      ' uniform sampler2D texture;\n' +
-      ' uniform vec3 light;\n' +
-      ' uniform float lightIntensity;\n' +
-      ' uniform vec3 lightColor;\n' +
-      ' uniform vec3 ballColor;\n' +
-      ' uniform vec3 sphereCenter0;\n' +
-      ' uniform float sphereRadius0;\n';
-
-   // compute the near intersection of a sphere
-   // no intersection returns a value of +infinity
-   private static intersectSphereSource =
-      ' float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadius)\n' +
-      ' {\n' +
-      '   vec3 toSphere = origin - sphereCenter;\n' +
-      '   float a = dot(ray, ray);\n' +
-      '   float b = 2.0 * dot(toSphere, ray);\n' +
-      '   float c = dot(toSphere, toSphere) - sphereRadius*sphereRadius;\n' +
-      '   float discriminant = b*b - 4.0*a*c;\n' +
-      '   if(discriminant > 0.0) {\n' +
-      '     float t = (-b - sqrt(discriminant)) / (2.0 * a);\n' +
-      '     if(t > 0.0) return t;\n' +
-      '   }\n' +
-      '   return ' + infinity + ';\n' +
-      ' }\n\n';
-
-   // given that hit is a point on the sphere, what is the surface normal?
-   private static normalForSphereSource =
-      ' vec3 normalForSphere(vec3 hit, vec3 sphereCenter, float sphereRadius) \n' +
-      ' {\n' +
-      '   return (hit - sphereCenter) / sphereRadius;\n' +
-      ' }\n\n';
-
-   // use the fragment position for randomness
-   private static randomSource =
-      ' float random(vec3 scale, float seed) \n' +
-      ' {\n' +
-      '   return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);\n' +
-      ' }\n\n';
-
-   // random cosine-weighted distributed vector
-   // from http://www.rorydriscoll.com/2009/01/07/better-sampling/
-   private static cosineWeightedDirectionSource =
-      ' vec3 cosineWeightedDirection(float seed, vec3 normal) \n' +
-      ' {\n' +
-      '   float u = random(vec3(12.9898, 78.233, 151.7182), seed);\n' +
-      '   float v = random(vec3(63.7264, 10.873, 623.6736), seed);\n' +
-      '   float r = sqrt(u);\n' +
-      '   float angle = 6.283185307179586 * v;\n' +
-      '   // compute basis from normal\n' +
-      '   vec3 sdir, tdir;\n' +
-      '   if (abs(normal.x)<.5) \n' +
-      '   {\n' +
-      '     sdir = cross(normal, vec3(1,0,0));\n' +
-      '   }\n' +
-      '   else \n' +
-      '   {\n' +
-      '     sdir = cross(normal, vec3(0,1,0));\n' +
-      '   }\n' +
-      '   tdir = cross(normal, sdir);\n' +
-      '   return r*cos(angle)*sdir + r*sin(angle)*tdir + sqrt(1.-u)*normal;\n' +
-      ' }\n\n';
-
-   // random normalized vector
-   private static uniformlyRandomDirectionSource =
-      ' vec3 uniformlyRandomDirection(float seed) \n' +
-      ' {\n' +
-      '   float u = random(vec3(12.9898, 78.233, 151.7182), seed);\n' +
-      '   float v = random(vec3(63.7264, 10.873, 623.6736), seed);\n' +
-      '   float z = 1.0 - 2.0 * u;\n' +
-      '   float r = sqrt(1.0 - z * z);\n' +
-      '   float angle = 6.283185307179586 * v;\n' +
-      '   return vec3(r * cos(angle), r * sin(angle), z);\n' +
-      ' }\n\n';
-
-   // random vector in the unit sphere
-   // note: this is probably not statistically uniform, saw raising to 1/3 power somewhere but that looks wrong?
-   private static uniformlyRandomVectorSource =
-      ' vec3 uniformlyRandomVector(float seed) \n' +
-      ' {\n' +
-      '   return uniformlyRandomDirection(seed) * sqrt(random(vec3(36.7539, 50.3658, 306.2759), seed));\n' +
-      ' }\n\n';
 
    // compute specular lighting contribution
    private static specularReflection =
@@ -162,8 +108,79 @@ export class Shaders {
       Shaders.specularReflection +
       '     specularHighlight = pow(specularHighlight, 3.0);\n';
 
-   private static makeShadow(): string {
+   public static makeTracerFragmentSource() {
       return '' +
+         ' precision highp float;\n' +
+         ' uniform vec3 eye;\n' +
+         ' varying vec3 initialRay;\n' +
+         ' uniform float textureWeight;\n' +
+         ' uniform float timeSinceStart;\n' +
+         ' uniform sampler2D texture;\n' +
+         ' uniform vec3 light;\n' +
+         ' uniform float lightIntensity;\n' +
+         ' uniform vec3 lightColor;\n' +
+         ' uniform vec3 ballColor;\n' +
+         ' uniform vec3 sphereCenter0;\n' +
+         ' uniform float sphereRadius0;\n' +
+         ' float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadius)\n' +
+         ' {\n' +
+         '   vec3 toSphere = origin - sphereCenter;\n' +
+         '   float a = dot(ray, ray);\n' +
+         '   float b = 2.0 * dot(toSphere, ray);\n' +
+         '   float c = dot(toSphere, toSphere) - sphereRadius*sphereRadius;\n' +
+         '   float discriminant = b*b - 4.0*a*c;\n' +
+         '   if(discriminant > 0.0) {\n' +
+         '     float t = (-b - sqrt(discriminant)) / (2.0 * a);\n' +
+         '     if(t > 0.0) return t;\n' +
+         '   }\n' +
+         '   return ' + infinity + ';\n' +
+         ' }\n' +
+         '\n' +
+         ' vec3 normalForSphere(vec3 hit, vec3 sphereCenter, float sphereRadius) \n' +
+         ' {\n' +
+         '   return (hit - sphereCenter) / sphereRadius;\n' +
+         ' }\n' +
+         '\n' +
+         ' float random(vec3 scale, float seed) \n' +
+         ' {\n' +
+         '   return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);\n' +
+         ' }\n' +
+         '\n' +
+         ' vec3 cosineWeightedDirection(float seed, vec3 normal) \n' +
+         ' {\n' +
+         '   float u = random(vec3(12.9898, 78.233, 151.7182), seed);\n' +
+         '   float v = random(vec3(63.7264, 10.873, 623.6736), seed);\n' +
+         '   float r = sqrt(u);\n' +
+         '   float angle = 6.283185307179586 * v;\n' +
+         '   // compute basis from normal\n' +
+         '   vec3 sdir, tdir;\n' +
+         '   if (abs(normal.x)<.5) \n' +
+         '   {\n' +
+         '     sdir = cross(normal, vec3(1,0,0));\n' +
+         '   }\n' +
+         '   else \n' +
+         '   {\n' +
+         '     sdir = cross(normal, vec3(0,1,0));\n' +
+         '   }\n' +
+         '   tdir = cross(normal, sdir);\n' +
+         '   return r*cos(angle)*sdir + r*sin(angle)*tdir + sqrt(1.-u)*normal;\n' +
+         ' }\n' +
+         '\n' +
+         ' vec3 uniformlyRandomDirection(float seed) \n' +
+         ' {\n' +
+         '   float u = random(vec3(12.9898, 78.233, 151.7182), seed);\n' +
+         '   float v = random(vec3(63.7264, 10.873, 623.6736), seed);\n' +
+         '   float z = 1.0 - 2.0 * u;\n' +
+         '   float r = sqrt(1.0 - z * z);\n' +
+         '   float angle = 6.283185307179586 * v;\n' +
+         '   return vec3(r * cos(angle), r * sin(angle), z);\n' +
+         ' }\n' +
+         '\n' +
+         ' vec3 uniformlyRandomVector(float seed) \n' +
+         ' {\n' +
+         '   return uniformlyRandomDirection(seed) * sqrt(random(vec3(36.7539, 50.3658, 306.2759), seed));\n' +
+         ' }\n' +
+         '\n' +
          ' float shadow(vec3 origin, vec3 ray) \n' +
          ' {\n' +
          '   float tSphere0 = intersectSphere(origin, ray, sphereCenter0, sphereRadius0);\n' +
@@ -175,11 +192,8 @@ export class Shaders {
          '   {\n' +
          '     return 1.0;\n' +
          '   }\n' +
-         ' }\n\n';
-   }
-
-   private static makeCalculateColor() {
-      return '' +
+         ' }\n' +
+         '\n' +
          ' vec3 calculateColor(vec3 origin, vec3 ray, vec3 light) \n' +
          ' {\n' +
          '   vec3 colorMask = lightColor;\n' +
@@ -252,30 +266,14 @@ export class Shaders {
          '   }\n' +
          '\n' +
          '   return accumulatedColor;\n' +
-         ' }\n';
-   }
-
-   private static makeMain() {
-      return '' +
+         ' }\n' +
+         '\n' +
          ' void main() \n' +
          ' {\n' +
          '   vec3 newLight = light + uniformlyRandomVector(timeSinceStart - 53.0) * ' + lightSize + ';\n' +
          '   vec3 texture = texture2D(texture, gl_FragCoord.xy / 512.0).rgb;\n' +
          '   gl_FragColor = vec4(mix(calculateColor(eye, initialRay, newLight), texture, textureWeight), 1.0);\n' +
          ' }\n';
-   }
-
-   public static makeTracerFragmentSource() {
-      return Shaders.tracerFragmentSourceHeader +
-         Shaders.intersectSphereSource +
-         Shaders.normalForSphereSource +
-         Shaders.randomSource +
-         Shaders.cosineWeightedDirectionSource +
-         Shaders.uniformlyRandomDirectionSource +
-         Shaders.uniformlyRandomVectorSource +
-         Shaders.makeShadow() +
-         Shaders.makeCalculateColor() +
-         Shaders.makeMain();
    }
 
    ////////////////////////////////////////////////////////////////////////////////

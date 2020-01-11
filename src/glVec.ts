@@ -89,6 +89,15 @@ export class glVec3 extends glVec {
       }
    }
 
+   /**
+    * Creates a copy of the vector.
+    * 
+    * @returns A copy of the vector.
+    */
+   public clone(): glVec3 {
+      return new glVec3(this.values);
+   }
+
    /** 
     * Normalizes this vector, and stores and returns the result.
     * 
