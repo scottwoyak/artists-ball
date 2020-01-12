@@ -1,5 +1,6 @@
 const path = require('path');
-var TypedocWebpackPlugin = require('typedoc-webpack-plugin');
+const TypedocWebpackPlugin = require('typedoc-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
    devServer: {
@@ -7,7 +8,7 @@ module.exports = {
       port: 80,
       contentBase: path.join(__dirname, 'dist'),
    },
-   entry: './src/app.ts',
+   entry: './src/index.ts',
    devtool: 'inline-source-map',
    mode: 'development',
    module: {
@@ -16,8 +17,15 @@ module.exports = {
             test: /\.tsx?$/,
             use: 'ts-loader',
             exclude: /node_modules/
-         }
-      ]
+         },
+         {
+            test: /\.css$/,
+            use: [
+               'style-loader',
+               'css-loader',
+            ],
+         },
+      ],
    },
    resolve: {
       extensions: ['.tsx', '.ts', '.js']
@@ -33,6 +41,9 @@ module.exports = {
          mode: 'file',
          includeDeclarations: false,
          ignoreCompilerErrors: true,
+      }),
+      new HtmlWebpackPlugin({
+         title: 'Artist\'s Ball'
       })
    ]
 };

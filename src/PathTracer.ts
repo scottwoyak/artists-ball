@@ -29,10 +29,10 @@
 
 
 
-import { gl } from './app';
 import { Shaders, Uniforms } from './Shaders';
 import { glMat4 } from './glMat';
 import { glVec3 } from './glVec';
+import { gl } from './index';
 
 export class PathTracer {
 

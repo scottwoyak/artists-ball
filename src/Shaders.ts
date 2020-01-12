@@ -1,6 +1,6 @@
-import { gl } from "./app";
 import { glVec3, glVec4 } from "./glVec";
 import { glMat4 } from "./glMat";
+import { gl } from "./index";
 
 // constants for the shaders
 var bounces = '5';
