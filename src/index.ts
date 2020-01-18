@@ -4,7 +4,7 @@ import { App } from "./app";
 import './styles.css';
 
 let app: App;
-export let gl: WebGLRenderingContext;
+export let gl: WebGL2RenderingContext = null;
 let canvas: HTMLCanvasElement;
 
 let angleX = 0;
@@ -40,9 +40,13 @@ function tick(timeSinceStart: number) {
 }
 
 window.onload = function () {
-   gl = null;
    canvas = document.getElementById('canvas') as HTMLCanvasElement;
-   try { gl = canvas.getContext('webgl'); } catch (e) { }
+   try {
+      gl = canvas.getContext('webgl2') as WebGL2RenderingContext;
+      //gl = canvas.getContext('webgl') as WebGLRenderingContext;
+   } catch (e) {
+
+   }
 
    if (gl) {
       app = new App();

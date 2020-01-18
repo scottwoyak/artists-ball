@@ -53,7 +53,7 @@ export class PathTracer {
    ];
 
    public constructor() {
-      // create vertex buffer
+      // create vertex buffer - the block we'll draw our rendered texture on
       this.vertexBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
@@ -62,20 +62,28 @@ export class PathTracer {
       this.frameBuffer = gl.createFramebuffer();
 
       // create textures
-      var type = gl.getExtension('OES_texture_float') ? gl.FLOAT : gl.UNSIGNED_BYTE;
       gl.getExtension('EXT_color_buffer_float');
-      //      type = gl.UNSIGNED_BYTE;
-      type = gl.FLOAT;
+
+      // create two textures. One we display and one we draw to
       this.textures = [];
       for (var i = 0; i < 2; i++) {
          this.textures.push(gl.createTexture());
          gl.bindTexture(gl.TEXTURE_2D, this.textures[i]);
          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 512, 512, 0, gl.RGB, type, null);
+         gl.texImage2D(
+            gl.TEXTURE_2D, // target
+            0,             // level
+            gl.RGBA32F,    // internal format
+            512,           // width
+            512,           // height
+            0,             // border
+            gl.RGBA,       // format
+            gl.FLOAT,      // type
+            null           // pixels
+         );
       }
       gl.bindTexture(gl.TEXTURE_2D, null);
-      //   gl.viewport(0, 0, 300, 300);
 
       // create render shader
       this.renderProgram = Shaders.compileShader(Shaders.renderVertexSource, Shaders.renderFragmentSource);
