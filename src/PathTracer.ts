@@ -72,15 +72,15 @@ export class PathTracer {
          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
          gl.texImage2D(
-            gl.TEXTURE_2D, // target
-            0,             // level
-            gl.RGBA32F,    // internal format
-            512,           // width
-            512,           // height
-            0,             // border
-            gl.RGBA,       // format
-            gl.FLOAT,      // type
-            null           // pixels
+            gl.TEXTURE_2D,          // target
+            0,                      // level
+            gl.RGBA32F,             // internal format
+            Uniforms.textureSize,   // width
+            Uniforms.textureSize,   // height
+            0,                      // border
+            gl.RGBA,                // format
+            gl.FLOAT,               // type
+            null                    // pixels
          );
       }
       gl.bindTexture(gl.TEXTURE_2D, null);
@@ -102,12 +102,12 @@ export class PathTracer {
 
    public update(modelviewProjection: glMat4, timeSinceStart: number): void {
 
-      let x = Math.random() * 2 - 1;
-      let y = Math.random() * 2 - 1;
+      // implement aliasing by random sampling within a pixel
+      let x = (Math.random() * 2 - 1) / Uniforms.textureSize;
+      let y = (Math.random() * 2 - 1) / Uniforms.textureSize;
       let z = 0;
 
-      let size = 512.0;
-      let v = new glVec3([x / size, y / size, z / size]);
+      let v = new glVec3([x, y, z]);
       let jitter = glMat4.fromTranslation(v);
       let matrix = jitter.multM(modelviewProjection).invert();
 
@@ -123,6 +123,7 @@ export class PathTracer {
       Shaders.setUniforms(this.tracerProgram);
 
       // render to texture
+      gl.viewport(0, 0, Uniforms.textureSize, Uniforms.textureSize);
       gl.useProgram(this.tracerProgram);
       gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -138,6 +139,7 @@ export class PathTracer {
    };
 
    public render(): void {
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       gl.useProgram(this.renderProgram);
       gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);

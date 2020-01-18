@@ -15,8 +15,9 @@ function component() {
    const element = document.createElement('div');
 
    // Lodash, now imported by this script
-   element.innerHTML = '   <div id="main">\n' +
-      '<canvas id="canvas" width="512" height="512"></canvas>\n' +
+   element.innerHTML =
+      '<div id="main">\n' +
+      '<canvas id="canvas" width="512px" height="512px"></canvas>\n' +
       '</div>\n' +
       '<label for="range1">Light</label>\n' +
       '<input id="range1" type="range" min="1" max="100" value="50" class="slider">\n' +

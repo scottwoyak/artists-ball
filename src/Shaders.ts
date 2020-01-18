@@ -17,6 +17,7 @@ interface IUniforms {
    ballColor: glVec3,
    eye: glVec3,
    light: glVec3,
+   textureSize: number,
    textureWeight: number,
    timeSinceStart: number,
    sphereCenter0: glVec3,
@@ -37,6 +38,7 @@ export var Uniforms: IUniforms = {
    ballColor: new glVec3([0.5, 0.5, 0.8]),
    eye: new glVec3([0, 0, 0]),
    light: new glVec3([-0.4, 0.5, 0.6]), // SAW light position
+   textureSize: 1024,
    textureWeight: 0,
    timeSinceStart: 0,
    sphereCenter0: new glVec3([0, -0.5, 0]),
@@ -58,7 +60,7 @@ export class Shaders {
          ' {\n' +
          '   texCoord = vertex.xy * 0.5 + 0.5;\n' +
          '   gl_Position = vec4(vertex, 1.0);\n' +
-         ' }\n'
+         ' }\n';
    }
 
    // fragment shader for drawing a textured quad
@@ -114,6 +116,7 @@ export class Shaders {
          ' uniform vec3 eye;\n' +
          ' varying vec3 initialRay;\n' +
          ' uniform float textureWeight;\n' +
+         ' uniform float textureSize;\n' +
          ' uniform float timeSinceStart;\n' +
          ' uniform sampler2D texture;\n' +
          ' uniform vec3 light;\n' +
@@ -271,8 +274,8 @@ export class Shaders {
          ' void main() \n' +
          ' {\n' +
          '   vec3 newLight = light + uniformlyRandomVector(timeSinceStart - 53.0) * ' + lightSize + ';\n' +
-         '   vec3 texture = texture2D(texture, gl_FragCoord.xy / 512.0).rgb;\n' +
-         '   gl_FragColor = vec4(mix(calculateColor(eye, initialRay, newLight), texture, textureWeight), 1.0);\n' +
+         '   vec3 texture2 = texture2D(texture, gl_FragCoord.xy / textureSize).rgb;\n' +
+         '   gl_FragColor = vec4(mix(calculateColor(eye, initialRay, newLight), texture2, textureWeight), 1.0);\n' +
          ' }\n';
    }
 

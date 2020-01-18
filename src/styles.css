@@ -1,7 +1,7 @@
 body {
   margin: 0px;
-} 
- 
+}
+
 /* Mouse-over effects */
 .slider:hover {
   opacity: 1; /* Fully shown on mouse-over */
@@ -44,4 +44,3 @@ label {
   width: 100px;
   text-align: right;
 }
-
