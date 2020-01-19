@@ -2,6 +2,7 @@
  uniform vec3 eye;
  varying vec3 initialRay;
  uniform float textureWeight;
+ uniform float textureSize;
  uniform float timeSinceStart;
  uniform sampler2D texture;
  uniform vec3 light;
@@ -10,6 +11,12 @@
  uniform vec3 ballColor;
  uniform vec3 sphereCenter0;
  uniform float sphereRadius0;
+
+ const int BOUNCES = 5;
+ const float EPSILON = 0.0001;
+ const float INFINITY = 10000.0;
+ const float LIGHT_SIZE = 0.1;
+
  float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadius)
  {
    vec3 toSphere = origin - sphereCenter;
@@ -21,7 +28,7 @@
      float t = (-b - sqrt(discriminant)) / (2.0 * a);
      if(t > 0.0) return t;
    }
-   return 10000.0;
+   return INFINITY;
  }
 
  vec3 normalForSphere(vec3 hit, vec3 sphereCenter, float sphereRadius) 
@@ -88,7 +95,7 @@
    vec3 accumulatedColor = vec3(0.0);
 
    // main raytracing loop
-   for(int bounce = 0; bounce < 5; bounce++) 
+   for(int bounce = 0; bounce < BOUNCES; bounce++) 
    {
 
      // compute the intersection with everything
@@ -96,8 +103,8 @@
      vec3 surfaceColor = vec3(0.5);
 
      // find the closest intersection
-     float t = 10000.0;
-     float tfloor = 10000.0;
+     float t = INFINITY;
+     float tfloor = INFINITY;
 
      // check for intersection with the ground
      if (ray.y < 0.0)
@@ -142,7 +149,7 @@
      float diffuse = max(0.0, dot(normalize(toLight), normal));
 
      // trace a shadow ray to the light
-     float shadowIntensity = shadow(hit + normal * 0.0001, toLight);
+     float shadowIntensity = shadow(hit + normal * EPSILON, toLight);
 
      // do light bounce
      colorMask *= surfaceColor;
@@ -155,9 +162,10 @@
 
    return accumulatedColor;
  }
+
  void main() 
  {
-   vec3 newLight = light + uniformlyRandomVector(timeSinceStart - 53.0) * 0.1;
-   vec3 texture = texture2D(texture, gl_FragCoord.xy / 512.0).rgb;
-   gl_FragColor = vec4(mix(calculateColor(eye, initialRay, newLight), texture, textureWeight), 1.0);
+   vec3 newLight = light + uniformlyRandomVector(timeSinceStart - 53.0) * LIGHT_SIZE;
+   vec3 texture2 = texture2D(texture, gl_FragCoord.xy / textureSize).rgb;
+   gl_FragColor = vec4(mix(calculateColor(eye, initialRay, newLight), texture2, textureWeight), 1.0);
  }

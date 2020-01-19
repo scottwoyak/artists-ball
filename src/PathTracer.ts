@@ -33,6 +33,10 @@ import { Shaders, Uniforms } from './Shaders';
 import { glMat4 } from './glMat';
 import { glVec3 } from './glVec';
 import { gl } from './index';
+import toScreenVertexSource from './toScreenVertex.glsl';
+import toScreenFragmentSource from './toScreenFragment.glsl';
+import toTextureVertexSource from './toTextureVertex.glsl';
+import toTextureFragmentSource from './toTextureFragment.glsl';
 
 export class PathTracer {
 
@@ -86,12 +90,12 @@ export class PathTracer {
       gl.bindTexture(gl.TEXTURE_2D, null);
 
       // create render shader
-      this.renderProgram = Shaders.compileShader(Shaders.renderVertexSource, Shaders.renderFragmentSource);
+      this.renderProgram = Shaders.compileShader(toScreenVertexSource, toScreenFragmentSource);
       this.renderVertexAttribute = gl.getAttribLocation(this.renderProgram, 'vertex');
       gl.enableVertexAttribArray(this.renderVertexAttribute);
 
       this.sampleCount = 0;
-      this.tracerProgram = Shaders.compileShader(Shaders.tracerVertexSource, Shaders.makeTracerFragmentSource());
+      this.tracerProgram = Shaders.compileShader(toTextureVertexSource, toTextureFragmentSource);
       this.tracerVertexAttribute = gl.getAttribLocation(this.tracerProgram, 'vertex');
       gl.enableVertexAttribArray(this.tracerVertexAttribute);
    };

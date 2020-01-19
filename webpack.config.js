@@ -25,6 +25,10 @@ module.exports = {
                'css-loader',
             ],
          },
+         {
+            test: /\.(glsl|vs|fs)$/,
+            loader: 'ts-shader-loader',
+         }
       ],
    },
    resolve: {
