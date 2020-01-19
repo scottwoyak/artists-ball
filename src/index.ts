@@ -1,5 +1,4 @@
 import { Uniforms } from "./Shaders";
-import { glVec3 } from "./glVec";
 import { App } from "./app";
 import './styles.css';
 import { LightColors } from "./LightColors";
@@ -25,9 +24,7 @@ function component() {
       '<label for="range2">Temperature</label>\n' +
       '<input id="range2" type="range" min="2000" max="8000" value="' + LightColors.daylight.temperature + '" class="slider">\n' +
       '<span id="colorTemperature">' + LightColors.daylight.temperature + '</span>\n' +
-      '<br>\n' +
-      '<label for="picker2">Ball</label>\n' +
-      '<input id="picker2" type="color">\n';
+      '<br>\n';
 
    return element;
 }
@@ -136,18 +133,8 @@ function setLightColor() {
    Uniforms.lightColor = LightColors.toRGB(temperature);
    let span = document.getElementById("colorTemperature") as HTMLSpanElement;
    span.innerText = " " + temperature.toFixed() + "K ";
-   span.style.backgroundColor = Uniforms.lightColor.toHtmlColor().toHex();
 
    if (app) {
       app.restart();
    }
 }
-
-var ballPicker = document.getElementById("picker2") as HTMLInputElement;
-ballPicker.value = Uniforms.ballColor.toHtmlColor().toHex();
-ballPicker.oninput = function () {
-   var color = htmlColor.fromHex(ballPicker.value);
-   Uniforms.ballColor = color.toGlColor();
-   app.restart();
-}
-

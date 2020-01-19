@@ -97,6 +97,15 @@
    // main raytracing loop
    for(int bounce = 0; bounce < BOUNCES; bounce++) 
    {
+      // if the first ray hits the light, return the light color. This simulates
+      // displaying the light
+      if ( bounce == 0)
+      {
+         if (intersectSphere(origin, ray, light, LIGHT_SIZE)<INFINITY)
+         {
+            return (lightIntensity/2.0)*lightColor;
+         }
+      }
      // compute the intersection with everything
      float tSphere = intersectSphere(origin, ray, SPHERE_CENTER, SPHERE_RADIUS);
      vec3 surfaceColor = vec3(0.5);

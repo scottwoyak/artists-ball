@@ -30,7 +30,7 @@ export var Uniforms: IUniforms = {
    lightColor: new glColor([1.0, 1.0, 1.0]),
    ballColor: new glColor([0.5, 0.5, 0.8]),
    eye: new glVec3([0, 0, 0]),
-   light: new glVec3([-0.4, 0.5, 0.6]), // SAW light position
+   light: new glVec3([-0.6, 0.7, 0.8]), // SAW light position
    textureSize: 512,
    textureWeight: 0,
    timeSinceStart: 0,
