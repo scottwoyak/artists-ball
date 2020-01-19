@@ -16,9 +16,8 @@ function component() {
 
    // Lodash, now imported by this script
    element.innerHTML =
-      '<div id="main">\n' +
-      '<canvas id="canvas" width="512px" height="512px"></canvas>\n' +
-      '</div>\n' +
+      '<canvas id="canvas"></canvas>\n' +
+      '<br />\n' +
       '<label for="range1">Light</label>\n' +
       '<input id="range1" type="range" min="1" max="100" value="50" class="slider">\n' +
       '<input id="picker1" type="color">\n' +
@@ -36,8 +35,8 @@ function tick(timeSinceStart: number) {
    Uniforms.eye.set(1, zoomZ * Math.sin(angleX));
    Uniforms.eye.set(2, zoomZ * Math.cos(angleY) * Math.cos(angleX));
 
-   app.update(timeSinceStart);
-   app.render();
+   app.updateTexture(timeSinceStart);
+   app.displayTexture();
 }
 
 var mouseDown = false;
@@ -116,7 +115,6 @@ function onMove(x: number, y: number) {
    }
 }
 
-
 let slider = document.getElementById("range1") as HTMLInputElement;
 slider.value = "" + Uniforms.lightIntensity * 50;
 slider.oninput = function () {
@@ -163,5 +161,4 @@ ballPicker.oninput = function () {
    Uniforms.ballColor = new glVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
    app.restart();
 }
-
 

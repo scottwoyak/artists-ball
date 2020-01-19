@@ -100,7 +100,7 @@ export class PathTracer {
       this.sampleCount = 0;
    }
 
-   public update(modelviewProjection: glMat4, timeSinceStart: number): void {
+   public updateTexture(modelviewProjection: glMat4, timeSinceStart: number): void {
 
       // implement aliasing by random sampling within a pixel
       let x = (Math.random() * 2 - 1) / Uniforms.textureSize;
@@ -138,7 +138,18 @@ export class PathTracer {
       this.sampleCount++;
    };
 
-   public render(): void {
+   public displayTexture(): void {
+
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      let size = document.body.clientWidth;
+
+      if (isMobile === false) {
+         size = 512;
+      }
+
+      gl.canvas.width = size;
+      gl.canvas.height = size;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       gl.useProgram(this.renderProgram);
       gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);

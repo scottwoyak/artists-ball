@@ -12,7 +12,7 @@ export class App {
    constructor() {
    }
 
-   public update(timeSinceStart: number) {
+   public updateTexture(timeSinceStart: number) {
       this.modelview = glMat4.makeLookAt(
          Uniforms.eye,
          new glVec3([0, 0, 0]),  // center point
@@ -21,11 +21,11 @@ export class App {
 
       this.projection = glMat4.makePerspective(55, 1, 0.1, 100);
       this.modelviewProjection = this.projection.multM(this.modelview);
-      this.tracer.update(this.modelviewProjection, timeSinceStart);
+      this.tracer.updateTexture(this.modelviewProjection, timeSinceStart);
    };
 
-   public render(): void {
-      this.tracer.render();
+   public displayTexture(): void {
+      this.tracer.displayTexture();
    };
 
    public restart(): void {
