@@ -2,6 +2,8 @@ import { Uniforms } from "./Shaders";
 import { glVec3 } from "./glVec";
 import { App } from "./app";
 import './styles.css';
+import { LightColors } from "./LightColors";
+import { htmlColor } from "./htmlColor";
 
 let app: App;
 export let gl: WebGL2RenderingContext = null;
@@ -14,13 +16,15 @@ let zoomZ = 3.0;
 function component() {
    const element = document.createElement('div');
 
-   // Lodash, now imported by this script
    element.innerHTML =
       '<canvas id="canvas"></canvas>\n' +
       '<br />\n' +
-      '<label for="range1">Light</label>\n' +
-      '<input id="range1" type="range" min="1" max="100" value="50" class="slider">\n' +
-      '<input id="picker1" type="color">\n' +
+      '<label for="range1">Intensity</label>\n' +
+      '<input id="range1" type="range" min="20" max="100" value="50" class="slider">\n' +
+      '<br />\n' +
+      '<label for="range2">Temperature</label>\n' +
+      '<input id="range2" type="range" min="2000" max="8000" value="' + LightColors.daylight.temperature + '" class="slider">\n' +
+      '<span id="colorTemperature">' + LightColors.daylight.temperature + '</span>\n' +
       '<br>\n' +
       '<label for="picker2">Ball</label>\n' +
       '<input id="picker2" type="color">\n';
@@ -115,50 +119,35 @@ function onMove(x: number, y: number) {
    }
 }
 
-let slider = document.getElementById("range1") as HTMLInputElement;
-slider.value = "" + Uniforms.lightIntensity * 50;
-slider.oninput = function () {
-   Uniforms.lightIntensity = parseFloat(slider.value) / 50;
+let slider1 = document.getElementById("range1") as HTMLInputElement;
+slider1.value = "" + Uniforms.lightIntensity * 50;
+slider1.oninput = function () {
+   Uniforms.lightIntensity = parseFloat(slider1.value) / 50;
    app.restart();
 }
 
-function componentToHex(c: number): string {
-   var hex = c.toString(16);
-   return hex.length == 1 ? "0" + hex : hex;
-}
 
-function rgbToHex(r: number, g: number, b: number): string {
-   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-}
+let slider2 = document.getElementById("range2") as HTMLInputElement;
+setLightColor();
+slider2.oninput = setLightColor
 
-function hexToRgb(hex: string) {
-   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-   return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-   } : null;
-}
+function setLightColor() {
+   let temperature = parseFloat(slider2.value);
+   Uniforms.lightColor = LightColors.toRGB(temperature);
+   let span = document.getElementById("colorTemperature") as HTMLSpanElement;
+   span.innerText = " " + temperature.toFixed() + "K ";
+   span.style.backgroundColor = Uniforms.lightColor.toHtmlColor().toHex();
 
-var lightPicker = document.getElementById("picker1") as HTMLInputElement;
-var r = Math.round(255 * Uniforms.lightColor.get(0));
-var g = Math.round(255 * Uniforms.lightColor.get(1));
-var b = Math.round(255 * Uniforms.lightColor.get(2));
-lightPicker.value = rgbToHex(r, g, b)
-lightPicker.oninput = function () {
-   var color = hexToRgb(lightPicker.value);
-   Uniforms.lightColor = new glVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
-   app.restart();
+   if (app) {
+      app.restart();
+   }
 }
 
 var ballPicker = document.getElementById("picker2") as HTMLInputElement;
-r = Math.round(255 * Uniforms.ballColor.get(0));
-g = Math.round(255 * Uniforms.ballColor.get(1));
-b = Math.round(255 * Uniforms.ballColor.get(2));
-ballPicker.value = rgbToHex(r, g, b);
+ballPicker.value = Uniforms.ballColor.toHtmlColor().toHex();
 ballPicker.oninput = function () {
-   var color = hexToRgb(ballPicker.value);
-   Uniforms.ballColor = new glVec3([color.r / 255.0, color.g / 255.0, color.b / 255.0]);
+   var color = htmlColor.fromHex(ballPicker.value);
+   Uniforms.ballColor = color.toGlColor();
    app.restart();
 }
 

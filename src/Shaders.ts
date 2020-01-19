@@ -1,14 +1,15 @@
 import { glVec3, glVec4 } from "./glVec";
 import { glMat4 } from "./glMat";
 import { gl } from "./index";
+import { glColor } from "./glColor";
 
 /**
  * Types for the uniform values
  */
 interface IUniforms {
    lightIntensity: number,
-   lightColor: glVec3,
-   ballColor: glVec3,
+   lightColor: glColor,
+   ballColor: glColor,
    eye: glVec3,
    light: glVec3,
    textureSize: number,
@@ -25,12 +26,12 @@ interface IUniforms {
  * Values that are passed to the shader
  */
 export var Uniforms: IUniforms = {
-   lightIntensity: 0.8,
-   lightColor: new glVec3([1.0, 1.0, 1.0]),
-   ballColor: new glVec3([0.5, 0.5, 0.8]),
+   lightIntensity: 1.0,
+   lightColor: new glColor([1.0, 1.0, 1.0]),
+   ballColor: new glColor([0.5, 0.5, 0.8]),
    eye: new glVec3([0, 0, 0]),
    light: new glVec3([-0.4, 0.5, 0.6]), // SAW light position
-   textureSize: 1024,
+   textureSize: 512,
    textureWeight: 0,
    timeSinceStart: 0,
    ray00: new glVec3([0, 0, 0]),
@@ -53,7 +54,11 @@ export class Shaders {
          if (location == null) continue;
          else if (value instanceof glVec3) {
             gl.uniform3fv(location, new Float32Array([value.get(0), value.get(1), value.get(2)]));
-         } else {
+         }
+         else if (value instanceof glColor) {
+            gl.uniform3fv(location, new Float32Array([value.r, value.g, value.b]));
+         }
+         else {
             gl.uniform1f(location, value);
          }
       }
