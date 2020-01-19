@@ -14,8 +14,6 @@ interface IUniforms {
    textureSize: number,
    textureWeight: number,
    timeSinceStart: number,
-   sphereCenter0: glVec3,
-   sphereRadius0: number,
    ray00: glVec3,
    ray01: glVec3,
    ray10: glVec3,
@@ -35,8 +33,6 @@ export var Uniforms: IUniforms = {
    textureSize: 1024,
    textureWeight: 0,
    timeSinceStart: 0,
-   sphereCenter0: new glVec3([0, -0.5, 0]),
-   sphereRadius0: 0.5,
    ray00: new glVec3([0, 0, 0]),
    ray01: new glVec3([0, 0, 0]),
    ray10: new glVec3([0, 0, 0]),
@@ -44,7 +40,6 @@ export var Uniforms: IUniforms = {
 }
 
 export class Shaders {
-
 
    public static getEyeRay(matrix: glMat4, x: number, y: number): glVec3 {
       let vec = new glVec4([x, y, 0, 1]);

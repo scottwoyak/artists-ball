@@ -9,13 +9,13 @@
  uniform float lightIntensity;
  uniform vec3 lightColor;
  uniform vec3 ballColor;
- uniform vec3 sphereCenter0;
- uniform float sphereRadius0;
 
  const int BOUNCES = 5;
  const float EPSILON = 0.0001;
  const float INFINITY = 10000.0;
  const float LIGHT_SIZE = 0.1;
+ const vec3 SPHERE_CENTER = vec3(0, -0.5, 0);
+ const float SPHERE_RADIUS = 0.5;
 
  float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadius)
  {
@@ -78,8 +78,8 @@
 
  float shadow(vec3 origin, vec3 ray) 
  {
-   float tSphere0 = intersectSphere(origin, ray, sphereCenter0, sphereRadius0);
-   if(tSphere0 < 1.0)
+   float tSphere = intersectSphere(origin, ray, SPHERE_CENTER, SPHERE_RADIUS);
+   if(tSphere < 1.0)
    {
      return 0.0;
    }
@@ -97,9 +97,8 @@
    // main raytracing loop
    for(int bounce = 0; bounce < BOUNCES; bounce++) 
    {
-
      // compute the intersection with everything
-     float tSphere0 = intersectSphere(origin, ray, sphereCenter0, sphereRadius0);
+     float tSphere = intersectSphere(origin, ray, SPHERE_CENTER, SPHERE_RADIUS);
      vec3 surfaceColor = vec3(0.5);
 
      // find the closest intersection
@@ -117,10 +116,10 @@
        }
      }
 
-     if(tSphere0 < t)
+     if(tSphere < t)
      {
        surfaceColor = vec3(ballColor);
-       t = tSphere0;
+       t = tSphere;
      }
 
      // info about hit
@@ -133,9 +132,9 @@
      {
        normal = vec3(0.0,1.0,0.0);
      }
-     else if(t == tSphere0)
+     else if(t == tSphere)
      {
-       normal = normalForSphere(hit, sphereCenter0, sphereRadius0);
+       normal = normalForSphere(hit, SPHERE_CENTER, SPHERE_RADIUS);
      }
      else
      {
