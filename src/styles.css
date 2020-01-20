@@ -45,8 +45,15 @@ label {
   text-align: right;
 }
 
+#ballColorSpan {
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
 @media only screen and (max-device-width: 800px) {
   .slider {
+    width: 50%;
     height: 10px;
     border-radius: 10px;
     margin-top: 40px;
@@ -63,7 +70,16 @@ label {
     height: 30px;
   }
 
+  #ballColorSpan {
+    width: 80px;
+    height: 40px;
+  }
+
   label {
+    width: 30%;
+    font-size: 40px;
+  }
+  #temperatureSpan {
     font-size: 40px;
   }
 }

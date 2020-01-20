@@ -1,10 +1,12 @@
 import { Color } from "./Color";
 import { glColor } from "./glColor";
+import { hsvColor } from "./hsvColor";
 
 /**
  * Color class that requires RGB values to be between 0 and 255
  */
 export class htmlColor extends Color {
+
    /**
     * @param color An RGB color array
     */

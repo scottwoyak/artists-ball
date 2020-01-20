@@ -2,9 +2,9 @@
  * Class for representing color values. Values may be on a 0-1 or 0-255 scale.
  */
 export class Color {
-   readonly r: number;
-   readonly g: number;
-   readonly b: number;
+   public readonly r: number;
+   public readonly g: number;
+   public readonly b: number;
 
    /**
     * @param color RGB values to store in this object
