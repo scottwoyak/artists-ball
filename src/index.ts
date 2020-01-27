@@ -8,9 +8,9 @@ let app: App;
 export let gl: WebGL2RenderingContext = null;
 let canvas: HTMLCanvasElement;
 
-let angleX = 0;
-let angleY = 0;
-let zoomZ = 3.0;
+export let angleX = 0;
+export let angleY = 0;
+export let zoomZ = 3.0;
 
 function component() {
    const element = document.createElement('div');
@@ -19,7 +19,7 @@ function component() {
       '<canvas id="canvas"></canvas>\n' +
       '<br />\n' +
       '<label for="intensityRange">Intensity</label>\n' +
-      '<input id="intensityRange" type="range" min="20" max="100" value="50" class="slider">\n' +
+      '<input id="intensityRange" type="range" min="0" max="100" value="50" class="slider">\n' +
       '<br />\n' +
       '<label for="temperatureRange">Temperature</label>\n' +
       '<input id="temperatureRange" type="range" min="2000" max="8000" value="' + LightColors.daylight.temperature + '" class="slider">\n' +
@@ -27,21 +27,17 @@ function component() {
       '<br>\n' +
       '<label for="ballColorRange">Ball Color</label>\n' +
       '<input id="ballColorRange" type="range" min="0" max="1000" value="' + LightColors.daylight.temperature + '" class="slider">\n' +
-      '<span id="ballColorSpan" />';
+      '<span id="ballColorSpan"></span>' +
+      '<br />\n' +
+      '<label for="ambientIntensityRange">Ambient Intensity</label>\n' +
+      '<input id="ambientIntensityRange" type="range" min="0" max="100" value="50" class="slider">\n' +
+      '<br />\n' +
+      '<br />\n';
 
    return element;
 }
 
 document.body.appendChild(component());
-
-function tick(timeSinceStart: number) {
-   Uniforms.eye.set(0, zoomZ * Math.sin(angleY) * Math.cos(angleX));
-   Uniforms.eye.set(1, zoomZ * Math.sin(angleX));
-   Uniforms.eye.set(2, zoomZ * Math.cos(angleY) * Math.cos(angleX));
-
-   app.updateTexture(timeSinceStart);
-   app.displayTexture();
-}
 
 var mouseDown = false;
 var oldX: number;
@@ -57,8 +53,6 @@ window.onload = function () {
 
    if (gl) {
       app = new App();
-      var start = new Date().getTime();
-      setInterval(function () { tick(((new Date()).getTime() - start) * 0.001); }, 1000 / 60);
 
       canvas.ontouchstart = function (event: TouchEvent) {
          event.preventDefault();
@@ -120,9 +114,9 @@ function onMove(x: number, y: number) {
 }
 
 let intensitySlider = document.getElementById("intensityRange") as HTMLInputElement;
-intensitySlider.value = "" + Uniforms.lightIntensity * 50;
+intensitySlider.value = "" + Uniforms.uLightIntensity * 100;
 intensitySlider.oninput = function () {
-   Uniforms.lightIntensity = parseFloat(intensitySlider.value) / 50;
+   Uniforms.uLightIntensity = parseFloat(intensitySlider.value) / 100;
    app.restart();
 }
 
@@ -133,7 +127,7 @@ temperatureSlider.oninput = setLightColor
 
 function setLightColor() {
    let temperature = parseFloat(temperatureSlider.value);
-   Uniforms.lightColor = LightColors.toRGB(temperature);
+   Uniforms.uLightColor = LightColors.toRGB(temperature);
    let span = document.getElementById("temperatureSpan") as HTMLSpanElement;
    span.innerText = temperature.toFixed() + "K";
 
@@ -144,13 +138,13 @@ function setLightColor() {
 
 
 let ballColorSlider = document.getElementById("ballColorRange") as HTMLInputElement;
-ballColorSlider.value = (parseFloat(ballColorSlider.max) * hsvColor.fromGlColor(Uniforms.ballColor).v).toString();
+ballColorSlider.value = (parseFloat(ballColorSlider.max) * hsvColor.fromGlColor(Uniforms.uBallColor).v).toString();
 setSpanColor();
 ballColorSlider.oninput = setBallColor
 
 function setBallColor() {
    let hue = parseFloat(ballColorSlider.value);
-   Uniforms.ballColor = (new hsvColor([hue / parseFloat(ballColorSlider.max), 0.6, 0.6])).toGlColor();
+   Uniforms.uBallColor = (new hsvColor([hue / parseFloat(ballColorSlider.max), 0.6, 0.6])).toGlColor();
 
    setSpanColor();
 
@@ -161,5 +155,13 @@ function setBallColor() {
 
 function setSpanColor() {
    let span = document.getElementById("ballColorSpan") as HTMLSpanElement;
-   span.style.backgroundColor = Uniforms.ballColor.toHtmlColor().toHex();
+   span.style.backgroundColor = Uniforms.uBallColor.toHtmlColor().toHex();
 }
+
+let ambientIntensitySlider = document.getElementById("ambientIntensityRange") as HTMLInputElement;
+ambientIntensitySlider.value = "" + Uniforms.uAmbientLightIntensity * 100;
+ambientIntensitySlider.oninput = function () {
+   Uniforms.uAmbientLightIntensity = parseFloat(ambientIntensitySlider.value) / 100;
+   app.restart();
+}
+

@@ -7,18 +7,19 @@ import { glColor } from "./glColor";
  * Types for the uniform values
  */
 interface IUniforms {
-   lightIntensity: number,
-   lightColor: glColor,
-   ballColor: glColor,
-   eye: glVec3,
-   light: glVec3,
-   textureSize: number,
-   textureWeight: number,
-   timeSinceStart: number,
-   ray00: glVec3,
-   ray01: glVec3,
-   ray10: glVec3,
-   ray11: glVec3,
+   uLightIntensity: number,
+   uLightColor: glColor,
+   uLightPos: glVec3,
+   uAmbientLightIntensity: number,
+   uBallColor: glColor,
+   uEye: glVec3,
+   uTextureSize: number,
+   uTextureWeight: number,
+   uTimeSinceStart: number,
+   uRay00: glVec3,
+   uRay01: glVec3,
+   uRay10: glVec3,
+   uRay11: glVec3,
    [propName: string]: any
 }
 
@@ -26,25 +27,26 @@ interface IUniforms {
  * Values that are passed to the shader
  */
 export var Uniforms: IUniforms = {
-   lightIntensity: 1.0,
-   lightColor: new glColor([1.0, 1.0, 1.0]),
-   ballColor: new glColor([0.5, 0.5, 0.8]),
-   eye: new glVec3([0, 0, 0]),
-   light: new glVec3([-0.6, 0.7, 0.8]), // SAW light position
-   textureSize: 512,
-   textureWeight: 0,
-   timeSinceStart: 0,
-   ray00: new glVec3([0, 0, 0]),
-   ray01: new glVec3([0, 0, 0]),
-   ray10: new glVec3([0, 0, 0]),
-   ray11: new glVec3([0, 0, 0]),
+   uLightIntensity: 0.7,
+   uLightColor: new glColor([1.0, 1.0, 1.0]),
+   uLightPos: new glVec3([-0.6, 0.7, 0.8]),
+   uAmbientLightIntensity: 0.3,
+   uBallColor: new glColor([0.5, 0.5, 0.8]),
+   uEye: new glVec3([0, 0, 0]),
+   uTextureSize: 256,
+   uTextureWeight: 0,
+   uTimeSinceStart: 0,
+   uRay00: new glVec3([0, 0, 0]),
+   uRay01: new glVec3([0, 0, 0]),
+   uRay10: new glVec3([0, 0, 0]),
+   uRay11: new glVec3([0, 0, 0]),
 }
 
 export class Shaders {
 
    public static getEyeRay(matrix: glMat4, x: number, y: number): glVec3 {
       let vec = new glVec4([x, y, 0, 1]);
-      return matrix.multV(vec).divideByW().subtract(Uniforms.eye);
+      return matrix.multV(vec).divideByW().subtract(Uniforms.uEye);
    }
 
    public static setUniforms(program: WebGLProgram) {

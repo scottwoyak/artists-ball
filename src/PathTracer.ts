@@ -79,8 +79,8 @@ export class PathTracer {
             gl.TEXTURE_2D,          // target
             0,                      // level
             gl.RGBA32F,             // internal format
-            Uniforms.textureSize,   // width
-            Uniforms.textureSize,   // height
+            Uniforms.uTextureSize,   // width
+            Uniforms.uTextureSize,   // height
             0,                      // border
             gl.RGBA,                // format
             gl.FLOAT,               // type
@@ -107,27 +107,27 @@ export class PathTracer {
    public updateTexture(modelviewProjection: glMat4, timeSinceStart: number): void {
 
       // implement aliasing by random sampling within a pixel
-      let x = (Math.random() * 2 - 1) / Uniforms.textureSize;
-      let y = (Math.random() * 2 - 1) / Uniforms.textureSize;
+      let x = (Math.random() * 2 - 1) / Uniforms.uTextureSize;
+      let y = (Math.random() * 2 - 1) / Uniforms.uTextureSize;
       let z = 0;
 
       let v = new glVec3([x, y, z]);
       let jitter = glMat4.fromTranslation(v);
       let matrix = jitter.multM(modelviewProjection).invert();
 
-      Uniforms.ray00 = Shaders.getEyeRay(matrix, -1, -1);
-      Uniforms.ray01 = Shaders.getEyeRay(matrix, -1, +1);
-      Uniforms.ray10 = Shaders.getEyeRay(matrix, +1, -1);
-      Uniforms.ray11 = Shaders.getEyeRay(matrix, +1, +1);
-      Uniforms.timeSinceStart = timeSinceStart;
-      Uniforms.textureWeight = this.sampleCount / (this.sampleCount + 1);
+      Uniforms.uRay00 = Shaders.getEyeRay(matrix, -1, -1);
+      Uniforms.uRay01 = Shaders.getEyeRay(matrix, -1, +1);
+      Uniforms.uRay10 = Shaders.getEyeRay(matrix, +1, -1);
+      Uniforms.uRay11 = Shaders.getEyeRay(matrix, +1, +1);
+      Uniforms.uTimeSinceStart = timeSinceStart;
+      Uniforms.uTextureWeight = this.sampleCount / (this.sampleCount + 1);
 
       // set uniforms
       gl.useProgram(this.tracerProgram);
       Shaders.setUniforms(this.tracerProgram);
 
       // render to texture
-      gl.viewport(0, 0, Uniforms.textureSize, Uniforms.textureSize);
+      gl.viewport(0, 0, Uniforms.uTextureSize, Uniforms.uTextureSize);
       gl.useProgram(this.tracerProgram);
       gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
