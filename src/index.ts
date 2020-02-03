@@ -138,13 +138,14 @@ function setLightColor() {
 
 
 let ballColorSlider = document.getElementById("ballColorRange") as HTMLInputElement;
-ballColorSlider.value = (parseFloat(ballColorSlider.max) * hsvColor.fromGlColor(Uniforms.uBallColor).v).toString();
+ballColorSlider.value = (parseFloat(ballColorSlider.max) * hsvColor.fromGlColor(Uniforms.uBallColor).h).toString();
 setSpanColor();
+setBallColor();
 ballColorSlider.oninput = setBallColor
 
 function setBallColor() {
    let hue = parseFloat(ballColorSlider.value);
-   Uniforms.uBallColor = (new hsvColor([hue / parseFloat(ballColorSlider.max), 0.6, 0.6])).toGlColor();
+   Uniforms.uBallColor = (new hsvColor([hue / parseFloat(ballColorSlider.max), 0.7, 0.7])).toGlColor();
 
    setSpanColor();
 

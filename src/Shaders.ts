@@ -49,9 +49,9 @@ export class Shaders {
       return matrix.multV(vec).divideByW().subtract(Uniforms.uEye);
    }
 
-   public static setUniforms(program: WebGLProgram) {
-      for (var name in Uniforms) {
-         var value = Uniforms[name];
+   public static setUniforms(program: WebGLProgram, uniforms: any) {
+      for (var name in uniforms) {
+         var value = uniforms[name];
          var location = gl.getUniformLocation(program, name);
          if (location == null) continue;
          else if (value instanceof glVec3) {
@@ -59,6 +59,9 @@ export class Shaders {
          }
          else if (value instanceof glColor) {
             gl.uniform3fv(location, new Float32Array([value.r, value.g, value.b]));
+         }
+         else if (name === "uMode") {
+            gl.uniform1i(location, value);
          }
          else {
             gl.uniform1f(location, value);

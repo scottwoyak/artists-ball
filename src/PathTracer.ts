@@ -38,9 +38,39 @@ import toScreenFragmentSource from './toScreenFragment.glsl';
 import toTextureVertexSource from './toTextureVertex.glsl';
 import toTextureFragmentSource from './toTextureFragment.glsl';
 
+/**
+ * Rendering mode for displaying the texture
+ */
+enum RenderMode {
+   Color = 0,
+   Value = 1,
+   Chroma = 2,
+}
+
+/**
+ * Types for the uniform values
+ */
+interface IToScreenUniforms {
+   uScale: number;
+   uXOffset: number;
+   uYOffset: number;
+   uMode: RenderMode;
+}
+
+/**
+ * Values that are passed to the shader
+ */
+let ToScreenUniforms: IToScreenUniforms = {
+   uScale: 1.0,
+   uXOffset: 0.0,
+   uYOffset: 0.0,
+   uMode: 0,
+}
+
 export class PathTracer {
 
    private vertexBuffer: WebGLBuffer;
+
    private frameBuffer: WebGLFramebuffer;
    private textures: WebGLTexture[];
    private renderProgram: WebGLProgram;
@@ -79,8 +109,8 @@ export class PathTracer {
             gl.TEXTURE_2D,          // target
             0,                      // level
             gl.RGBA32F,             // internal format
-            Uniforms.uTextureSize,   // width
-            Uniforms.uTextureSize,   // height
+            Uniforms.uTextureSize,  // width
+            Uniforms.uTextureSize,  // height
             0,                      // border
             gl.RGBA,                // format
             gl.FLOAT,               // type
@@ -124,7 +154,7 @@ export class PathTracer {
 
       // set uniforms
       gl.useProgram(this.tracerProgram);
-      Shaders.setUniforms(this.tracerProgram);
+      Shaders.setUniforms(this.tracerProgram, Uniforms);
 
       // render to texture
       gl.viewport(0, 0, Uniforms.uTextureSize, Uniforms.uTextureSize);
@@ -159,6 +189,29 @@ export class PathTracer {
       gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
       gl.vertexAttribPointer(this.renderVertexAttribute, 2, gl.FLOAT, false, 0, 0);
+
+      // display the main screen
+      ToScreenUniforms.uScale = 1.0;
+      ToScreenUniforms.uXOffset = 0.0;
+      ToScreenUniforms.uYOffset = 0.0;
+      ToScreenUniforms.uMode = RenderMode.Color;
+      Shaders.setUniforms(this.renderProgram, ToScreenUniforms);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      // display the chroma view
+      ToScreenUniforms.uScale = 0.2;
+      ToScreenUniforms.uXOffset = 0.4;
+      ToScreenUniforms.uYOffset = 0.8;
+      ToScreenUniforms.uMode = RenderMode.Chroma;
+      Shaders.setUniforms(this.renderProgram, ToScreenUniforms);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      // display the color view
+      ToScreenUniforms.uScale = 0.2;
+      ToScreenUniforms.uXOffset = 0.8;
+      ToScreenUniforms.uYOffset = 0.8;
+      ToScreenUniforms.uMode = RenderMode.Value;
+      Shaders.setUniforms(this.renderProgram, ToScreenUniforms);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
    }
 }
