@@ -33,7 +33,7 @@ export var Uniforms: IUniforms = {
    uAmbientLightIntensity: 0.3,
    uBallColor: new glColor([0.5, 0.5, 0.8]),
    uEye: new glVec3([0, 0, 0]),
-   uTextureSize: 256,
+   uTextureSize: 512,
    uTextureWeight: 0,
    uTimeSinceStart: 0,
    uRay00: new glVec3([0, 0, 0]),

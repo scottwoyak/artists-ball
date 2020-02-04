@@ -3,6 +3,9 @@ import { App } from "./app";
 import './styles.css';
 import { LightColors } from "./LightColors";
 import { hsvColor } from "./hsvColor";
+import { Color } from "./Color";
+import { ColorRange } from "./ColorRange";
+import { glColor } from "./glColor";
 
 let app: App;
 export let gl: WebGL2RenderingContext = null;
@@ -11,6 +14,17 @@ let canvas: HTMLCanvasElement;
 export let angleX = 0;
 export let angleY = 0;
 export let zoomZ = 3.0;
+
+let skinTones = [
+   new Color([255, 218, 200]),
+   new Color([255, 218, 200]),
+   new Color([232, 179, 117]),
+   new Color([190, 136, 87]),
+   //   new Color([115, 91, 59])
+   //   new Color([132, 55, 34]),
+   new Color([61, 12, 2]),
+   //   new Color([38, 7, 1])
+];
 
 function component() {
    const element = document.createElement('div');
@@ -26,7 +40,7 @@ function component() {
       '<span id="temperatureSpan">' + LightColors.daylight.temperature + '</span>\n' +
       '<br>\n' +
       '<label for="ballColorRange">Ball Color</label>\n' +
-      '<input id="ballColorRange" type="range" min="0" max="1000" value="' + LightColors.daylight.temperature + '" class="slider">\n' +
+      '<input id="ballColorRange" type="range" min="0" max="100" value="50" class="slider">\n' +
       '<span id="ballColorSpan"></span>' +
       '<br />\n' +
       '<label for="ambientIntensityRange">Ambient Intensity</label>\n' +
@@ -165,6 +179,7 @@ function setLightColor() {
 }
 
 
+/*
 let ballColorSlider = document.getElementById("ballColorRange") as HTMLInputElement;
 ballColorSlider.value = (parseFloat(ballColorSlider.max) * hsvColor.fromGlColor(Uniforms.uBallColor).h).toString();
 setSpanColor();
@@ -186,6 +201,30 @@ function setSpanColor() {
    let span = document.getElementById("ballColorSpan") as HTMLSpanElement;
    span.style.backgroundColor = Uniforms.uBallColor.toHtmlColor().toHex();
 }
+*/
+let skinColorRange = new ColorRange(skinTones);
+
+let ballColorSlider = document.getElementById("ballColorRange") as HTMLInputElement;
+setSpanColor();
+setBallColor();
+ballColorSlider.oninput = setBallColor
+
+function setBallColor() {
+   let color = skinColorRange.get(parseFloat(ballColorSlider.value) / 100.0);
+   Uniforms.uBallColor = new glColor([color.r / 255, color.g / 255, color.b / 255]);
+
+   setSpanColor();
+
+   if (app) {
+      app.restart();
+   }
+}
+
+function setSpanColor() {
+   let span = document.getElementById("ballColorSpan") as HTMLSpanElement;
+   span.style.backgroundColor = Uniforms.uBallColor.toHtmlColor().toHex();
+}
+
 
 let ambientIntensitySlider = document.getElementById("ambientIntensityRange") as HTMLInputElement;
 ambientIntensitySlider.value = "" + Uniforms.uAmbientLightIntensity * 100;

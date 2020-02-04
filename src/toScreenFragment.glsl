@@ -9,6 +9,7 @@ uniform int uMode;
 
 vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
 vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
+vec4 orange = vec4(1.0, 0.65, 0.0, 1.0);
 vec4 yellow = vec4(1.0, 1.0, 0.0, 1.0);
 vec4 green = vec4(0.0, 1.0, 0.0, 1.0);
 vec4 cyan = vec4(0.0, 1.0, 1.0, 1.0);
@@ -63,8 +64,8 @@ void main()
    colors[1] = blue;
    colors[2] = green;
    colors[3] = yellow;
-   colors[4] = red;
-   colors[5] = white;
+   colors[4] = orange;
+   colors[5] = red;
 
    if (uMode == MODE_VALUE)
    {
