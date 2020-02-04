@@ -38,6 +38,10 @@ export class App {
       this.tracer.restart();
    }
 
+   public swap(pos: number) {
+      this.tracer.swap(pos);
+   }
+
    public tick() {
 
       this.count++;

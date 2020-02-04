@@ -57,6 +57,21 @@ window.onload = function () {
       canvas.ontouchstart = function (event: TouchEvent) {
          event.preventDefault();
          if (event.touches.length === 1) {
+            let size = canvas.width / 5;
+
+            let x = event.touches[0].clientX;
+            let y = event.touches[0].clientY;
+            if (y < size) {
+               if (x > canvas.width - size) {
+                  app.swap(1);
+                  return;
+               }
+               else if (x > canvas.width - 2 * size) {
+                  app.swap(0);
+                  return;
+               }
+            }
+
             mouseDown = true;
 
             oldX = event.touches[0].clientX;
@@ -91,6 +106,19 @@ window.onload = function () {
       canvas.onmouseup = function (event) {
          mouseDown = false;
       };
+
+      canvas.onclick = function (event: MouseEvent) {
+         let size = canvas.width / 5;
+
+         if (event.y < size) {
+            if (event.x > canvas.width - size) {
+               app.swap(1);
+            }
+            else if (event.x > canvas.width - 2 * size) {
+               app.swap(0);
+            }
+         }
+      }
    }
 }
 

@@ -79,6 +79,9 @@ export class PathTracer {
    private tracerProgram: WebGLProgram;
    private tracerVertexAttribute: number;
 
+   private mainView = RenderMode.Color;
+   private smallViews = [RenderMode.Chroma, RenderMode.Value];
+
    private vertices = [
       -1, -1,
       -1, +1,
@@ -194,25 +197,31 @@ export class PathTracer {
       ToScreenUniforms.uScale = 1.0;
       ToScreenUniforms.uXOffset = 0.0;
       ToScreenUniforms.uYOffset = 0.0;
-      ToScreenUniforms.uMode = RenderMode.Color;
+      ToScreenUniforms.uMode = this.mainView;
       Shaders.setUniforms(this.renderProgram, ToScreenUniforms);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      // display the chroma view
+      // display the smaller views
       ToScreenUniforms.uScale = 0.2;
       ToScreenUniforms.uXOffset = 0.4;
       ToScreenUniforms.uYOffset = 0.8;
-      ToScreenUniforms.uMode = RenderMode.Chroma;
+      ToScreenUniforms.uMode = this.smallViews[0];
       Shaders.setUniforms(this.renderProgram, ToScreenUniforms);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      // display the color view
       ToScreenUniforms.uScale = 0.2;
       ToScreenUniforms.uXOffset = 0.8;
       ToScreenUniforms.uYOffset = 0.8;
-      ToScreenUniforms.uMode = RenderMode.Value;
+      ToScreenUniforms.uMode = this.smallViews[1];
       Shaders.setUniforms(this.renderProgram, ToScreenUniforms);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+   }
+
+   public swap(pos: number): void {
+      let tmp = this.smallViews[pos];
+      this.smallViews[pos] = this.mainView;
+      this.mainView = tmp;
+      this.displayTexture();
    }
 }
 

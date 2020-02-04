@@ -78,36 +78,6 @@ void main()
       if (texCoord.x < 0.03)
       {
          gl_FragColor = value2Color(texCoord.y);
-         /*
-         if ((texCoord.y < 1.0 / float(NUM_COLORS)))
-         {
-            gl_FragColor = colors[0];
-         }
-         else if ((texCoord.y < 2.0 / float(NUM_COLORS)))
-         {
-            gl_FragColor = colors[1];
-         }
-         else if (texCoord.y < 3.0 / float(NUM_COLORS))
-         {
-            gl_FragColor = colors[2];
-         }
-         else if (texCoord.y < 4.0 / float(NUM_COLORS))
-         {
-            gl_FragColor = colors[3];
-         }
-         else if (texCoord.y < (5.0 / float(NUM_COLORS)))
-         {
-            gl_FragColor = colors[4];
-         }
-         else if (texCoord.y < 6.0 / float(NUM_COLORS))
-         {
-            gl_FragColor = colors[5];
-         }
-         else
-         {
-            gl_FragColor = colors[NUM_COLORS - 1];
-         }
-         */
       }
       else
       {
