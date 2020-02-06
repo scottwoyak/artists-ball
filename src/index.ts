@@ -17,12 +17,11 @@ export let zoomZ = 3.0;
 
 let skinTones = [
    new Color([255, 218, 200]),
-   new Color([255, 218, 200]),
    new Color([232, 179, 117]),
    new Color([190, 136, 87]),
-   //   new Color([115, 91, 59])
+   new Color([115, 91, 59])
    //   new Color([132, 55, 34]),
-   new Color([61, 12, 2]),
+   //new Color([61, 12, 2]),
    //   new Color([38, 7, 1])
 ];
 
@@ -71,7 +70,7 @@ window.onload = function () {
       canvas.ontouchstart = function (event: TouchEvent) {
          event.preventDefault();
          if (event.touches.length === 1) {
-            let size = canvas.width / 5;
+            let size = canvas.width / 4;
 
             let x = event.touches[0].clientX;
             let y = event.touches[0].clientY;
@@ -122,7 +121,7 @@ window.onload = function () {
       };
 
       canvas.onclick = function (event: MouseEvent) {
-         let size = canvas.width / 5;
+         let size = canvas.width / 4;
 
          if (event.y < size) {
             if (event.x > canvas.width - size) {

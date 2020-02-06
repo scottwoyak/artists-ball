@@ -10,6 +10,9 @@ uniform float uLightIntensity;
 uniform vec3 uLightColor;
 uniform float uAmbientLightIntensity;
 uniform vec3 uBallColor;
+uniform float uPass;
+uniform float uNumPasses;
+uniform float uSample;
 
 const int MAX_BOUNCES = 100;
 const float EPSILON = 0.0001;
@@ -238,11 +241,24 @@ vec3 calculateColor(vec3 origin, vec3 ray)
       origin = hit;
    }
 
-   return accumulatedColor;
+   return clamp(accumulatedColor, 0.0, 1.0);
 }
 
 void main()
 {
+   if (floor(mod(gl_FragCoord.x, uNumPasses)) != uPass)
+   {
+      if (uSample == 0.0 && uPass == 0.0)
+      {
+         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      }
+      else
+      {
+         gl_FragColor = texture2D(uTexture, gl_FragCoord.xy / uTextureSize);
+      }
+      return;
+   }
+
    vec3 rand = uniformlyRandomVector(uTimeSinceStart - 53.0) * LIGHT_SIZE;
 
    Lights[0].intensity = uLightIntensity;

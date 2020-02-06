@@ -55,6 +55,7 @@ interface IToScreenUniforms {
    uXOffset: number;
    uYOffset: number;
    uMode: RenderMode;
+   uMaxChroma: number;
 }
 
 /**
@@ -65,6 +66,7 @@ let ToScreenUniforms: IToScreenUniforms = {
    uXOffset: 0.0,
    uYOffset: 0.0,
    uMode: 0,
+   uMaxChroma: 1.0,
 }
 
 export class PathTracer {
@@ -75,9 +77,9 @@ export class PathTracer {
    private textures: WebGLTexture[];
    private renderProgram: WebGLProgram;
    private renderVertexAttribute: number;
-   private sampleCount: number;
    private tracerProgram: WebGLProgram;
    private tracerVertexAttribute: number;
+   private pixels: Float32Array;
 
    private mainView = RenderMode.Color;
    private smallViews = [RenderMode.Chroma, RenderMode.Value];
@@ -127,14 +129,14 @@ export class PathTracer {
       this.renderVertexAttribute = gl.getAttribLocation(this.renderProgram, 'vertex');
       gl.enableVertexAttribArray(this.renderVertexAttribute);
 
-      this.sampleCount = 0;
       this.tracerProgram = Shaders.compileShader(toTextureVertexSource, toTextureFragmentSource);
       this.tracerVertexAttribute = gl.getAttribLocation(this.tracerProgram, 'vertex');
       gl.enableVertexAttribArray(this.tracerVertexAttribute);
    };
 
    public restart(): void {
-      this.sampleCount = 0;
+      Uniforms.uSample = 0;
+      Uniforms.uPass = 0;
    }
 
    public updateTexture(modelviewProjection: glMat4, timeSinceStart: number): void {
@@ -153,7 +155,7 @@ export class PathTracer {
       Uniforms.uRay10 = Shaders.getEyeRay(matrix, +1, -1);
       Uniforms.uRay11 = Shaders.getEyeRay(matrix, +1, +1);
       Uniforms.uTimeSinceStart = timeSinceStart;
-      Uniforms.uTextureWeight = this.sampleCount / (this.sampleCount + 1);
+      Uniforms.uTextureWeight = Uniforms.uSample / (Uniforms.uSample + 1);
 
       // set uniforms
       gl.useProgram(this.tracerProgram);
@@ -166,15 +168,55 @@ export class PathTracer {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.textures[1], 0);
+
       gl.vertexAttribPointer(this.tracerVertexAttribute, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      ToScreenUniforms.uMaxChroma = this.getMaxChroma();
+
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
       // ping pong textures
       this.textures.reverse();
-      this.sampleCount++;
+
+      Uniforms.uPass++;
+      if (Uniforms.uPass == Uniforms.uNumPasses) {
+         Uniforms.uPass = 0;
+         Uniforms.uSample++;
+      }
    };
 
+   private getMaxChroma(): number {
+      let size = Uniforms.uTextureSize;
+
+      if (this.pixels === undefined) {
+         this.pixels = new Float32Array(size * size * 4);
+      }
+
+      //      let t1 = window.performance.now();
+      gl.readPixels(0, 0, Uniforms.uTextureSize, Uniforms.uTextureSize, gl.RGBA, gl.FLOAT, this.pixels);
+      let maxChroma = 0;
+
+      for (let row = 0; row < size; row++) {
+         for (let col = 0; col < size; col++) {
+            let index = (row * size + col) * 4;
+            let r = this.pixels[index + 0];
+            let g = this.pixels[index + 1];
+            let b = this.pixels[index + 2];
+            let avg = (r + g + b) / 3;
+            let chroma = (Math.abs(r - avg) + Math.abs(g - avg) + Math.abs(b - avg)) / (4 / 3);
+
+            if (chroma > maxChroma) {
+               maxChroma = chroma;
+            }
+         }
+      }
+
+      //      let t2 = window.performance.now();
+      //      console.log((t2 - t1) + " ms " + maxChroma);
+
+      return maxChroma;
+   }
    public displayTexture(): void {
 
       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -202,16 +244,16 @@ export class PathTracer {
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
       // display the smaller views
-      ToScreenUniforms.uScale = 0.2;
-      ToScreenUniforms.uXOffset = 0.4;
-      ToScreenUniforms.uYOffset = 0.8;
+      ToScreenUniforms.uScale = 0.25;
+      ToScreenUniforms.uXOffset = 0.25;
+      ToScreenUniforms.uYOffset = 0.75;
       ToScreenUniforms.uMode = this.smallViews[0];
       Shaders.setUniforms(this.renderProgram, ToScreenUniforms);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      ToScreenUniforms.uScale = 0.2;
-      ToScreenUniforms.uXOffset = 0.8;
-      ToScreenUniforms.uYOffset = 0.8;
+      ToScreenUniforms.uScale = 0.25;
+      ToScreenUniforms.uXOffset = 0.75;
+      ToScreenUniforms.uYOffset = 0.75;
       ToScreenUniforms.uMode = this.smallViews[1];
       Shaders.setUniforms(this.renderProgram, ToScreenUniforms);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);

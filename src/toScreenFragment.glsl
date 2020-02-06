@@ -2,6 +2,7 @@ precision highp float;
 varying vec2 texCoord;
 uniform sampler2D uTexture;
 uniform int uMode;
+uniform float uMaxChroma;
 
 #define MODE_COLOR 0
 #define MODE_VALUE 1
@@ -71,7 +72,7 @@ void main()
    {
       vec4 color = texture2D(uTexture, texCoord);
       //      float rgb = 0.3 * color.x + 0.59 * color.y + 0.11 * color.z;
-      float rgb = (color.x + color.y + color.z) / 3.0;
+      float rgb = clamp((color.r + color.g + color.b) / 3.0, 0.0, 1.0);
       gl_FragColor = vec4(rgb, rgb, rgb, 1.0);
    }
    else if (uMode == MODE_CHROMA)
@@ -83,9 +84,9 @@ void main()
       else
       {
          vec4 color = texture2D(uTexture, texCoord);
-         float avg = (color.x + color.y + color.z) / 3.0;
-         float rgb = (abs(avg - color.x) + abs(avg - color.y) + abs(avg - color.z)) / (4.0 / 3.0);
-         gl_FragColor = value2Color(rgb);
+         float avg = (color.r + color.g + color.b) / 3.0;
+         float rgb = (abs(avg - color.r) + abs(avg - color.g) + abs(avg - color.b)) / (4.0 / 3.0);
+         gl_FragColor = value2Color(rgb / uMaxChroma);
       }
    }
    else

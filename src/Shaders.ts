@@ -20,6 +20,9 @@ interface IUniforms {
    uRay01: glVec3,
    uRay10: glVec3,
    uRay11: glVec3,
+   uPass: number,
+   uSample: number,
+   uNumPasses: number,
    [propName: string]: any
 }
 
@@ -33,13 +36,16 @@ export var Uniforms: IUniforms = {
    uAmbientLightIntensity: 0.3,
    uBallColor: new glColor([0.5, 0.5, 0.8]),
    uEye: new glVec3([0, 0, 0]),
-   uTextureSize: 512,
+   uTextureSize: 256,
    uTextureWeight: 0,
    uTimeSinceStart: 0,
    uRay00: new glVec3([0, 0, 0]),
    uRay01: new glVec3([0, 0, 0]),
    uRay10: new glVec3([0, 0, 0]),
    uRay11: new glVec3([0, 0, 0]),
+   uPass: 0.0,
+   uNumPasses: 1.0,
+   uSample: 0.0,
 }
 
 export class Shaders {
