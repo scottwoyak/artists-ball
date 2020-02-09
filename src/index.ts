@@ -7,7 +7,7 @@ import { glColor } from "./glColor";
 import { htmlColor } from "./htmlColor";
 
 let app: App;
-export let gl: WebGL2RenderingContext = null;
+export let gl: WebGLRenderingContext | WebGL2RenderingContext = null;
 export let canvas: HTMLCanvasElement;
 let gradientStr;
 
@@ -60,13 +60,17 @@ var oldY: number;
 
 window.onload = function () {
    canvas = document.getElementById('canvas') as HTMLCanvasElement;
-   try {
-      gl = canvas.getContext('webgl2') as WebGL2RenderingContext;
-   } catch (e) {
-      console.log("Unable to get WebGL2 context");
+   gl = canvas.getContext('webgl2') as WebGL2RenderingContext;
+
+   if (!gl) {
+      gl = canvas.getContext('webgl') as WebGLRenderingContext;
    }
 
-   if (gl) {
+   if (!gl) {
+      // TODO display a message about not being able to create a WebGL context
+      console.log("Unable to get WebGL context");
+   }
+   else {
       app = new App();
 
       canvas.ontouchstart = function (event: TouchEvent) {
