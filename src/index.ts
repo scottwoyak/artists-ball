@@ -37,7 +37,7 @@ function component() {
       '<input id="intensityRange" type="range" min="0" max="100" value="50" class="slider">\n' +
       '<br />\n' +
       '<label for="temperatureRange">Light Color</label>\n' +
-      '<input id="temperatureRange" type="range" min="2000" max="8000" value="' + LightColors.daylight.temperature + '" class="slider">\n' +
+      '<input id="temperatureRange" type="range" min="2000" max="10000" value="' + LightColors.daylight.temperature + '" class="slider">\n' +
       '<span id="temperatureSpan">' + LightColors.daylight.temperature + '</span>\n' +
       '<br>\n' +
       '<label for="ballColorRange">Ball Color</label>\n' +

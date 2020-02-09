@@ -223,7 +223,7 @@ vec3 calculateColor(vec3 origin, vec3 ray)
             vec3 n2l = normalize(toLight);
             vec3 n2e = normalize(toEye);
             vec3 bisector = (n2l + n2e) / length(n2l + n2e);
-            float specularCoefficient = 0.9;
+            float specularCoefficient = 0.5;
             float shininess = 100.0;
             float specular = specularCoefficient * pow(max(0.0, dot(bisector, normal)), shininess);
 
@@ -236,7 +236,10 @@ vec3 calculateColor(vec3 origin, vec3 ray)
             accumulatedColor += colorMask * Lights[i].color * lightIntensity * diffuse;
 
             // TODO define a color mask for specular reflection
-            accumulatedColor += colorMask * Lights[i].color * lightIntensity * specular;
+            //            accumulatedColor += mix(surfaceColor, Lights[i].color, 0.8) *
+            //            lightIntensity * specular;
+            accumulatedColor +=
+                (length(surfaceColor) * Lights[i].color) * lightIntensity * specular;
          }
       }
 
