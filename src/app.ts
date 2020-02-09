@@ -70,10 +70,10 @@ export class App {
 
    public tick() {
 
-      this.count++;
       let timeSinceStart = ((new Date()).getTime() - this.start) * 0.001;
 
       if (this.count < 150) {
+         this.count++;
          Uniforms.uEye.set(0, zoomZ * Math.sin(angleY) * Math.cos(angleX));
          Uniforms.uEye.set(1, zoomZ * Math.sin(angleX));
          Uniforms.uEye.set(2, zoomZ * Math.cos(angleY) * Math.cos(angleX));
@@ -84,8 +84,5 @@ export class App {
 
       requestAnimationFrame(() => this.tick());
    }
-
-
-
 }
 
