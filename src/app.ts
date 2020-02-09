@@ -2,7 +2,7 @@ import { glVec3 } from "./glVec";
 import { Uniforms } from "./Shaders";
 import { PathTracer } from "./PathTracer";
 import { glMat4 } from "./glMat";
-import { zoomZ, angleY, angleX } from "./index";
+import { zoomZ, angleY, angleX, canvas } from "./index";
 
 export class App {
    public tracer = new PathTracer();
@@ -15,6 +15,32 @@ export class App {
    constructor() {
       this.start = new Date().getTime();
       requestAnimationFrame(() => this.tick());
+   }
+
+   /**
+    * Processes a click/touch event at the designated coordinates. If a hit
+    * occurs, the clicked on view is swapped for the primary view and true
+    * is returned. If no hit occurs, false is returned.
+    * 
+    * @param x The x coordinate.
+    * @param y The y coordinate.
+    * @returns true if a hit on one of the views occurs.
+    */
+   public click(x: number, y: number): boolean {
+      let size = canvas.width / 4;
+
+      if (y < size) {
+         if (x > canvas.width - size) {
+            this.swap(1);
+            return true;
+         }
+         else if (x > canvas.width - 2 * size) {
+            this.swap(0);
+            return true;
+         }
+      }
+
+      return false;
    }
 
    public updateTexture(timeSinceStart: number) {

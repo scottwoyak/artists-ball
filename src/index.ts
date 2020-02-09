@@ -8,7 +8,7 @@ import { htmlColor } from "./htmlColor";
 
 let app: App;
 export let gl: WebGL2RenderingContext = null;
-let canvas: HTMLCanvasElement;
+export let canvas: HTMLCanvasElement;
 let gradientStr;
 
 export let angleX = 0;
@@ -72,19 +72,11 @@ window.onload = function () {
       canvas.ontouchstart = function (event: TouchEvent) {
          event.preventDefault();
          if (event.touches.length === 1) {
-            let size = canvas.width / 4;
 
             let x = event.touches[0].clientX;
             let y = event.touches[0].clientY;
-            if (y < size) {
-               if (x > canvas.width - size) {
-                  app.swap(1);
-                  return;
-               }
-               else if (x > canvas.width - 2 * size) {
-                  app.swap(0);
-                  return;
-               }
+            if (app.click(x, y)) {
+               return;
             }
 
             mouseDown = true;
@@ -123,16 +115,7 @@ window.onload = function () {
       };
 
       canvas.onclick = function (event: MouseEvent) {
-         let size = canvas.width / 4;
-
-         if (event.y < size) {
-            if (event.x > canvas.width - size) {
-               app.swap(1);
-            }
-            else if (event.x > canvas.width - 2 * size) {
-               app.swap(0);
-            }
-         }
+         app.click(event.x, event.y);
       }
    }
 }
