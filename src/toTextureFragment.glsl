@@ -109,16 +109,16 @@ vec3 uniformlyRandomVector(float seed)
    return uniformlyRandomDirection(seed) * sqrt(random(vec3(36.7539, 50.3658, 306.2759), seed));
 }
 
-float shadow(vec3 origin, vec3 ray)
+bool inShadow(vec3 origin, vec3 ray)
 {
    float tSphere = intersectSphere(origin, ray, SPHERE_CENTER, SPHERE_RADIUS);
    if (tSphere < 1.0)
    {
-      return 0.0;
+      return true;
    }
    else
    {
-      return 1.0;
+      return false;
    }
 }
 
@@ -126,6 +126,7 @@ vec3 calculateColor(vec3 origin, vec3 ray)
 {
    vec3 accumulatedColor = vec3(0.0);
    vec3 colorMask = vec3(1.0);
+   vec3 eye = origin;
 
    // main raytracing loop
    for (int bounce = 0; bounce < MAX_BOUNCES; bounce++)
@@ -140,8 +141,7 @@ vec3 calculateColor(vec3 origin, vec3 ray)
          // simulates displaying the light
          for (int i = 0; i < NUM_LIGHTS; i++)
          {
-            vec3 lightPos = Lights[i].pos;
-            if (intersectSphere(origin, ray, lightPos, Lights[i].size) < tSphere)
+            if (intersectSphere(origin, ray, Lights[i].pos, Lights[i].size) < tSphere)
             {
                return Lights[i].intensity * Lights[i].color;
             }
@@ -193,18 +193,12 @@ vec3 calculateColor(vec3 origin, vec3 ray)
       }
       else if (t == tDome)
       {
-         normal = normalForSphere(hit, DOME_CENTER, DOME_RADIUS);
-         // normal = -normalForSphere(hit, DOME_CENTER, DOME_RADIUS);
-         normal[0] = -normal[0];
-         normal[1] = -normal[1];
-         normal[2] = -normal[2];
+         normal = -normalForSphere(hit, DOME_CENTER, DOME_RADIUS);
       }
       else
       {
          break;
       }
-
-      ray = cosineWeightedDirection(uTimeSinceStart + float(bounce), normal);
 
       colorMask *= surfaceColor;
 
@@ -215,29 +209,40 @@ vec3 calculateColor(vec3 origin, vec3 ray)
 
       for (int i = 0; i < NUM_LIGHTS; i++)
       {
-         float lightIntensity = Lights[i].intensity;
-         vec3 lightPos = Lights[i].pos;
-         vec3 lightColor = Lights[i].color;
-
          // compute diffuse lighting contribution
-         vec3 toLight = lightPos - hit;
-         float diffuse = max(0.0, dot(normalize(toLight), normal));
+         vec3 toLight = Lights[i].pos - hit;
 
          // trace a shadow ray to the light
-         float shadowIntensity = shadow(hit + normal * EPSILON, toLight);
+         if (inShadow(hit + normal * EPSILON, toLight) == false)
+         {
+            // diffuse component
+            float diffuse = max(0.0, dot(normalize(toLight), normal));
 
-         // do light bounce
+            // specular component
+            vec3 toEye = eye - hit;
+            vec3 n2l = normalize(toLight);
+            vec3 n2e = normalize(toEye);
+            vec3 bisector = (n2l + n2e) / length(n2l + n2e);
+            float specularCoefficient = 0.9;
+            float shininess = 100.0;
+            float specular = specularCoefficient * pow(max(0.0, dot(bisector, normal)), shininess);
 
-         // apply light fall off as distance squares. Use a min value for the
-         // light size
-         float radius = max(0.75, Lights[i].size);
-         float dist = max(1.0, (length(toLight) - radius) / radius);
+            // apply light fall off as distance squares. Use a min value for the
+            // light size otherwise falloff is too rapid
+            float radius = max(0.75, Lights[i].size);
+            float dist = max(1.0, (length(toLight) - radius) / radius);
+            float lightIntensity = Lights[i].intensity / (dist * dist);
 
-         accumulatedColor +=
-             colorMask * lightColor * (lightIntensity / (dist * dist) * diffuse * shadowIntensity);
+            accumulatedColor += colorMask * Lights[i].color * lightIntensity * diffuse;
+
+            // TODO define a color mask for specular reflection
+            accumulatedColor += colorMask * Lights[i].color * lightIntensity * specular;
+         }
       }
 
       // calculate next origin
+      ray = cosineWeightedDirection(uTimeSinceStart + float(bounce), normal);
+
       origin = hit;
    }
 
@@ -259,18 +264,18 @@ void main()
       return;
    }
 
-   vec3 rand = uniformlyRandomVector(uTimeSinceStart - 53.0) * LIGHT_SIZE;
+   vec3 rand = uniformlyRandomVector(uTimeSinceStart) * LIGHT_SIZE;
 
    Lights[0].intensity = uLightIntensity;
    Lights[0].size = LIGHT_SIZE;
-   Lights[0].pos = vec3(uLightPos.x + rand.x, uLightPos.y + rand.y, uLightPos.z + rand.z);
-   Lights[0].color = vec3(uLightColor.x, uLightColor.y, uLightColor.z);
+   Lights[0].pos = uLightPos + rand;
+   Lights[0].color = uLightColor;
 
    for (int i = 1; i < NUM_LIGHTS; i++)
    {
-      float x = RADIUS * sin(2.0 * PI * float(i) / (float(NUM_LIGHTS) - 1.0)) + +rand.x;
-      float y = HEIGHT + +rand.y;
-      float z = RADIUS * cos(2.0 * PI * float(i) / (float(NUM_LIGHTS) - 1.0)) + +rand.z;
+      float x = RADIUS * sin(2.0 * PI * float(i) / (float(NUM_LIGHTS) - 1.0)) + rand.x;
+      float y = HEIGHT + rand.y;
+      float z = RADIUS * cos(2.0 * PI * float(i) / (float(NUM_LIGHTS) - 1.0)) + rand.z;
 
       Lights[i].intensity = uAmbientLightIntensity;
       Lights[i].size = 2.0 * LIGHT_SIZE;
