@@ -1,12 +1,28 @@
 import { Color } from "./Color";
 
+/**
+ * Interpolates and array of colors
+ */
 export class ColorRange {
+   /**
+    * The colors
+    */
    private colors: Color[];
 
+   /**
+    * Constructor
+    * 
+    * @param colors The colors to interpolate
+    */
    public constructor(colors: Color[]) {
       this.colors = colors;
    }
 
+   /**
+    * Gets an interpolated color.
+    * 
+    * @param value A value between 0 and 1.
+    */
    public get(value: number): Color {
 
       if (value < 0) {

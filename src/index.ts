@@ -1,10 +1,10 @@
 import { Uniforms } from "./Shaders";
 import { App } from "./app";
 import './styles.css';
-import { LightColors } from "./LightColors";
 import { ColorRange } from "./ColorRange";
 import { glColor } from "./glColor";
 import { htmlColor } from "./htmlColor";
+import { glColorWithTemperature } from "./glColorWithTemperature";
 
 let app: App;
 export let gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -37,8 +37,8 @@ function component() {
       '<input id="intensityRange" type="range" min="0" max="100" value="50" class="slider">\n' +
       '<br />\n' +
       '<label for="temperatureRange">Light Color</label>\n' +
-      '<input id="temperatureRange" type="range" min="2000" max="10000" value="' + LightColors.daylight.temperature + '" class="slider">\n' +
-      '<span id="temperatureSpan">' + LightColors.daylight.temperature + '</span>\n' +
+      '<input id="temperatureRange" type="range" min="2000" max="10000" value="' + glColorWithTemperature.daylight.temperature + '" class="slider">\n' +
+      '<span id="temperatureSpan">' + glColorWithTemperature.daylight.temperature + '</span>\n' +
       '<br>\n' +
       '<label for="ballColorRange">Ball Color</label>\n' +
       '<input id="ballColorRange" type="range" min="0" max="100" value="50" class="slider">\n' +
@@ -159,7 +159,7 @@ for (let i = 0; i < 10; i++) {
    let min = parseFloat(temperatureSlider.min);
    let max = parseFloat(temperatureSlider.max);
    let temp = min + (i / 9) * (max - min);
-   gradientStr += ', ' + LightColors.toRGB(temp).toHtmlColor().toHex();
+   gradientStr += ', ' + glColorWithTemperature.create(temp).toHtmlColor().toHex();
 }
 temperatureSlider.style.background = 'linear-gradient(' + gradientStr + ')';
 
@@ -168,7 +168,7 @@ temperatureSlider.oninput = setLightColor
 
 function setLightColor() {
    let temperature = parseFloat(temperatureSlider.value);
-   let lightColor = LightColors.toRGB(temperature);
+   let lightColor = glColorWithTemperature.create(temperature);
    Uniforms.uLightColor = lightColor;
    let span = document.getElementById("temperatureSpan") as HTMLSpanElement;
    span.innerText = temperature.toFixed() + "K";
