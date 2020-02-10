@@ -27,6 +27,14 @@ let skinTones = [
    //   new htmlColor([38, 7, 1])
 ];
 
+/*
+let skinTones = [
+   new htmlColor([255, 147, 41]),
+   new htmlColor([255, 255, 255]),
+   new htmlColor([64, 156, 255]),
+];
+*/
+
 function component() {
    const element = document.createElement('div');
 

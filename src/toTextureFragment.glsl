@@ -30,6 +30,7 @@ const int NUM_LIGHTS = 6;
 const float HEIGHT = 4.0;
 const float RADIUS = 4.0;
 const float PI = 3.14159265;
+bool ballHit = false;
 
 struct Light
 {
@@ -171,6 +172,11 @@ vec3 calculateColor(vec3 origin, vec3 ray)
       {
          surfaceColor = vec3(uBallColor);
          t = tSphere;
+
+         if (bounce == 0)
+         {
+            ballHit = true;
+         }
       }
       else if (tDome < t)
       {
@@ -288,4 +294,9 @@ void main()
 
    vec3 texture2 = texture2D(uTexture, gl_FragCoord.xy / uTextureSize).rgb;
    gl_FragColor = vec4(mix(calculateColor(uEye, initialRay), texture2, uTextureWeight), 1.0);
+
+   if (ballHit)
+   {
+      gl_FragColor.a = 0.999;
+   }
 }

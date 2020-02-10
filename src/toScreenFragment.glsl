@@ -84,9 +84,17 @@ void main()
       else
       {
          vec4 color = texture2D(uTexture, texCoord);
-         float avg = (color.r + color.g + color.b) / 3.0;
-         float rgb = (abs(avg - color.r) + abs(avg - color.g) + abs(avg - color.b)) / (4.0 / 3.0);
-         gl_FragColor = value2Color(rgb / uMaxChroma);
+         if (color.a == 0.999)
+         {
+            float avg = (color.r + color.g + color.b) / 3.0;
+            float rgb =
+                (abs(avg - color.r) + abs(avg - color.g) + abs(avg - color.b)) / (4.0 / 3.0);
+            gl_FragColor = value2Color(rgb / uMaxChroma);
+         }
+         else
+         {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+         }
       }
    }
    else

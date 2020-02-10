@@ -193,6 +193,13 @@ export class PathTracer {
             let r = this.pixels[index + 0];
             let g = this.pixels[index + 1];
             let b = this.pixels[index + 2];
+            let a = this.pixels[index + 3];
+
+            // ignore values that are not part of the ball
+            if (a === 1) {
+               continue;
+            }
+
             let avg = (r + g + b) / 3;
             let chroma = (Math.abs(r - avg) + Math.abs(g - avg) + Math.abs(b - avg)) / (4 / 3);
 
