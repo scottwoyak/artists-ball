@@ -297,6 +297,6 @@ void main()
 
    if (ballHit)
    {
-      gl_FragColor.a = 0.999;
+      gl_FragColor.a = 2.0;
    }
 }

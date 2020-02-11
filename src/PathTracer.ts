@@ -72,12 +72,24 @@ export class PathTracer {
 
       let internalFormat: number;
       let format: number;
+      let type: number;
 
       // create textures
       if (gl instanceof WebGLRenderingContext) {
-         gl.getExtension('OES_texture_float');
-         internalFormat = gl.RGBA;
-         format = gl.RGBA;
+         let ext = gl.getExtension('OES_texture_half_float');
+         ext = null;
+         if (ext) {
+            // Thanks Apple. Always got to do things a little differently
+            internalFormat = gl.RGBA;
+            format = gl.RGBA;
+            type = ext.HALF_FLOAT_OES;
+         }
+         else {
+            // No floating point textures? really fall back to unsigned bytes
+            internalFormat = gl.RGBA;
+            format = gl.RGBA;
+            type = gl.UNSIGNED_BYTE;
+         }
       }
 
       // Typescript doesn't let you do an 'else if' here and when WebGL2 is
@@ -88,6 +100,7 @@ export class PathTracer {
             gl.getExtension('EXT_color_buffer_float');
             internalFormat = gl.RGBA32F;
             format = gl.RGBA;
+            type = gl.FLOAT
          }
       }
       catch (error) {
@@ -108,7 +121,7 @@ export class PathTracer {
             Uniforms.uTextureSize,  // height
             0,                      // border
             format,                 // format
-            gl.FLOAT,               // type
+            type,                   // type
             null                    // pixels
          );
       }
@@ -184,6 +197,7 @@ export class PathTracer {
       }
 
       //      let t1 = window.performance.now();
+      // TODO handle case when the text type is UNSIGNED_BYTE
       gl.readPixels(0, 0, Uniforms.uTextureSize, Uniforms.uTextureSize, gl.RGBA, gl.FLOAT, this.pixels);
       let maxChroma = 0;
 

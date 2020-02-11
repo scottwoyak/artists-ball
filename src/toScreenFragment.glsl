@@ -84,7 +84,7 @@ void main()
       else
       {
          vec4 color = texture2D(uTexture, texCoord);
-         if (color.a == 0.999)
+         if (color.a == 2.0)
          {
             float avg = (color.r + color.g + color.b) / 3.0;
             float rgb =
