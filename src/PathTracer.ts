@@ -77,7 +77,6 @@ export class PathTracer {
       // create textures
       if (gl instanceof WebGLRenderingContext) {
          let ext = gl.getExtension('OES_texture_half_float');
-         ext = null;
          if (ext) {
             // Thanks Apple. Always got to do things a little differently
             internalFormat = gl.RGBA;
