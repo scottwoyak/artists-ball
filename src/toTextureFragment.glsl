@@ -273,7 +273,8 @@ void main()
       return;
    }
 
-   vec3 rand = uniformlyRandomVector(uTimeSinceStart) * LIGHT_SIZE;
+   //   vec3 rand = uniformlyRandomVector(uTimeSinceStart) * LIGHT_SIZE;
+   vec3 rand = uniformlyRandomVector(uSample) * LIGHT_SIZE;
 
    Lights[0].intensity = uLightIntensity;
    Lights[0].size = LIGHT_SIZE;
