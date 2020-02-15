@@ -11,7 +11,9 @@ export interface ISliderSetup {
    min: number,
    max: number,
    value: number,
-   colors: htmlColor[]
+   colors: htmlColor[],
+   oninput?: () => void,
+   getText?: (slider: Slider) => string,
 }
 
 /**
@@ -23,12 +25,15 @@ export class Slider {
    private _colorSpan: HTMLSpanElement;
    private _valueSpan: HTMLSpanElement;
    private _colors: ColorRange;
+   private _getText: (slider: Slider) => string;
 
    /**
     * @param parent The parent html object.
     * @param setup The setup data object
     */
    public constructor(parent: HTMLElement, setup: ISliderSetup) {
+      this._getText = setup.getText;
+
       let label = document.createElement('label');
       label.id = setup.id + 'Label';
       label.className = 'SliderLabel';
@@ -58,6 +63,8 @@ export class Slider {
 
       // set the initial color
       this.colors = setup.colors;
+
+      this._range.oninput = setup.oninput;
    }
 
    /**
@@ -67,6 +74,9 @@ export class Slider {
       let val = (this.value - this.min) / (this.max - this.min);
       let color = htmlColor.fromColor(this._colors.get(val));
       this._colorSpan.style.backgroundColor = color.toHex()
+      if (this._getText) {
+         this._valueSpan.innerText = this._getText(this);
+      }
    }
 
    /**
@@ -103,15 +113,6 @@ export class Slider {
     */
    public get max(): number {
       return parseFloat(this._range.max);
-   }
-
-   /**
-    * Sets the slider text value.
-    *
-    * @value The slider text value.
-    */
-   public set text(value: string) {
-      this._valueSpan.innerText = value;
    }
 
    /**

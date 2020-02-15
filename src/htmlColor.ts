@@ -1,6 +1,5 @@
 import { Color } from "./Color";
 import { glColor } from "./glColor";
-import { hsvColor } from "./hsvColor";
 
 /**
  * Color class that requires RGB values to be between 0 and 255
@@ -99,6 +98,16 @@ export class htmlColor extends Color {
       else {
          return val;
       }
+   }
+
+   /**
+    * Converts this color to an equivalent gray-scale color
+    * 
+    * @returns The gray-scale color.
+    */
+   public toGray(): htmlColor {
+      let rgb = Math.round((this.r + this.g + this.b) / 3);
+      return new htmlColor([rgb, rgb, rgb]);
    }
 
    /**
