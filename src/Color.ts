@@ -1,3 +1,4 @@
+
 /**
  * Class for representing color values. Values may be on a 0-1 or 0-255 scale.
  */

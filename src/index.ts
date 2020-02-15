@@ -5,11 +5,11 @@ import { ColorRange } from "./ColorRange";
 import { glColor } from "./glColor";
 import { htmlColor } from "./htmlColor";
 import { glColorWithTemperature } from "./glColorWithTemperature";
+import { Slider } from "./Slider";
 
 let app: App;
 export let gl: WebGLRenderingContext | WebGL2RenderingContext = null;
 export let canvas: HTMLCanvasElement;
-let gradientStr;
 
 export let angleX = 0;
 export let angleY = 0;
@@ -35,10 +35,133 @@ let skinTones = [
 ];
 */
 
-function component() {
-   const element = document.createElement('div');
 
-   element.innerHTML =
+function component(): HTMLElement {
+   const div = document.createElement('div');
+
+   let canvas = document.createElement('canvas');
+   canvas.id = 'canvas';
+   div.appendChild(canvas);
+   div.appendChild(document.createElement('br'));
+
+   let intensitySlider = new Slider(div, {
+      id: 'LightIntensity',
+      label: 'Light Intensity',
+      min: 0,
+      max: 100,
+      value: Uniforms.uLightIntensity * 100,
+      colors: [htmlColor.black, htmlColor.white],
+   });
+
+   setIntensitySpanColor();
+   intensitySlider.range.value = "" + Uniforms.uLightIntensity * 100;
+   /*
+   intensitySlider.range.oninput = function () {
+      Uniforms.uLightIntensity = intensitySlider.value / 100;
+      setIntensitySpanColor();
+      app.restart();
+   }
+   */
+
+   function setIntensitySpanColor() {
+      let r = Math.round(255 * Uniforms.uLightColor.r * Uniforms.uLightIntensity);
+      let g = Math.round(255 * Uniforms.uLightColor.g * Uniforms.uLightIntensity);
+      let b = Math.round(255 * Uniforms.uLightColor.b * Uniforms.uLightIntensity);
+      intensitySlider.color = new htmlColor([r, g, b]);
+   }
+   div.appendChild(document.createElement('br'));
+
+   let min = 2000;
+   let max = 10000;
+   let colors: htmlColor[] = [];
+   for (let i = 0; i < 10; i++) {
+      let temp = min + (i / 9) * (max - min);
+      colors.push(glColorWithTemperature.create(temp).toHtmlColor());
+   }
+   let lightColorSlider = new Slider(div, {
+      id: 'LightColor',
+      label: 'Light Color',
+      min: 2000,
+      max: 10000,
+      value: glColorWithTemperature.daylight.temperature,
+      colors: colors,
+   });
+
+
+   setLightColor();
+   setLightColorSpanColor();
+   lightColorSlider.range.oninput = setLightColor
+
+   function setLightColor() {
+      let temperature = lightColorSlider.value;
+      let lightColor = glColorWithTemperature.create(temperature);
+      Uniforms.uLightColor = lightColor;
+      lightColorSlider.text = temperature.toFixed() + "K";
+
+      intensitySlider.background = 'linear-gradient(90deg, black, ' + lightColor.toHtmlColor().toHex() + ')';
+      setLightColorSpanColor();
+
+      if (app) {
+         app.restart();
+      }
+   }
+
+   function setLightColorSpanColor() {
+      lightColorSlider.color = Uniforms.uLightColor.toHtmlColor();
+      setIntensitySpanColor();
+   }
+
+
+   div.appendChild(document.createElement('br'));
+
+   let skinColorRange = new ColorRange(skinTones);
+   let ballColorSlider = new Slider(div, {
+      id: 'BallColor',
+      label: 'Ball Color',
+      min: 0,
+      max: 100,
+      value: 50,
+      colors: skinTones,
+   });
+
+   setBallColorSpanColor();
+   setBallColor();
+   ballColorSlider.range.oninput = setBallColor
+
+   function setBallColor() {
+      let color = skinColorRange.get(ballColorSlider.value / 100.0);
+      Uniforms.uBallColor = new glColor([color.r / 255, color.g / 255, color.b / 255]);
+
+      setBallColorSpanColor();
+
+      if (app) {
+         app.restart();
+      }
+   }
+
+   function setBallColorSpanColor() {
+      ballColorSlider.color = Uniforms.uBallColor.toHtmlColor();
+   }
+
+
+   div.appendChild(document.createElement('br'));
+
+   let ambientIntensitySlider = new Slider(div, {
+      id: 'AmbientIntensity',
+      label: 'Ambient Light',
+      min: 0,
+      max: 100,
+      value: Uniforms.uAmbientLightIntensity * 100,
+      colors: [htmlColor.black, htmlColor.white],
+   });
+
+   ambientIntensitySlider.range.oninput = function () {
+      Uniforms.uAmbientLightIntensity = ambientIntensitySlider.value / 100;
+      app.restart();
+   }
+
+   /*
+   div.innerHTML =
       '<canvas id="canvas"></canvas>\n' +
       '<br />\n' +
       '<label>Light Intensity</label>\n' +
@@ -59,8 +182,9 @@ function component() {
       '<span id="ambientIntensitySpan" class="ColorSpan"></span>\n' +
       '<br />\n' +
       '<br />\n';
+      */
 
-   return element;
+   return div;
 }
 
 document.body.appendChild(component());
@@ -154,11 +278,12 @@ function onMove(x: number, y: number) {
    }
 }
 
-let intensitySlider = document.getElementById("intensityRange") as HTMLInputElement;
-intensitySlider.style.background = 'linear-gradient(90deg, black, white)';
+/*
+let intensitySliderX = document.getElementById("intensityRange") as HTMLInputElement;
+intensitySliderX.style.background = 'linear-gradient(90deg, black, white)';
 setIntensityRangeSpanColor();
-intensitySlider.value = "" + Uniforms.uLightIntensity * 100;
-intensitySlider.oninput = function () {
+intensitySliderX.value = "" + Uniforms.uLightIntensity * 100;
+intensitySliderX.oninput = function () {
    Uniforms.uLightIntensity = parseFloat(intensitySlider.value) / 100;
    setIntensityRangeSpanColor();
    app.restart();
@@ -196,7 +321,7 @@ function setLightColor() {
    let span = document.getElementById("temperatureSpan") as HTMLSpanElement;
    span.innerText = temperature.toFixed() + "K";
 
-   intensitySlider.style.background = 'linear-gradient(90deg, black, ' + lightColor.toHtmlColor().toHex() + ')';
+   intensitySliderX.style.background = 'linear-gradient(90deg, black, ' + lightColor.toHtmlColor().toHex() + ')';
    setLightColorSpanColor();
 
    if (app) {
@@ -209,6 +334,25 @@ function setLightColorSpanColor() {
    span.style.backgroundColor = Uniforms.uLightColor.toHtmlColor().toHex();
    setIntensityRangeSpanColor()
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 let skinColorRange = new ColorRange(skinTones);
@@ -239,7 +383,6 @@ function setBallColorSpanColor() {
    span.style.backgroundColor = Uniforms.uBallColor.toHtmlColor().toHex();
 }
 
-
 let ambientIntensitySlider = document.getElementById("ambientIntensityRange") as HTMLInputElement;
 ambientIntensitySlider.style.background = 'linear-gradient(90deg, black, white)';
 ambientIntensitySlider.value = "" + Uniforms.uAmbientLightIntensity * 100;
@@ -255,3 +398,4 @@ function setAmbientIntensitySpanColor() {
    let rgb = Math.round((parseFloat(ambientIntensitySlider.value) / 100) * 255);
    span.style.backgroundColor = (new htmlColor([rgb, rgb, rgb]).toHex());
 }
+*/

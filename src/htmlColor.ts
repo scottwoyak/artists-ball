@@ -7,6 +7,9 @@ import { hsvColor } from "./hsvColor";
  */
 export class htmlColor extends Color {
 
+   public static readonly white = new htmlColor([255, 255, 255]);
+   public static readonly black = new htmlColor([0, 0, 0]);
+
    /**
     * @param color An RGB color array
     */
@@ -64,6 +67,37 @@ export class htmlColor extends Color {
       }
       else {
          return null;
+      }
+   }
+
+   /**
+    * Creates an htmlColor object using values in a Color object.
+    * 
+    * @param color A generic Color object.
+    */
+   public static fromColor(color: Color): htmlColor {
+      let r = htmlColor.clamp(color.r);
+      let g = htmlColor.clamp(color.g);
+      let b = htmlColor.clamp(color.b);
+      return new htmlColor([r, g, b]);
+   }
+
+   /**
+    * Rounds a number to a whole number and clamps it between 0 and 255.
+    * 
+    * @param val The value.
+    * @returns The rounded & clamped value
+    */
+   private static clamp(val: number): number {
+      val = Math.round(val);
+      if (val < 0) {
+         return 0;
+      }
+      else if (val > 255) {
+         return 255;
+      }
+      else {
+         return val;
       }
    }
 

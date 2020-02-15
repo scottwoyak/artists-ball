@@ -6,7 +6,14 @@ body {
   margin: 0px;
 }
 
-.slider {
+.SliderLabel {
+  display: inline-block;
+  width: 25%;
+  text-align: right;
+  padding-bottom: 9px;
+}
+
+.SliderRange {
   width: 50%;
   -webkit-appearance: none;
   outline: none;
@@ -15,7 +22,7 @@ body {
   margin-top: 15px;
   margin-bottom: 10px;
   margin-left: 5px;
-  margin-right: 0px;
+  margin-right: 5px;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3) inset;
   border: gray;
   border-style: solid;
@@ -23,7 +30,7 @@ body {
   vertical-align: bottom;
 }
 
-.slider::-webkit-slider-thumb {
+.SliderRange::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
@@ -36,7 +43,7 @@ body {
   background: linear-gradient(135deg, lightgreen, darkgreen);
 }
 
-.slider::-moz-range-thumb {
+.SliderRange::-moz-range-thumb {
   box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
   width: 20px;
   height: 20px;
@@ -48,55 +55,51 @@ body {
   cursor: pointer;
 }
 
-label {
-  display: inline-block;
-  width: 25%;
-  text-align: right;
-  padding-bottom: 9px;
-}
-
-.ColorSpan {
+.SliderColorSpan {
   display: inline-block;
   vertical-align: text-bottom;
   width: 15px;
   height: 15px;
+  margin-right: 5px;
   border-radius: 50%;
   border: gray;
   border-style: solid;
 }
 
 @media only screen and (max-device-width: 800px) {
-  .slider {
+  .SliderLabel {
+    width: 30%;
+    font-size: 40px;
+    padding-bottom: 22px;
+  }
+
+  .SliderRange {
     width: 45%;
     height: 30px;
     border-radius: 15px;
     margin-top: 30px;
     margin-bottom: 30px;
     margin-left: 10px;
-    margin-right: 5px;
+    margin-right: 20px;
   }
 
-  .slider::-webkit-slider-thumb {
+  .SliderRange::-webkit-slider-thumb {
     width: 40px;
     height: 40px;
   }
 
-  .slider::-moz-range-thumb {
+  .SliderRange::-moz-range-thumb {
     width: 40px;
     height: 40px;
   }
 
-  .ColorSpan {
+  .SliderColorSpan {
     width: 30px;
     height: 30px;
+    margin-right: 10px;
   }
 
-  label {
-    width: 30%;
-    font-size: 40px;
-    padding-bottom: 22px;
-  }
-  #temperatureSpan {
+  .SliderValueSpan {
     font-size: 40px;
     margin-left: 10px;
   }
