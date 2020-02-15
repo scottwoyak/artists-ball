@@ -1,6 +1,10 @@
 import { htmlColor } from "./htmlColor";
 import { ColorRange } from "./ColorRange";
+import { glColor } from "./glColor";
 
+/**
+ * Interface for data passed to the Slider constructor
+ */
 export interface ISliderSetup {
    id: string,
    label: string,
@@ -10,6 +14,9 @@ export interface ISliderSetup {
    colors: htmlColor[]
 }
 
+/**
+ * Class representing a slider composed of a label, input range, color span and value span
+ */
 export class Slider {
 
    private _range: HTMLInputElement;
@@ -17,14 +24,16 @@ export class Slider {
    private _valueSpan: HTMLSpanElement;
    private _colors: ColorRange;
 
+   /**
+    * @param parent The parent html object.
+    * @param setup The setup data object
+    */
    public constructor(parent: HTMLElement, setup: ISliderSetup) {
       let label = document.createElement('label');
       label.id = setup.id + 'Label';
       label.className = 'SliderLabel';
       label.innerText = setup.label;
       parent.appendChild(label);
-
-      this._colors = new ColorRange(setup.colors);
 
       this._range = document.createElement('input');
       this._range.type = 'range';
@@ -33,14 +42,7 @@ export class Slider {
       this._range.min = setup.min.toString();
       this._range.max = setup.max.toString();
       this._range.value = setup.value.toString();
-      this._range.addEventListener('input', () => this.onInput());
-
-      let gradientStr = '90deg';
-      for (let i = 0; i < setup.colors.length; i++) {
-         gradientStr += ', ' + setup.colors[i].toHex();
-      }
-      this._range.style.background = 'linear-gradient(' + gradientStr + ')';
-
+      this._range.addEventListener('input', () => this.updateSpanColor());
       parent.appendChild(this._range);
 
       this._colorSpan = document.createElement('span');
@@ -55,40 +57,101 @@ export class Slider {
       parent.appendChild(this._valueSpan);
 
       // set the initial color
-      this.onInput();
+      this.colors = setup.colors;
    }
 
-   private onInput(): void {
+   /**
+    * Sets the span color to the currently selected color.
+    */
+   private updateSpanColor(): void {
       let val = (this.value - this.min) / (this.max - this.min);
       let color = htmlColor.fromColor(this._colors.get(val));
       this._colorSpan.style.backgroundColor = color.toHex()
    }
 
-   get range(): HTMLInputElement {
+   /**
+    * Gets the html range object
+    * 
+    * @returns The html range object.
+    */
+   public get range(): HTMLInputElement {
       return this._range;
    }
 
-   get value(): number {
+   /**
+    * Gets the current slider value
+    * 
+    * @returns the current slider value
+    */
+   public get value(): number {
       return this._range.valueAsNumber;
    }
 
-   get min(): number {
+   /**
+    * Gets the min slider value.
+    * 
+    * @returns The min slider value.
+    */
+   public get min(): number {
       return parseFloat(this._range.min);
    }
 
-   get max(): number {
+   /**
+    * Gets the max slider value.
+    *
+    * @returns The max slider value.
+    */
+   public get max(): number {
       return parseFloat(this._range.max);
    }
 
-   set color(color: htmlColor) {
-      this._colorSpan.style.backgroundColor = color.toHex();
-   }
-
-   set text(value: string) {
+   /**
+    * Sets the slider text value.
+    *
+    * @value The slider text value.
+    */
+   public set text(value: string) {
       this._valueSpan.innerText = value;
    }
 
-   set background(value: string) {
-      this._range.style.background = value;
+   /**
+    * Sets the color for the slider
+    */
+   public set colors(colors: htmlColor[]) {
+
+      // store the colors
+      this._colors = new ColorRange(colors);
+
+      // build the gradient style for the range object
+      let gradientStr = '90deg';
+      for (let i = 0; i < colors.length; i++) {
+         gradientStr += ', ' + colors[i].toHex();
+      }
+      this._range.style.background = 'linear-gradient(' + gradientStr + ')';
+
+      // update the span color too
+      this.updateSpanColor();
+   }
+
+   /**
+    * Gets the current color as an htmlColor object.
+    *
+    * @returns The current color.
+    */
+   public get htmlColor(): htmlColor {
+      let val = (this.value - this.min) / (this.max - this.min);
+      let color = this._colors.get(val);
+      return htmlColor.fromColor(color);
+   }
+
+   /**
+    * Gets the current color as a glColor object.
+    * 
+    * @returns The current color.
+    */
+   public get glColor(): glColor {
+      let val = (this.value - this.min) / (this.max - this.min);
+      let color = this._colors.get(val);
+      return htmlColor.fromColor(color).toGlColor();
    }
 }

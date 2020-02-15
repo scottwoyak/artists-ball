@@ -28,6 +28,36 @@ export class glColor extends Color {
    }
 
    /**
+    * Creates an glColor object using values in a Color object.
+    * 
+    * @param color A generic Color object.
+    */
+   public static fromColor(color: Color): glColor {
+      let r = glColor.clamp(color.r);
+      let g = glColor.clamp(color.g);
+      let b = glColor.clamp(color.b);
+      return new glColor([r, g, b]);
+   }
+
+   /**
+    * Clamps a number between 0 and 1.
+    * 
+    * @param val The value.
+    * @returns The clamped value
+    */
+   private static clamp(val: number): number {
+      if (val < 0) {
+         return 0;
+      }
+      else if (val > 1) {
+         return 1;
+      }
+      else {
+         return val;
+      }
+   }
+
+   /**
     * Converts this object to an html color object (0-255 based).
     * 
     * @returns An htmlColor object.

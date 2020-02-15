@@ -53,22 +53,12 @@ function component(): HTMLElement {
       colors: [htmlColor.black, htmlColor.white],
    });
 
-   setIntensitySpanColor();
    intensitySlider.range.value = "" + Uniforms.uLightIntensity * 100;
-   /*
    intensitySlider.range.oninput = function () {
       Uniforms.uLightIntensity = intensitySlider.value / 100;
-      setIntensitySpanColor();
       app.restart();
    }
-   */
 
-   function setIntensitySpanColor() {
-      let r = Math.round(255 * Uniforms.uLightColor.r * Uniforms.uLightIntensity);
-      let g = Math.round(255 * Uniforms.uLightColor.g * Uniforms.uLightIntensity);
-      let b = Math.round(255 * Uniforms.uLightColor.b * Uniforms.uLightIntensity);
-      intensitySlider.color = new htmlColor([r, g, b]);
-   }
    div.appendChild(document.createElement('br'));
 
    let min = 2000;
@@ -89,32 +79,20 @@ function component(): HTMLElement {
 
 
    setLightColor();
-   setLightColorSpanColor();
    lightColorSlider.range.oninput = setLightColor
 
    function setLightColor() {
-      let temperature = lightColorSlider.value;
-      let lightColor = glColorWithTemperature.create(temperature);
-      Uniforms.uLightColor = lightColor;
-      lightColorSlider.text = temperature.toFixed() + "K";
-
-      intensitySlider.background = 'linear-gradient(90deg, black, ' + lightColor.toHtmlColor().toHex() + ')';
-      setLightColorSpanColor();
+      Uniforms.uLightColor = lightColorSlider.glColor;
+      lightColorSlider.text = lightColorSlider.value.toFixed() + "K";
+      intensitySlider.colors = [htmlColor.black, lightColorSlider.htmlColor];
 
       if (app) {
          app.restart();
       }
    }
 
-   function setLightColorSpanColor() {
-      lightColorSlider.color = Uniforms.uLightColor.toHtmlColor();
-      setIntensitySpanColor();
-   }
-
-
    div.appendChild(document.createElement('br'));
 
-   let skinColorRange = new ColorRange(skinTones);
    let ballColorSlider = new Slider(div, {
       id: 'BallColor',
       label: 'Ball Color',
@@ -124,25 +102,16 @@ function component(): HTMLElement {
       colors: skinTones,
    });
 
-   setBallColorSpanColor();
    setBallColor();
    ballColorSlider.range.oninput = setBallColor
 
    function setBallColor() {
-      let color = skinColorRange.get(ballColorSlider.value / 100.0);
-      Uniforms.uBallColor = new glColor([color.r / 255, color.g / 255, color.b / 255]);
-
-      setBallColorSpanColor();
+      Uniforms.uBallColor = ballColorSlider.glColor;
 
       if (app) {
          app.restart();
       }
    }
-
-   function setBallColorSpanColor() {
-      ballColorSlider.color = Uniforms.uBallColor.toHtmlColor();
-   }
-
 
    div.appendChild(document.createElement('br'));
 
@@ -159,30 +128,6 @@ function component(): HTMLElement {
       Uniforms.uAmbientLightIntensity = ambientIntensitySlider.value / 100;
       app.restart();
    }
-
-   /*
-   div.innerHTML =
-      '<canvas id="canvas"></canvas>\n' +
-      '<br />\n' +
-      '<label>Light Intensity</label>\n' +
-      '<input id="intensityRange" type="range" min="0" max="100" value="50" class="slider">\n' +
-      '<span id="intensityRangeSpan" class="ColorSpan"></span>\n' +
-      '<br />\n' +
-      '<label for="temperatureRange">Light Color</label>\n' +
-      '<input id="temperatureRange" type="range" min="2000" max="10000" value="' + glColorWithTemperature.daylight.temperature + '" class="slider">\n' +
-      '<span id="lightColorSpan" class="ColorSpan"></span>\n' +
-      '<span id="temperatureSpan">' + glColorWithTemperature.daylight.temperature + '</span>\n' +
-      '<br>\n' +
-      '<label for="ballColorRange">Ball Color</label>\n' +
-      '<input id="ballColorRange" type="range" min="0" max="100" value="50" class="slider">\n' +
-      '<span id="ballColorSpan" class="ColorSpan"></span>\n' +
-      '<br />\n' +
-      '<label for="ambientIntensityRange">Ambient Light</label>\n' +
-      '<input id="ambientIntensityRange" type="range" min="0" max="100" value="50" class="slider">\n' +
-      '<span id="ambientIntensitySpan" class="ColorSpan"></span>\n' +
-      '<br />\n' +
-      '<br />\n';
-      */
 
    return div;
 }
