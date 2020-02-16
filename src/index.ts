@@ -4,6 +4,7 @@ import './styles.css';
 import { htmlColor } from "./htmlColor";
 import { glColorWithTemperature } from "./glColorWithTemperature";
 import { Slider } from "./Slider";
+import { ToScreenUniforms } from "./PathTracer";
 
 let app: App;
 export let gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -114,6 +115,98 @@ function component(): HTMLElement {
          app.restart();
       }
    });
+
+   div.appendChild(document.createElement('br'));
+
+   let groupDiv = document.createElement('div');
+   groupDiv.className = "SliderGroup";
+   let headerDiv = document.createElement('div');
+   headerDiv.className = "SliderHeader";
+   headerDiv.innerText = "Ball in Light";
+   groupDiv.appendChild(headerDiv);
+   div.appendChild(groupDiv);
+
+   let lightChromaSlider = new Slider(groupDiv, {
+      id: 'LightChroma',
+      label: 'Chroma',
+      min: 0,
+      max: 200,
+      value: 100,
+      colors: [htmlColor.red.toGray(), htmlColor.red],
+      oninput: function () {
+         ToScreenUniforms.uBallLightChroma = lightChromaSlider.value / 100;
+         app.restart();
+      },
+      getText: (slider: Slider) => { return slider.value.toFixed() + "%" }
+   })
+
+   groupDiv.appendChild(document.createElement('br'));
+
+   let ballLightShiftSlider = new Slider(groupDiv, {
+      id: 'BallLightShift',
+      label: 'Temperature',
+      min: -90,
+      max: 90,
+      value: 0,
+      colors: [htmlColor.blue, htmlColor.white, htmlColor.orange],
+      oninput: function () {
+         ToScreenUniforms.uBallLightShift = ballLightShiftSlider.value;
+         app.restart();
+      },
+      getText: getTemperatureShiftText,
+   })
+
+   let separator = document.createElement('div');
+   separator.style.height = '2px';
+   div.appendChild(separator);
+
+   groupDiv = document.createElement('div');
+   groupDiv.className = "SliderGroup";
+   headerDiv = document.createElement('div');
+   headerDiv.className = "SliderHeader";
+   headerDiv.innerText = "Ball in Shadow";
+   groupDiv.appendChild(headerDiv);
+   div.appendChild(groupDiv);
+
+   let shadowChromaSlider = new Slider(groupDiv, {
+      id: 'ShadowChroma',
+      label: 'Chroma',
+      min: 0,
+      max: 200,
+      value: 100,
+      colors: [htmlColor.red.toGray(), htmlColor.red],
+      oninput: function () {
+         ToScreenUniforms.uBallShadowChroma = shadowChromaSlider.value / 100;
+         app.restart();
+      },
+      getText: (slider: Slider) => { return slider.value.toFixed() + "%" }
+   })
+
+   groupDiv.appendChild(document.createElement('br'));
+
+   let ballShadowShiftSlider = new Slider(groupDiv, {
+      id: 'BallShadowShift',
+      label: 'Temperature',
+      min: -90,
+      max: 90,
+      value: 0,
+      colors: [htmlColor.blue, htmlColor.white, htmlColor.orange],
+      oninput: function () {
+         ToScreenUniforms.uBallShadowShift = ballShadowShiftSlider.value;
+         app.restart();
+      },
+      getText: getTemperatureShiftText,
+   })
+
+   function getTemperatureShiftText(slider: Slider): string {
+      if (slider.value >= 0) {
+         return '+' + slider.value.toFixed() + " deg"
+      }
+      else {
+         return slider.value.toFixed() + " deg"
+
+      }
+   }
 
    return div;
 }

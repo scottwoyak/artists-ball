@@ -8,6 +8,10 @@ export class htmlColor extends Color {
 
    public static readonly white = new htmlColor([255, 255, 255]);
    public static readonly black = new htmlColor([0, 0, 0]);
+   public static readonly red = new htmlColor([255, 0, 0]);
+   public static readonly green = new htmlColor([0, 255, 0]);
+   public static readonly blue = new htmlColor([0, 0, 255]);
+   public static readonly orange = new htmlColor([255, 165, 0]);
 
    /**
     * @param color An RGB color array

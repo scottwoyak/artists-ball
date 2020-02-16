@@ -15,6 +15,7 @@ enum RenderMode {
    Color = 0,
    Value = 1,
    Chroma = 2,
+   Artist = 3,
 }
 
 /**
@@ -26,19 +27,30 @@ interface IToScreenUniforms {
    uYOffset: number;
    uMode: RenderMode;
    uMaxChroma: number;
+   uBallLightChroma: number;
+   uBallShadowChroma: number;
+   uBallLightShift: number;
+   uBallShadowShift: number;
 }
 
 /**
  * Values that are passed to the shader
  */
-let ToScreenUniforms: IToScreenUniforms = {
+export let ToScreenUniforms: IToScreenUniforms = {
    uScale: 1.0,
    uXOffset: 0.0,
    uYOffset: 0.0,
    uMode: 0,
    uMaxChroma: 1.0,
+   uBallLightChroma: 1.0,
+   uBallShadowChroma: 1.0,
+   uBallLightShift: 0.0,
+   uBallShadowShift: 0.0,
 }
 
+/**
+ * Class that does the work of building the Path Traced texture
+ */
 export class PathTracer {
 
    private vertexBuffer: WebGLBuffer;
@@ -51,8 +63,8 @@ export class PathTracer {
    private tracerVertexAttribute: number;
    private pixels: Float32Array;
 
-   private mainView = RenderMode.Color;
-   private smallViews = [RenderMode.Chroma, RenderMode.Value];
+   private mainView = RenderMode.Artist;
+   private smallViews = [RenderMode.Chroma, RenderMode.Value, RenderMode.Color];
 
    private vertices = [
       -1, -1,
@@ -255,18 +267,13 @@ export class PathTracer {
 
       // display the smaller views
       ToScreenUniforms.uScale = 0.25;
-      ToScreenUniforms.uXOffset = 0.25;
-      ToScreenUniforms.uYOffset = 0.75;
-      ToScreenUniforms.uMode = this.smallViews[0];
-      Shaders.setUniforms(this.renderProgram, ToScreenUniforms);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-      ToScreenUniforms.uScale = 0.25;
-      ToScreenUniforms.uXOffset = 0.75;
-      ToScreenUniforms.uYOffset = 0.75;
-      ToScreenUniforms.uMode = this.smallViews[1];
-      Shaders.setUniforms(this.renderProgram, ToScreenUniforms);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      for (let i = 0; i < this.smallViews.length; i++) {
+         ToScreenUniforms.uXOffset = 1.0 - (this.smallViews.length - i - 0.5) * (2 * ToScreenUniforms.uScale);
+         ToScreenUniforms.uYOffset = 1.0 - ToScreenUniforms.uScale;
+         ToScreenUniforms.uMode = this.smallViews[i];
+         Shaders.setUniforms(this.renderProgram, ToScreenUniforms);
+         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      }
    }
 
    public swap(pos: number): void {

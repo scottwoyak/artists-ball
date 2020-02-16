@@ -27,14 +27,19 @@ export class App {
     * @returns true if a hit on one of the views occurs.
     */
    public click(x: number, y: number): boolean {
+      // TODO handle this within the PathTracer class so that we don't have to hard code view stuff
       let size = canvas.width / 4;
 
       if (y < size) {
-         if (x > canvas.width - size) {
-            this.swap(1);
+         if (x > canvas.width - 1 * size) {
+            this.swap(2);
             return true;
          }
          else if (x > canvas.width - 2 * size) {
+            this.swap(1);
+            return true;
+         }
+         else if (x > canvas.width - 3 * size) {
             this.swap(0);
             return true;
          }

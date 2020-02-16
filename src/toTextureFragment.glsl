@@ -18,8 +18,8 @@ const int MAX_BOUNCES = 100;
 const float EPSILON = 0.0001;
 const float INFINITY = 10000.0;
 const float LIGHT_SIZE = 0.1;
-const vec3 SPHERE_CENTER = vec3(0, -0.5, 0);
-const float SPHERE_RADIUS = 0.5;
+const vec3 BALL_CENTER = vec3(0, -0.5, 0);
+const float BALL_RADIUS = 0.5;
 const vec3 DOME_CENTER = vec3(0, 0, 0);
 const float DOME_RADIUS = 7.0;
 const float VAL = 0.8;
@@ -30,7 +30,6 @@ const int NUM_LIGHTS = 6;
 const float HEIGHT = 4.0;
 const float RADIUS = 4.0;
 const float PI = 3.14159265;
-bool ballHit = false;
 
 struct Light
 {
@@ -112,8 +111,8 @@ vec3 uniformlyRandomVector(float seed)
 
 bool inShadow(vec3 origin, vec3 ray)
 {
-   float tSphere = intersectSphere(origin, ray, SPHERE_CENTER, SPHERE_RADIUS);
-   if (tSphere < 1.0)
+   float tBall = intersectSphere(origin, ray, BALL_CENTER, BALL_RADIUS);
+   if (tBall < 1.0)
    {
       return true;
    }
@@ -123,17 +122,19 @@ bool inShadow(vec3 origin, vec3 ray)
    }
 }
 
-vec3 calculateColor(vec3 origin, vec3 ray)
+vec4 calculateColor(vec3 origin, vec3 ray)
 {
    vec3 accumulatedColor = vec3(0.0);
    vec3 colorMask = vec3(1.0);
    vec3 eye = origin;
+   bool ballHit = false;
+   bool ballShadow = false;
 
    // main raytracing loop
    for (int bounce = 0; bounce < MAX_BOUNCES; bounce++)
    {
       // compute the intersection with everything
-      float tSphere = intersectSphere(origin, ray, SPHERE_CENTER, SPHERE_RADIUS);
+      float tBall = intersectSphere(origin, ray, BALL_CENTER, BALL_RADIUS);
       vec3 surfaceColor = vec3(0.5, 0.5, 0.5);
 
       if (bounce == 0)
@@ -142,9 +143,9 @@ vec3 calculateColor(vec3 origin, vec3 ray)
          // simulates displaying the light
          for (int i = 0; i < NUM_LIGHTS; i++)
          {
-            if (intersectSphere(origin, ray, Lights[i].pos, Lights[i].size) < tSphere)
+            if (intersectSphere(origin, ray, Lights[i].pos, Lights[i].size) < tBall)
             {
-               return Lights[i].intensity * Lights[i].color;
+               return vec4(Lights[i].intensity * Lights[i].color, 1.0);
             }
          }
       }
@@ -168,10 +169,10 @@ vec3 calculateColor(vec3 origin, vec3 ray)
          surfaceColor = FLOOR_COLOR;
       }
 
-      if (tSphere < t)
+      if (tBall < t)
       {
          surfaceColor = vec3(uBallColor);
-         t = tSphere;
+         t = tBall;
 
          if (bounce == 0)
          {
@@ -193,9 +194,9 @@ vec3 calculateColor(vec3 origin, vec3 ray)
       {
          normal = vec3(0.0, 1.0, 0.0);
       }
-      else if (t == tSphere)
+      else if (t == tBall)
       {
-         normal = normalForSphere(hit, SPHERE_CENTER, SPHERE_RADIUS);
+         normal = normalForSphere(hit, BALL_CENTER, BALL_RADIUS);
       }
       else if (t == tDome)
       {
@@ -247,6 +248,10 @@ vec3 calculateColor(vec3 origin, vec3 ray)
             accumulatedColor +=
                 (length(surfaceColor) * Lights[i].color) * lightIntensity * specular;
          }
+         else if (bounce == 0 && i == 0)
+         {
+            ballShadow = true;
+         }
       }
 
       // calculate next origin
@@ -255,7 +260,19 @@ vec3 calculateColor(vec3 origin, vec3 ray)
       origin = hit;
    }
 
-   return clamp(accumulatedColor, 0.0, 1.0);
+   float alpha = 1.0;
+   if (ballHit)
+   {
+      if (ballShadow)
+      {
+         alpha = 3.0;
+      }
+      else
+      {
+         alpha = 2.0;
+      }
+   }
+   return vec4(clamp(accumulatedColor, 0.0, 1.0), alpha);
 }
 
 void main()
@@ -293,11 +310,8 @@ void main()
       Lights[i].color = AMBIENT_COLOR;
    }
 
-   vec3 texture2 = texture2D(uTexture, gl_FragCoord.xy / uTextureSize).rgb;
-   gl_FragColor = vec4(mix(calculateColor(uEye, initialRay), texture2, uTextureWeight), 1.0);
-
-   if (ballHit)
-   {
-      gl_FragColor.a = 2.0;
-   }
+   // merge the new color into the existing texture
+   vec4 textureColor = texture2D(uTexture, gl_FragCoord.xy / uTextureSize);
+   vec4 newColor = calculateColor(uEye, initialRay);
+   gl_FragColor = mix(newColor, textureColor, uTextureWeight);
 }
