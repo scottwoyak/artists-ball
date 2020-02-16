@@ -5,6 +5,7 @@ import { htmlColor } from "./htmlColor";
 import { glColorWithTemperature } from "./glColorWithTemperature";
 import { Slider } from "./Slider";
 import { ToScreenUniforms } from "./PathTracer";
+import { hsvColor } from "./hsvColor";
 
 let app: App;
 export let gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -93,6 +94,10 @@ function component(): HTMLElement {
       value: 50,
       colors: skinTones,
       oninput: () => {
+         ballLightShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 90);
+         ballShadowShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 90);
+         ballLightChromaSlider.colors = computeChromaColors(ballLightShiftSlider.htmlColor);
+         ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
          Uniforms.uBallColor = ballColorSlider.glColor;
          app.restart();
       }
@@ -126,19 +131,25 @@ function component(): HTMLElement {
    groupDiv.appendChild(headerDiv);
    div.appendChild(groupDiv);
 
-   let lightChromaSlider = new Slider(groupDiv, {
+   let ballLightChromaSlider = new Slider(groupDiv, {
       id: 'LightChroma',
       label: 'Chroma',
       min: 0,
       max: 200,
       value: 100,
-      colors: [htmlColor.red.toGray(), htmlColor.red],
+      colors: computeChromaColors(ballColorSlider.htmlColor),
       oninput: function () {
-         ToScreenUniforms.uBallLightChroma = lightChromaSlider.value / 100;
+         ToScreenUniforms.uBallLightChroma = ballLightChromaSlider.value / 100;
          app.restart();
       },
       getText: (slider: Slider) => { return slider.value.toFixed() + "%" }
    })
+
+   function computeChromaColors(baseColor: htmlColor): htmlColor[] {
+      let hsv = hsvColor.fromHtmlColor(baseColor);
+      hsv = new hsvColor([hsv.h, Math.min(hsv.s * 2, 1.0), hsv.v]);
+      return [baseColor.toGray(), baseColor, hsv.toHtmlColor()];
+   }
 
    groupDiv.appendChild(document.createElement('br'));
 
@@ -148,13 +159,32 @@ function component(): HTMLElement {
       min: -90,
       max: 90,
       value: 0,
-      colors: [htmlColor.blue, htmlColor.white, htmlColor.orange],
+      colors: computeShiftColors(ballColorSlider.htmlColor, 90),
       oninput: function () {
+         ballLightChromaSlider.colors = computeChromaColors(ballLightShiftSlider.htmlColor);
          ToScreenUniforms.uBallLightShift = ballLightShiftSlider.value;
          app.restart();
       },
       getText: getTemperatureShiftText,
    })
+
+   function computeShiftColors(baseColor: htmlColor, maxShift: number): htmlColor[] {
+      let hsv = hsvColor.fromHtmlColor(baseColor);
+      let colors: htmlColor[] = [];
+      let numSteps = 10;
+      for (let i = 0; i < numSteps; i++) {
+         let shift = (maxShift - (i / (numSteps - 1)) * (2 * maxShift)) / 360;
+         let adjustment = 0;
+         if (hsv.h + shift < 0) {
+            adjustment = 1;
+         }
+         else if (hsv.h + shift > 1) {
+            adjustment = -1;
+         }
+         colors.push((new hsvColor([hsv.h + shift + adjustment, hsv.s, hsv.v])).toHtmlColor());
+      }
+      return colors;
+   }
 
    let separator = document.createElement('div');
    separator.style.height = '2px';
@@ -168,15 +198,16 @@ function component(): HTMLElement {
    groupDiv.appendChild(headerDiv);
    div.appendChild(groupDiv);
 
-   let shadowChromaSlider = new Slider(groupDiv, {
+   let ballShadowChromaSlider = new Slider(groupDiv, {
       id: 'ShadowChroma',
       label: 'Chroma',
       min: 0,
       max: 200,
       value: 100,
-      colors: [htmlColor.red.toGray(), htmlColor.red],
+      colors: computeChromaColors(ballColorSlider.htmlColor),
       oninput: function () {
-         ToScreenUniforms.uBallShadowChroma = shadowChromaSlider.value / 100;
+         ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
+         ToScreenUniforms.uBallShadowChroma = ballShadowChromaSlider.value / 100;
          app.restart();
       },
       getText: (slider: Slider) => { return slider.value.toFixed() + "%" }
@@ -190,7 +221,7 @@ function component(): HTMLElement {
       min: -90,
       max: 90,
       value: 0,
-      colors: [htmlColor.blue, htmlColor.white, htmlColor.orange],
+      colors: computeShiftColors(ballColorSlider.htmlColor, 90),
       oninput: function () {
          ToScreenUniforms.uBallShadowShift = ballShadowShiftSlider.value;
          app.restart();
