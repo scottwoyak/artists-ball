@@ -115,7 +115,7 @@ vec4 renderAsChroma()
    // render the scale as a bar on the left
    if (texCoord.x < 0.03)
    {
-      return value2Color(texCoord.y);
+      return value2Color((texCoord.y - 0.1) / 0.9);
    }
    else
    {

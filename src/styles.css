@@ -79,6 +79,24 @@ body {
   border-style: solid;
 }
 
+.container {
+  position: relative;
+}
+
+#description {
+  position: absolute;
+  bottom: 5px;
+  left: 2px;
+  padding: 2px;
+  padding-right: 5px;
+  padding-left: 5px;
+  border-radius: 5px;
+  font-size: 10pt;
+  font-family: arial;
+  color: white;
+  text-shadow: 0px 0px 6px rgba(0, 0, 0, 1);
+}
+
 @media only screen and (max-device-width: 800px) {
   .SliderHeader {
     font-size: 40px;
@@ -119,5 +137,10 @@ body {
   .SliderValueSpan {
     font-size: 40px;
     margin-left: 10px;
+  }
+
+  #description {
+    font-size: 20pt;
+    font-weight: darker;
   }
 }

@@ -11,7 +11,7 @@ import toTextureFragmentSource from './toTextureFragment.glsl';
 /**
  * Rendering mode for displaying the texture
  */
-enum RenderMode {
+export enum RenderMode {
    Color = 0,
    Value = 1,
    Chroma = 2,
@@ -148,6 +148,9 @@ export class PathTracer {
       gl.enableVertexAttribArray(this.tracerVertexAttribute);
    };
 
+   public get renderMode(): RenderMode {
+      return this.mainView;
+   }
    public restart(): void {
       Uniforms.uSample = 0;
       Uniforms.uPass = 0;

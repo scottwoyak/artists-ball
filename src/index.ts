@@ -30,9 +30,18 @@ let skinTones = [
 function component(): HTMLElement {
    const div = document.createElement('div');
 
+   const container = document.createElement('div');
+   container.className = 'container';
+   div.appendChild(container);
+
    let canvas = document.createElement('canvas');
    canvas.id = 'canvas';
-   div.appendChild(canvas);
+   container.appendChild(canvas);
+
+   let description = document.createElement('div');
+   description.id = 'description';
+   container.appendChild(description);
+
    div.appendChild(document.createElement('br'));
 
    let intensitySlider = new Slider(div, {
@@ -94,8 +103,8 @@ function component(): HTMLElement {
       value: 50,
       colors: skinTones,
       oninput: () => {
-         ballLightShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 90);
-         ballShadowShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 90);
+         ballLightShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 180);
+         ballShadowShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 180);
          ballLightChromaSlider.colors = computeChromaColors(ballLightShiftSlider.htmlColor);
          ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
          Uniforms.uBallColor = ballColorSlider.glColor;
@@ -156,10 +165,10 @@ function component(): HTMLElement {
    let ballLightShiftSlider = new Slider(groupDiv, {
       id: 'BallLightShift',
       label: 'Temperature',
-      min: -90,
-      max: 90,
+      min: -180,
+      max: 180,
       value: 0,
-      colors: computeShiftColors(ballColorSlider.htmlColor, 90),
+      colors: computeShiftColors(ballColorSlider.htmlColor, 180),
       oninput: function () {
          ballLightChromaSlider.colors = computeChromaColors(ballLightShiftSlider.htmlColor);
          ToScreenUniforms.uBallLightShift = ballLightShiftSlider.value;
@@ -218,10 +227,10 @@ function component(): HTMLElement {
    let ballShadowShiftSlider = new Slider(groupDiv, {
       id: 'BallShadowShift',
       label: 'Temperature',
-      min: -90,
-      max: 90,
+      min: -180,
+      max: 180,
       value: 0,
-      colors: computeShiftColors(ballColorSlider.htmlColor, 90),
+      colors: computeShiftColors(ballColorSlider.htmlColor, 180),
       oninput: function () {
          ToScreenUniforms.uBallShadowShift = ballShadowShiftSlider.value;
          app.restart();
@@ -231,10 +240,10 @@ function component(): HTMLElement {
 
    function getTemperatureShiftText(slider: Slider): string {
       if (slider.value >= 0) {
-         return '+' + slider.value.toFixed() + " deg"
+         return '+' + slider.value.toFixed() + "º"
       }
       else {
-         return slider.value.toFixed() + " deg"
+         return slider.value.toFixed() + "º"
 
       }
    }

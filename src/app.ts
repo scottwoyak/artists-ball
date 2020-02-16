@@ -1,6 +1,6 @@
 import { glVec3 } from "./glVec";
 import { Uniforms } from "./Shaders";
-import { PathTracer } from "./PathTracer";
+import { PathTracer, RenderMode } from "./PathTracer";
 import { glMat4 } from "./glMat";
 import { zoomZ, angleY, angleX, canvas } from "./index";
 
@@ -15,6 +15,7 @@ export class App {
    constructor() {
       this.start = new Date().getTime();
       requestAnimationFrame(() => this.tick());
+      this.setDescription();
    }
 
    /**
@@ -31,21 +32,46 @@ export class App {
       let size = canvas.width / 4;
 
       if (y < size) {
+
          if (x > canvas.width - 1 * size) {
             this.swap(2);
+            this.setDescription();
             return true;
          }
          else if (x > canvas.width - 2 * size) {
             this.swap(1);
+            this.setDescription();
             return true;
          }
          else if (x > canvas.width - 3 * size) {
             this.swap(0);
+            this.setDescription();
             return true;
          }
       }
 
       return false;
+   }
+
+   private setDescription() {
+      let description = document.getElementById('description');
+      switch (this.tracer.renderMode) {
+         case RenderMode.Color:
+            description.innerText = "This view displays the numerically computed colors.";
+            break;
+
+         case RenderMode.Artist:
+            description.innerText = "This view displays the artist adjusted colors.";
+            break;
+
+         case RenderMode.Chroma:
+            description.innerText = "This view displays the chroma on the ball. Red=highest chroma.";
+            break;
+
+         case RenderMode.Value:
+            description.innerText = "This view displays the ball using values only.";
+            break;
+      }
    }
 
    public updateTexture(timeSinceStart: number) {
