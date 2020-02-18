@@ -1,11 +1,11 @@
-import { Uniforms } from "./Shaders";
 import { App } from "./app";
 import './styles.css';
 import { htmlColor } from "./htmlColor";
 import { glColorWithTemperature } from "./glColorWithTemperature";
 import { Slider } from "./Slider";
-import { ToScreenUniforms } from "./PathTracer";
 import { hsvColor } from "./hsvColor";
+import { ToTextureUniforms } from "./ToTextureUniforms";
+import { ToScreenUniforms } from "./ToScreenUniforms";
 
 let app: App;
 export let gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -49,10 +49,10 @@ function component(): HTMLElement {
       label: 'Light Intensity',
       min: 0,
       max: 100,
-      value: Uniforms.uLightIntensity * 100,
+      value: ToTextureUniforms.uLightIntensity * 100,
       colors: [htmlColor.black, htmlColor.white],
       oninput: function () {
-         Uniforms.uLightIntensity = intensitySlider.value / 100;
+         ToTextureUniforms.uLightIntensity = intensitySlider.value / 100;
          app.restart();
       }
    });
@@ -87,7 +87,7 @@ function component(): HTMLElement {
       intensitySlider.colors = [htmlColor.black, lightColorSlider.htmlColor];
 
       // use the value in rendering
-      Uniforms.uLightColor = lightColorSlider.glColor;
+      ToTextureUniforms.uLightColor = lightColorSlider.glColor;
       if (app) {
          app.restart();
       }
@@ -107,13 +107,13 @@ function component(): HTMLElement {
          ballShadowShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 180);
          ballLightChromaSlider.colors = computeChromaColors(ballLightShiftSlider.htmlColor);
          ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
-         Uniforms.uBallColor = ballColorSlider.glColor;
+         ToTextureUniforms.uBallColor = ballColorSlider.glColor;
          app.restart();
       }
    });
 
    // make sure gl matches the initial UI setting
-   Uniforms.uBallColor = ballColorSlider.glColor;
+   ToTextureUniforms.uBallColor = ballColorSlider.glColor;
 
    div.appendChild(document.createElement('br'));
 
@@ -122,10 +122,10 @@ function component(): HTMLElement {
       label: 'Ambient Light',
       min: 0,
       max: 100,
-      value: Uniforms.uAmbientLightIntensity * 100,
+      value: ToTextureUniforms.uAmbientLightIntensity * 100,
       colors: [htmlColor.black, htmlColor.white],
       oninput: function () {
-         Uniforms.uAmbientLightIntensity = ambientIntensitySlider.value / 100;
+         ToTextureUniforms.uAmbientLightIntensity = ambientIntensitySlider.value / 100;
          app.restart();
       }
    });

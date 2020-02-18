@@ -1,8 +1,8 @@
 import { glVec3 } from "./glVec";
-import { Uniforms } from "./Shaders";
 import { PathTracer, RenderMode } from "./PathTracer";
 import { glMat4 } from "./glMat";
 import { zoomZ, angleY, angleX, canvas } from "./index";
+import { ToTextureUniforms } from "./ToTextureUniforms";
 
 export class App {
    public tracer = new PathTracer();
@@ -85,7 +85,7 @@ export class App {
 
    public updateTexture(timeSinceStart: number) {
       this.modelview = glMat4.makeLookAt(
-         Uniforms.uEye,
+         ToTextureUniforms.uEye,
          new glVec3([0, 0, 0]),  // center point
          new glVec3([0, 1, 0])   // up vector
       );
@@ -114,9 +114,9 @@ export class App {
 
       if (this.count < 1000) {
          this.count++;
-         Uniforms.uEye.set(0, zoomZ * Math.sin(angleY) * Math.cos(angleX));
-         Uniforms.uEye.set(1, zoomZ * Math.sin(angleX));
-         Uniforms.uEye.set(2, zoomZ * Math.cos(angleY) * Math.cos(angleX));
+         ToTextureUniforms.uEye.set(0, zoomZ * Math.sin(angleY) * Math.cos(angleX));
+         ToTextureUniforms.uEye.set(1, zoomZ * Math.sin(angleX));
+         ToTextureUniforms.uEye.set(2, zoomZ * Math.cos(angleY) * Math.cos(angleX));
 
          this.updateTexture(timeSinceStart);
          this.displayTexture();
