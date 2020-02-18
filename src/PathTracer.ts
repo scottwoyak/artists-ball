@@ -31,6 +31,7 @@ interface IPixelData {
    avgShadowColor: glColor,
    lightestShadowColor: glColor,
    darkestShadowColor: glColor,
+   terminatorColor: glColor,
 }
 /**
  * Class that does the work of building the Path Traced texture
@@ -184,15 +185,18 @@ export class PathTracer {
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
       let data = this.getPixelData();
-      let cr = new ColorRange([data.darkestLightColor.toHtmlColor(), data.avgLightColor.toHtmlColor(), data.lightestLightColor.toHtmlColor()]);
       ToScreenUniforms.uMaxChroma = data.maxChroma;
+
+      let cr = new ColorRange([data.darkestLightColor.toHtmlColor(), data.avgLightColor.toHtmlColor(), data.lightestLightColor.toHtmlColor()]);
       ToScreenUniforms.uHighlightColor = cr.get(1.0).toGlColor();
       ToScreenUniforms.uLightLightColor = cr.get(0.8).toGlColor();
       ToScreenUniforms.uMidLightColor = cr.get(0.5).toGlColor();
       ToScreenUniforms.uDarkLightColor = cr.get(0.2).toGlColor();
-      ToScreenUniforms.uLightestShadowColor = data.lightestShadowColor;
-      ToScreenUniforms.uDarkestShadowColor = data.darkestShadowColor;
-      ToScreenUniforms.uAvgShadowColor = data.avgShadowColor;
+
+      cr = new ColorRange([data.darkestShadowColor.toHtmlColor(), data.avgShadowColor.toHtmlColor(), data.lightestShadowColor.toHtmlColor()]);
+      ToScreenUniforms.uShadowColor = data.terminatorColor;
+      ToScreenUniforms.uReflectedLightColor = cr.get(1).toGlColor();
+      ToScreenUniforms.uDarkAccentColor = cr.get(0.0).toGlColor();
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
@@ -216,6 +220,7 @@ export class PathTracer {
          avgShadowColor: new glColor([0, 0, 0]),
          lightestShadowColor: new glColor([0, 0, 0]),
          darkestShadowColor: new glColor([1, 1, 1]),
+         terminatorColor: new glColor([0, 0, 0]),
       }
 
       let size = ToTextureUniforms.uTextureSize;
@@ -229,6 +234,8 @@ export class PathTracer {
 
       let numLightPixels = 0;
       let numShadowPixels = 0;
+      let numTerminatorPixels = 0;
+
       for (let row = 0; row < size; row++) {
          for (let col = 0; col < size; col++) {
             let index = (row * size + col) * 4;
@@ -278,6 +285,14 @@ export class PathTracer {
                data.avgShadowColor.b += color.b;
                data.avgShadowColor.g += color.g;
             }
+
+            let terminator = (ToTextureUniforms.uBALL_LIGHT + ToTextureUniforms.uBALL_SHADOW) / 2.0;
+            if (Math.abs(a - terminator) < 0.1) {
+               numTerminatorPixels++;
+               data.terminatorColor.r += color.r;
+               data.terminatorColor.b += color.b;
+               data.terminatorColor.g += color.g;
+            }
          }
       }
 
@@ -290,6 +305,11 @@ export class PathTracer {
          data.avgShadowColor.r /= numShadowPixels;
          data.avgShadowColor.g /= numShadowPixels;
          data.avgShadowColor.b /= numShadowPixels;
+      }
+      if (numTerminatorPixels > 0) {
+         data.terminatorColor.r /= numTerminatorPixels;
+         data.terminatorColor.g /= numTerminatorPixels;
+         data.terminatorColor.b /= numTerminatorPixels;
       }
 
       return data;
@@ -339,8 +359,13 @@ export class PathTracer {
          RenderMode.Bands,
          RenderMode.Value,
       ];
-      this.mainView = this.smallViews[pos];
-      this.smallViews[pos] = RenderMode.Science;
+      if (this.mainView == RenderMode.Science) {
+         this.mainView = this.smallViews[pos];
+         this.smallViews[pos] = RenderMode.Science;
+      }
+      else {
+         this.mainView = RenderMode.Science;
+      }
       this.displayTexture();
    }
 }

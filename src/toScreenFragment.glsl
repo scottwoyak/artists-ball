@@ -7,13 +7,16 @@ uniform float uBallLightChroma;
 uniform float uBallShadowChroma;
 uniform float uBallLightShift;
 uniform float uBallShadowShift;
+
 uniform vec3 uHighlightColor;
 uniform vec3 uLightLightColor;
 uniform vec3 uMidLightColor;
 uniform vec3 uDarkLightColor;
-uniform vec3 uLightestShadowColor;
-uniform vec3 uDarkestShadowColor;
-uniform vec3 uAvgShadowColor;
+
+uniform vec3 uShadowColor;
+uniform vec3 uReflectedLightColor;
+uniform vec3 uDarkAccentColor;
+
 uniform float uBALL_SPECULAR;
 uniform float uBALL_LIGHT;
 uniform float uBALL_SHADOW;
@@ -179,11 +182,15 @@ vec4 renderAsBands()
 {
    vec4 color = texture2D(uTexture, texCoord);
 
-   if (color.a > 1.0 && color.a <= (uBALL_SHADOW + uBALL_LIGHT) / 2.0)
+   // define the terminator as the point where things are 50% in shadow
+   float terminator = ((uBALL_SHADOW + uBALL_LIGHT) / 2.0);
+   if (color.a > 1.0 && color.a <= terminator)
    {
-      return vec4(uAvgShadowColor, 1.0);
+      vec3 c = closest(color.rgb, uShadowColor, uReflectedLightColor, uDarkAccentColor,
+                       uDarkAccentColor);
+      return vec4(c, 1.0);
    }
-   else if (color.a > (uBALL_SHADOW + uBALL_LIGHT) / 2.0)
+   else if (color.a > terminator)
    {
       vec3 c =
           closest(color.rgb, uHighlightColor, uLightLightColor, uMidLightColor, uDarkLightColor);

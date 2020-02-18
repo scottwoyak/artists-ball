@@ -15,13 +15,16 @@ export interface IToScreenUniforms {
    uBallShadowChroma: number;
    uBallLightShift: number;
    uBallShadowShift: number;
+
    uHighlightColor: glColor;
    uLightLightColor: glColor;
    uMidLightColor: glColor;
    uDarkLightColor: glColor;
-   uLightestShadowColor: glColor;
-   uDarkestShadowColor: glColor;
-   uAvgShadowColor: glColor;
+
+   uShadowColor: glColor;
+   uReflectedLightColor: glColor;
+   uDarkAccentColor: glColor;
+
    uBALL_SPECULAR: number;
    uBALL_LIGHT: number;
    uBALL_SHADOW: number;
@@ -40,13 +43,16 @@ export let ToScreenUniforms: IToScreenUniforms = {
    uBallShadowChroma: 1.0,
    uBallLightShift: 0.0,
    uBallShadowShift: 0.0,
+
    uHighlightColor: undefined,
    uLightLightColor: undefined,
    uMidLightColor: undefined,
    uDarkLightColor: undefined,
-   uLightestShadowColor: undefined,
-   uDarkestShadowColor: undefined,
-   uAvgShadowColor: undefined,
+
+   uShadowColor: undefined,
+   uReflectedLightColor: undefined,
+   uDarkAccentColor: undefined,
+
    uBALL_SPECULAR: ToTextureUniforms.uBALL_SPECULAR,
    uBALL_LIGHT: ToTextureUniforms.uBALL_LIGHT,
    uBALL_SHADOW: ToTextureUniforms.uBALL_SHADOW,
