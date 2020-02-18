@@ -13,6 +13,9 @@ uniform vec3 uBallColor;
 uniform float uPass;
 uniform float uNumPasses;
 uniform float uSample;
+uniform float uBALL_SPECULAR;
+uniform float uBALL_LIGHT;
+uniform float uBALL_SHADOW;
 
 const int MAX_BOUNCES = 100;
 const float EPSILON = 0.0001;
@@ -265,11 +268,11 @@ vec4 calculateColor(vec3 origin, vec3 ray)
    {
       if (ballShadow)
       {
-         alpha = 3.0;
+         alpha = uBALL_SHADOW;
       }
       else
       {
-         alpha = 2.0;
+         alpha = uBALL_LIGHT;
       }
    }
    return vec4(clamp(accumulatedColor, 0.0, 1.0), alpha);

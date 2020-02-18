@@ -40,6 +40,40 @@ export class glColor extends Color {
    }
 
    /**
+    * Returns the lighter of two colors
+    * 
+    * @param c1 The first color.
+    * @param c2 The second color.
+    * @returns The lightest color.
+    */
+   public static lightest(c1: glColor, c2: glColor): glColor {
+      // TODO: use luminosity instead?
+      if (c1.r + c1.g + c1.b > c2.r + c2.g + c2.b) {
+         return c1;
+      }
+      else {
+         return c2;
+      }
+   }
+
+   /**
+    * Returns the darker of two colors
+    * 
+    * @param c1 The first color.
+    * @param c2 The second color.
+    * @returns The darkest color.
+    */
+   public static darkest(c1: glColor, c2: glColor): glColor {
+      // TODO: use luminosity instead?
+      if (c1.r + c1.g + c1.b < c2.r + c2.g + c2.b) {
+         return c1;
+      }
+      else {
+         return c2;
+      }
+   }
+
+   /**
     * Clamps a number between 0 and 1.
     * 
     * @param val The value.

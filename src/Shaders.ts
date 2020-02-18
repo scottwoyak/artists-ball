@@ -23,6 +23,9 @@ interface IUniforms {
    uPass: number,
    uSample: number,
    uNumPasses: number,
+   uBALL_SPECULAR: number;
+   uBALL_LIGHT: number;
+   uBALL_SHADOW: number;
    [propName: string]: any
 }
 
@@ -46,6 +49,9 @@ export var Uniforms: IUniforms = {
    uPass: 0.0,
    uNumPasses: 1.0,
    uSample: 0.0,
+   uBALL_SPECULAR: 1002,
+   uBALL_LIGHT: 1001,
+   uBALL_SHADOW: 1000,
 }
 
 export class Shaders {

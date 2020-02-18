@@ -1,4 +1,4 @@
-import { Color } from "./Color";
+import { htmlColor } from "./htmlColor";
 
 /**
  * Interpolates and array of colors
@@ -7,14 +7,14 @@ export class ColorRange {
    /**
     * The colors
     */
-   private colors: Color[];
+   private colors: htmlColor[];
 
    /**
     * Constructor
     * 
     * @param colors The colors to interpolate
     */
-   public constructor(colors: Color[]) {
+   public constructor(colors: htmlColor[]) {
       this.colors = colors;
    }
 
@@ -23,7 +23,7 @@ export class ColorRange {
     * 
     * @param value A value between 0 and 1.
     */
-   public get(value: number): Color {
+   public get(value: number): htmlColor {
 
       if (value < 0) {
          return this.colors[0];
@@ -39,7 +39,7 @@ export class ColorRange {
          let g = this.colors[index].g + partial * (this.colors[index + 1].g - this.colors[index].g);
          let b = this.colors[index].b + partial * (this.colors[index + 1].b - this.colors[index].b);
 
-         return new Color([r, g, b]);
+         return new htmlColor([r, g, b]);
       }
    }
 }

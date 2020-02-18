@@ -7,11 +7,22 @@ uniform float uBallLightChroma;
 uniform float uBallShadowChroma;
 uniform float uBallLightShift;
 uniform float uBallShadowShift;
+uniform vec3 uHighlightColor;
+uniform vec3 uLightLightColor;
+uniform vec3 uMidLightColor;
+uniform vec3 uDarkLightColor;
+uniform vec3 uLightestShadowColor;
+uniform vec3 uDarkestShadowColor;
+uniform vec3 uAvgShadowColor;
+uniform float uBALL_SPECULAR;
+uniform float uBALL_LIGHT;
+uniform float uBALL_SHADOW;
 
-#define MODE_COLOR 0
+#define MODE_SCIENCE 0
 #define MODE_VALUE 1
 #define MODE_CHROMA 2
 #define MODE_ARTIST 3
+#define MODE_BANDS 4
 
 vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
 vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
@@ -119,7 +130,7 @@ vec4 renderAsChroma()
    }
    else
    {
-      if (color.a >= 2.0)
+      if (color.a >= uBALL_SHADOW)
       {
          float avg = (color.r + color.g + color.b) / 3.0;
          float rgb = (abs(avg - color.r) + abs(avg - color.g) + abs(avg - color.b)) / (4.0 / 3.0);
@@ -129,6 +140,58 @@ vec4 renderAsChroma()
       {
          return vec4(0.0, 0.0, 0.0, 1.0);
       }
+   }
+}
+
+float d2(vec3 c1, vec3 c2)
+{
+   // sum the squares of the differences
+   return pow(c1.r - c2.r, 2.0) + pow(c1.g - c2.g, 2.0) + pow(c1.b - c2.b, 2.0);
+}
+
+vec3 closest(vec3 color, vec3 high, vec3 light, vec3 mid, vec3 dark)
+{
+   float dhigh = d2(color, high);
+   float dlight = d2(color, light);
+   float dmid = d2(color, mid);
+   float ddark = d2(color, dark);
+
+   float dmin = min(dhigh, min(dlight, min(dmid, ddark)));
+   if (dmin == dhigh)
+   {
+      return high;
+   }
+   else if (dmin == dlight)
+   {
+      return light;
+   }
+   else if (dmin == dmid)
+   {
+      return mid;
+   }
+   else
+   {
+      return dark;
+   }
+}
+
+vec4 renderAsBands()
+{
+   vec4 color = texture2D(uTexture, texCoord);
+
+   if (color.a > 1.0 && color.a <= (uBALL_SHADOW + uBALL_LIGHT) / 2.0)
+   {
+      return vec4(uAvgShadowColor, 1.0);
+   }
+   else if (color.a > (uBALL_SHADOW + uBALL_LIGHT) / 2.0)
+   {
+      vec3 c =
+          closest(color.rgb, uHighlightColor, uLightLightColor, uMidLightColor, uDarkLightColor);
+      return vec4(c, 1.0);
+   }
+   else
+   {
+      return color;
    }
 }
 
@@ -143,12 +206,9 @@ vec4 renderAsArtist()
 {
    vec4 color = texture2D(uTexture, texCoord);
 
-   // 1 = not ball
-   // 2 = ball in light
-   // 3 = ball in shadow
-   if (color.a >= 1.9)
+   if (color.a >= 1.0)
    {
-      float percentLight = clamp(3.0 - color.a, 0.0, 1.0);
+      float percentLight = clamp(uBALL_LIGHT - color.a, 0.0, 1.0);
       float percentShadow = 1.0 - percentLight;
 
       // temperature shift
@@ -196,7 +256,11 @@ vec4 renderAsArtist()
    }
 }
 
-vec4 renderAsScience() { return texture2D(uTexture, texCoord); }
+vec4 renderAsScience()
+{
+   // just return the texture
+   return texture2D(uTexture, texCoord);
+}
 
 void main()
 {
@@ -218,6 +282,10 @@ void main()
    else if (uMode == MODE_ARTIST)
    {
       gl_FragColor = renderAsArtist();
+   }
+   else if (uMode == MODE_BANDS)
+   {
+      gl_FragColor = renderAsBands();
    }
    else
    {

@@ -141,8 +141,7 @@ export class Slider {
     */
    public get htmlColor(): htmlColor {
       let val = (this.value - this.min) / (this.max - this.min);
-      let color = this._colors.get(val);
-      return htmlColor.fromColor(color);
+      return this._colors.get(val);
    }
 
    /**
@@ -152,7 +151,6 @@ export class Slider {
     */
    public get glColor(): glColor {
       let val = (this.value - this.min) / (this.max - this.min);
-      let color = this._colors.get(val);
-      return htmlColor.fromColor(color).toGlColor();
+      return this._colors.get(val).toGlColor();
    }
 }

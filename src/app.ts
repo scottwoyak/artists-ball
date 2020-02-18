@@ -34,16 +34,21 @@ export class App {
       if (y < size) {
 
          if (x > canvas.width - 1 * size) {
-            this.swap(2);
+            this.swap(3);
             this.setDescription();
             return true;
          }
          else if (x > canvas.width - 2 * size) {
-            this.swap(1);
+            this.swap(2);
             this.setDescription();
             return true;
          }
          else if (x > canvas.width - 3 * size) {
+            this.swap(1);
+            this.setDescription();
+            return true;
+         }
+         else if (x > canvas.width - 4 * size) {
             this.swap(0);
             this.setDescription();
             return true;
@@ -56,7 +61,7 @@ export class App {
    private setDescription() {
       let description = document.getElementById('description');
       switch (this.tracer.renderMode) {
-         case RenderMode.Color:
+         case RenderMode.Science:
             description.innerText = "This view displays the numerically computed colors.";
             break;
 
@@ -70,6 +75,10 @@ export class App {
 
          case RenderMode.Value:
             description.innerText = "This view displays the ball using values only.";
+            break;
+
+         case RenderMode.Bands:
+            description.innerText = "This view displays the ball rendered with limited colors.";
             break;
       }
    }
@@ -103,7 +112,7 @@ export class App {
 
       let timeSinceStart = ((new Date()).getTime() - this.start) * 0.001;
 
-      if (this.count < 150) {
+      if (this.count < 1000) {
          this.count++;
          Uniforms.uEye.set(0, zoomZ * Math.sin(angleY) * Math.cos(angleX));
          Uniforms.uEye.set(1, zoomZ * Math.sin(angleX));
