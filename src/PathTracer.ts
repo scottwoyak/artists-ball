@@ -9,8 +9,7 @@ import toTextureVertexSource from './toTextureVertex.glsl';
 import toTextureFragmentSource from './toTextureFragment.glsl';
 import { glColor } from './glColor';
 import { ColorRange } from './ColorRange';
-import { ToScreenUniforms } from './ToScreenUniforms';
-import { ToTextureUniforms } from './ToTextureUniforms';
+import { Uniforms } from './Uniforms';
 
 /**
  * Rendering mode for displaying the texture
@@ -118,8 +117,8 @@ export class PathTracer {
             gl.TEXTURE_2D,          // target
             0,                      // level
             internalFormat,         // internal format
-            ToTextureUniforms.uTextureSize,  // width
-            ToTextureUniforms.uTextureSize,  // height
+            Uniforms.uTextureSize,  // width
+            Uniforms.uTextureSize,  // height
             0,                      // border
             format,                 // format
             type,                   // type
@@ -142,39 +141,39 @@ export class PathTracer {
       return this.mainView;
    }
    public restart(): void {
-      ToTextureUniforms.uSample = 0;
-      ToTextureUniforms.uPass = 0;
+      Uniforms.uSample = 0;
+      Uniforms.uPass = 0;
    }
 
    private getEyeRay(matrix: glMat4, x: number, y: number): glVec3 {
       let vec = new glVec4([x, y, 0, 1]);
-      return matrix.multV(vec).divideByW().subtract(ToTextureUniforms.uEye);
+      return matrix.multV(vec).divideByW().subtract(Uniforms.uEye);
    }
 
    public updateTexture(modelviewProjection: glMat4, timeSinceStart: number): void {
 
       // implement aliasing by random sampling within a pixel
-      let x = (Math.random() * 2 - 1) / ToTextureUniforms.uTextureSize;
-      let y = (Math.random() * 2 - 1) / ToTextureUniforms.uTextureSize;
+      let x = (Math.random() * 2 - 1) / Uniforms.uTextureSize;
+      let y = (Math.random() * 2 - 1) / Uniforms.uTextureSize;
       let z = 0;
 
       let v = new glVec3([x, y, z]);
       let jitter = glMat4.fromTranslation(v);
       let matrix = jitter.multM(modelviewProjection).invert();
 
-      ToTextureUniforms.uRay00 = this.getEyeRay(matrix, -1, -1);
-      ToTextureUniforms.uRay01 = this.getEyeRay(matrix, -1, +1);
-      ToTextureUniforms.uRay10 = this.getEyeRay(matrix, +1, -1);
-      ToTextureUniforms.uRay11 = this.getEyeRay(matrix, +1, +1);
-      ToTextureUniforms.uTimeSinceStart = timeSinceStart;
-      ToTextureUniforms.uTextureWeight = ToTextureUniforms.uSample / (ToTextureUniforms.uSample + 1);
+      Uniforms.uRay00 = this.getEyeRay(matrix, -1, -1);
+      Uniforms.uRay01 = this.getEyeRay(matrix, -1, +1);
+      Uniforms.uRay10 = this.getEyeRay(matrix, +1, -1);
+      Uniforms.uRay11 = this.getEyeRay(matrix, +1, +1);
+      Uniforms.uTimeSinceStart = timeSinceStart;
+      Uniforms.uTextureWeight = Uniforms.uSample / (Uniforms.uSample + 1);
 
       // set uniforms
       gl.useProgram(this.toTextureProgram);
-      Shaders.setUniforms(this.toTextureProgram, ToTextureUniforms);
+      Shaders.setUniforms(this.toTextureProgram, Uniforms);
 
       // render to texture
-      gl.viewport(0, 0, ToTextureUniforms.uTextureSize, ToTextureUniforms.uTextureSize);
+      gl.viewport(0, 0, Uniforms.uTextureSize, Uniforms.uTextureSize);
       gl.useProgram(this.toTextureProgram);
       gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -185,28 +184,28 @@ export class PathTracer {
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
       let data = this.getPixelData();
-      ToScreenUniforms.uMaxChroma = data.maxChroma;
+      Uniforms.uMaxChroma = data.maxChroma;
 
       let cr = new ColorRange([data.darkestLightColor.toHtmlColor(), data.avgLightColor.toHtmlColor(), data.lightestLightColor.toHtmlColor()]);
-      ToScreenUniforms.uHighlightColor = cr.get(1.0).toGlColor();
-      ToScreenUniforms.uLightLightColor = cr.get(0.8).toGlColor();
-      ToScreenUniforms.uMidLightColor = cr.get(0.5).toGlColor();
-      ToScreenUniforms.uDarkLightColor = cr.get(0.2).toGlColor();
+      Uniforms.uHighlightColor = cr.get(1.0).toGlColor();
+      Uniforms.uLightLightColor = cr.get(0.8).toGlColor();
+      Uniforms.uMidLightColor = cr.get(0.5).toGlColor();
+      Uniforms.uDarkLightColor = cr.get(0.2).toGlColor();
 
       cr = new ColorRange([data.darkestShadowColor.toHtmlColor(), data.avgShadowColor.toHtmlColor(), data.lightestShadowColor.toHtmlColor()]);
-      ToScreenUniforms.uShadowColor = data.terminatorColor;
-      ToScreenUniforms.uReflectedLightColor = cr.get(1).toGlColor();
-      ToScreenUniforms.uDarkAccentColor = cr.get(0.0).toGlColor();
+      Uniforms.uShadowColor = data.terminatorColor;
+      Uniforms.uReflectedLightColor = cr.get(1).toGlColor();
+      Uniforms.uDarkAccentColor = cr.get(0.0).toGlColor();
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
       // ping pong textures
       this.textures.reverse();
 
-      ToTextureUniforms.uPass++;
-      if (ToTextureUniforms.uPass == ToTextureUniforms.uNumPasses) {
-         ToTextureUniforms.uPass = 0;
-         ToTextureUniforms.uSample++;
+      Uniforms.uPass++;
+      if (Uniforms.uPass == Uniforms.uNumPasses) {
+         Uniforms.uPass = 0;
+         Uniforms.uSample++;
       }
    };
 
@@ -223,14 +222,14 @@ export class PathTracer {
          terminatorColor: new glColor([0, 0, 0]),
       }
 
-      let size = ToTextureUniforms.uTextureSize;
+      let size = Uniforms.uTextureSize;
 
       if (this.pixels === undefined) {
          this.pixels = new Float32Array(size * size * 4);
       }
 
       // TODO handle case when the text type is UNSIGNED_BYTE
-      gl.readPixels(0, 0, ToTextureUniforms.uTextureSize, ToTextureUniforms.uTextureSize, gl.RGBA, gl.FLOAT, this.pixels);
+      gl.readPixels(0, 0, Uniforms.uTextureSize, Uniforms.uTextureSize, gl.RGBA, gl.FLOAT, this.pixels);
 
       let numLightPixels = 0;
       let numShadowPixels = 0;
@@ -257,7 +256,7 @@ export class PathTracer {
             }
 
             let color = new glColor([r, g, b]);
-            if (a == ToTextureUniforms.uBALL_LIGHT) {
+            if (a == Uniforms.uBALL_LIGHT) {
                numLightPixels++;
                if (data.lightestLightColor == null) {
                   data.lightestLightColor = color;
@@ -271,7 +270,7 @@ export class PathTracer {
                data.avgLightColor.b += color.b;
                data.avgLightColor.g += color.g;
             }
-            else if (a == ToTextureUniforms.uBALL_SHADOW) {
+            else if (a == Uniforms.uBALL_SHADOW) {
                numShadowPixels++;
                if (data.lightestShadowColor == null) {
                   data.lightestShadowColor = color;
@@ -286,7 +285,7 @@ export class PathTracer {
                data.avgShadowColor.g += color.g;
             }
 
-            let terminator = (ToTextureUniforms.uBALL_LIGHT + ToTextureUniforms.uBALL_SHADOW) / 2.0;
+            let terminator = (Uniforms.uBALL_LIGHT + Uniforms.uBALL_SHADOW) / 2.0;
             if (Math.abs(a - terminator) < 0.1) {
                numTerminatorPixels++;
                data.terminatorColor.r += color.r;
@@ -334,20 +333,20 @@ export class PathTracer {
       gl.vertexAttribPointer(this.toScreenVertexAttribute, 2, gl.FLOAT, false, 0, 0);
 
       // display the main screen
-      ToScreenUniforms.uScale = 1.0;
-      ToScreenUniforms.uXOffset = 0.0;
-      ToScreenUniforms.uYOffset = 0.0;
-      ToScreenUniforms.uMode = this.mainView;
-      Shaders.setUniforms(this.toScreenProgram, ToScreenUniforms);
+      Uniforms.uScale = 1.0;
+      Uniforms.uXOffset = 0.0;
+      Uniforms.uYOffset = 0.0;
+      Uniforms.uMode = this.mainView;
+      Shaders.setUniforms(this.toScreenProgram, Uniforms);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
       // display the smaller views
-      ToScreenUniforms.uScale = 0.25;
+      Uniforms.uScale = 0.25;
       for (let i = 0; i < this.smallViews.length; i++) {
-         ToScreenUniforms.uXOffset = 1.0 - (this.smallViews.length - i - 0.5) * (2 * ToScreenUniforms.uScale);
-         ToScreenUniforms.uYOffset = 1.0 - ToScreenUniforms.uScale;
-         ToScreenUniforms.uMode = this.smallViews[i];
-         Shaders.setUniforms(this.toScreenProgram, ToScreenUniforms);
+         Uniforms.uXOffset = 1.0 - (this.smallViews.length - i - 0.5) * (2 * Uniforms.uScale);
+         Uniforms.uYOffset = 1.0 - Uniforms.uScale;
+         Uniforms.uMode = this.smallViews[i];
+         Shaders.setUniforms(this.toScreenProgram, Uniforms);
          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
    }

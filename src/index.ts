@@ -4,8 +4,7 @@ import { htmlColor } from "./htmlColor";
 import { glColorWithTemperature } from "./glColorWithTemperature";
 import { Slider } from "./Slider";
 import { hsvColor } from "./hsvColor";
-import { ToTextureUniforms } from "./ToTextureUniforms";
-import { ToScreenUniforms } from "./ToScreenUniforms";
+import { Uniforms } from "./Uniforms";
 
 let app: App;
 export let gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -49,10 +48,10 @@ function component(): HTMLElement {
       label: 'Light Intensity',
       min: 0,
       max: 100,
-      value: ToTextureUniforms.uLightIntensity * 100,
+      value: Uniforms.uLightIntensity * 100,
       colors: [htmlColor.black, htmlColor.white],
       oninput: function () {
-         ToTextureUniforms.uLightIntensity = intensitySlider.value / 100;
+         Uniforms.uLightIntensity = intensitySlider.value / 100;
          app.restart();
       }
    });
@@ -87,7 +86,7 @@ function component(): HTMLElement {
       intensitySlider.colors = [htmlColor.black, lightColorSlider.htmlColor];
 
       // use the value in rendering
-      ToTextureUniforms.uLightColor = lightColorSlider.glColor;
+      Uniforms.uLightColor = lightColorSlider.glColor;
       if (app) {
          app.restart();
       }
@@ -107,13 +106,13 @@ function component(): HTMLElement {
          ballShadowShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 180);
          ballLightChromaSlider.colors = computeChromaColors(ballLightShiftSlider.htmlColor);
          ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
-         ToTextureUniforms.uBallColor = ballColorSlider.glColor;
+         Uniforms.uBallColor = ballColorSlider.glColor;
          app.restart();
       }
    });
 
    // make sure gl matches the initial UI setting
-   ToTextureUniforms.uBallColor = ballColorSlider.glColor;
+   Uniforms.uBallColor = ballColorSlider.glColor;
 
    div.appendChild(document.createElement('br'));
 
@@ -122,10 +121,10 @@ function component(): HTMLElement {
       label: 'Ambient Light',
       min: 0,
       max: 100,
-      value: ToTextureUniforms.uAmbientLightIntensity * 100,
+      value: Uniforms.uAmbientLightIntensity * 100,
       colors: [htmlColor.black, htmlColor.white],
       oninput: function () {
-         ToTextureUniforms.uAmbientLightIntensity = ambientIntensitySlider.value / 100;
+         Uniforms.uAmbientLightIntensity = ambientIntensitySlider.value / 100;
          app.restart();
       }
    });
@@ -148,7 +147,7 @@ function component(): HTMLElement {
       value: 100,
       colors: computeChromaColors(ballColorSlider.htmlColor),
       oninput: function () {
-         ToScreenUniforms.uBallLightChroma = ballLightChromaSlider.value / 100;
+         Uniforms.uBallLightChroma = ballLightChromaSlider.value / 100;
          app.restart();
       },
       getText: (slider: Slider) => { return slider.value.toFixed() + "%" }
@@ -171,7 +170,7 @@ function component(): HTMLElement {
       colors: computeShiftColors(ballColorSlider.htmlColor, 180),
       oninput: function () {
          ballLightChromaSlider.colors = computeChromaColors(ballLightShiftSlider.htmlColor);
-         ToScreenUniforms.uBallLightShift = ballLightShiftSlider.value;
+         Uniforms.uBallLightShift = ballLightShiftSlider.value;
          app.restart();
       },
       getText: getTemperatureShiftText,
@@ -216,7 +215,7 @@ function component(): HTMLElement {
       colors: computeChromaColors(ballColorSlider.htmlColor),
       oninput: function () {
          ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
-         ToScreenUniforms.uBallShadowChroma = ballShadowChromaSlider.value / 100;
+         Uniforms.uBallShadowChroma = ballShadowChromaSlider.value / 100;
          app.restart();
       },
       getText: (slider: Slider) => { return slider.value.toFixed() + "%" }
@@ -232,7 +231,7 @@ function component(): HTMLElement {
       value: 0,
       colors: computeShiftColors(ballColorSlider.htmlColor, 180),
       oninput: function () {
-         ToScreenUniforms.uBallShadowShift = ballShadowShiftSlider.value;
+         Uniforms.uBallShadowShift = ballShadowShiftSlider.value;
          app.restart();
       },
       getText: getTemperatureShiftText,
