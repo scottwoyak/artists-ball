@@ -163,7 +163,7 @@ function component(): HTMLElement {
 
    let ballLightShiftSlider = new Slider(groupDiv, {
       id: 'BallLightShift',
-      label: 'Temperature',
+      label: 'Color Shift',
       min: -180,
       max: 180,
       value: 0,
@@ -214,7 +214,6 @@ function component(): HTMLElement {
       value: 100,
       colors: computeChromaColors(ballColorSlider.htmlColor),
       oninput: function () {
-         ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
          Uniforms.uBallShadowChroma = ballShadowChromaSlider.value / 100;
          app.restart();
       },
@@ -225,12 +224,13 @@ function component(): HTMLElement {
 
    let ballShadowShiftSlider = new Slider(groupDiv, {
       id: 'BallShadowShift',
-      label: 'Temperature',
+      label: 'Color Shift',
       min: -180,
       max: 180,
       value: 0,
       colors: computeShiftColors(ballColorSlider.htmlColor, 180),
       oninput: function () {
+         ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
          Uniforms.uBallShadowShift = ballShadowShiftSlider.value;
          app.restart();
       },

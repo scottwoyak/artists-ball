@@ -3,10 +3,6 @@ varying vec2 texCoord;
 uniform sampler2D uTexture;
 uniform int uMode;
 uniform float uMaxChroma;
-uniform float uBallLightChroma;
-uniform float uBallShadowChroma;
-uniform float uBallLightShift;
-uniform float uBallShadowShift;
 
 uniform vec3 uHighlightColor;
 uniform vec3 uLightLightColor;
@@ -76,26 +72,6 @@ vec4 value2Color(float value)
    {
       return colors[NUM_COLORS - 1];
    }
-}
-
-// All components are in the range [0…1], including hue.
-vec4 rgb2hsv(vec4 c)
-{
-   vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-   vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-   vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
-
-   float d = q.x - min(q.w, q.y);
-   float e = 1.0e-10;
-   return vec4(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x, c.a);
-}
-
-// All components are in the range[0…1], including hue.
-vec4 hsv2rgb(vec4 c)
-{
-   vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-   vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-   return vec4(c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y), c.a);
 }
 
 float toGray(vec4 c)
@@ -202,65 +178,22 @@ vec4 renderAsBands()
    }
 }
 
-vec4 shiftTemperature(vec4 rgb, float deg)
-{
-   vec4 hsv = rgb2hsv(rgb);
-   hsv.x += deg / 360.0;
-   return hsv2rgb(hsv);
-}
-
 vec4 renderAsArtist()
 {
    vec4 color = texture2D(uTexture, texCoord);
+   return color;
+
+   /*
 
    if (color.a >= 1.0)
    {
-      float percentShadow = clamp(uBALL_LIGHT - color.a, 0.0, 1.0);
-      float percentLight = 1.0 - percentShadow;
-
-      // temperature shift
-      vec4 rgblight = shiftTemperature(color, -uBallLightShift);
-      vec4 rgbshadow = shiftTemperature(color, -uBallShadowShift);
-      vec4 rgbmix = mix(rgblight, rgbshadow, percentShadow);
-      vec4 hsv = rgb2hsv(rgbmix);
-
-      // correct overflows
-      if (hsv.x > 1.0)
-      {
-         hsv.x -= 1.0;
-      }
-      else if (hsv.x < 0.0)
-      {
-         hsv.x += 1.0;
-      }
-
-      // chroma shift
-      hsv.y *= (percentLight * uBallLightChroma + percentShadow * uBallShadowChroma);
-      hsv.y = clamp(hsv.y, 0.0, 1.0);
-
-      // adjust light/dark value to match the old value in rgb space
-      float origValue = toGray(color);
-      float newValue = toGray(hsv2rgb(hsv));
-      for (int i = 0; i < 1000; i++)
-      {
-         if (abs(origValue - newValue) < 0.01)
-         {
-            break;
-         }
-         else
-         {
-            hsv.z += (origValue - newValue) / 10.0;
-            newValue = toGray(hsv2rgb(hsv));
-         }
-      }
-
-      // convert back to rgb
-      return hsv2rgb(hsv);
+      return toArtist(color);
    }
    else
    {
       return color;
    }
+   */
 }
 
 vec4 renderAsScience()

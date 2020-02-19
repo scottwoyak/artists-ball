@@ -16,6 +16,10 @@ uniform float uSample;
 uniform float uBALL_SPECULAR;
 uniform float uBALL_LIGHT;
 uniform float uBALL_SHADOW;
+uniform float uBallLightChroma;
+uniform float uBallShadowChroma;
+uniform float uBallLightShift;
+uniform float uBallShadowShift;
 
 const int MAX_BOUNCES = 100;
 const float EPSILON = 0.0001;
@@ -123,6 +127,96 @@ bool inShadow(vec3 origin, vec3 ray)
    {
       return false;
    }
+}
+
+// All components are in the range [0…1], including hue.
+vec4 rgb2hsv(vec4 c)
+{
+   vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+   vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+   vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+   float d = q.x - min(q.w, q.y);
+   float e = 1.0e-10;
+   return vec4(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x, c.a);
+}
+
+// All components are in the range[0…1], including hue.
+vec4 hsv2rgb(vec4 c)
+{
+   vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+   vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+   return vec4(c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y), c.a);
+}
+
+vec4 shiftTemperature(vec4 rgb, float deg)
+{
+   vec4 hsv = rgb2hsv(rgb);
+   hsv.x += deg / 360.0;
+   return hsv2rgb(hsv);
+}
+
+// TODO move to a common file
+float toGray(vec4 c)
+{
+   // lots of ways to convert RGB to gray scale.
+
+   // simple averaging method
+   // return (c.r + c.g + c.b) / 3.0;
+
+   // relative perceptual values
+   // return 0.3 * c.r + 0.59 * c.g + 0.11 * c.b;
+
+   // luminosity measure
+   float gamma = 2.2;
+   float y = 0.2126 * pow(c.r, gamma) + 0.7152 * pow(c.g, gamma) + .0722 * pow(c.b, gamma);
+   float l = 116.0 * pow(y, 1.0 / 3.0) - 16.0;
+   return l / 100.0;
+}
+
+vec4 toArtist(vec4 color)
+{
+   float percentShadow = clamp(uBALL_LIGHT - color.a, 0.0, 1.0);
+   float percentLight = 1.0 - percentShadow;
+
+   // temperature shift
+   vec4 rgblight = shiftTemperature(color, -uBallLightShift);
+   vec4 rgbshadow = shiftTemperature(color, -uBallShadowShift);
+   vec4 rgbmix = mix(rgblight, rgbshadow, percentShadow);
+   vec4 hsv = rgb2hsv(rgbmix);
+
+   // correct overflows
+   if (hsv.x > 1.0)
+   {
+      hsv.x -= 1.0;
+   }
+   else if (hsv.x < 0.0)
+   {
+      hsv.x += 1.0;
+   }
+
+   // chroma shift
+   hsv.y *= (percentLight * uBallLightChroma + percentShadow * uBallShadowChroma);
+   hsv.y = clamp(hsv.y, 0.0, 1.0);
+
+   // adjust light/dark value to match the old value in rgb space
+   float origValue = toGray(color);
+   float newValue = toGray(hsv2rgb(hsv));
+   for (int i = 0; i < 1000; i++)
+   {
+      if (abs(origValue - newValue) < 0.01)
+      {
+         break;
+      }
+      else
+      {
+         hsv.z += (origValue - newValue) / 10.0;
+         newValue = toGray(hsv2rgb(hsv));
+      }
+   }
+
+   // convert back to rgb
+   return hsv2rgb(clamp(hsv, 0.0, 1.0));
 }
 
 vec4 calculateColor(vec3 origin, vec3 ray)
@@ -275,7 +369,10 @@ vec4 calculateColor(vec3 origin, vec3 ray)
          alpha = uBALL_LIGHT;
       }
    }
-   return vec4(clamp(accumulatedColor, 0.0, 1.0), alpha);
+
+   vec4 scienceColor = vec4(clamp(accumulatedColor, 0.0, 1.0), alpha);
+   vec4 artistColor = vec4(toArtist(scienceColor).rgb, alpha);
+   return artistColor;
 }
 
 void main()

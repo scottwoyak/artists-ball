@@ -34,21 +34,16 @@ export class App {
       if (y < size) {
 
          if (x > canvas.width - 1 * size) {
-            this.swap(3);
-            this.setDescription();
-            return true;
-         }
-         else if (x > canvas.width - 2 * size) {
             this.swap(2);
             this.setDescription();
             return true;
          }
-         else if (x > canvas.width - 3 * size) {
+         else if (x > canvas.width - 2 * size) {
             this.swap(1);
             this.setDescription();
             return true;
          }
-         else if (x > canvas.width - 4 * size) {
+         else if (x > canvas.width - 3 * size) {
             this.swap(0);
             this.setDescription();
             return true;
@@ -61,12 +56,8 @@ export class App {
    private setDescription() {
       let description = document.getElementById('description');
       switch (this.tracer.renderMode) {
-         case RenderMode.Science:
-            description.innerText = "This view displays the numerically computed colors.";
-            break;
-
          case RenderMode.Artist:
-            description.innerText = "This view displays the artist adjusted colors.";
+            description.innerText = "This view displays numerically computed colors with artist enhancements.";
             break;
 
          case RenderMode.Chroma:

@@ -15,10 +15,9 @@ import { Uniforms } from './Uniforms';
  * Rendering mode for displaying the texture
  */
 export enum RenderMode {
-   Science = 0,
+   Artist = 0,
    Value = 1,
    Chroma = 2,
-   Artist = 3,
    Bands = 4,
 }
 
@@ -47,12 +46,11 @@ export class PathTracer {
    private toTextureVertexAttribute: number;
    private pixels: Float32Array;
 
-   private mainView = RenderMode.Science;
+   private mainView = RenderMode.Artist;
    private smallViews = [
-      RenderMode.Artist,
       RenderMode.Chroma,
-      RenderMode.Bands,
       RenderMode.Value,
+      RenderMode.Bands,
    ];
 
    private vertices = [
@@ -193,7 +191,8 @@ export class PathTracer {
       Uniforms.uDarkLightColor = cr.get(0.2).toGlColor();
 
       cr = new ColorRange([data.darkestShadowColor.toHtmlColor(), data.avgShadowColor.toHtmlColor(), data.lightestShadowColor.toHtmlColor()]);
-      Uniforms.uShadowColor = data.terminatorColor;
+      //Uniforms.uShadowColor = data.terminatorColor;
+      Uniforms.uShadowColor = data.avgShadowColor;
       Uniforms.uReflectedLightColor = cr.get(1).toGlColor();
       Uniforms.uDarkAccentColor = cr.get(0.0).toGlColor();
 
@@ -353,17 +352,16 @@ export class PathTracer {
 
    public swap(pos: number): void {
       this.smallViews = [
-         RenderMode.Artist,
          RenderMode.Chroma,
-         RenderMode.Bands,
          RenderMode.Value,
+         RenderMode.Bands,
       ];
-      if (this.mainView == RenderMode.Science) {
-         this.mainView = this.smallViews[pos];
-         this.smallViews[pos] = RenderMode.Science;
+      if (this.mainView == this.smallViews[pos]) {
+         this.mainView = RenderMode.Artist;
       }
       else {
-         this.mainView = RenderMode.Science;
+         this.mainView = this.smallViews[pos];
+         this.smallViews[pos] = RenderMode.Artist;
       }
       this.displayTexture();
    }
