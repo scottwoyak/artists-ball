@@ -215,8 +215,8 @@ vec4 renderAsArtist()
 
    if (color.a >= 1.0)
    {
-      float percentLight = clamp(uBALL_LIGHT - color.a, 0.0, 1.0);
-      float percentShadow = 1.0 - percentLight;
+      float percentShadow = clamp(uBALL_LIGHT - color.a, 0.0, 1.0);
+      float percentLight = 1.0 - percentShadow;
 
       // temperature shift
       vec4 rgblight = shiftTemperature(color, -uBallLightShift);
