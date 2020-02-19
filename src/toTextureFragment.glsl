@@ -371,8 +371,14 @@ vec4 calculateColor(vec3 origin, vec3 ray)
    }
 
    vec4 scienceColor = vec4(clamp(accumulatedColor, 0.0, 1.0), alpha);
-   vec4 artistColor = vec4(toArtist(scienceColor).rgb, alpha);
-   return artistColor;
+   if (ballHit)
+   {
+      return vec4(toArtist(scienceColor).rgb, alpha);
+   }
+   else
+   {
+      return scienceColor;
+   }
 }
 
 void main()
