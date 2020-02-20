@@ -155,25 +155,87 @@ vec3 closest(vec3 color, vec3 high, vec3 light, vec3 mid, vec3 dark)
 
 vec4 renderAsBands()
 {
-   vec4 color = texture2D(uTexture, texCoord);
+   float size = 0.07;
+   if (texCoord.x > (1.0 - size) && texCoord.y < 6.0 * size)
+   {
+      /*
+      if (texCoord.y < 1.0 * size)
+      {
+         return vec4(uDarkAccentColor, 1.0);
+      }
+      else if (texCoord.y < 2.0 * size)
+      {
+         return vec4(uShadowColor, 1.0);
+      }
+      else if (texCoord.y < 3.0 * size)
+      {
+         return vec4(uReflectedLightColor, 1.0);
+      }
+      else if (texCoord.y < 4.0 * size)
+      {
+         return vec4(uDarkLightColor, 1.0);
+      }
+      else if (texCoord.y < 5.0 * size)
+      {
+         return vec4(uMidLightColor, 1.0);
+      }
+      else if (texCoord.y < 6.0 * size)
+      {
+         return vec4(uLightLightColor, 1.0);
+      }
+      else // if (texCoord.y < 7.0 * size)
+      {
+         return vec4(uHighlightColor, 1.0);
+      }
+      */
 
-   // define the terminator as the point where things are 50% in shadow
-   float terminator = ((uBALL_SHADOW + uBALL_LIGHT) / 2.0);
-   if (color.a > 1.0 && color.a <= terminator)
-   {
-      vec3 c = closest(color.rgb, uShadowColor, uReflectedLightColor, uDarkAccentColor,
-                       uDarkAccentColor);
-      return vec4(c, 1.0);
-   }
-   else if (color.a > terminator)
-   {
-      vec3 c =
-          closest(color.rgb, uHighlightColor, uLightLightColor, uMidLightColor, uDarkLightColor);
-      return vec4(c, 1.0);
+      if (texCoord.y < 1.0 * size)
+      {
+         return vec4(uDarkAccentColor, 1.0);
+      }
+      else if (texCoord.y < 2.0 * size)
+      {
+         return vec4(uShadowColor, 1.0);
+      }
+      else if (texCoord.y < 3.0 * size)
+      {
+         return vec4(uDarkLightColor, 1.0);
+      }
+      else if (texCoord.y < 4.0 * size)
+      {
+         return vec4(uMidLightColor, 1.0);
+      }
+      else if (texCoord.y < 5.0 * size)
+      {
+         return vec4(uLightLightColor, 1.0);
+      }
+      else // if (texCoord.y < 7.0 * size)
+      {
+         return vec4(uHighlightColor, 1.0);
+      }
    }
    else
    {
-      return color;
+      vec4 color = texture2D(uTexture, texCoord);
+
+      // define the terminator as the point where things are 50% in shadow
+      float terminator = ((uBALL_SHADOW + uBALL_LIGHT) / 2.0);
+      if (color.a > 1.0 && color.a <= terminator)
+      {
+         vec3 c = closest(color.rgb, uShadowColor, uReflectedLightColor, uDarkAccentColor,
+                          uDarkAccentColor);
+         return vec4(c, 1.0);
+      }
+      else if (color.a > terminator)
+      {
+         vec3 c =
+             closest(color.rgb, uHighlightColor, uLightLightColor, uMidLightColor, uDarkLightColor);
+         return vec4(c, 1.0);
+      }
+      else
+      {
+         return color;
+      }
    }
 }
 
