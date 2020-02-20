@@ -5,6 +5,7 @@ import { glColorWithTemperature } from "./glColorWithTemperature";
 import { Slider } from "./Slider";
 import { hsvColor } from "./hsvColor";
 import { Uniforms } from "./Uniforms";
+import { TabControl } from "./TabControl";
 
 let app: App;
 export let gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -43,7 +44,12 @@ function component(): HTMLElement {
 
    div.appendChild(document.createElement('br'));
 
-   let intensitySlider = new Slider(div, {
+   let tabCtrl = new TabControl(div);
+
+   let setupTabContent = tabCtrl.createTab('Setup');
+   let artisticTabContent = tabCtrl.createTab('Artistic Tweaks');
+
+   let intensitySlider = new Slider(setupTabContent, {
       id: 'LightIntensity',
       label: 'Light Intensity',
       min: 0,
@@ -56,7 +62,7 @@ function component(): HTMLElement {
       }
    });
 
-   div.appendChild(document.createElement('br'));
+   setupTabContent.appendChild(document.createElement('br'));
 
    // build a range of colors
    let min = 2000;
@@ -66,7 +72,7 @@ function component(): HTMLElement {
       let temp = min + (i / 9) * (max - min);
       colors.push(glColorWithTemperature.create(temp).toHtmlColor());
    }
-   let lightColorSlider = new Slider(div, {
+   let lightColorSlider = new Slider(setupTabContent, {
       id: 'LightColor',
       label: 'Light Color',
       min: 2000,
@@ -92,9 +98,9 @@ function component(): HTMLElement {
       }
    }
 
-   div.appendChild(document.createElement('br'));
+   setupTabContent.appendChild(document.createElement('br'));
 
-   let ballColorSlider = new Slider(div, {
+   let ballColorSlider = new Slider(setupTabContent, {
       id: 'BallColor',
       label: 'Ball Color',
       min: 0,
@@ -114,9 +120,9 @@ function component(): HTMLElement {
    // make sure gl matches the initial UI setting
    Uniforms.uBallColor = ballColorSlider.glColor;
 
-   div.appendChild(document.createElement('br'));
+   setupTabContent.appendChild(document.createElement('br'));
 
-   let ambientIntensitySlider = new Slider(div, {
+   let ambientIntensitySlider = new Slider(setupTabContent, {
       id: 'AmbientIntensity',
       label: 'Ambient Light',
       min: 0,
@@ -129,7 +135,7 @@ function component(): HTMLElement {
       }
    });
 
-   div.appendChild(document.createElement('br'));
+   setupTabContent.appendChild(document.createElement('br'));
 
    let groupDiv = document.createElement('div');
    groupDiv.className = "SliderGroup";
@@ -137,7 +143,7 @@ function component(): HTMLElement {
    headerDiv.className = "SliderHeader";
    headerDiv.innerText = "Ball in Light";
    groupDiv.appendChild(headerDiv);
-   div.appendChild(groupDiv);
+   artisticTabContent.appendChild(groupDiv);
 
    let ballLightChromaSlider = new Slider(groupDiv, {
       id: 'LightChroma',
@@ -196,7 +202,7 @@ function component(): HTMLElement {
 
    let separator = document.createElement('div');
    separator.style.height = '2px';
-   div.appendChild(separator);
+   artisticTabContent.appendChild(separator);
 
    groupDiv = document.createElement('div');
    groupDiv.className = "SliderGroup";
@@ -204,7 +210,7 @@ function component(): HTMLElement {
    headerDiv.className = "SliderHeader";
    headerDiv.innerText = "Ball in Shadow";
    groupDiv.appendChild(headerDiv);
-   div.appendChild(groupDiv);
+   artisticTabContent.appendChild(groupDiv);
 
    let ballShadowChromaSlider = new Slider(groupDiv, {
       id: 'ShadowChroma',
