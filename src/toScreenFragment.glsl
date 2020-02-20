@@ -20,8 +20,7 @@ uniform float uBALL_SHADOW;
 #define MODE_SCIENCE 0
 #define MODE_VALUE 1
 #define MODE_CHROMA 2
-#define MODE_ARTIST 3
-#define MODE_BANDS 4
+#define MODE_BANDS 3
 
 vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
 vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
@@ -178,24 +177,6 @@ vec4 renderAsBands()
    }
 }
 
-vec4 renderAsArtist()
-{
-   vec4 color = texture2D(uTexture, texCoord);
-   return color;
-
-   /*
-
-   if (color.a >= 1.0)
-   {
-      return toArtist(color);
-   }
-   else
-   {
-      return color;
-   }
-   */
-}
-
 vec4 renderAsScience()
 {
    // just return the texture
@@ -218,10 +199,6 @@ void main()
    else if (uMode == MODE_CHROMA)
    {
       gl_FragColor = renderAsChroma();
-   }
-   else if (uMode == MODE_ARTIST)
-   {
-      gl_FragColor = renderAsArtist();
    }
    else if (uMode == MODE_BANDS)
    {

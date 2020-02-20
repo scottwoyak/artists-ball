@@ -18,7 +18,7 @@ export enum RenderMode {
    Artist = 0,
    Value = 1,
    Chroma = 2,
-   Bands = 4,
+   Bands = 3,
 }
 
 interface IPixelData {
