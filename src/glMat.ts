@@ -67,7 +67,7 @@ export class glMat4 {
       for (let row = 0; row < 4; row++) {
          let sum = 0;
          for (let col = 0; col < 4; col++) {
-            sum += this.values[row * 4 + col] * vec.get(col);
+            sum += this.values[row * 4 + col] * vec.values[col];
          }
          vals.push(sum);
       }
@@ -177,9 +177,9 @@ export class glMat4 {
    public static fromTranslation(v: glVec3): glMat4 {
 
       let result = new glMat4([
-         1, 0, 0, v.get(0),
-         0, 1, 0, v.get(1),
-         0, 0, 1, v.get(2),
+         1, 0, 0, v.values[0],
+         0, 1, 0, v.values[1],
+         0, 0, 1, v.values[2],
          0, 0, 0, 1
       ]);
 
@@ -206,16 +206,16 @@ export class glMat4 {
       let y = z.clone().cross(x).normalize();
 
       let m = new glMat4([
-         x.get(0), x.get(1), x.get(2), 0,
-         y.get(0), y.get(1), y.get(2), 0,
-         z.get(0), z.get(1), z.get(2), 0,
+         x.values[0], x.values[1], x.values[2], 0,
+         y.values[0], y.values[1], y.values[2], 0,
+         z.values[0], z.values[1], z.values[2], 0,
          0, 0, 0, 1
       ]);
 
       var t = new glMat4([
-         1, 0, 0, -eye.get(0),
-         0, 1, 0, -eye.get(1),
-         0, 0, 1, -eye.get(2),
+         1, 0, 0, -eye.values[0],
+         0, 1, 0, -eye.values[1],
+         0, 0, 1, -eye.values[2],
          0, 0, 0, 1
       ]);
 

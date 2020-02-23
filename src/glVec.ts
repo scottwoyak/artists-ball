@@ -5,7 +5,7 @@
 class glVec {
 
    /** The vector values. */
-   protected values: number[];
+   public values: number[];
 
    /**
     * @param valuesOrSize If a array, the values for the vector. If a number, the size of the vector.
@@ -20,26 +20,6 @@ class glVec {
             this.values[i] = 0;
          }
       }
-   }
-
-   /**
-    * Gets a value in the vector.
-    * 
-    * @param index The element index.
-    * @returns The element value.
-    */
-   public get(index: number): number {
-      return this.values[index];
-   }
-
-   /**
-    * Sets a value in the vector.
-    * 
-    * @param index The element index.
-    * @param value The element value.
-    */
-   public set(index: number, value: number): void {
-      this.values[index] = value;
    }
 
    /**

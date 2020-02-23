@@ -25,8 +25,8 @@ const int MAX_BOUNCES = 100;
 const float EPSILON = 0.0001;
 const float INFINITY = 10000.0;
 const float LIGHT_SIZE = 0.1;
-const vec3 BALL_CENTER = vec3(0, -0.5, 0);
 const float BALL_RADIUS = 0.5;
+const vec3 BALL_CENTER = vec3(0, BALL_RADIUS, 0);
 const vec3 DOME_CENTER = vec3(0, 0, 0);
 const float DOME_RADIUS = 7.0;
 const float VAL = 0.8;
@@ -257,7 +257,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       if (ray.y < 0.0)
       {
          // distance to floor = num unit vectors required to reach the floor
-         tfloor = -(origin.y + 1.0) / ray.y;
+         tfloor = -origin.y / ray.y;
          if (tfloor < t)
          {
             t = tfloor;

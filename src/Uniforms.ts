@@ -76,7 +76,7 @@ export let Uniforms: IUniforms = {
 
    uLightIntensity: 0.7,
    uLightColor: new glColor([1.0, 1.0, 1.0]),
-   uLightPos: new glVec3([-0.6, 0.7, 0.8]),
+   uLightPos: new glVec3([-0.6, 1.7, 0.8]),
    uAmbientLightIntensity: 0.3,
    uBallColor: new glColor([0.5, 0.5, 0.8]),
    uEye: new glVec3([0, 0, 0]),

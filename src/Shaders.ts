@@ -10,7 +10,7 @@ export class Shaders {
          var location = gl.getUniformLocation(program, name);
          if (location == null) continue;
          else if (value instanceof glVec3) {
-            gl.uniform3fv(location, new Float32Array([value.get(0), value.get(1), value.get(2)]));
+            gl.uniform3fv(location, new Float32Array(value.values));
          }
          else if (value instanceof glColor) {
             gl.uniform3fv(location, new Float32Array([value.r, value.g, value.b]));

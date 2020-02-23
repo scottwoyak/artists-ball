@@ -6,14 +6,24 @@ import { Slider } from "./Slider";
 import { hsvColor } from "./hsvColor";
 import { Uniforms } from "./Uniforms";
 import { TabControl } from "./TabControl";
+import { SphericalCoord } from "./SphericalCoord";
+
+enum PointerMode {
+   View,
+   LightDistance,
+   LightRotationElevation,
+}
 
 let app: App;
 export let gl: WebGLRenderingContext | WebGL2RenderingContext = null;
 export let canvas: HTMLCanvasElement;
 
-export let angleX = 0;
-export let angleY = 0;
-export let zoomZ = 3.0;
+export let angleX = 0.5;
+export let angleY = 0.75;
+export let zoomZ = 3.5;
+
+let pointerMode: PointerMode = PointerMode.View;
+let pos: SphericalCoord;
 
 let skinTones = [
    new htmlColor([240, 223, 214]),
@@ -41,6 +51,26 @@ function component(): HTMLElement {
    let description = document.createElement('div');
    description.id = 'description';
    container.appendChild(description);
+
+   let button = document.createElement('span');
+   button.id = 'modeButton';
+   button.innerHTML = 'View';
+   button.style.cursor = 'default';
+   pointerMode = PointerMode.View;
+   button.onclick = () => {
+      switch (pointerMode) {
+         case PointerMode.View:
+            button.innerHTML = 'Light';
+            pointerMode = PointerMode.LightRotationElevation;
+            break;
+
+         case PointerMode.LightRotationElevation:
+            button.innerHTML = 'View';
+            pointerMode = PointerMode.View;
+            break;
+      }
+   }
+   container.appendChild(button);
 
    div.appendChild(document.createElement('br'));
 
@@ -287,10 +317,7 @@ window.onload = function () {
                return;
             }
 
-            mouseDown = true;
-
-            oldX = event.touches[0].clientX;
-            oldY = event.touches[0].clientY;
+            onDown(event.touches[0].clientX, event.touches[0].clientY);
          }
       }
 
@@ -305,10 +332,7 @@ window.onload = function () {
       }
 
       canvas.onmousedown = function (event: MouseEvent) {
-         oldX = event.x;
-         oldY = event.y;
-
-         mouseDown = true;
+         onDown(event.x, event.y);
 
          // disable selection because dragging is used for rotating the camera and moving objects
          return false;
@@ -328,15 +352,39 @@ window.onload = function () {
    }
 }
 
+function onDown(x: number, y: number) {
+   oldX = x;
+   oldY = y;
+
+   pos = SphericalCoord.fromXYZ(Uniforms.uLightPos.values);
+
+   mouseDown = true;
+}
+
 function onMove(x: number, y: number) {
    if (mouseDown) {
-      // update the angles based on how far we moved since last time
-      angleY -= (x - oldX) * 0.01;
-      angleX += (y - oldY) * 0.01;
+      if (pointerMode === PointerMode.View) {
+         // update the angles based on how far we moved since last time
+         angleY -= (x - oldX) * 0.01;
+         angleX += (y - oldY) * 0.01;
 
-      // don't go upside down
-      angleX = Math.max(angleX, -Math.PI / 2 + 0.01);
-      angleX = Math.min(angleX, Math.PI / 2 - 0.01);
+         // don't go upside down
+         angleX = Math.max(angleX, -Math.PI / 2 + 0.01);
+         angleX = Math.min(angleX, Math.PI / 2 - 0.01);
+      }
+      else if (pointerMode === PointerMode.LightDistance) {
+
+         pos.radius -= (y - oldY) * 0.002;
+         pos.radius = Math.max(0.75, pos.radius);
+         Uniforms.uLightPos.values = pos.toXYZ();
+      }
+      else if (pointerMode === PointerMode.LightRotationElevation) {
+
+         pos.rotationAngle += (x - oldX);
+         pos.elevationAngle += (y - oldY);
+         pos.elevationAngle = clamp(pos.elevationAngle, 0, 180);
+         Uniforms.uLightPos.values = pos.toXYZ();
+      }
 
       // clear the sample buffer
       app.restart();
@@ -347,3 +395,14 @@ function onMove(x: number, y: number) {
    }
 }
 
+function clamp(value: number, min: number, max: number): number {
+   if (value < min) {
+      return min;
+   }
+   else if (value > max) {
+      return max;
+   }
+   else {
+      return value;
+   }
+}

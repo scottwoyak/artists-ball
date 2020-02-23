@@ -96,6 +96,20 @@ body {
   text-shadow: 0px 0px 6px rgba(0, 0, 0, 1);
 }
 
+#modeButton {
+  position: absolute;
+  bottom: 5px;
+  right: 2px;
+  padding: 2px;
+  padding-right: 5px;
+  padding-left: 5px;
+  border-radius: 5px;
+  font-size: 10pt;
+  font-family: arial;
+  color: yellow;
+  text-shadow: 0px 0px 6px rgba(0, 0, 0, 1);
+}
+
 /* Style the tab */
 .Tabs {
   overflow: hidden;
@@ -175,6 +189,11 @@ body {
   }
 
   #description {
+    font-size: 20pt;
+    font-weight: darker;
+  }
+
+  #modeButton {
     font-size: 20pt;
     font-weight: darker;
   }

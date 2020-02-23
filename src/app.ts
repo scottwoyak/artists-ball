@@ -77,7 +77,7 @@ export class App {
    public updateTexture(timeSinceStart: number) {
       this.modelview = glMat4.makeLookAt(
          Uniforms.uEye,
-         new glVec3([0, 0, 0]),  // center point
+         new glVec3([0, 1, 0]),  // center point
          new glVec3([0, 1, 0])   // up vector
       );
 
@@ -105,9 +105,9 @@ export class App {
 
       if (this.count < 1000) {
          this.count++;
-         Uniforms.uEye.set(0, zoomZ * Math.sin(angleY) * Math.cos(angleX));
-         Uniforms.uEye.set(1, zoomZ * Math.sin(angleX));
-         Uniforms.uEye.set(2, zoomZ * Math.cos(angleY) * Math.cos(angleX));
+         Uniforms.uEye.values[0] = zoomZ * Math.sin(angleY) * Math.cos(angleX);
+         Uniforms.uEye.values[1] = zoomZ * Math.sin(angleX);
+         Uniforms.uEye.values[2] = zoomZ * Math.cos(angleY) * Math.cos(angleX);
 
          this.updateTexture(timeSinceStart);
          this.displayTexture();
