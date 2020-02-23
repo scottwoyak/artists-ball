@@ -226,6 +226,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
    vec3 eye = origin;
    bool ballHit = false;
    bool ballShadow = false;
+   float specularContribution = 0.0;
 
    // main raytracing loop
    for (int bounce = 0; bounce < MAX_BOUNCES; bounce++)
@@ -344,6 +345,11 @@ vec4 calculateColor(vec3 origin, vec3 ray)
             //            lightIntensity * specular;
             accumulatedColor +=
                 (length(surfaceColor) * Lights[i].color) * lightIntensity * specular;
+
+            if (bounce == 0 && i == 0)
+            {
+               specularContribution += lightIntensity * specular;
+            }
          }
          else if (bounce == 0 && i == 0)
          {
@@ -368,6 +374,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       {
          alpha = uBALL_LIGHT;
       }
+      alpha += clamp(specularContribution, 0.0, 1.0);
    }
 
    vec4 scienceColor = vec4(clamp(accumulatedColor, 0.0, 1.0), alpha);

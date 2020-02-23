@@ -127,19 +127,14 @@ float d2(vec3 c1, vec3 c2)
    return pow(c1.r - c2.r, 2.0) + pow(c1.g - c2.g, 2.0) + pow(c1.b - c2.b, 2.0);
 }
 
-vec3 closest(vec3 color, vec3 high, vec3 light, vec3 mid, vec3 dark)
+vec3 closest(vec3 color, vec3 light, vec3 mid, vec3 dark)
 {
-   float dhigh = d2(color, high);
    float dlight = d2(color, light);
    float dmid = d2(color, mid);
    float ddark = d2(color, dark);
 
-   float dmin = min(dhigh, min(dlight, min(dmid, ddark)));
-   if (dmin == dhigh)
-   {
-      return high;
-   }
-   else if (dmin == dlight)
+   float dmin = min(dlight, min(dmid, ddark));
+   if (dmin == dlight)
    {
       return light;
    }
@@ -222,15 +217,23 @@ vec4 renderAsBands()
       float terminator = ((uBALL_SHADOW + uBALL_LIGHT) / 2.0);
       if (color.a > 1.0 && color.a <= terminator)
       {
-         vec3 c = closest(color.rgb, uShadowColor, uReflectedLightColor, uDarkAccentColor,
-                          uDarkAccentColor);
+         vec3 c = closest(color.rgb, uShadowColor, uReflectedLightColor, uDarkAccentColor);
          return vec4(c, 1.0);
       }
       else if (color.a > terminator)
       {
-         vec3 c =
-             closest(color.rgb, uHighlightColor, uLightLightColor, uMidLightColor, uDarkLightColor);
-         return vec4(c, 1.0);
+         // only render the highlight where it's contribution is significant, i.e. greater
+         // than some threshold
+         const float SPECULAR_THRESHOLD = 0.1;
+         if (color.a > (uBALL_LIGHT + SPECULAR_THRESHOLD))
+         {
+            return vec4(uHighlightColor, 1.0);
+         }
+         else
+         {
+            vec3 c = closest(color.rgb, uLightLightColor, uMidLightColor, uDarkLightColor);
+            return vec4(c, 1.0);
+         }
       }
       else
       {

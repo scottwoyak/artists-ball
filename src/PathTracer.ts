@@ -23,6 +23,7 @@ export enum RenderMode {
 
 interface IPixelData {
    maxChroma: number,
+   highlightColor: glColor,
    avgLightColor: glColor,
    lightestLightColor: glColor,
    darkestLightColor: glColor,
@@ -185,10 +186,10 @@ export class PathTracer {
       Uniforms.uMaxChroma = data.maxChroma;
 
       let cr = new ColorRange([data.darkestLightColor.toHtmlColor(), data.avgLightColor.toHtmlColor(), data.lightestLightColor.toHtmlColor()]);
-      Uniforms.uHighlightColor = cr.get(1.0).toGlColor();
-      Uniforms.uLightLightColor = cr.get(0.8).toGlColor();
+      Uniforms.uHighlightColor = data.highlightColor;
+      Uniforms.uLightLightColor = cr.get(0.85).toGlColor();
       Uniforms.uMidLightColor = cr.get(0.5).toGlColor();
-      Uniforms.uDarkLightColor = cr.get(0.2).toGlColor();
+      Uniforms.uDarkLightColor = cr.get(0.15).toGlColor();
 
       cr = new ColorRange([data.darkestShadowColor.toHtmlColor(), data.avgShadowColor.toHtmlColor(), data.lightestShadowColor.toHtmlColor()]);
       //Uniforms.uShadowColor = data.terminatorColor;
@@ -219,6 +220,7 @@ export class PathTracer {
          lightestShadowColor: new glColor([0, 0, 0]),
          darkestShadowColor: new glColor([1, 1, 1]),
          terminatorColor: new glColor([0, 0, 0]),
+         highlightColor: new glColor([0, 0, 0]),
       }
 
       let size = Uniforms.uTextureSize;
@@ -282,6 +284,9 @@ export class PathTracer {
                data.avgShadowColor.r += color.r;
                data.avgShadowColor.b += color.b;
                data.avgShadowColor.g += color.g;
+            }
+            else if (a > Uniforms.uBALL_LIGHT) {
+               data.highlightColor = glColor.lightest(data.highlightColor, color);
             }
 
             let terminator = (Uniforms.uBALL_LIGHT + Uniforms.uBALL_SHADOW) / 2.0;
