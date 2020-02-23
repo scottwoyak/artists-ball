@@ -151,60 +151,30 @@ vec3 closest(vec3 color, vec3 light, vec3 mid, vec3 dark)
 vec4 renderAsBands()
 {
    float size = 0.07;
-   if (texCoord.x > (1.0 - size) && texCoord.y < 6.0 * size)
+   float margin = (1.0 - 6.0 * size) / 2.0;
+   if (texCoord.x < size && texCoord.y > margin && texCoord.y < (1.0 - margin))
    {
-      /*
-      if (texCoord.y < 1.0 * size)
+      if (texCoord.y < (margin + 1.0 * size))
       {
          return vec4(uDarkAccentColor, 1.0);
       }
-      else if (texCoord.y < 2.0 * size)
+      else if (texCoord.y < (margin + 2.0 * size))
       {
          return vec4(uShadowColor, 1.0);
       }
-      else if (texCoord.y < 3.0 * size)
-      {
-         return vec4(uReflectedLightColor, 1.0);
-      }
-      else if (texCoord.y < 4.0 * size)
+      else if (texCoord.y < (margin + 3.0 * size))
       {
          return vec4(uDarkLightColor, 1.0);
       }
-      else if (texCoord.y < 5.0 * size)
+      else if (texCoord.y < (margin + 4.0 * size))
       {
          return vec4(uMidLightColor, 1.0);
       }
-      else if (texCoord.y < 6.0 * size)
+      else if (texCoord.y < (margin + 5.0 * size))
       {
          return vec4(uLightLightColor, 1.0);
       }
-      else // if (texCoord.y < 7.0 * size)
-      {
-         return vec4(uHighlightColor, 1.0);
-      }
-      */
-
-      if (texCoord.y < 1.0 * size)
-      {
-         return vec4(uDarkAccentColor, 1.0);
-      }
-      else if (texCoord.y < 2.0 * size)
-      {
-         return vec4(uShadowColor, 1.0);
-      }
-      else if (texCoord.y < 3.0 * size)
-      {
-         return vec4(uDarkLightColor, 1.0);
-      }
-      else if (texCoord.y < 4.0 * size)
-      {
-         return vec4(uMidLightColor, 1.0);
-      }
-      else if (texCoord.y < 5.0 * size)
-      {
-         return vec4(uLightLightColor, 1.0);
-      }
-      else // if (texCoord.y < 7.0 * size)
+      else // if (texCoord.y < (margin + 7.0 * size))
       {
          return vec4(uHighlightColor, 1.0);
       }

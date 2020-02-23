@@ -7,11 +7,11 @@ import { hsvColor } from "./hsvColor";
 import { Uniforms } from "./Uniforms";
 import { TabControl } from "./TabControl";
 import { SphericalCoord } from "./SphericalCoord";
+import { htmlColorWithAlpha } from "./htmlColorWithAlpha";
 
 enum PointerMode {
    View,
-   LightDistance,
-   LightRotationElevation,
+   Light,
 }
 
 let app: App;
@@ -23,6 +23,7 @@ export let angleY = 0.75;
 export let zoomZ = 3.5;
 
 let pointerMode: PointerMode = PointerMode.View;
+let pointerModeSpecial = false;
 let pos: SphericalCoord;
 
 let skinTones = [
@@ -40,7 +41,7 @@ let skinTones = [
 function component(): HTMLElement {
    const div = document.createElement('div');
 
-   const container = document.createElement('div');
+   const container = document.createElement('span');
    container.className = 'container';
    div.appendChild(container);
 
@@ -55,16 +56,15 @@ function component(): HTMLElement {
    let button = document.createElement('span');
    button.id = 'modeButton';
    button.innerHTML = 'View';
-   button.style.cursor = 'default';
    pointerMode = PointerMode.View;
    button.onclick = () => {
       switch (pointerMode) {
          case PointerMode.View:
             button.innerHTML = 'Light';
-            pointerMode = PointerMode.LightRotationElevation;
+            pointerMode = PointerMode.Light;
             break;
 
-         case PointerMode.LightRotationElevation:
+         case PointerMode.Light:
             button.innerHTML = 'View';
             pointerMode = PointerMode.View;
             break;
@@ -140,6 +140,8 @@ function component(): HTMLElement {
       oninput: () => {
          ballLightShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 180);
          ballShadowShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 180);
+         ballLightTintStrengthSlider.colors = computeTintStrengthColors(ballLightShiftSlider.htmlColor);
+         ballShadowTintStrengthSlider.colors = computeTintStrengthColors(ballShadowShiftSlider.htmlColor);
          ballLightChromaSlider.colors = computeChromaColors(ballLightShiftSlider.htmlColor);
          ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
          Uniforms.uBallColor = ballColorSlider.glColor;
@@ -189,46 +191,37 @@ function component(): HTMLElement {
       getText: (slider: Slider) => { return slider.value.toFixed() + "%" }
    })
 
-   function computeChromaColors(baseColor: htmlColor): htmlColor[] {
-      let hsv = hsvColor.fromHtmlColor(baseColor);
-      hsv = new hsvColor([hsv.h, Math.min(hsv.s * 2, 1.0), hsv.v]);
-      return [baseColor.toGray(), baseColor, hsv.toHtmlColor()];
-   }
-
    groupDiv.appendChild(document.createElement('br'));
 
    let ballLightShiftSlider = new Slider(groupDiv, {
       id: 'BallLightShift',
-      label: 'Color Shift',
+      label: 'Tint Color',
       min: -180,
       max: 180,
       value: 0,
       colors: computeShiftColors(ballColorSlider.htmlColor, 180),
       oninput: function () {
          ballLightChromaSlider.colors = computeChromaColors(ballLightShiftSlider.htmlColor);
+         ballLightTintStrengthSlider.colors = computeTintStrengthColors(ballLightShiftSlider.htmlColor);
          Uniforms.uBallLightShift = ballLightShiftSlider.value;
          app.restart();
       },
       getText: getTemperatureShiftText,
    })
 
-   function computeShiftColors(baseColor: htmlColor, maxShift: number): htmlColor[] {
-      let hsv = hsvColor.fromHtmlColor(baseColor);
-      let colors: htmlColor[] = [];
-      let numSteps = 10;
-      for (let i = 0; i < numSteps; i++) {
-         let shift = (maxShift - (i / (numSteps - 1)) * (2 * maxShift)) / 360;
-         let adjustment = 0;
-         if (hsv.h + shift < 0) {
-            adjustment = 1;
-         }
-         else if (hsv.h + shift > 1) {
-            adjustment = -1;
-         }
-         colors.push((new hsvColor([hsv.h + shift + adjustment, hsv.s, hsv.v])).toHtmlColor());
-      }
-      return colors;
-   }
+   let ballLightTintStrengthSlider = new Slider(groupDiv, {
+      id: 'BallLightShift',
+      label: 'Tint Strength',
+      min: 0,
+      max: 100,
+      value: 50,
+      colors: computeTintStrengthColors(ballLightShiftSlider.htmlColor),
+      oninput: function () {
+         Uniforms.uBallLightTintStrength = ballLightTintStrengthSlider.value / 100;
+         app.restart();
+      },
+      getText: (slider: Slider) => { return slider.value.toFixed() + '%' },
+   })
 
    let separator = document.createElement('div');
    separator.style.height = '2px';
@@ -260,7 +253,7 @@ function component(): HTMLElement {
 
    let ballShadowShiftSlider = new Slider(groupDiv, {
       id: 'BallShadowShift',
-      label: 'Color Shift',
+      label: 'Tint Color',
       min: -180,
       max: 180,
       value: 0,
@@ -268,10 +261,56 @@ function component(): HTMLElement {
       oninput: function () {
          ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
          Uniforms.uBallShadowShift = ballShadowShiftSlider.value;
+         ballShadowTintStrengthSlider.colors = computeTintStrengthColors(ballShadowShiftSlider.htmlColor);
          app.restart();
       },
       getText: getTemperatureShiftText,
    })
+
+   let ballShadowTintStrengthSlider = new Slider(groupDiv, {
+      id: 'BallLightShift',
+      label: 'Tint Strength',
+      min: 0,
+      max: 100,
+      value: 50,
+      colors: computeTintStrengthColors(ballShadowShiftSlider.htmlColor),
+      oninput: function () {
+         Uniforms.uBallShadowTintStrength = ballShadowTintStrengthSlider.value / 100;
+         app.restart();
+      },
+      getText: (slider: Slider) => { return slider.value.toFixed() + '%' },
+   })
+
+   function computeChromaColors(baseColor: htmlColor): htmlColor[] {
+      let hsv = hsvColor.fromHtmlColor(baseColor);
+      hsv = new hsvColor([hsv.h, Math.min(hsv.s * 2, 1.0), hsv.v]);
+      return [baseColor.toGray(), baseColor, hsv.toHtmlColor()];
+   }
+
+   function computeShiftColors(baseColor: htmlColor, maxShift: number): htmlColor[] {
+      let hsv = hsvColor.fromHtmlColor(baseColor);
+      let colors: htmlColor[] = [];
+      let numSteps = 10;
+      for (let i = 0; i < numSteps; i++) {
+         let shift = (maxShift - (i / (numSteps - 1)) * (2 * maxShift)) / 360;
+         let adjustment = 0;
+         if (hsv.h + shift < 0) {
+            adjustment = 1;
+         }
+         else if (hsv.h + shift > 1) {
+            adjustment = -1;
+         }
+         colors.push((new hsvColor([hsv.h + shift + adjustment, hsv.s, hsv.v])).toHtmlColor());
+      }
+      return colors;
+   }
+
+   function computeTintStrengthColors(baseColor: htmlColor): htmlColor[] {
+      return [
+         new htmlColorWithAlpha([baseColor.r, baseColor.g, baseColor.b, 0]),
+         new htmlColorWithAlpha([baseColor.r, baseColor.g, baseColor.b, 255]),
+      ];
+   }
 
    function getTemperatureShiftText(slider: Slider): string {
       if (slider.value >= 0) {
@@ -313,9 +352,6 @@ window.onload = function () {
 
             let x = event.touches[0].clientX;
             let y = event.touches[0].clientY;
-            if (app.click(x, y)) {
-               return;
-            }
 
             onDown(event.touches[0].clientX, event.touches[0].clientY);
          }
@@ -345,14 +381,17 @@ window.onload = function () {
       canvas.onmouseup = function (event) {
          mouseDown = false;
       };
-
-      canvas.onclick = function (event: MouseEvent) {
-         app.click(event.x, event.y);
-      }
    }
 }
 
 function onDown(x: number, y: number) {
+
+   if (app.click(x, y)) {
+      return;
+   };
+
+   pointerModeSpecial = (x < 0.1 * canvas.width) ? true : false;
+
    oldX = x;
    oldY = y;
 
@@ -364,26 +403,33 @@ function onDown(x: number, y: number) {
 function onMove(x: number, y: number) {
    if (mouseDown) {
       if (pointerMode === PointerMode.View) {
-         // update the angles based on how far we moved since last time
-         angleY -= (x - oldX) * 0.01;
-         angleX += (y - oldY) * 0.01;
+         if (pointerModeSpecial) {
+            zoomZ += (y - oldY) * 0.01;
+            zoomZ = clamp(zoomZ, 1, 6);
+         }
+         else {
+            // update the angles based on how far we moved since last time
+            angleY -= (x - oldX) * 0.01;
+            angleX += (y - oldY) * 0.01;
 
-         // don't go upside down
-         angleX = Math.max(angleX, -Math.PI / 2 + 0.01);
-         angleX = Math.min(angleX, Math.PI / 2 - 0.01);
+            // don't go upside down
+            angleX = Math.max(angleX, -Math.PI / 2 + 0.01);
+            angleX = Math.min(angleX, Math.PI / 2 - 0.01);
+         }
       }
-      else if (pointerMode === PointerMode.LightDistance) {
+      else if (pointerMode === PointerMode.Light) {
 
-         pos.radius -= (y - oldY) * 0.002;
-         pos.radius = Math.max(0.75, pos.radius);
-         Uniforms.uLightPos.values = pos.toXYZ();
-      }
-      else if (pointerMode === PointerMode.LightRotationElevation) {
-
-         pos.rotationAngle += (x - oldX);
-         pos.elevationAngle += (y - oldY);
-         pos.elevationAngle = clamp(pos.elevationAngle, 0, 180);
-         Uniforms.uLightPos.values = pos.toXYZ();
+         if (pointerModeSpecial) {
+            pos.radius -= (y - oldY) * 0.005;
+            pos.radius = clamp(pos.radius, Uniforms.uBallRadius + 0.5, 5);
+            Uniforms.uLightPos.values = pos.toXYZ();
+         }
+         else {
+            pos.rotationAngle += (x - oldX);
+            pos.elevationAngle += (y - oldY);
+            pos.elevationAngle = clamp(pos.elevationAngle, 0, 180);
+            Uniforms.uLightPos.values = pos.toXYZ();
+         }
       }
 
       // clear the sample buffer

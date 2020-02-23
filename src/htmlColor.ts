@@ -38,20 +38,32 @@ export class htmlColor extends Color {
     * Converts a value to a hex string
     * 
     * @param c The numeric value
+    * @returns The hex string
     */
-   private componentToHex(c: number): string {
+   protected componentToHex(c: number): string {
       var hex = c.toString(16);
       return hex.length == 1 ? "0" + hex : hex;
    }
 
    /**
-    * Converts this object to a hex string (e.g. #0f0f0f);
+    * Converts this object to a hex string (e.g. #0f0f0f).
+    * 
+    * @returns A hex string.
     */
    public toHex(): string {
       let rHex = this.componentToHex(this.r);
       let gHex = this.componentToHex(this.g);
       let bHex = this.componentToHex(this.b);
       return "#" + rHex + gHex + bHex;
+   }
+
+   /**
+    * Converts this object to a css string (e.g. 'rgb(128,228,32)').
+    *
+    * @returns A css string.
+    */
+   public toCss(): string {
+      return 'rgb(' + this.r + ',' + this.g + ',' + this.b + ')';
    }
 
    /**

@@ -10,23 +10,27 @@ uniform float uLightIntensity;
 uniform vec3 uLightColor;
 uniform float uAmbientLightIntensity;
 uniform vec3 uBallColor;
+uniform float uBallRadius;
 uniform float uPass;
 uniform float uNumPasses;
 uniform float uSample;
 uniform float uBALL_SPECULAR;
 uniform float uBALL_LIGHT;
 uniform float uBALL_SHADOW;
+
 uniform float uBallLightChroma;
-uniform float uBallShadowChroma;
 uniform float uBallLightShift;
+uniform float uBallLightTintStrength;
+
+uniform float uBallShadowChroma;
 uniform float uBallShadowShift;
+uniform float uBallShadowTintStrength;
 
 const int MAX_BOUNCES = 100;
 const float EPSILON = 0.0001;
 const float INFINITY = 10000.0;
 const float LIGHT_SIZE = 0.1;
-const float BALL_RADIUS = 0.5;
-const vec3 BALL_CENTER = vec3(0, BALL_RADIUS, 0);
+vec3 BALL_CENTER = vec3(0, uBallRadius, 0);
 const vec3 DOME_CENTER = vec3(0, 0, 0);
 const float DOME_RADIUS = 7.0;
 const float VAL = 0.8;
@@ -118,7 +122,7 @@ vec3 uniformlyRandomVector(float seed)
 
 bool inShadow(vec3 origin, vec3 ray)
 {
-   float tBall = intersectSphere(origin, ray, BALL_CENTER, BALL_RADIUS);
+   float tBall = intersectSphere(origin, ray, BALL_CENTER, uBallRadius);
    if (tBall < 1.0)
    {
       return true;
@@ -149,11 +153,13 @@ vec4 hsv2rgb(vec4 c)
    return vec4(c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y), c.a);
 }
 
-vec4 shiftTemperature(vec4 rgb, float deg)
+vec4 shiftTemperature(vec4 rgb, float deg, float tintStrength)
 {
    vec4 hsv = rgb2hsv(rgb);
    hsv.x += deg / 360.0;
-   return hsv2rgb(hsv);
+   vec4 fullTintRgb = hsv2rgb(hsv);
+
+   return mix(rgb, fullTintRgb, tintStrength);
 }
 
 // TODO move to a common file
@@ -180,8 +186,8 @@ vec4 toArtist(vec4 color)
    float percentLight = 1.0 - percentShadow;
 
    // temperature shift
-   vec4 rgblight = shiftTemperature(color, -uBallLightShift);
-   vec4 rgbshadow = shiftTemperature(color, -uBallShadowShift);
+   vec4 rgblight = shiftTemperature(color, -uBallLightShift, uBallLightTintStrength);
+   vec4 rgbshadow = shiftTemperature(color, -uBallShadowShift, uBallShadowTintStrength);
    vec4 rgbmix = mix(rgblight, rgbshadow, percentShadow);
    vec4 hsv = rgb2hsv(rgbmix);
 
@@ -232,7 +238,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
    for (int bounce = 0; bounce < MAX_BOUNCES; bounce++)
    {
       // compute the intersection with everything
-      float tBall = intersectSphere(origin, ray, BALL_CENTER, BALL_RADIUS);
+      float tBall = intersectSphere(origin, ray, BALL_CENTER, uBallRadius);
       vec3 surfaceColor = vec3(0.5, 0.5, 0.5);
 
       if (bounce == 0)
@@ -294,7 +300,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       }
       else if (t == tBall)
       {
-         normal = normalForSphere(hit, BALL_CENTER, BALL_RADIUS);
+         normal = normalForSphere(hit, BALL_CENTER, uBallRadius);
       }
       else if (t == tDome)
       {

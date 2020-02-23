@@ -32,6 +32,7 @@ export class Slider {
     * @param setup The setup data object
     */
    public constructor(parent: HTMLElement, setup: ISliderSetup) {
+
       this._getText = setup.getText;
 
       let label = document.createElement('label');
@@ -126,7 +127,7 @@ export class Slider {
       // build the gradient style for the range object
       let gradientStr = '90deg';
       for (let i = 0; i < colors.length; i++) {
-         gradientStr += ', ' + colors[i].toHex();
+         gradientStr += ', ' + colors[i].toCss();
       }
       this._range.style.background = 'linear-gradient(' + gradientStr + ')';
 
