@@ -12,11 +12,9 @@ export interface IUniforms {
    uMode: RenderMode;
    uMaxChroma: number;
 
-   uBallLightChroma: number;
    uBallLightShift: number;
    uBallLightTintStrength: number;
 
-   uBallShadowChroma: number;
    uBallShadowShift: number;
    uBallShadowTintStrength: number;
 
@@ -61,11 +59,10 @@ export let Uniforms: IUniforms = {
    uYOffset: 0.0,
    uMode: 0,
    uMaxChroma: 1.0,
-   uBallLightChroma: 1.0,
+
    uBallLightShift: 0.0,
    uBallLightTintStrength: 0.5,
 
-   uBallShadowChroma: 1.0,
    uBallShadowShift: 0.0,
    uBallShadowTintStrength: 0.5,
 

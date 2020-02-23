@@ -57,19 +57,19 @@ export class App {
       let description = document.getElementById('description');
       switch (this.tracer.renderMode) {
          case RenderMode.Artist:
-            description.innerText = "This view displays numerically computed colors with artist enhancements.";
+            description.innerText = "";
             break;
 
          case RenderMode.Chroma:
-            description.innerText = "This view displays the chroma on the ball. Red=highest chroma.";
+            description.innerText = "Chroma View: red=highest chroma.";
             break;
 
          case RenderMode.Value:
-            description.innerText = "This view displays the ball using values only.";
+            description.innerText = "Value View";
             break;
 
          case RenderMode.Bands:
-            description.innerText = "This view displays the ball rendered with limited colors.";
+            description.innerText = "5 Color + Highlight View";
             break;
       }
    }

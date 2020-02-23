@@ -73,13 +73,9 @@ function component(): HTMLElement {
    container.appendChild(button);
 
    div.appendChild(document.createElement('br'));
+   div.appendChild(document.createElement('br'));
 
-   let tabCtrl = new TabControl(div);
-
-   let setupTabContent = tabCtrl.createTab('Setup');
-   let artisticTabContent = tabCtrl.createTab('Artistic Tweaks');
-
-   let intensitySlider = new Slider(setupTabContent, {
+   let intensitySlider = new Slider(div, {
       id: 'LightIntensity',
       label: 'Light Intensity',
       min: 0,
@@ -92,8 +88,6 @@ function component(): HTMLElement {
       }
    });
 
-   setupTabContent.appendChild(document.createElement('br'));
-
    // build a range of colors
    let min = 2000;
    let max = 10000;
@@ -102,7 +96,7 @@ function component(): HTMLElement {
       let temp = min + (i / 9) * (max - min);
       colors.push(glColorWithTemperature.create(temp).toHtmlColor());
    }
-   let lightColorSlider = new Slider(setupTabContent, {
+   let lightColorSlider = new Slider(div, {
       id: 'LightColor',
       label: 'Light Color',
       min: 2000,
@@ -128,9 +122,7 @@ function component(): HTMLElement {
       }
    }
 
-   setupTabContent.appendChild(document.createElement('br'));
-
-   let ballColorSlider = new Slider(setupTabContent, {
+   let ballColorSlider = new Slider(div, {
       id: 'BallColor',
       label: 'Ball Color',
       min: 0,
@@ -138,12 +130,6 @@ function component(): HTMLElement {
       value: 50,
       colors: skinTones,
       oninput: () => {
-         ballLightShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 180);
-         ballShadowShiftSlider.colors = computeShiftColors(ballColorSlider.htmlColor, 180);
-         ballLightTintStrengthSlider.colors = computeTintStrengthColors(ballLightShiftSlider.htmlColor);
-         ballShadowTintStrengthSlider.colors = computeTintStrengthColors(ballShadowShiftSlider.htmlColor);
-         ballLightChromaSlider.colors = computeChromaColors(ballLightShiftSlider.htmlColor);
-         ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
          Uniforms.uBallColor = ballColorSlider.glColor;
          app.restart();
       }
@@ -152,9 +138,7 @@ function component(): HTMLElement {
    // make sure gl matches the initial UI setting
    Uniforms.uBallColor = ballColorSlider.glColor;
 
-   setupTabContent.appendChild(document.createElement('br'));
-
-   let ambientIntensitySlider = new Slider(setupTabContent, {
+   let ambientIntensitySlider = new Slider(div, {
       id: 'AmbientIntensity',
       label: 'Ambient Light',
       min: 0,
@@ -166,161 +150,6 @@ function component(): HTMLElement {
          app.restart();
       }
    });
-
-   setupTabContent.appendChild(document.createElement('br'));
-
-   let groupDiv = document.createElement('div');
-   groupDiv.className = "SliderGroup";
-   let headerDiv = document.createElement('div');
-   headerDiv.className = "SliderHeader";
-   headerDiv.innerText = "Ball in Light";
-   groupDiv.appendChild(headerDiv);
-   artisticTabContent.appendChild(groupDiv);
-
-   let ballLightChromaSlider = new Slider(groupDiv, {
-      id: 'LightChroma',
-      label: 'Chroma',
-      min: 0,
-      max: 200,
-      value: 100,
-      colors: computeChromaColors(ballColorSlider.htmlColor),
-      oninput: function () {
-         Uniforms.uBallLightChroma = ballLightChromaSlider.value / 100;
-         app.restart();
-      },
-      getText: (slider: Slider) => { return slider.value.toFixed() + "%" }
-   })
-
-   groupDiv.appendChild(document.createElement('br'));
-
-   let ballLightShiftSlider = new Slider(groupDiv, {
-      id: 'BallLightShift',
-      label: 'Tint Color',
-      min: -180,
-      max: 180,
-      value: 0,
-      colors: computeShiftColors(ballColorSlider.htmlColor, 180),
-      oninput: function () {
-         ballLightChromaSlider.colors = computeChromaColors(ballLightShiftSlider.htmlColor);
-         ballLightTintStrengthSlider.colors = computeTintStrengthColors(ballLightShiftSlider.htmlColor);
-         Uniforms.uBallLightShift = ballLightShiftSlider.value;
-         app.restart();
-      },
-      getText: getTemperatureShiftText,
-   })
-
-   let ballLightTintStrengthSlider = new Slider(groupDiv, {
-      id: 'BallLightShift',
-      label: 'Tint Strength',
-      min: 0,
-      max: 100,
-      value: 50,
-      colors: computeTintStrengthColors(ballLightShiftSlider.htmlColor),
-      oninput: function () {
-         Uniforms.uBallLightTintStrength = ballLightTintStrengthSlider.value / 100;
-         app.restart();
-      },
-      getText: (slider: Slider) => { return slider.value.toFixed() + '%' },
-   })
-
-   let separator = document.createElement('div');
-   separator.style.height = '2px';
-   artisticTabContent.appendChild(separator);
-
-   groupDiv = document.createElement('div');
-   groupDiv.className = "SliderGroup";
-   headerDiv = document.createElement('div');
-   headerDiv.className = "SliderHeader";
-   headerDiv.innerText = "Ball in Shadow";
-   groupDiv.appendChild(headerDiv);
-   artisticTabContent.appendChild(groupDiv);
-
-   let ballShadowChromaSlider = new Slider(groupDiv, {
-      id: 'ShadowChroma',
-      label: 'Chroma',
-      min: 0,
-      max: 200,
-      value: 100,
-      colors: computeChromaColors(ballColorSlider.htmlColor),
-      oninput: function () {
-         Uniforms.uBallShadowChroma = ballShadowChromaSlider.value / 100;
-         app.restart();
-      },
-      getText: (slider: Slider) => { return slider.value.toFixed() + "%" }
-   })
-
-   groupDiv.appendChild(document.createElement('br'));
-
-   let ballShadowShiftSlider = new Slider(groupDiv, {
-      id: 'BallShadowShift',
-      label: 'Tint Color',
-      min: -180,
-      max: 180,
-      value: 0,
-      colors: computeShiftColors(ballColorSlider.htmlColor, 180),
-      oninput: function () {
-         ballShadowChromaSlider.colors = computeChromaColors(ballShadowShiftSlider.htmlColor);
-         Uniforms.uBallShadowShift = ballShadowShiftSlider.value;
-         ballShadowTintStrengthSlider.colors = computeTintStrengthColors(ballShadowShiftSlider.htmlColor);
-         app.restart();
-      },
-      getText: getTemperatureShiftText,
-   })
-
-   let ballShadowTintStrengthSlider = new Slider(groupDiv, {
-      id: 'BallLightShift',
-      label: 'Tint Strength',
-      min: 0,
-      max: 100,
-      value: 50,
-      colors: computeTintStrengthColors(ballShadowShiftSlider.htmlColor),
-      oninput: function () {
-         Uniforms.uBallShadowTintStrength = ballShadowTintStrengthSlider.value / 100;
-         app.restart();
-      },
-      getText: (slider: Slider) => { return slider.value.toFixed() + '%' },
-   })
-
-   function computeChromaColors(baseColor: htmlColor): htmlColor[] {
-      let hsv = hsvColor.fromHtmlColor(baseColor);
-      hsv = new hsvColor([hsv.h, Math.min(hsv.s * 2, 1.0), hsv.v]);
-      return [baseColor.toGray(), baseColor, hsv.toHtmlColor()];
-   }
-
-   function computeShiftColors(baseColor: htmlColor, maxShift: number): htmlColor[] {
-      let hsv = hsvColor.fromHtmlColor(baseColor);
-      let colors: htmlColor[] = [];
-      let numSteps = 10;
-      for (let i = 0; i < numSteps; i++) {
-         let shift = (maxShift - (i / (numSteps - 1)) * (2 * maxShift)) / 360;
-         let adjustment = 0;
-         if (hsv.h + shift < 0) {
-            adjustment = 1;
-         }
-         else if (hsv.h + shift > 1) {
-            adjustment = -1;
-         }
-         colors.push((new hsvColor([hsv.h + shift + adjustment, hsv.s, hsv.v])).toHtmlColor());
-      }
-      return colors;
-   }
-
-   function computeTintStrengthColors(baseColor: htmlColor): htmlColor[] {
-      return [
-         new htmlColorWithAlpha([baseColor.r, baseColor.g, baseColor.b, 0]),
-         new htmlColorWithAlpha([baseColor.r, baseColor.g, baseColor.b, 255]),
-      ];
-   }
-
-   function getTemperatureShiftText(slider: Slider): string {
-      if (slider.value >= 0) {
-         return '+' + slider.value.toFixed() + "º"
-      }
-      else {
-         return slider.value.toFixed() + "º"
-
-      }
-   }
 
    return div;
 }

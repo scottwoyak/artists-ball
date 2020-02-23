@@ -18,11 +18,9 @@ uniform float uBALL_SPECULAR;
 uniform float uBALL_LIGHT;
 uniform float uBALL_SHADOW;
 
-uniform float uBallLightChroma;
 uniform float uBallLightShift;
 uniform float uBallLightTintStrength;
 
-uniform float uBallShadowChroma;
 uniform float uBallShadowShift;
 uniform float uBallShadowTintStrength;
 
@@ -200,10 +198,6 @@ vec4 toArtist(vec4 color)
    {
       hsv.x += 1.0;
    }
-
-   // chroma shift
-   hsv.y *= (percentLight * uBallLightChroma + percentShadow * uBallShadowChroma);
-   hsv.y = clamp(hsv.y, 0.0, 1.0);
 
    // adjust light/dark value to match the old value in rgb space
    float origValue = toGray(color);
@@ -384,6 +378,8 @@ vec4 calculateColor(vec3 origin, vec3 ray)
    }
 
    vec4 scienceColor = vec4(clamp(accumulatedColor, 0.0, 1.0), alpha);
+   return scienceColor;
+   /*
    if (ballHit)
    {
       return vec4(toArtist(scienceColor).rgb, alpha);
@@ -392,6 +388,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
    {
       return scienceColor;
    }
+   */
 }
 
 void main()
