@@ -114,6 +114,15 @@ body {
   cursor: pointer;
 }
 
+#progressSpan {
+  position: absolute;
+  bottom: 3px;
+  left: 0px;
+  right: 0px;
+  height: 5px;
+  background-color: rgba(50, 205, 50, 0.75);
+}
+
 /* Style the tab */
 .Tabs {
   overflow: hidden;

@@ -72,6 +72,10 @@ function component(): HTMLElement {
    }
    container.appendChild(button);
 
+   let progressSpan = document.createElement('span');
+   progressSpan.id = 'progressSpan';
+   container.appendChild(progressSpan);
+
    div.appendChild(document.createElement('br'));
    div.appendChild(document.createElement('br'));
 

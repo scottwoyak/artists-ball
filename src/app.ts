@@ -103,6 +103,7 @@ export class App {
 
       let timeSinceStart = ((new Date()).getTime() - this.start) * 0.001;
 
+      this.updateProgress();
       if (this.count < 1000) {
          this.count++;
          Uniforms.uEye.values[0] = zoomZ * Math.sin(angleY) * Math.cos(angleX);
@@ -114,6 +115,19 @@ export class App {
       }
 
       requestAnimationFrame(() => this.tick());
+   }
+
+   private updateProgress() {
+      let progress = this.count / 1000;
+      let span = document.getElementById('progressSpan') as HTMLSpanElement;
+      if (progress >= 0 && progress < 1) {
+         span.style.visibility = 'visible';
+         let w = canvas.width;
+         span.style.right = w * (1 - progress) + 'px';
+      }
+      else {
+         span.style.visibility = 'hidden';
+      }
    }
 }
 
