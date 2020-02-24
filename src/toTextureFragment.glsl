@@ -30,13 +30,13 @@ const float INFINITY = 10000.0;
 const float LIGHT_SIZE = 0.1;
 vec3 BALL_CENTER = vec3(0, uBallRadius, 0);
 const vec3 DOME_CENTER = vec3(0, 0, 0);
-const float DOME_RADIUS = 7.0;
+const float DOME_RADIUS = 8.0;
 const float VAL = 0.8;
 const vec3 DOME_COLOR = vec3(VAL, VAL, VAL);
 const vec3 FLOOR_COLOR = vec3(VAL, VAL, VAL);
 const vec3 AMBIENT_COLOR = vec3(1.0, 1.0, 1.0);
 const int NUM_LIGHTS = 6;
-const float HEIGHT = 4.0;
+const float HEIGHT = 5.0;
 const float RADIUS = 4.0;
 const float PI = 3.14159265;
 
