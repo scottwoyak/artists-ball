@@ -141,7 +141,6 @@ export class PathTracer {
    }
    public restart(): void {
       Uniforms.uSample = 0;
-      Uniforms.uPass = 0;
    }
 
    private getEyeRay(matrix: glMat4, x: number, y: number): glVec3 {
@@ -202,11 +201,7 @@ export class PathTracer {
       // ping pong textures
       this.textures.reverse();
 
-      Uniforms.uPass++;
-      if (Uniforms.uPass == Uniforms.uNumPasses) {
-         Uniforms.uPass = 0;
-         Uniforms.uSample++;
-      }
+      Uniforms.uSample++;
    };
 
    private getPixelData(): IPixelData {

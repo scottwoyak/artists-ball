@@ -234,7 +234,7 @@ function onMove(x: number, y: number) {
       if (pointerMode === PointerMode.View) {
          if (pointerModeSpecial) {
             zoomZ += (y - oldY) * 0.01;
-            zoomZ = clamp(zoomZ, 1, 6);
+            zoomZ = clamp(zoomZ, 1, 7);
          }
          else {
             // update the angles based on how far we moved since last time

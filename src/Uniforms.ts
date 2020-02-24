@@ -1,6 +1,7 @@
 import { RenderMode } from "./PathTracer";
 import { glColor } from "./glColor";
 import { glVec3 } from "./glVec";
+import { SphericalCoord } from "./SphericalCoord";
 
 /**
  * Types for the uniform values
@@ -45,9 +46,7 @@ export interface IUniforms {
    uRay01: glVec3,
    uRay10: glVec3,
    uRay11: glVec3,
-   uPass: number,
    uSample: number,
-   uNumPasses: number,
 }
 
 /**
@@ -81,7 +80,7 @@ export let Uniforms: IUniforms = {
 
    uLightIntensity: 0.7,
    uLightColor: new glColor([1.0, 1.0, 1.0]),
-   uLightPos: new glVec3([-0.6, 1.7, 0.8]),
+   uLightPos: new glVec3(new SphericalCoord(2, 60, 110).toXYZ()),
    uAmbientLightIntensity: 0.3,
    uBallColor: new glColor([0.5, 0.5, 0.8]),
    uBallRadius: 0.5,
@@ -93,7 +92,5 @@ export let Uniforms: IUniforms = {
    uRay01: new glVec3([0, 0, 0]),
    uRay10: new glVec3([0, 0, 0]),
    uRay11: new glVec3([0, 0, 0]),
-   uPass: 0.0,
-   uNumPasses: 1.0,
    uSample: 0.0,
 }

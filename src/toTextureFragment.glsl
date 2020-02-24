@@ -11,8 +11,6 @@ uniform vec3 uLightColor;
 uniform float uAmbientLightIntensity;
 uniform vec3 uBallColor;
 uniform float uBallRadius;
-uniform float uPass;
-uniform float uNumPasses;
 uniform float uSample;
 uniform float uBALL_SPECULAR;
 uniform float uBALL_LIGHT;
@@ -393,18 +391,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
 
 void main()
 {
-   if (floor(mod(gl_FragCoord.x, uNumPasses)) != uPass)
-   {
-      if (uSample == 0.0 && uPass == 0.0)
-      {
-         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-      }
-      else
-      {
-         gl_FragColor = texture2D(uTexture, gl_FragCoord.xy / uTextureSize);
-      }
-      return;
-   }
+   gl_FragColor = texture2D(uTexture, gl_FragCoord.xy / uTextureSize);
 
    //   vec3 rand = uniformlyRandomVector(uTimeSinceStart) * LIGHT_SIZE;
    vec3 rand = uniformlyRandomVector(uSample) * LIGHT_SIZE;
