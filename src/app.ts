@@ -61,7 +61,7 @@ export class App {
             break;
 
          case RenderMode.Chroma:
-            description.innerText = "Chroma View: red=highest chroma.";
+            description.innerText = "Chroma View: red=highest chroma";
             break;
 
          case RenderMode.Value:
