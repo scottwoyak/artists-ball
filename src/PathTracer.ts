@@ -2,7 +2,6 @@
 import { Shaders } from './Shaders';
 import { glMat4 } from './glMat';
 import { glVec3, glVec4 } from './glVec';
-import { gl } from './index';
 import toScreenVertexSource from './toScreenVertex.glsl';
 import toScreenFragmentSource from './toScreenFragment.glsl';
 import toTextureVertexSource from './toTextureVertex.glsl';
@@ -10,6 +9,7 @@ import toTextureFragmentSource from './toTextureFragment.glsl';
 import { glColor } from './glColor';
 import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
+import { gl } from './app';
 
 /**
  * Rendering mode for displaying the texture

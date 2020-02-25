@@ -1,6 +1,6 @@
 import { glVec3 } from "./glVec";
-import { gl } from "./index";
 import { glColor } from "./glColor";
+import { gl } from "./app";
 
 export class Shaders {
 
