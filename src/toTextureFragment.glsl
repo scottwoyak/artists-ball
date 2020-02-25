@@ -3,7 +3,7 @@ uniform vec3 uEye;
 varying vec3 initialRay;
 uniform float uTextureWeight;
 uniform float uTextureSize;
-uniform float uTimeSinceStart;
+uniform float uRandom;
 uniform sampler2D uTexture;
 uniform vec3 uLightPos;
 uniform float uLightIntensity;
@@ -356,7 +356,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       }
 
       // calculate next origin
-      ray = cosineWeightedDirection(uTimeSinceStart + float(bounce), normal);
+      ray = cosineWeightedDirection(uRandom + float(bounce), normal);
 
       origin = hit;
    }
@@ -393,8 +393,7 @@ void main()
 {
    gl_FragColor = texture2D(uTexture, gl_FragCoord.xy / uTextureSize);
 
-   //   vec3 rand = uniformlyRandomVector(uTimeSinceStart) * LIGHT_SIZE;
-   vec3 rand = uniformlyRandomVector(uSample) * LIGHT_SIZE;
+   vec3 rand = uniformlyRandomVector(uRandom) * LIGHT_SIZE;
 
    Lights[0].intensity = uLightIntensity;
    Lights[0].size = LIGHT_SIZE;

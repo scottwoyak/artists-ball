@@ -148,7 +148,7 @@ export class PathTracer {
       return matrix.multV(vec).divideByW().subtract(Uniforms.uEye);
    }
 
-   public updateTexture(modelviewProjection: glMat4, timeSinceStart: number): void {
+   public updateTexture(modelviewProjection: glMat4): void {
 
       // implement aliasing by random sampling within a pixel
       let x = (Math.random() * 2 - 1) / Uniforms.uTextureSize;
@@ -163,7 +163,7 @@ export class PathTracer {
       Uniforms.uRay01 = this.getEyeRay(matrix, -1, +1);
       Uniforms.uRay10 = this.getEyeRay(matrix, +1, -1);
       Uniforms.uRay11 = this.getEyeRay(matrix, +1, +1);
-      Uniforms.uTimeSinceStart = timeSinceStart;
+      Uniforms.uRandom = Math.random();
       Uniforms.uTextureWeight = Uniforms.uSample / (Uniforms.uSample + 1);
 
       // set uniforms

@@ -31,7 +31,6 @@ export class App {
    private modelview: glMat4;
    private projection: glMat4;
    private modelviewProjection: glMat4;
-   private start: number;
    private count = 0;
    private pointerMode: PointerMode = PointerMode.View;
    private pointerModeSpecial = false;
@@ -52,7 +51,6 @@ export class App {
    private oldY: number;
 
    public constructor() {
-      this.start = new Date().getTime();
       requestAnimationFrame(() => this.tick());
    }
 
@@ -226,7 +224,7 @@ export class App {
       this.restart();
    }
 
-   public onDown(x: number, y: number) {
+   private onDown(x: number, y: number) {
 
       if (this.click(x, y)) {
          return;
@@ -242,7 +240,7 @@ export class App {
       this.mouseDown = true;
    }
 
-   public onMove(x: number, y: number) {
+   private onMove(x: number, y: number) {
       if (this.mouseDown) {
          if (this.pointerMode === PointerMode.View) {
             if (this.pointerModeSpecial) {
@@ -292,7 +290,7 @@ export class App {
     * @param y The y coordinate.
     * @returns true if a hit on one of the views occurs.
     */
-   public click(x: number, y: number): boolean {
+   private click(x: number, y: number): boolean {
       // TODO handle this within the PathTracer class so that we don't have to hard code view stuff
       let size = this.canvas.width / 4;
 
@@ -339,7 +337,7 @@ export class App {
       }
    }
 
-   public updateTexture(timeSinceStart: number) {
+   private updateTexture() {
       this.modelview = glMat4.makeLookAt(
          Uniforms.uEye,
          new glVec3([0, 1, 0]),  // center point
@@ -348,10 +346,10 @@ export class App {
 
       this.projection = glMat4.makePerspective(55, 1, 0.1, 100);
       this.modelviewProjection = this.projection.multM(this.modelview);
-      this.tracer.updateTexture(this.modelviewProjection, timeSinceStart);
+      this.tracer.updateTexture(this.modelviewProjection);
    };
 
-   public displayTexture(): void {
+   private displayTexture(): void {
       this.tracer.displayTexture();
    };
 
@@ -366,8 +364,6 @@ export class App {
 
    public tick() {
 
-      let timeSinceStart = ((new Date()).getTime() - this.start) * 0.001;
-
       this.updateProgress();
       if (this.count < 1000) {
          this.count++;
@@ -375,7 +371,7 @@ export class App {
          Uniforms.uEye.values[1] = this.zoomZ * Math.sin(this.angleX);
          Uniforms.uEye.values[2] = this.zoomZ * Math.cos(this.angleY) * Math.cos(this.angleX);
 
-         this.updateTexture(timeSinceStart);
+         this.updateTexture();
          this.displayTexture();
       }
 
