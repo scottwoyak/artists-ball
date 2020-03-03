@@ -70,6 +70,27 @@ export class glVec3 extends glVec {
    }
 
    /**
+    * Gets the X component of the vector
+    */
+   public get x(): number {
+      return this.values[0];
+   }
+
+   /**
+    * Gets the Y component of the vector
+    */
+   public get y(): number {
+      return this.values[1];
+   }
+
+   /**
+    * Gets the Z component of the vector
+    */
+   public get z(): number {
+      return this.values[2];
+   }
+
+   /**
     * Creates a copy of the vector.
     * 
     * @returns A copy of the vector.

@@ -1,3 +1,4 @@
+
 precision highp float;
 uniform vec3 uEye;
 varying vec3 initialRay;
@@ -26,7 +27,7 @@ const int MAX_BOUNCES = 100;
 const float EPSILON = 0.0001;
 const float INFINITY = 10000.0;
 const float LIGHT_SIZE = 0.1;
-vec3 BALL_CENTER = vec3(0, uBallRadius, 0);
+#define BALL_CENTER vec3(0, uBallRadius, 0)
 const vec3 DOME_CENTER = vec3(0, 0, 0);
 const float DOME_RADIUS = 8.0;
 const float VAL = 0.8;
@@ -46,7 +47,79 @@ struct Light
    vec3 color;
 };
 
+struct Triangle
+{
+   vec3 p0;
+   vec3 p1;
+   vec3 p2;
+   vec3 c;
+};
+
+// this is where the triangle code get's inserted
+// INIT
+
 Light Lights[NUM_LIGHTS];
+
+bool intersectBox(const vec3 boxMin, const vec3 boxMax, const vec3 origin, const vec3 ray)
+{
+   vec3 rayInv = 1.0 / ray;
+   vec3 tbot = rayInv * (boxMin - origin);
+   vec3 ttop = rayInv * (boxMax - origin);
+   vec3 tmin = min(ttop, tbot);
+   vec3 tmax = max(ttop, tbot);
+   vec2 t = max(tmin.xx, tmin.yz);
+   float t0 = max(t.x, t.y);
+   t = min(tmax.xx, tmax.yz);
+   float t1 = min(t.x, t.y);
+   return t1 > max(t0, 0.0);
+}
+
+// Möller–Trumbore ray-triangle intersection algorithm
+// source: http://bit.ly/2MxnPMG
+float intersectTriangle(vec3 origin, vec3 ray, Triangle tri)
+{
+   vec3 edge1, edge2, h, s, q;
+   float a, f, u, v;
+   edge1 = tri.p1 - tri.p0;
+   edge2 = tri.p2 - tri.p0;
+
+   h = cross(ray, edge2);
+   a = dot(edge1, h);
+   if (abs(a) < EPSILON)
+      return INFINITY;
+
+   f = 1.0 / a;
+   s = origin - tri.p0;
+   u = f * dot(s, h);
+   if (u < 0.0 || u > 1.0)
+      return INFINITY;
+
+   q = cross(s, edge1);
+   v = f * dot(ray, q);
+   if (v < 0.0 || (u + v) > 1.0)
+      return INFINITY;
+
+   // At this stage we can compute t to find out where the intersection point is on the line.
+   float t = f * dot(edge2, q);
+   if (t <= EPSILON) // this means that there is a line intersection but not a ray intersection.
+      return INFINITY;
+
+   return t; // ray intersection
+}
+
+vec3 normalForTriangle(vec3 origin, vec3 hit, Triangle tri)
+{
+   vec3 normal = cross(tri.p1 - tri.p0, tri.p2 - tri.p0);
+   normal = normal / length(normal);
+   if (dot(normal, origin) > 0.0)
+   {
+      return normal;
+   }
+   else
+   {
+      return -normal;
+   }
+}
 
 float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadius)
 {
@@ -119,14 +192,23 @@ vec3 uniformlyRandomVector(float seed)
 bool inShadow(vec3 origin, vec3 ray)
 {
    float tBall = intersectSphere(origin, ray, BALL_CENTER, uBallRadius);
-   if (tBall < 1.0)
+   if (tBall < INFINITY)
    {
       return true;
    }
-   else
+
+   if (intersectBox(objMin, objMax, origin, ray))
    {
-      return false;
+      for (int i = 0; i < NUM_TRIANGLES; i++)
+      {
+         if (intersectTriangle(origin, ray, triangles[i]) < INFINITY)
+         {
+            return true;
+         }
+      }
    }
+
+   return false;
 }
 
 // All components are in the range [0…1], including hue.
@@ -233,13 +315,29 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       float tBall = intersectSphere(origin, ray, BALL_CENTER, uBallRadius);
       vec3 surfaceColor = vec3(0.5, 0.5, 0.5);
 
+      float tObj = INFINITY;
+      Triangle obj;
+      if (intersectBox(objMin, objMax, origin, ray))
+      {
+         for (int i = 0; i < NUM_TRIANGLES; i++)
+         {
+            float tTri = min(tObj, intersectTriangle(origin, ray, triangles[i]));
+            if (tTri < tObj)
+            {
+               obj = triangles[i];
+               tObj = tTri;
+            }
+         }
+      }
+
       if (bounce == 0)
       {
          // if the first ray hits the light, return the light color. This
          // simulates displaying the light
          for (int i = 0; i < NUM_LIGHTS; i++)
          {
-            if (intersectSphere(origin, ray, Lights[i].pos, Lights[i].size) < tBall)
+            float tLight = intersectSphere(origin, ray, Lights[i].pos, Lights[i].size);
+            if (tLight < tBall && tLight < tObj)
             {
                return vec4(Lights[i].intensity * Lights[i].color, 1.0);
             }
@@ -267,7 +365,6 @@ vec4 calculateColor(vec3 origin, vec3 ray)
 
       if (tBall < t)
       {
-         surfaceColor = vec3(uBallColor);
          t = tBall;
 
          if (bounce == 0)
@@ -275,11 +372,8 @@ vec4 calculateColor(vec3 origin, vec3 ray)
             ballHit = true;
          }
       }
-      else if (tDome < t)
-      {
-         surfaceColor = DOME_COLOR;
-         t = tDome;
-      }
+
+      t = min(t, min(tObj, tDome));
 
       // info about hit
       vec3 hit = origin + ray * t;
@@ -292,10 +386,17 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       }
       else if (t == tBall)
       {
+         surfaceColor = vec3(uBallColor);
          normal = normalForSphere(hit, BALL_CENTER, uBallRadius);
+      }
+      else if (t == tObj)
+      {
+         surfaceColor = obj.c;
+         normal = normalForTriangle(origin, hit, obj);
       }
       else if (t == tDome)
       {
+         surfaceColor = DOME_COLOR;
          normal = -normalForSphere(hit, DOME_CENTER, DOME_RADIUS);
       }
       else
@@ -391,6 +492,8 @@ vec4 calculateColor(vec3 origin, vec3 ray)
 
 void main()
 {
+   init();
+
    gl_FragColor = texture2D(uTexture, gl_FragCoord.xy / uTextureSize);
 
    vec3 rand = uniformlyRandomVector(uRandom) * LIGHT_SIZE;
