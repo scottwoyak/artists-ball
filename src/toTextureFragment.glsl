@@ -23,6 +23,9 @@ uniform float uBallLightTintStrength;
 uniform float uBallShadowShift;
 uniform float uBallShadowTintStrength;
 
+uniform sampler2D uSampler;
+const int NUM_TRIANGLES = <NUM_TRIANGLES>;
+
 const int MAX_BOUNCES = 100;
 const float EPSILON = 0.0001;
 const float INFINITY = 10000.0;
@@ -55,13 +58,29 @@ struct Triangle
    vec3 c;
 };
 
-// this is where the triangle code get's inserted
-// INIT
+vec3 getVec(int triIndex, int vecIndex)
+{
+   float x = (float(vecIndex) + 0.5) * (1.0 / 4.0);
+   float y = (float(triIndex) + 0.5) * (1.0 / (float(NUM_TRIANGLES) + 1.0));
+   return texture2D(uSampler, vec2(x, y)).xyz;
+}
+
+Triangle getTriangle(int index)
+{
+   vec3 p1 = getVec(index + 1, 0);
+   vec3 p2 = getVec(index + 1, 1);
+   vec3 p3 = getVec(index + 1, 2);
+   vec3 c = getVec(index + 1, 3);
+   return Triangle(p1, p2, p3, c);
+}
 
 Light Lights[NUM_LIGHTS];
 
-bool intersectBox(const vec3 boxMin, const vec3 boxMax, const vec3 origin, const vec3 ray)
+bool intersectBox(const vec3 origin, const vec3 ray)
 {
+   vec3 boxMin = getVec(0, 0);
+   vec3 boxMax = getVec(0, 1);
+
    vec3 rayInv = 1.0 / ray;
    vec3 tbot = rayInv * (boxMin - origin);
    vec3 ttop = rayInv * (boxMax - origin);
@@ -197,11 +216,12 @@ bool inShadow(vec3 origin, vec3 ray)
       return true;
    }
 
-   if (intersectBox(objMin, objMax, origin, ray))
+   if (intersectBox(origin, ray))
    {
       for (int i = 0; i < NUM_TRIANGLES; i++)
       {
-         if (intersectTriangle(origin, ray, triangles[i]) < INFINITY)
+         Triangle tri = getTriangle(i);
+         if (intersectTriangle(origin, ray, tri) < INFINITY)
          {
             return true;
          }
@@ -317,14 +337,15 @@ vec4 calculateColor(vec3 origin, vec3 ray)
 
       float tObj = INFINITY;
       Triangle obj;
-      if (intersectBox(objMin, objMax, origin, ray))
+      if (intersectBox(origin, ray))
       {
          for (int i = 0; i < NUM_TRIANGLES; i++)
          {
-            float tTri = min(tObj, intersectTriangle(origin, ray, triangles[i]));
+            Triangle tri = getTriangle(i);
+            float tTri = min(tObj, intersectTriangle(origin, ray, tri));
             if (tTri < tObj)
             {
-               obj = triangles[i];
+               obj = tri;
                tObj = tTri;
             }
          }
@@ -492,8 +513,6 @@ vec4 calculateColor(vec3 origin, vec3 ray)
 
 void main()
 {
-   init();
-
    gl_FragColor = texture2D(uTexture, gl_FragCoord.xy / uTextureSize);
 
    vec3 rand = uniformlyRandomVector(uRandom) * LIGHT_SIZE;

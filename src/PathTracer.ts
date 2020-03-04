@@ -10,6 +10,8 @@ import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
 import { gl } from './app';
 import { Triangle } from './Triangle';
+import { TriangleSphere } from './TriangleSphere';
+import { DataTexture } from './DataTexture';
 
 
 /**
@@ -132,94 +134,22 @@ export class PathTracer {
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
 
-      let code = toTextureFragmentSource.replace('// INIT', this.getTriangleCode());
+      let tSphere = new TriangleSphere(0, 0.3, new glVec3([0, 1.05, 0]));
+      console.log("NumTriangles: " + tSphere.triangles.length);
+      let code = toTextureFragmentSource.replace('<NUM_TRIANGLES>', tSphere.triangles.length.toString());
       this.toTextureProgram = Shaders.compileShader(toTextureVertexSource, code);
       this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
       gl.enableVertexAttribArray(this.toTextureVertexAttribute);
+
+      let textureUnit = 15;  // from 0 to 15 is ok
+      let dt = new DataTexture(gl.TEXTURE0 + textureUnit);
+      dt.create(tSphere.triangles);
+
+      gl.useProgram(this.toTextureProgram);
+      let z = gl.getUniformLocation(this.toTextureProgram, "uSampler");
+      gl.uniform1i(z, textureUnit);
    };
 
-   private getTriangleCode(): string {
-      let triangles: Triangle[] = [];
-
-      let NUM_STEPS = 6;
-      let RADIUS = 0.3;
-      let offset = 0;
-      let c1 = new glColor([0.5, 0.8, 0.5]);
-      let c2 = new glColor([0.5, 0.3, 0.5]);
-      for (let i = 0; i < NUM_STEPS; i++) {
-         let yA = 1.1 + RADIUS * (1 - Math.cos(i / NUM_STEPS * Math.PI));
-         let yB = 1.1 + RADIUS * (1 - Math.cos((i + 1) / NUM_STEPS * Math.PI));
-
-         let R1 = RADIUS * Math.sin(i / NUM_STEPS * Math.PI);
-         let R2 = RADIUS * Math.sin((i + 1) / NUM_STEPS * Math.PI);
-
-         for (let j = 0; j < NUM_STEPS; j++) {
-            let x1 = R1 * Math.sin(((j + offset) / NUM_STEPS) * 2 * Math.PI);
-            let z1 = R1 * Math.cos(((j + offset) / NUM_STEPS) * 2 * Math.PI);
-            let y1 = yA;
-
-            let x2 = R2 * Math.sin(((j + 0.5 + offset) / NUM_STEPS) * 2 * Math.PI);
-            let z2 = R2 * Math.cos(((j + 0.5 + offset) / NUM_STEPS) * 2 * Math.PI);
-            let y2 = yB;
-
-            let x3 = R1 * Math.sin(((j + 1 + offset) / NUM_STEPS) * 2 * Math.PI);
-            let z3 = R1 * Math.cos(((j + 1 + offset) / NUM_STEPS) * 2 * Math.PI);
-            let y3 = yA;
-
-            let x4 = R2 * Math.sin(((j + 1.5 + offset) / NUM_STEPS) * 2 * Math.PI);
-            let z4 = R2 * Math.cos(((j + 1.5 + offset) / NUM_STEPS) * 2 * Math.PI);
-            let y4 = yB;
-
-            // for the top and bottom we only need one set of triangles to close the surface
-            if (i > 0) {
-               triangles.push(new Triangle(new glVec3([x1, y1, z1]), new glVec3([x2, y2, z2]), new glVec3([x3, y3, z3]), c1));
-            }
-            if (i < NUM_STEPS - 1) {
-               triangles.push(new Triangle(new glVec3([x3, y3, z3]), new glVec3([x2, y2, z2]), new glVec3([x4, y4, z4]), c2));
-            }
-         }
-         offset += 0.5;
-      }
-
-      let minX = 3.402823466e+38;
-      let minY = 3.402823466e+38;
-      let minZ = 3.402823466e+38;
-      let maxX = -3.402823466e+38;
-      let maxY = -3.402823466e+38;
-      let maxZ = -3.402823466e+38;
-      for (let i = 0; i < triangles.length; i++) {
-         minX = Math.min(minX, triangles[i].minX);
-         minY = Math.min(minY, triangles[i].minY);
-         minZ = Math.min(minZ, triangles[i].minZ);
-         maxX = Math.max(maxX, triangles[i].maxX);
-         maxY = Math.max(maxY, triangles[i].maxY);
-         maxZ = Math.max(maxZ, triangles[i].maxZ);
-      }
-
-      let code =
-         '#define NUM_TRIANGLES ' + triangles.length + '\n' +
-         '\n' +
-         'Triangle triangles[NUM_TRIANGLES];\n' +
-         'vec3 objMax = vec3(' + maxX.toFixed(5) + ',' + maxY.toFixed(5) + ',' + maxZ.toFixed(5) + ');\n' +
-         'vec3 objMin = vec3(' + minX.toFixed(5) + ',' + minY.toFixed(5) + ',' + minZ.toFixed(5) + ');\n' +
-         '\n' +
-         'void init()\n' +
-         '{\n';
-
-      for (let i = 0; i < triangles.length; i++) {
-         let t = triangles[i];
-         code += 'triangles[' + i + '] = Triangle(' +
-            'vec3(' + t.p0.x.toFixed(5) + ',' + t.p0.y.toFixed(5) + ',' + t.p0.z.toFixed(5) + '), ' +
-            'vec3(' + t.p1.x.toFixed(5) + ',' + t.p1.y.toFixed(5) + ',' + t.p1.z.toFixed(5) + '), ' +
-            'vec3(' + t.p2.x.toFixed(5) + ',' + t.p2.y.toFixed(5) + ',' + t.p2.z.toFixed(5) + '),' +
-            'vec3(' + t.color.r.toFixed(5) + ',' + t.color.g.toFixed(5) + ',' + t.color.b.toFixed(5) + ')' +
-            ');\n';
-      }
-
-      code += '}\n';
-
-      return code;
-   }
 
    public get renderMode(): RenderMode {
       return this.mainView;
