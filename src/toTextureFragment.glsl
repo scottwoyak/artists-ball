@@ -58,10 +58,10 @@ struct Triangle
    vec3 c;
 };
 
-vec3 getVec(int triIndex, int vecIndex)
+vec3 getVec(int index, int pos)
 {
-   float x = (float(vecIndex) + 0.5) * (1.0 / 4.0);
-   float y = (float(triIndex) + 0.5) * (1.0 / (float(NUM_TRIANGLES) + 1.0));
+   float x = (float(pos) + 0.5) * (1.0 / 4.0);
+   float y = (float(index) + 0.5) * (1.0 / (float(NUM_TRIANGLES) + 1.0));
    return texture2D(uSampler, vec2(x, y)).xyz;
 }
 
@@ -513,7 +513,16 @@ vec4 calculateColor(vec3 origin, vec3 ray)
 
 void main()
 {
-   gl_FragColor = texture2D(uTexture, gl_FragCoord.xy / uTextureSize);
+   /*
+   float x = floor(gl_FragCoord.x);
+   float y = floor(gl_FragCoord.y);
+   if (mod(x, 4.0) != 0.0 || mod(y, 4.0) != 0.0)
+   //   if (x - 3.0 * floor(x / 3.0) == 0.0)
+   {
+      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      return;
+   }
+   */
 
    vec3 rand = uniformlyRandomVector(uRandom) * LIGHT_SIZE;
 
