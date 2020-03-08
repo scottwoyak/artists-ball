@@ -1,6 +1,8 @@
-attribute vec3 vertex;
+#version 300 es
+
+in vec3 vertex;
 uniform vec3 uEye, uRay00, uRay01, uRay10, uRay11;
-varying vec3 initialRay;
+out vec3 initialRay;
 
 void main()
 {

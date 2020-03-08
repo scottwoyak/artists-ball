@@ -10,8 +10,6 @@ import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
 import { gl } from './app';
 import { TriangleSphere } from './TriangleSphere';
-import { DataTexture } from './DataTexture';
-
 
 /**
  * Rendering mode for displaying the texture
@@ -124,7 +122,7 @@ export class PathTracer {
             0,                      // border
             format,                 // format
             type,                   // type
-            null                    // pixel8s
+            null                    // pixels
          );
       }
       gl.bindTexture(gl.TEXTURE_2D, null);
@@ -134,21 +132,13 @@ export class PathTracer {
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
 
-      let tSphere = new TriangleSphere(8, 0.3, new glVec3([0, 1.05, 0]));
+      let tSphere = new TriangleSphere(5, 0.3, new glVec3([0, 1.05, 0]));
       console.log("NumTriangles: " + tSphere.triangles.length);
       let code = toTextureFragmentSource.replace('<NUM_TRIANGLES>', tSphere.triangles.length.toString());
+      code = code.replace('<TRIANGLES>', tSphere.code);
       this.toTextureProgram = Shaders.compileShader(toTextureVertexSource, code);
       this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
       gl.enableVertexAttribArray(this.toTextureVertexAttribute);
-
-      let textureUnit = 15;  // from 0 to 15 is ok
-      let dt = new DataTexture(gl.TEXTURE0 + textureUnit);
-      dt.create(tSphere.triangles);
-
-      // write the texture unit to the program uniform
-      gl.useProgram(this.toTextureProgram);
-      let z = gl.getUniformLocation(this.toTextureProgram, "uSampler");
-      gl.uniform1i(z, textureUnit);
    };
 
    public get renderMode(): RenderMode {
@@ -198,7 +188,19 @@ export class PathTracer {
       let t1 = window.performance.now();
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
+
       let data = this.getPixelData();
+      let data2: IPixelData = {
+         maxChroma: 0,
+         avgLightColor: new glColor([0, 0, 0]),
+         lightestLightColor: new glColor([0, 0, 0]),
+         darkestLightColor: new glColor([1, 1, 1]),
+         avgShadowColor: new glColor([0, 0, 0]),
+         lightestShadowColor: new glColor([0, 0, 0]),
+         darkestShadowColor: new glColor([1, 1, 1]),
+         terminatorColor: new glColor([0, 0, 0]),
+         highlightColor: new glColor([0, 0, 0]),
+      }
       Uniforms.uMaxChroma = data.maxChroma;
       let t2 = window.performance.now();
       console.log("Update Texture: " + (t2 - t1));
@@ -342,8 +344,6 @@ export class PathTracer {
          size = 512;
       }
 
-      let t1 = window.performance.now();
-
       gl.canvas.width = size;
       gl.canvas.height = size;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -369,9 +369,6 @@ export class PathTracer {
          Shaders.setUniforms(this.toScreenProgram, Uniforms);
          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
-
-      let t2 = window.performance.now();
-      console.log("Display Texture: " + (t2 - t1));
    }
 
    public swap(pos: number): void {

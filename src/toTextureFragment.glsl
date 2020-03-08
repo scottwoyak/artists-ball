@@ -1,7 +1,8 @@
+#version 300 es
 
 precision highp float;
 uniform vec3 uEye;
-varying vec3 initialRay;
+in vec3 initialRay;
 uniform float uTextureWeight;
 uniform float uTextureSize;
 uniform float uRandom;
@@ -23,8 +24,7 @@ uniform float uBallLightTintStrength;
 uniform float uBallShadowShift;
 uniform float uBallShadowTintStrength;
 
-uniform sampler2D uSampler;
-const int NUM_TRIANGLES = <NUM_TRIANGLES>;
+out vec4 fragColor;
 
 const int MAX_BOUNCES = 100;
 const float EPSILON = 0.0001;
@@ -58,29 +58,37 @@ struct Triangle
    vec3 c;
 };
 
-vec3 getVec(int index, int pos)
-{
-   float x = (float(pos) + 0.5) * (1.0 / 4.0);
-   float y = (float(index) + 0.5) * (1.0 / (float(NUM_TRIANGLES) + 1.0));
-   return texture2D(uSampler, vec2(x, y)).xyz;
-}
+/*
+const int NUM_TRIANGLES = 8;
 
-Triangle getTriangle(int index)
-{
-   vec3 p1 = getVec(index + 1, 0);
-   vec3 p2 = getVec(index + 1, 1);
-   vec3 p3 = getVec(index + 1, 2);
-   vec3 c = getVec(index + 1, 3);
-   return Triangle(p1, p2, p3, c);
-}
+Triangle triangles[8] = Triangle[8](Triangle(vec3(0.000, 1.065, 0.000), vec3(0.225, 1.215, 0.130),
+                                             vec3(0.000, 1.215, -0.260), vec3(0.8, 0.3, 0.3)),
+                                    Triangle(vec3(0.000, 1.065, 0.000), vec3(0.225, 1.215, 0.130),
+                                             vec3(0.000, 1.215, -0.260), vec3(0.8, 0.3, 0.3)),
+                                    Triangle(vec3(0.000, 1.065, 0.000), vec3(0.225, 1.215, 0.130),
+                                             vec3(0.000, 1.215, -0.260), vec3(0.8, 0.3, 0.3)),
+                                    Triangle(vec3(0.000, 1.065, 0.000), vec3(0.225, 1.215, 0.130),
+                                             vec3(0.000, 1.215, -0.260), vec3(0.8, 0.3, 0.3)),
+                                    Triangle(vec3(0.000, 1.065, 0.000), vec3(0.225, 1.215, 0.130),
+                                             vec3(0.000, 1.215, -0.260), vec3(0.8, 0.3, 0.3)),
+                                    Triangle(vec3(0.000, 1.065, 0.000), vec3(0.225, 1.215, 0.130),
+                                             vec3(0.000, 1.215, -0.260), vec3(0.8, 0.3, 0.3)),
+                                    Triangle(vec3(0.000, 1.065, 0.000), vec3(0.225, 1.215, 0.130),
+                                             vec3(0.000, 1.215, -0.260), vec3(0.8, 0.3, 0.3)),
+                                    Triangle(vec3(-0.000, 1.515, 0.260), vec3(0.000, 1.665, 0.000),
+                                             vec3(0.225, 1.515, -0.130), vec3(0.5, 0.8, 0.5)));
+vec3 boxMin = vec3(-0.225, 1.065, -0.260);
+vec3 boxMax = vec3(0.225, 1.665, 0.260);
+*/
 
-Light Lights[NUM_LIGHTS];
+const int NUM_TRIANGLES = <NUM_TRIANGLES>;
+
+<TRIANGLES>
+
+    Light Lights[NUM_LIGHTS];
 
 bool intersectBox(const vec3 origin, const vec3 ray)
 {
-   vec3 boxMin = getVec(0, 0);
-   vec3 boxMax = getVec(0, 1);
-
    vec3 rayInv = 1.0 / ray;
    vec3 tbot = rayInv * (boxMin - origin);
    vec3 ttop = rayInv * (boxMax - origin);
@@ -220,7 +228,8 @@ bool inShadow(vec3 origin, vec3 ray)
    {
       for (int i = 0; i < NUM_TRIANGLES; i++)
       {
-         Triangle tri = getTriangle(i);
+         Triangle tri = triangles[i];
+         //         Triangle tri = getTriangle(i);
          if (intersectTriangle(origin, ray, tri) < INFINITY)
          {
             return true;
@@ -341,7 +350,8 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       {
          for (int i = 0; i < NUM_TRIANGLES; i++)
          {
-            Triangle tri = getTriangle(i);
+            //            Triangle tri = getTriangle(i);
+            Triangle tri = triangles[i];
             float tTri = min(tObj, intersectTriangle(origin, ray, tri));
             if (tTri < tObj)
             {
@@ -517,9 +527,8 @@ void main()
    float x = floor(gl_FragCoord.x);
    float y = floor(gl_FragCoord.y);
    if (mod(x, 4.0) != 0.0 || mod(y, 4.0) != 0.0)
-   //   if (x - 3.0 * floor(x / 3.0) == 0.0)
    {
-      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      fragColor = vec4(0.0, 0.0, 0.0, 1.0);
       return;
    }
    */
@@ -544,7 +553,7 @@ void main()
    }
 
    // merge the new color into the existing texture
-   vec4 textureColor = texture2D(uTexture, gl_FragCoord.xy / uTextureSize);
+   vec4 textureColor = texture(uTexture, gl_FragCoord.xy / uTextureSize);
    vec4 newColor = calculateColor(uEye, initialRay);
-   gl_FragColor = mix(newColor, textureColor, uTextureWeight);
+   fragColor = mix(newColor, textureColor, uTextureWeight);
 }
