@@ -132,13 +132,27 @@ export class PathTracer {
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
 
-      let tSphere = new TriangleSphere(5, 0.3, new glVec3([0, 1.05, 0]));
+      let tSphere = new TriangleSphere(3, 0.3, new glVec3([0, 1.05, 0]));
       console.log("NumTriangles: " + tSphere.triangles.length);
-      let code = toTextureFragmentSource.replace('<NUM_TRIANGLES>', tSphere.triangles.length.toString());
-      code = code.replace('<TRIANGLES>', tSphere.code);
+      let code = toTextureFragmentSource.replace('<TRIANGLES>', tSphere.code);
       this.toTextureProgram = Shaders.compileShader(toTextureVertexSource, code);
       this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
       gl.enableVertexAttribArray(this.toTextureVertexAttribute);
+
+      gl.useProgram(this.toTextureProgram);
+      for (let i = 0; i < tSphere.triangles.length; i++) {
+         let tri = tSphere.triangles[i];
+         let loc = gl.getUniformLocation(this.toTextureProgram, 'triangles[' + i + '].p0');
+         gl.uniform3fv(loc, new Float32Array(tri.p0.values));
+         loc = gl.getUniformLocation(this.toTextureProgram, 'triangles[' + i + '].p1');
+         gl.uniform3fv(loc, new Float32Array(tri.p1.values));
+         loc = gl.getUniformLocation(this.toTextureProgram, 'triangles[' + i + '].p2');
+         gl.uniform3fv(loc, new Float32Array(tri.p2.values));
+         loc = gl.getUniformLocation(this.toTextureProgram, 'triangles[' + i + '].c');
+         gl.uniform3fv(loc, new Float32Array([tri.color.r, tri.color.g, tri.color.b]));
+
+
+      }
    };
 
    public get renderMode(): RenderMode {
@@ -190,17 +204,6 @@ export class PathTracer {
 
 
       let data = this.getPixelData();
-      let data2: IPixelData = {
-         maxChroma: 0,
-         avgLightColor: new glColor([0, 0, 0]),
-         lightestLightColor: new glColor([0, 0, 0]),
-         darkestLightColor: new glColor([1, 1, 1]),
-         avgShadowColor: new glColor([0, 0, 0]),
-         lightestShadowColor: new glColor([0, 0, 0]),
-         darkestShadowColor: new glColor([1, 1, 1]),
-         terminatorColor: new glColor([0, 0, 0]),
-         highlightColor: new glColor([0, 0, 0]),
-      }
       Uniforms.uMaxChroma = data.maxChroma;
       let t2 = window.performance.now();
       console.log("Update Texture: " + (t2 - t1));

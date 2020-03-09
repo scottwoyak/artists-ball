@@ -87,50 +87,17 @@ export class TriangleSphere {
    public get code(): string {
       let code = "";
       let numTriangles = this.triangles.length;
+      code += 'const int NUM_TRIANGLES = ' + numTriangles + ';';
       if (numTriangles == 0) {
          code += 'Triangle triangles[1];\n';
       }
       else {
-         code += 'Triangle triangles[' + numTriangles + '] = Triangle[' + numTriangles + '](\n ';
-
-         for (let i = 0; i < numTriangles; i++) {
-            let t = this.triangles[i];
-            code += 'Triangle(' + this.vecToStr(t.p0) + ',' + this.vecToStr(t.p1) + ',' + this.vecToStr(t.p2) + ',' + this.cToStr(t.color) + ')';
-
-            if (i < numTriangles - 1) {
-               code += ',\n';
-            }
-         }
-         code += '\n);\n';
+         code += 'uniform Triangle triangles[' + numTriangles + '];';
       }
       code += 'vec3 boxMin = ' + this.vecToStr(this.boxMin) + ';\n';
       code += 'vec3 boxMax = ' + this.vecToStr(this.boxMax) + ';\n';
 
       console.log(code);
-      return code;
-   }
-
-   public get code2(): string {
-      let numTriangles = this.triangles.length;
-      let code = 'Triangle triangles[' + numTriangles + '];\n';
-
-      code += 'bool trianglesInitialized = false;'
-      code += 'void initTriangles()\n';
-      code += '{\n';
-      code += 'if ( trianglesInitialized == false )\n';
-      code += '{\n';
-      code += '   trianglesInitialized = true;';
-
-      for (let i = 0; i < numTriangles; i++) {
-         let t = this.triangles[i];
-         code += 'triangles[' + i + ']=Triangle(' + this.vecToStr(t.p0) + ',' + this.vecToStr(t.p1) + ',' + this.vecToStr(t.p2) + ',' + this.cToStr(t.color) + ');';
-      }
-      code += '}\n';
-      code += '}\n';
-      code += 'vec3 boxMin = ' + this.vecToStr(this.boxMin) + ';\n';
-      code += 'vec3 boxMax = ' + this.vecToStr(this.boxMax) + ';\n';
-
-      //      console.log(code);
       return code;
    }
 }
