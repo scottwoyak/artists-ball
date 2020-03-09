@@ -58,6 +58,7 @@ struct Triangle
    vec3 c;
 };
 
+// The following line is replaced with code generated in JavaScript
 <TRIANGLES>
 
     Light Lights[NUM_LIGHTS];

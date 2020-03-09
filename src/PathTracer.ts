@@ -10,6 +10,7 @@ import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
 import { gl } from './app';
 import { TriangleSphere } from './TriangleSphere';
+import { TriangleCube } from './TriangleCube';
 
 /**
  * Rendering mode for displaying the texture
@@ -127,32 +128,26 @@ export class PathTracer {
       }
       gl.bindTexture(gl.TEXTURE_2D, null);
 
-      // create render shader
+      // create toScreen shader
       this.toScreenProgram = Shaders.compileShader(toScreenVertexSource, toScreenFragmentSource);
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
 
-      let tSphere = new TriangleSphere(3, 0.3, new glVec3([0, 1.05, 0]));
-      console.log("NumTriangles: " + tSphere.triangles.length);
-      let code = toTextureFragmentSource.replace('<TRIANGLES>', tSphere.code);
-      this.toTextureProgram = Shaders.compileShader(toTextureVertexSource, code);
+      let size = 0.6;
+      let center = new glVec3([0, Uniforms.uBallRadius * 2 + 0.05 + size / 2.0, 0]);
+      //let tObj = new TriangleSphere(6, size / 2, center);
+      let tObj = new TriangleCube(size, center);
+
+      // create the toTexture shader
+      this.toTextureProgram = Shaders.compileShader(
+         toTextureVertexSource,
+         toTextureFragmentSource.replace('<TRIANGLES>', tObj.code)
+      );
       this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
       gl.enableVertexAttribArray(this.toTextureVertexAttribute);
 
-      gl.useProgram(this.toTextureProgram);
-      for (let i = 0; i < tSphere.triangles.length; i++) {
-         let tri = tSphere.triangles[i];
-         let loc = gl.getUniformLocation(this.toTextureProgram, 'triangles[' + i + '].p0');
-         gl.uniform3fv(loc, new Float32Array(tri.p0.values));
-         loc = gl.getUniformLocation(this.toTextureProgram, 'triangles[' + i + '].p1');
-         gl.uniform3fv(loc, new Float32Array(tri.p1.values));
-         loc = gl.getUniformLocation(this.toTextureProgram, 'triangles[' + i + '].p2');
-         gl.uniform3fv(loc, new Float32Array(tri.p2.values));
-         loc = gl.getUniformLocation(this.toTextureProgram, 'triangles[' + i + '].c');
-         gl.uniform3fv(loc, new Float32Array([tri.color.r, tri.color.g, tri.color.b]));
-
-
-      }
+      // upload triangles to the GPU
+      tObj.uploadUniformBlock(this.toTextureProgram);
    };
 
    public get renderMode(): RenderMode {
