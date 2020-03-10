@@ -26,7 +26,7 @@ uniform float uBallShadowTintStrength;
 
 out vec4 fragColor;
 
-const int MAX_BOUNCES = 100;
+const int MAX_BOUNCES = 10;
 const float EPSILON = 0.0001;
 const float INFINITY = 10000.0;
 const float LIGHT_SIZE = 0.1;

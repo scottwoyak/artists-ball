@@ -133,10 +133,10 @@ export class PathTracer {
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
 
-      let size = 0.3;
+      let size = 0.5;
       let center = new glVec3([0, Uniforms.uBallRadius * 2 + 0.05 + size / 2.0, 0]);
-      //let tObj = new TriangleSphere(6, size / 2, center);
-      let tObj = new TriangleCube(size, center);
+      let tObj = new TriangleSphere(6, size / 2, center);
+      //let tObj = new TriangleCube(size, center);
 
       // create the toTexture shader
       this.toTextureProgram = Shaders.compileShader(
@@ -194,14 +194,10 @@ export class PathTracer {
 
       gl.vertexAttribPointer(this.toTextureVertexAttribute, 2, gl.FLOAT, false, 0, 0);
 
-      let t1 = window.performance.now();
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
 
       let data = this.getPixelData();
       Uniforms.uMaxChroma = data.maxChroma;
-      let t2 = window.performance.now();
-      console.log("Update Texture: " + (t2 - t1));
 
       let cr = new ColorRange([data.darkestLightColor.toHtmlColor(), data.avgLightColor.toHtmlColor(), data.lightestLightColor.toHtmlColor()]);
       Uniforms.uHighlightColor = data.highlightColor;

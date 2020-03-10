@@ -50,6 +50,9 @@ export class App {
    private oldX: number;
    private oldY: number;
 
+   private lastTimes: number[] = [];
+   private readonly MAX_SAMPLES = 1000;
+
    public constructor() {
       requestAnimationFrame(() => this.tick());
    }
@@ -113,6 +116,10 @@ export class App {
       };
 
       this.tracer = new PathTracer();
+
+      let drawTime = document.createElement('div');
+      drawTime.id = 'drawTime';
+      container.appendChild(drawTime);
 
       let description = document.createElement('div');
       description.id = 'description';
@@ -364,8 +371,10 @@ export class App {
 
    public tick() {
 
+
+      this.updateTimerLabel();
       this.updateProgress();
-      if (this.count < 1000) {
+      if (this.count < this.MAX_SAMPLES) {
          this.count++;
          Uniforms.uEye.values[0] = this.zoomZ * Math.sin(this.angleY) * Math.cos(this.angleX);
          Uniforms.uEye.values[1] = this.zoomZ * Math.sin(this.angleX);
@@ -376,6 +385,22 @@ export class App {
       }
 
       requestAnimationFrame(() => this.tick());
+   }
+
+   private updateTimerLabel() {
+
+      let t = window.performance.now();
+      let drawTimeLabel = document.getElementById('drawTime');
+      if (this.lastTimes.length > 0) {
+         let elapsedMs = (t - this.lastTimes[0]) / this.lastTimes.length;
+         drawTimeLabel.innerText = elapsedMs.toFixed(0) + 'ms';
+      }
+      this.lastTimes.push(t);
+      if (this.lastTimes.length > 30) {
+         this.lastTimes.shift();
+      }
+
+      drawTimeLabel.style.visibility = this.count < this.MAX_SAMPLES ? 'visible' : 'hidden';
    }
 
    private updateProgress() {
