@@ -114,7 +114,7 @@ vec3 normalForTriangle(vec3 origin, vec3 hit, Triangle tri)
 {
    vec3 normal = cross(tri.p1 - tri.p0, tri.p2 - tri.p0);
    normal = normal / length(normal);
-   if (dot(normal, origin) > 0.0)
+   if (dot(normal, origin - hit) > 0.0)
    {
       return normal;
    }
