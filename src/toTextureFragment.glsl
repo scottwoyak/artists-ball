@@ -192,10 +192,10 @@ vec3 uniformlyRandomVector(float seed)
    return uniformlyRandomDirection(seed) * sqrt(random(vec3(36.7539, 50.3658, 306.2759), seed));
 }
 
-bool inShadow(vec3 origin, vec3 ray)
+bool inShadow(vec3 origin, vec3 ray, float tLight)
 {
    float tBall = intersectSphere(origin, ray, BALL_CENTER, uBallRadius);
-   if (tBall < INFINITY)
+   if (tBall < tLight)
    {
       return true;
    }
@@ -205,8 +205,7 @@ bool inShadow(vec3 origin, vec3 ray)
       for (int i = 0; i < NUM_TRIANGLES; i++)
       {
          Triangle tri = triangles[i];
-         //         Triangle tri = getTriangle(i);
-         if (intersectTriangle(origin, ray, tri) < INFINITY)
+         if (intersectTriangle(origin, ray, tri) < tLight)
          {
             return true;
          }
@@ -326,7 +325,6 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       {
          for (int i = 0; i < NUM_TRIANGLES; i++)
          {
-            //            Triangle tri = getTriangle(i);
             Triangle tri = triangles[i];
             float tTri = min(tObj, intersectTriangle(origin, ray, tri));
             if (tTri < tObj)
@@ -337,10 +335,10 @@ vec4 calculateColor(vec3 origin, vec3 ray)
          }
       }
 
+      // if the first ray hits the light, return the light color. This
+      // simulates displaying the light
       if (bounce == 0)
       {
-         // if the first ray hits the light, return the light color. This
-         // simulates displaying the light
          for (int i = 0; i < NUM_LIGHTS; i++)
          {
             float tLight = intersectSphere(origin, ray, Lights[i].pos, Lights[i].size);
@@ -366,8 +364,6 @@ vec4 calculateColor(vec3 origin, vec3 ray)
          {
             t = tfloor;
          }
-
-         surfaceColor = FLOOR_COLOR;
       }
 
       if (tBall < t)
@@ -389,6 +385,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       // calculate the normal
       if (t == tfloor)
       {
+         surfaceColor = FLOOR_COLOR;
          normal = vec3(0.0, 1.0, 0.0);
       }
       else if (t == tBall)
@@ -422,16 +419,17 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       {
          // compute diffuse lighting contribution
          vec3 toLight = Lights[i].pos - hit;
+         vec3 toLightN = normalize(toLight);
 
          // trace a shadow ray to the light
-         if (inShadow(hit + normal * EPSILON, toLight) == false)
+         if (inShadow(hit + normal * EPSILON, toLightN, length(toLight)) == false)
          {
             // diffuse component
-            float diffuse = max(0.0, dot(normalize(toLight), normal));
+            float diffuse = max(0.0, dot(toLightN, normal));
 
             // specular component
             vec3 toEye = eye - hit;
-            vec3 n2l = normalize(toLight);
+            vec3 n2l = toLightN;
             vec3 n2e = normalize(toEye);
             vec3 bisector = (n2l + n2e) / length(n2l + n2e);
             float specularCoefficient = 0.5;

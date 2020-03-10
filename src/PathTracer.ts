@@ -133,7 +133,7 @@ export class PathTracer {
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
 
-      let size = 0.6;
+      let size = 0.3;
       let center = new glVec3([0, Uniforms.uBallRadius * 2 + 0.05 + size / 2.0, 0]);
       //let tObj = new TriangleSphere(6, size / 2, center);
       let tObj = new TriangleCube(size, center);

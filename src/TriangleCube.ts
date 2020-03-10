@@ -12,8 +12,8 @@ export class TriangleCube extends TriangleObject {
    static createFace(triangles: Triangle[], p1: glVec3, p2: glVec3, p3: glVec3, p4: glVec3) {
       let c1 = new glColor([0.5, 0.8, 0.5]);
       let c2 = new glColor([0.8, 0.3, 0.3]);
-      triangles.push(new Triangle(p3, p2, p1, c1));
-      triangles.push(new Triangle(p4, p3, p2, c2));
+      triangles.push(new Triangle(p1, p2, p3, c1));
+      triangles.push(new Triangle(p2, p3, p4, c2));
    }
    static createTriangles(size: number, center: glVec3): Triangle[] {
 
