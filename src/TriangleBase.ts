@@ -7,7 +7,10 @@ export class TriangleObject {
    public boxMin: glVec3;
    public boxMax: glVec3;
 
-   protected constructor(triangles: Triangle[]) {
+   protected constructor() {
+   }
+
+   protected store(triangles: Triangle[]) {
 
       console.log("NumTriangles: " + triangles.length);
       this.triangles = triangles;
@@ -61,31 +64,27 @@ export class TriangleObject {
       gl2.uniformBlockBinding(program, uniformBlockLocation, blockBinding);
 
       // put the triangle data into a Float32Array for uploading
-      let triangles = new Float32Array(this.triangles.length * 16);
+      let triangleData = new Float32Array(this.triangles.length * 12);
       for (let i = 0; i < this.triangles.length; i++) {
          let tri = this.triangles[i];
-         triangles[16 * i + 0] = tri.p0.x;
-         triangles[16 * i + 1] = tri.p0.y;
-         triangles[16 * i + 2] = tri.p0.z;
-         triangles[16 * i + 3] = 0;
-         triangles[16 * i + 4] = tri.p1.x;
-         triangles[16 * i + 5] = tri.p1.y;
-         triangles[16 * i + 6] = tri.p1.z;
-         triangles[16 * i + 7] = 0;
-         triangles[16 * i + 8] = tri.p2.x;
-         triangles[16 * i + 9] = tri.p2.y;
-         triangles[16 * i + 10] = tri.p2.z;
-         triangles[16 * i + 11] = 0;
-         triangles[16 * i + 12] = tri.color.r;
-         triangles[16 * i + 13] = tri.color.g;
-         triangles[16 * i + 14] = tri.color.b;
-         triangles[16 * i + 15] = 1;
+         triangleData[12 * i + 0] = tri.p0.x;
+         triangleData[12 * i + 1] = tri.p0.y;
+         triangleData[12 * i + 2] = tri.p0.z;
+         triangleData[12 * i + 3] = 0;
+         triangleData[12 * i + 4] = tri.p1.x;
+         triangleData[12 * i + 5] = tri.p1.y;
+         triangleData[12 * i + 6] = tri.p1.z;
+         triangleData[12 * i + 7] = 0;
+         triangleData[12 * i + 8] = tri.p2.x;
+         triangleData[12 * i + 9] = tri.p2.y;
+         triangleData[12 * i + 10] = tri.p2.z;
+         triangleData[12 * i + 11] = 0;
       }
 
       // create a buffer and upload the data
       var uniformBlockBuffer = gl2.createBuffer();
       gl2.bindBuffer(gl2.UNIFORM_BUFFER, uniformBlockBuffer);
-      gl2.bufferData(gl2.UNIFORM_BUFFER, triangles, gl2.STATIC_DRAW);
+      gl2.bufferData(gl2.UNIFORM_BUFFER, triangleData, gl2.STATIC_DRAW);
       gl2.bindBuffer(gl2.UNIFORM_BUFFER, null);
       gl2.bindBufferBase(gl2.UNIFORM_BUFFER, 2, uniformBlockBuffer);
    }

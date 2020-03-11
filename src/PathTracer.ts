@@ -11,6 +11,8 @@ import { Uniforms } from './Uniforms';
 import { gl } from './app';
 import { TriangleSphere } from './TriangleSphere';
 import { TriangleCube } from './TriangleCube';
+import { TriangleObj } from './TriangleObjFile';
+
 
 /**
  * Rendering mode for displaying the texture
@@ -63,6 +65,9 @@ export class PathTracer {
    ];
 
    public constructor() {
+   }
+
+   public create(): Promise<void> {
 
       // create vertex buffer - the block we'll draw our rendered texture on
       this.vertexBuffer = gl.createBuffer();
@@ -135,19 +140,25 @@ export class PathTracer {
 
       let size = 0.5;
       let center = new glVec3([0, Uniforms.uBallRadius * 2 + 0.05 + size / 2.0, 0]);
-      let tObj = new TriangleSphere(6, size / 2, center);
-      //let tObj = new TriangleCube(size, center);
+      center.y = 0.8;
+      //let tObj = new TriangleCube();
+      //let tObj = new TriangleSphere();
+      let tObj = new TriangleObj();
+      return tObj.create('LowPolyMaleHead.obj', center).then(() => {
+         //return tObj.create(6, size / 2, center).then(() => {
+         //return tObj.create(size, center).then(() => {
 
-      // create the toTexture shader
-      this.toTextureProgram = Shaders.compileShader(
-         toTextureVertexSource,
-         toTextureFragmentSource.replace('<TRIANGLES>', tObj.code)
-      );
-      this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
-      gl.enableVertexAttribArray(this.toTextureVertexAttribute);
+         // create the toTexture shader
+         this.toTextureProgram = Shaders.compileShader(
+            toTextureVertexSource,
+            toTextureFragmentSource.replace('<TRIANGLES>', tObj.code)
+         );
+         this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
+         gl.enableVertexAttribArray(this.toTextureVertexAttribute);
 
-      // upload triangles to the GPU
-      tObj.uploadUniformBlock(this.toTextureProgram);
+         // upload triangles to the GPU
+         tObj.uploadUniformBlock(this.toTextureProgram);
+      });
    };
 
    public get renderMode(): RenderMode {

@@ -54,7 +54,6 @@ export class App {
    private readonly MAX_SAMPLES = 1000;
 
    public constructor() {
-      requestAnimationFrame(() => this.tick());
    }
 
    public component(): HTMLElement {
@@ -116,6 +115,9 @@ export class App {
       };
 
       this.tracer = new PathTracer();
+      this.tracer.create().then(() => {
+         requestAnimationFrame(() => this.tick());
+      })
 
       let drawTime = document.createElement('div');
       drawTime.id = 'drawTime';

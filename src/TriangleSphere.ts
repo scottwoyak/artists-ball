@@ -1,15 +1,20 @@
 import { Triangle } from "./Triangle";
 import { glVec3 } from "./glVec";
 import { glColor } from "./glColor";
-import { TriangleObject } from "./TriangleObject";
+import { TriangleObject } from "./TriangleBase";
 
 export class TriangleSphere extends TriangleObject {
 
-   constructor(numSteps: number, radius: number, center: glVec3) {
-      super(TriangleSphere.createTriangles(numSteps, radius, center));
+   public constructor() {
+      super();
    }
 
-   static createTriangles(numSteps: number, radius: number, center: glVec3): Triangle[] {
+   create(numSteps: number, radius: number, center: glVec3): Promise<void> {
+      super.store(this.createTriangles(numSteps, radius, center));
+      return Promise.resolve();
+   }
+
+   createTriangles(numSteps: number, radius: number, center: glVec3): Triangle[] {
       let offset = 0;
       let c1 = new glColor([0.5, 0.8, 0.5]);
       let c2 = new glColor([0.8, 0.3, 0.3]);

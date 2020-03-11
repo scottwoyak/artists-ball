@@ -55,7 +55,6 @@ struct Triangle
    vec3 p0;
    vec3 p1;
    vec3 p2;
-   vec3 c;
 };
 
 // The following line is replaced with code generated in JavaScript
@@ -395,7 +394,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       }
       else if (t == tObj)
       {
-         surfaceColor = obj.c;
+         surfaceColor = uBallColor;
          normal = normalForTriangle(origin, hit, obj);
       }
       else if (t == tDome)
