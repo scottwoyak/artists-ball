@@ -21,8 +21,8 @@ uniform float uBALL_SHADOW;
 uniform float uBallLightShift;
 uniform float uBallLightTintStrength;
 
-uniform float uBallShadowShift;
-uniform float uBallShadowTintStrength;
+uniform float uobjShadowShift;
+uniform float uobjShadowTintStrength;
 
 out vec4 fragColor;
 
@@ -203,7 +203,7 @@ bool inShadow(vec3 origin, vec3 ray, float tLight)
    {
       for (int i = 0; i < NUM_TRIANGLES; i++)
       {
-         Triangle tri = triangles[i];
+         Triangle tri = getTriangle(i);
          if (intersectTriangle(origin, ray, tri) < tLight)
          {
             return true;
@@ -268,7 +268,7 @@ vec4 toArtist(vec4 color)
 
    // temperature shift
    vec4 rgblight = shiftTemperature(color, -uBallLightShift, uBallLightTintStrength);
-   vec4 rgbshadow = shiftTemperature(color, -uBallShadowShift, uBallShadowTintStrength);
+   vec4 rgbshadow = shiftTemperature(color, -uobjShadowShift, uobjShadowTintStrength);
    vec4 rgbmix = mix(rgblight, rgbshadow, percentShadow);
    vec4 hsv = rgb2hsv(rgbmix);
 
@@ -307,8 +307,8 @@ vec4 calculateColor(vec3 origin, vec3 ray)
    vec3 accumulatedColor = vec3(0.0);
    vec3 colorMask = vec3(1.0);
    vec3 eye = origin;
-   bool ballHit = false;
-   bool ballShadow = false;
+   bool objHit = false;
+   bool objShadow = false;
    float specularContribution = 0.0;
 
    // main raytracing loop
@@ -324,7 +324,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       {
          for (int i = 0; i < NUM_TRIANGLES; i++)
          {
-            Triangle tri = triangles[i];
+            Triangle tri = getTriangle(i);
             float tTri = min(tObj, intersectTriangle(origin, ray, tri));
             if (tTri < tObj)
             {
@@ -348,41 +348,26 @@ vec4 calculateColor(vec3 origin, vec3 ray)
          }
       }
 
-      float tDome = intersectSphere(origin, ray, DOME_CENTER, DOME_RADIUS);
-
       // find the closest intersection
-      float t = INFINITY;
-      float tfloor = INFINITY;
+      float tDome = intersectSphere(origin, ray, DOME_CENTER, DOME_RADIUS);
+      float tFloor = INFINITY;
 
       // check for intersection with the ground
       if (ray.y < 0.0)
       {
          // distance to floor = num unit vectors required to reach the floor
-         tfloor = -origin.y / ray.y;
-         if (tfloor < t)
-         {
-            t = tfloor;
-         }
+         tFloor = -origin.y / ray.y;
       }
 
-      if (tBall < t)
-      {
-         t = tBall;
-
-         if (bounce == 0)
-         {
-            ballHit = true;
-         }
-      }
-
-      t = min(t, min(tObj, tDome));
+      // find the closest hit
+      float t = min(min(tDome, tFloor), min(tBall, tObj));
 
       // info about hit
       vec3 hit = origin + ray * t;
       vec3 normal;
 
       // calculate the normal
-      if (t == tfloor)
+      if (t == tFloor)
       {
          surfaceColor = FLOOR_COLOR;
          normal = vec3(0.0, 1.0, 0.0);
@@ -391,11 +376,21 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       {
          surfaceColor = vec3(uBallColor);
          normal = normalForSphere(hit, BALL_CENTER, uBallRadius);
+
+         if (bounce == 0)
+         {
+            objHit = true;
+         }
       }
       else if (t == tObj)
       {
          surfaceColor = uBallColor;
          normal = normalForTriangle(origin, hit, obj);
+
+         if (bounce == 0)
+         {
+            objHit = true;
+         }
       }
       else if (t == tDome)
       {
@@ -456,7 +451,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
          }
          else if (bounce == 0 && i == 0)
          {
-            ballShadow = true;
+            objShadow = true;
          }
       }
 
@@ -467,9 +462,9 @@ vec4 calculateColor(vec3 origin, vec3 ray)
    }
 
    float alpha = 1.0;
-   if (ballHit)
+   if (objHit)
    {
-      if (ballShadow)
+      if (objShadow)
       {
          alpha = uBALL_SHADOW;
       }
@@ -483,7 +478,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
    vec4 scienceColor = vec4(clamp(accumulatedColor, 0.0, 1.0), alpha);
    return scienceColor;
    /*
-   if (ballHit)
+   if (objHit)
    {
       return vec4(toArtist(scienceColor).rgb, alpha);
    }

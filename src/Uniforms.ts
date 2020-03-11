@@ -83,7 +83,7 @@ export let Uniforms: IUniforms = {
    uLightPos: new glVec3(new SphericalCoord(2, 60, 110).toXYZ()),
    uAmbientLightIntensity: 0.3,
    uBallColor: new glColor([0.5, 0.5, 0.8]),
-   uBallRadius: 0.05,
+   uBallRadius: 0.5,
    uEye: new glVec3([0, 0, 0]),
    uTextureSize: 256,
    uTextureWeight: 0,

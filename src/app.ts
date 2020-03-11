@@ -53,7 +53,10 @@ export class App {
    private lastTimes: number[] = [];
    private readonly MAX_SAMPLES = 1000;
 
-   public constructor() {
+   private query: string;
+
+   public constructor(query: string) {
+      this.query = query;
    }
 
    public component(): HTMLElement {
@@ -115,7 +118,7 @@ export class App {
       };
 
       this.tracer = new PathTracer();
-      this.tracer.create().then(() => {
+      this.tracer.create(this.query).then(() => {
          requestAnimationFrame(() => this.tick());
       })
 
@@ -372,7 +375,6 @@ export class App {
    }
 
    public tick() {
-
 
       this.updateTimerLabel();
       this.updateProgress();

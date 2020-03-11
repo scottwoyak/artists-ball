@@ -1,17 +1,19 @@
 import { Shaders } from './Shaders';
 import { glMat4 } from './glMat';
 import { glVec3, glVec4 } from './glVec';
-import toScreenVertexSource from './toScreenVertex.glsl';
-import toScreenFragmentSource from './toScreenFragment.glsl';
-import toTextureVertexSource from './toTextureVertex.glsl';
-import toTextureFragmentSource from './toTextureFragment.glsl';
+import toScreenVertexSource from './shaders/toScreenVertex.glsl';
+import toScreenFragmentSource from './shaders/toScreenFragment.glsl';
+import toTextureVertexSource from './shaders/toTextureVertex.glsl';
+import toTextureFragmentSource from './shaders/toTextureFragment.glsl';
+import noTrianglesSource from './shaders/noTriangles.glsl';
 import { glColor } from './glColor';
 import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
 import { gl } from './app';
 import { TriangleSphere } from './TriangleSphere';
 import { TriangleCube } from './TriangleCube';
-import { TriangleObj } from './TriangleObjFile';
+import { TriangleObjFile } from './TriangleObjFile';
+import { TriangleBase } from './TriangleBase';
 
 
 /**
@@ -67,7 +69,7 @@ export class PathTracer {
    public constructor() {
    }
 
-   public create(): Promise<void> {
+   public create(query: string): Promise<void> {
 
       // create vertex buffer - the block we'll draw our rendered texture on
       this.vertexBuffer = gl.createBuffer();
@@ -138,28 +140,57 @@ export class PathTracer {
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
 
-      let size = 0.5;
-      let center = new glVec3([0, Uniforms.uBallRadius * 2 + 0.05 + size / 2.0, 0]);
-      center.y = 0.8;
-      //let tObj = new TriangleCube();
-      //let tObj = new TriangleSphere();
-      let tObj = new TriangleObj();
-      return tObj.create('LowPolyMaleHead.obj', center).then(() => {
-         //return tObj.create(6, size / 2, center).then(() => {
-         //return tObj.create(size, center).then(() => {
+      if (query.toLowerCase() === 'trianglesphere') {
+         Uniforms.uBallRadius = 0;
+         let radius = 0.5;
+         let center = new glVec3([0, radius, 0]);
+         let tObj = new TriangleSphere();
+         return tObj.create(10, radius, center).then(() => {
+            this.compileShader(tObj);
+         });
+      }
+      else if (query.toLowerCase() === 'trianglecube') {
+         Uniforms.uBallRadius = 0;
+         let size = 0.8;
+         let center = new glVec3([0, size / 2.0, 0]);
+         let tObj = new TriangleCube();
+         return tObj.create(size, center).then(() => {
+            this.compileShader(tObj);
+         });
+      }
+      else if (query.toLowerCase().endsWith('.obj')) {
+         Uniforms.uBallRadius = 0;
+         let center = new glVec3([0, 0.5, 0]);
+         let tObj = new TriangleObjFile();
+         return tObj.create(query, center).then(() => {
+            this.compileShader(tObj);
+         });
+      }
+      else {
+         return Promise.resolve().then(() => { this.compileShader() })
+      }
+   }
 
-         // create the toTexture shader
+   private compileShader(tObj?: TriangleBase) {
+      // create the toTexture shader
+      if (tObj) {
          this.toTextureProgram = Shaders.compileShader(
             toTextureVertexSource,
             toTextureFragmentSource.replace('<TRIANGLES>', tObj.code)
          );
-         this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
-         gl.enableVertexAttribArray(this.toTextureVertexAttribute);
 
          // upload triangles to the GPU
          tObj.uploadUniformBlock(this.toTextureProgram);
-      });
-   };
+      }
+      else {
+         this.toTextureProgram = Shaders.compileShader(
+            toTextureVertexSource,
+            toTextureFragmentSource.replace('<TRIANGLES>', noTrianglesSource)
+         );
+      }
+      this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
+      gl.enableVertexAttribArray(this.toTextureVertexAttribute);
+   }
 
    public get renderMode(): RenderMode {
       return this.mainView;

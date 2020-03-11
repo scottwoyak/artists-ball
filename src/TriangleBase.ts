@@ -2,7 +2,7 @@ import { Triangle } from "./Triangle";
 import { glVec3 } from "./glVec";
 import { gl } from "./app";
 
-export class TriangleObject {
+export class TriangleBase {
    private triangles: Triangle[] = [];
    public boxMin: glVec3;
    public boxMax: glVec3;
@@ -50,6 +50,8 @@ export class TriangleObject {
       }
       code += 'vec3 boxMin = vec3(' + this.boxMin.x + ', ' + this.boxMin.y + ', ' + this.boxMin.z + ');\n';
       code += 'vec3 boxMax = vec3(' + this.boxMax.x + ', ' + this.boxMax.y + ', ' + this.boxMax.z + ');\n';
+
+      code += 'Triangle getTriangle(int index) { return triangles[index]; }\n';
 
       return code;
    }
