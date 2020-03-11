@@ -13,7 +13,8 @@ import { gl } from './app';
 import { TriangleSphere } from './TriangleSphere';
 import { TriangleCube } from './TriangleCube';
 import { TriangleObjFile } from './TriangleObjFile';
-import { TriangleBase } from './TriangleBase';
+import { ITriangleObj } from './ITriangleObj';
+import { Profiler } from './Profiler';
 
 
 /**
@@ -140,7 +141,7 @@ export class PathTracer {
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
 
-      if (query.toLowerCase() === 'trianglesphere') {
+      if (query && query.toLowerCase() === 'trianglesphere') {
          Uniforms.uBallRadius = 0;
          let radius = 0.5;
          let center = new glVec3([0, radius, 0]);
@@ -149,7 +150,7 @@ export class PathTracer {
             this.compileShader(tObj);
          });
       }
-      else if (query.toLowerCase() === 'trianglecube') {
+      else if (query && query.toLowerCase() === 'trianglecube') {
          Uniforms.uBallRadius = 0;
          let size = 0.8;
          let center = new glVec3([0, size / 2.0, 0]);
@@ -158,11 +159,12 @@ export class PathTracer {
             this.compileShader(tObj);
          });
       }
-      else if (query.toLowerCase().endsWith('.obj')) {
+      else if (query && query.toLowerCase().endsWith('.obj')) {
          Uniforms.uBallRadius = 0;
-         let center = new glVec3([0, 0.5, 0]);
+         let size = 1.5;
+         let center = new glVec3([0, size / 2 + 0.1, 0]);
          let tObj = new TriangleObjFile();
-         return tObj.create(query, center).then(() => {
+         return tObj.create(query, size, center).then(() => {
             this.compileShader(tObj);
          });
       }
@@ -171,7 +173,8 @@ export class PathTracer {
       }
    }
 
-   private compileShader(tObj?: TriangleBase) {
+   private compileShader(tObj?: ITriangleObj) {
+      let p = new Profiler();
       // create the toTexture shader
       if (tObj) {
          this.toTextureProgram = Shaders.compileShader(
@@ -190,6 +193,7 @@ export class PathTracer {
       }
       this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
       gl.enableVertexAttribArray(this.toTextureVertexAttribute);
+      p.log('compile');
    }
 
    public get renderMode(): RenderMode {

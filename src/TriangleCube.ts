@@ -1,9 +1,9 @@
 import { Triangle } from "./Triangle";
 import { glVec3 } from "./glVec";
 import { glColor } from "./glColor";
-import { TriangleBase } from "./TriangleBase";
+import { TriangleObj } from "./TriangleObj";
 
-export class TriangleCube extends TriangleBase {
+export class TriangleCube extends TriangleObj {
 
    public constructor() {
       super();

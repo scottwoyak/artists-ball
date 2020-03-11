@@ -27,7 +27,7 @@ uniform float uobjShadowTintStrength;
 out vec4 fragColor;
 
 const int MAX_BOUNCES = 10;
-const float EPSILON = 0.0001;
+const float EPSILON = 0.000001;
 const float INFINITY = 10000.0;
 const float LIGHT_SIZE = 0.1;
 #define BALL_CENTER vec3(0, uBallRadius, 0)

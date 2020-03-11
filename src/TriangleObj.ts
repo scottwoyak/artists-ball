@@ -1,8 +1,9 @@
 import { Triangle } from "./Triangle";
 import { glVec3 } from "./glVec";
 import { glUniformBlock } from "./glUniformBlock";
+import { ITriangleObj } from "./ITriangleObj";
 
-export class TriangleBase {
+export class TriangleObj implements ITriangleObj {
    private triangles: Triangle[] = [];
    private boxMin: glVec3;
    private boxMax: glVec3;

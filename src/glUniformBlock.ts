@@ -8,14 +8,14 @@ export class glUniformBlock {
 
       let gl2 = gl as WebGL2RenderingContext;
 
-      this.blockLocation = gl2.getUniformBlockIndex(program, 'MyUniformBlock');
+      this.blockLocation = gl2.getUniformBlockIndex(program, blockName);
       gl2.uniformBlockBinding(program, this.blockLocation, blockBinding);
 
       this.blockBuffer = gl2.createBuffer();
       gl2.bindBufferBase(gl2.UNIFORM_BUFFER, blockBinding, this.blockBuffer);
    }
 
-   upload(data: Float32Array) {
+   upload(data: Float32Array | Int32Array) {
 
       let gl2 = gl as WebGL2RenderingContext;
       gl2.bindBuffer(gl2.UNIFORM_BUFFER, this.blockBuffer);
