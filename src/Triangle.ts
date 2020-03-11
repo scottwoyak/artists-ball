@@ -1,5 +1,4 @@
 import { glVec3 } from "./glVec";
-import { glColor } from "./glColor";
 
 /**
  * Class for holding information about a triangle
@@ -8,13 +7,11 @@ export class Triangle {
    p0: glVec3;
    p1: glVec3;
    p2: glVec3;
-   color: glColor;
 
-   constructor(p0: glVec3, p1: glVec3, p2: glVec3, color: glColor) {
+   constructor(p0: glVec3, p1: glVec3, p2: glVec3) {
       this.p0 = p0;
       this.p1 = p1;
       this.p2 = p2;
-      this.color = color;
    }
 
    get minX(): number {

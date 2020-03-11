@@ -16,8 +16,6 @@ export class TriangleSphere extends TriangleBase {
 
    createTriangles(numSteps: number, radius: number, center: glVec3): Triangle[] {
       let offset = 0;
-      let c1 = new glColor([0.5, 0.8, 0.5]);
-      let c2 = new glColor([0.8, 0.3, 0.3]);
       let triangles: Triangle[] = [];
       for (let i = 0; i < numSteps; i++) {
          let yA = radius * Math.cos(i / numSteps * Math.PI);
@@ -53,10 +51,10 @@ export class TriangleSphere extends TriangleBase {
 
             // for the top and bottom we only need one set of triangles to close the surface
             if (i > 0) {
-               triangles.push(new Triangle(p1, p2, p3, c1));
+               triangles.push(new Triangle(p1, p2, p3));
             }
             if (i < numSteps - 1) {
-               triangles.push(new Triangle(p3, p2, p4, c2));
+               triangles.push(new Triangle(p3, p2, p4));
             }
          }
          offset += 0.5;

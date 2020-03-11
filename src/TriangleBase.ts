@@ -4,8 +4,8 @@ import { glUniformBlock } from "./glUniformBlock";
 
 export class TriangleBase {
    private triangles: Triangle[] = [];
-   public boxMin: glVec3;
-   public boxMax: glVec3;
+   private boxMin: glVec3;
+   private boxMax: glVec3;
 
    protected constructor() {
    }
