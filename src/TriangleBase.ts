@@ -1,6 +1,6 @@
 import { Triangle } from "./Triangle";
 import { glVec3 } from "./glVec";
-import { gl } from "./app";
+import { glUniformBlock } from "./glUniformBlock";
 
 export class TriangleBase {
    private triangles: Triangle[] = [];
@@ -58,12 +58,8 @@ export class TriangleBase {
 
    public uploadUniformBlock(program: WebGLProgram) {
 
-      let gl2 = gl as WebGL2RenderingContext;
-
-      // bind the uniform block
-      let uniformBlockLocation = gl2.getUniformBlockIndex(program, 'MyUniformBlock');
       let blockBinding = 2;
-      gl2.uniformBlockBinding(program, uniformBlockLocation, blockBinding);
+      let block = new glUniformBlock(program, 'MyUniformBlock', blockBinding);
 
       // put the triangle data into a Float32Array for uploading
       let triangleData = new Float32Array(this.triangles.length * 12);
@@ -83,11 +79,6 @@ export class TriangleBase {
          triangleData[12 * i + 11] = 0;
       }
 
-      // create a buffer and upload the data
-      var uniformBlockBuffer = gl2.createBuffer();
-      gl2.bindBuffer(gl2.UNIFORM_BUFFER, uniformBlockBuffer);
-      gl2.bufferData(gl2.UNIFORM_BUFFER, triangleData, gl2.STATIC_DRAW);
-      gl2.bindBuffer(gl2.UNIFORM_BUFFER, null);
-      gl2.bindBufferBase(gl2.UNIFORM_BUFFER, 2, uniformBlockBuffer);
+      block.upload(triangleData);
    }
 }

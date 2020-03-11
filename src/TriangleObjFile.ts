@@ -45,7 +45,7 @@ export class TriangleObjFile extends TriangleBase {
                }
             }
 
-            triangles = triangles.splice(0, 1000);
+            triangles = triangles.splice(0, 1300);
             let min = new glVec3([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]);
             let max = new glVec3([-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE]);
             for (let i = 0; i < triangles.length; i++) {
