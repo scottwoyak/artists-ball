@@ -53,12 +53,12 @@ export class TriangleObjFile {
       for (let i = 0; i < lines.length; i++) {
          let line = lines[i];
          if (line.startsWith('v ')) {
-            let tokens = line.split(' ');
+            let tokens = line.match(/\S+/g);
             let vec = new glVec3([parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3])])
             this.vertices.push(vec);
          }
          else if (line.startsWith('f ')) {
-            let tokens = line.split(' ');
+            let tokens = line.match(/\S+/g);
             if (tokens.length === 5) {
                let i1 = parseInt(tokens[1].split('/')[0]) - 1;
                let i2 = parseInt(tokens[2].split('/')[0]) - 1;

@@ -199,6 +199,7 @@ export class PathTracer {
 
    public restart(): void {
       Uniforms.uSample = 0;
+      Uniforms.uPixel = 0;
    }
 
    private getEyeRay(matrix: glMat4, x: number, y: number): glVec3 {
@@ -221,9 +222,6 @@ export class PathTracer {
       Uniforms.uRay01 = this.getEyeRay(matrix, -1, +1);
       Uniforms.uRay10 = this.getEyeRay(matrix, +1, -1);
       Uniforms.uRay11 = this.getEyeRay(matrix, +1, +1);
-      Uniforms.uRandom = Math.random();
-      Uniforms.uTextureWeight = Uniforms.uSample / (Uniforms.uSample + 1);
-
       // set uniforms
       gl.useProgram(this.toTextureProgram);
       Shaders.setUniforms(this.toTextureProgram, Uniforms);
@@ -259,7 +257,16 @@ export class PathTracer {
       // ping pong textures
       this.textures.reverse();
 
+      /*
+      Uniforms.uPixel++;
+      if (Uniforms.uPixel > 15) {
+         Uniforms.uPixel = 0.0;
+         Uniforms.uSample++;
+         Uniforms.uRandom = Math.random();
+      }
+      */
       Uniforms.uSample++;
+      Uniforms.uRandom = Math.random();
    };
 
    private getPixelData(): IPixelData {

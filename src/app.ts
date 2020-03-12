@@ -31,7 +31,6 @@ export class App {
    private modelview: glMat4;
    private projection: glMat4;
    private modelviewProjection: glMat4;
-   private count = 0;
    private pointerMode: PointerMode = PointerMode.View;
    private pointerModeSpecial = false;
    private pos: SphericalCoord;
@@ -366,7 +365,6 @@ export class App {
    };
 
    public restart(): void {
-      this.count = 0;
       this.tracer.restart();
    }
 
@@ -378,8 +376,7 @@ export class App {
 
       this.updateTimerLabel();
       this.updateProgress();
-      if (this.count < this.MAX_SAMPLES) {
-         this.count++;
+      if (Uniforms.uSample < this.MAX_SAMPLES) {
          Uniforms.uEye.values[0] = this.zoomZ * Math.sin(this.angleY) * Math.cos(this.angleX);
          Uniforms.uEye.values[1] = this.zoomZ * Math.sin(this.angleX);
          Uniforms.uEye.values[2] = this.zoomZ * Math.cos(this.angleY) * Math.cos(this.angleX);
@@ -404,11 +401,11 @@ export class App {
          this.lastTimes.shift();
       }
 
-      drawTimeLabel.style.visibility = this.count < this.MAX_SAMPLES ? 'visible' : 'hidden';
+      drawTimeLabel.style.visibility = Uniforms.uSample < this.MAX_SAMPLES ? 'visible' : 'hidden';
    }
 
    private updateProgress() {
-      let progress = this.count / 1000;
+      let progress = Uniforms.uSample / this.MAX_SAMPLES;
       let span = document.getElementById('progressSpan') as HTMLSpanElement;
       if (progress >= 0 && progress < 1) {
          span.style.visibility = 'visible';

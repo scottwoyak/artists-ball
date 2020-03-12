@@ -3,7 +3,6 @@
 precision highp float;
 uniform vec3 uEye;
 in vec3 initialRay;
-uniform float uTextureWeight;
 uniform float uTextureSize;
 uniform float uRandom;
 uniform sampler2D uTexture;
@@ -14,6 +13,7 @@ uniform float uAmbientLightIntensity;
 uniform vec3 uBallColor;
 uniform float uBallRadius;
 uniform float uSample;
+uniform float uPixel;
 uniform float uBALL_SPECULAR;
 uniform float uBALL_LIGHT;
 uniform float uBALL_SHADOW;
@@ -495,9 +495,17 @@ void main()
    /*
    float x = floor(gl_FragCoord.x);
    float y = floor(gl_FragCoord.y);
-   if (mod(x, 4.0) != 0.0 || mod(y, 4.0) != 0.0)
+   float pixel = (4.0 * mod(y, 4.0) + mod(x, 4.0));
+   if (pixel != uPixel)
    {
-      fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      if (uSample == 0.0 && pixel > uPixel)
+      {
+         fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      }
+      else
+      {
+         fragColor = texture(uTexture, gl_FragCoord.xy / uTextureSize);
+      }
       return;
    }
    */
@@ -524,5 +532,6 @@ void main()
    // merge the new color into the existing texture
    vec4 textureColor = texture(uTexture, gl_FragCoord.xy / uTextureSize);
    vec4 newColor = calculateColor(uEye, initialRay);
-   fragColor = mix(newColor, textureColor, uTextureWeight);
+   float weight = (uSample / (1.0 + uSample));
+   fragColor = mix(newColor, textureColor, weight);
 }

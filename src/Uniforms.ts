@@ -40,13 +40,13 @@ export interface IUniforms {
    uBallRadius: number,
    uEye: glVec3,
    uTextureSize: number,
-   uTextureWeight: number,
    uRandom: number,
    uRay00: glVec3,
    uRay01: glVec3,
    uRay10: glVec3,
    uRay11: glVec3,
    uSample: number,
+   uPixel: number,
 }
 
 /**
@@ -86,11 +86,11 @@ export let Uniforms: IUniforms = {
    uBallRadius: 0.5,
    uEye: new glVec3([0, 0, 0]),
    uTextureSize: 256,
-   uTextureWeight: 0,
-   uRandom: 0,
+   uRandom: Math.random(),
    uRay00: new glVec3([0, 0, 0]),
    uRay01: new glVec3([0, 0, 0]),
    uRay10: new glVec3([0, 0, 0]),
    uRay11: new glVec3([0, 0, 0]),
    uSample: 0.0,
+   uPixel: 0.0,
 }
