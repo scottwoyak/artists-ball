@@ -67,9 +67,6 @@ export class PathTracer {
       +1, +1
    ];
 
-   public constructor() {
-   }
-
    public create(query: string): Promise<void> {
 
       // create vertex buffer - the block we'll draw our rendered texture on

@@ -29,6 +29,16 @@ export class TriangleObjFile {
          });
    }
 
+   private createTriangles(src: string, size: number, center: glVec3) {
+
+      this.parse(src);
+      this.autoAdjust(size, center);
+
+      console.log('Num Triangles: ' + this.triangles.length);
+
+      //this.dumpObjContent();
+   }
+
    private storeTriangle(i1: number, i2: number, i3: number) {
 
       let t = new IndexedTriangle(this.vertices, i1, i2, i3);
@@ -37,8 +47,7 @@ export class TriangleObjFile {
       //}
    }
 
-   private createTriangles(src: string, size: number, center: glVec3) {
-
+   private parse(src: string) {
       let lines = src.split('\n');
 
       for (let i = 0; i < lines.length; i++) {
@@ -79,7 +88,9 @@ export class TriangleObjFile {
          this.boxMax.y = Math.max(this.boxMax.y, tri.maxY);
          this.boxMax.z = Math.max(this.boxMax.z, tri.maxZ);
       }
+   }
 
+   private autoAdjust(size: number, center: glVec3) {
       let trans = new glVec3([
          -(this.boxMax.x + this.boxMin.x) / 2,
          -(this.boxMax.y + this.boxMin.y) / 2,
@@ -102,9 +113,9 @@ export class TriangleObjFile {
       this.boxMax.x = (this.boxMax.x + trans.x) * scale + center.x;
       this.boxMax.y = (this.boxMax.y + trans.y) * scale + center.y;
       this.boxMax.z = (this.boxMax.z + trans.z) * scale + center.z;
-      console.log('Num Triangles: ' + this.triangles.length);
+   }
 
-      /*
+   private dumpObjContent() {
       let str = "";
       for (let i = 0; i < this.vertices.length; i++) {
          let v = this.vertices[i];
@@ -115,7 +126,6 @@ export class TriangleObjFile {
          str += 'f ' + (t.i0 + 1) + ' ' + (t.i1 + 1) + ' ' + (t.i2 + 1) + '\n';
       }
       console.log(str);
-      */
    }
 
    public get code(): string {

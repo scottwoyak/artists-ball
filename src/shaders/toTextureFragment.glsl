@@ -109,10 +109,11 @@ float intersectTriangle(vec3 origin, vec3 ray, Triangle tri)
    return t; // ray intersection
 }
 
-vec3 normalForTriangle(vec3 origin, vec3 hit, Triangle tri)
+vec3 normalForTriangle(vec3 origin, vec3 hit, int tIndex)
 {
+   Triangle tri = getTriangle(tIndex);
    vec3 normal = cross(tri.p1 - tri.p0, tri.p2 - tri.p0);
-   normal = normal / length(normal);
+   normal = normalize(normal);
    if (dot(normal, origin - hit) > 0.0)
    {
       return normal;
@@ -319,7 +320,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       vec3 surfaceColor = vec3(0.5, 0.5, 0.5);
 
       float tObj = INFINITY;
-      Triangle obj;
+      int tIndex;
       if (intersectBox(origin, ray))
       {
          for (int i = 0; i < NUM_TRIANGLES; i++)
@@ -328,8 +329,8 @@ vec4 calculateColor(vec3 origin, vec3 ray)
             float tTri = min(tObj, intersectTriangle(origin, ray, tri));
             if (tTri < tObj)
             {
-               obj = tri;
                tObj = tTri;
+               tIndex = i;
             }
          }
       }
@@ -385,7 +386,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       else if (t == tObj)
       {
          surfaceColor = uBallColor;
-         normal = normalForTriangle(origin, hit, obj);
+         normal = normalForTriangle(origin, hit, tIndex);
 
          if (bounce == 0)
          {
