@@ -1,45 +1,46 @@
-import { Triangle } from "./Triangle";
 import { glVec3 } from "./glVec";
-import { glColor } from "./glColor";
 import { TriangleObj } from "./TriangleObj";
+import { IndexedTriangle } from "./IndexedTriangle";
+import { Volume } from "./Volume";
 
 export class TriangleCube extends TriangleObj {
 
-   public constructor() {
-      super();
-   }
-
    create(size: number, center: glVec3): Promise<void> {
-      super.store(this.createTriangles(size, center));
+
+      this.createTriangles(size, center);
+
+      this.volumes.push(new Volume());
+      this.volumes[0].boxMin = this.boxMin.clone();
+      this.volumes[0].boxMax = this.boxMax.clone();
+      this.volumes[0].triangles = this.triangles;
+
       return Promise.resolve();
    }
 
-   createFace(triangles: Triangle[], p1: glVec3, p2: glVec3, p3: glVec3, p4: glVec3) {
-      triangles.push(new Triangle(p1, p2, p3));
-      triangles.push(new Triangle(p2, p3, p4));
+   createFace(i1: number, i2: number, i3: number, i4: number) {
+
+      this.push(new IndexedTriangle(this.vertices, i1, i2, i3));
+      this.push(new IndexedTriangle(this.vertices, i2, i3, i4));
    }
 
-   createTriangles(size: number, center: glVec3): Triangle[] {
+   createTriangles(size: number, center: glVec3) {
 
-      let p1 = new glVec3([center.x - size / 2, center.y - size / 2, center.z - size / 2]);
-      let p2 = new glVec3([center.x - size / 2, center.y - size / 2, center.z + size / 2]);
-      let p3 = new glVec3([center.x - size / 2, center.y + size / 2, center.z - size / 2]);
-      let p4 = new glVec3([center.x - size / 2, center.y + size / 2, center.z + size / 2]);
-      let p5 = new glVec3([center.x + size / 2, center.y - size / 2, center.z - size / 2]);
-      let p6 = new glVec3([center.x + size / 2, center.y - size / 2, center.z + size / 2]);
-      let p7 = new glVec3([center.x + size / 2, center.y + size / 2, center.z - size / 2]);
-      let p8 = new glVec3([center.x + size / 2, center.y + size / 2, center.z + size / 2]);
+      this.vertices.push(new glVec3([center.x - size / 2, center.y - size / 2, center.z - size / 2]));
+      this.vertices.push(new glVec3([center.x - size / 2, center.y - size / 2, center.z + size / 2]));
+      this.vertices.push(new glVec3([center.x - size / 2, center.y + size / 2, center.z - size / 2]));
+      this.vertices.push(new glVec3([center.x - size / 2, center.y + size / 2, center.z + size / 2]));
+      this.vertices.push(new glVec3([center.x + size / 2, center.y - size / 2, center.z - size / 2]));
+      this.vertices.push(new glVec3([center.x + size / 2, center.y - size / 2, center.z + size / 2]));
+      this.vertices.push(new glVec3([center.x + size / 2, center.y + size / 2, center.z - size / 2]));
+      this.vertices.push(new glVec3([center.x + size / 2, center.y + size / 2, center.z + size / 2]));
 
-      let triangles: Triangle[] = [];
-      this.createFace(triangles, p1, p2, p3, p4);
-      this.createFace(triangles, p5, p6, p7, p8);
+      this.createFace(0, 1, 2, 3);
+      this.createFace(4, 5, 6, 7);
 
-      this.createFace(triangles, p1, p2, p5, p6);
-      this.createFace(triangles, p3, p4, p7, p8);
+      this.createFace(0, 1, 4, 5);
+      this.createFace(2, 3, 6, 7);
 
-      this.createFace(triangles, p1, p3, p5, p7);
-      this.createFace(triangles, p2, p4, p6, p8);
-
-      return triangles;
+      this.createFace(0, 2, 4, 6);
+      this.createFace(1, 3, 5, 7);
    }
 }

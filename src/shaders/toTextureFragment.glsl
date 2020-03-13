@@ -1,8 +1,20 @@
-#version 300 es
+<VERSION>
+
+#define NOTHING
+
+#ifdef USE_TRIANGLES
+#define WEBGL2
+#endif
 
 precision highp float;
-uniform vec3 uEye;
+
+#ifdef WEBGL2
 in vec3 initialRay;
+#else
+varying vec3 initialRay;
+#endif
+
+uniform vec3 uEye;
 uniform float uTextureSize;
 uniform float uRandom;
 uniform sampler2D uTexture;
@@ -24,10 +36,16 @@ uniform float uBallLightTintStrength;
 uniform float uobjShadowShift;
 uniform float uobjShadowTintStrength;
 
+#ifdef WEBGL2
 out vec4 fragColor;
+#else
+#define fragColor gl_FragColor
+#define texture texture2D
+#endif
 
 const int MAX_BOUNCES = 10;
 const float EPSILON = 0.000001;
+const float OFFSET = 0.0001;
 const float INFINITY = 10000.0;
 const float LIGHT_SIZE = 0.1;
 #define BALL_CENTER vec3(0, uBallRadius, 0)
@@ -50,6 +68,9 @@ struct Light
    vec3 color;
 };
 
+Light Lights[NUM_LIGHTS];
+
+#ifdef USE_TRIANGLES
 struct Triangle
 {
    vec3 p0;
@@ -66,10 +87,31 @@ struct Volume
 };
 
 // The following line is replaced with code generated in JavaScript
-<TRIANGLES>
+const int NUM_VERTICES = <NUM_VERTICES>;
+const int NUM_VOLUMES = <NUM_VOLUMES>;
+const int NUM_TRIANGLES = <NUM_TRIANGLES>;
 
-    // The central object being rendered
-    struct Object
+layout(std140) uniform MyVerticesBlock { vec3 vertices[NUM_VERTICES]; };
+
+struct ITriangle
+{
+   int i0;
+   int i1;
+   int i2;
+};
+
+layout(std140) uniform MyTrianglesBlock { ITriangle triangles[NUM_TRIANGLES]; };
+Triangle getTriangle(int index)
+{
+   ITriangle tri = triangles[index];
+   vec3 p0 = vertices[tri.i0];
+   vec3 p1 = vertices[tri.i1];
+   vec3 p2 = vertices[tri.i2];
+   return Triangle(p0, p1, p2);
+}
+
+// The central object being rendered
+struct Object
 {
    Volume volumes[NUM_VOLUMES];
    vec3 boxMin;
@@ -77,8 +119,6 @@ struct Volume
 };
 
 uniform Object object;
-
-Light Lights[NUM_LIGHTS];
 
 bool intersectBox(const vec3 origin, const vec3 ray, const vec3 boxMin, const vec3 boxMax)
 {
@@ -156,6 +196,7 @@ vec3 normalForTriangle(vec3 origin, vec3 hit, int tIndex)
       return -normal;
    }
 }
+#endif
 
 float intersectSphere(vec3 origin, vec3 ray, vec3 sphereCenter, float sphereRadius)
 {
@@ -233,6 +274,7 @@ bool inShadow(vec3 origin, vec3 ray, float tLight)
       return true;
    }
 
+#ifdef USE_TRIANGLES
    if (intersectObj(origin, ray, object))
    {
       for (int i = 0; i < NUM_VOLUMES; i++)
@@ -251,6 +293,7 @@ bool inShadow(vec3 origin, vec3 ray, float tLight)
          }
       }
    }
+#endif
 
    return false;
 }
@@ -361,6 +404,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
 
       float tObj = INFINITY;
       int tIndex;
+#ifdef USE_TRIANGLES
       if (intersectObj(origin, ray, object))
       {
          for (int i = 0; i < NUM_VOLUMES; i++)
@@ -381,6 +425,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
             }
          }
       }
+#endif
 
       // if the first ray hits the light, return the light color. This
       // simulates displaying the light
@@ -430,6 +475,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
             objHit = true;
          }
       }
+#ifdef USE_TRIANGLES
       else if (t == tObj)
       {
          surfaceColor = uBallColor;
@@ -440,6 +486,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
             objHit = true;
          }
       }
+#endif
       else if (t == tDome)
       {
          surfaceColor = DOME_COLOR;
@@ -464,7 +511,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
          vec3 toLightN = normalize(toLight);
 
          // trace a shadow ray to the light
-         if (inShadow(hit + normal * EPSILON, toLightN, length(toLight)) == false)
+         if (inShadow(hit + normal * OFFSET, toLightN, length(toLight)) == false)
          {
             // diffuse component
             float diffuse = max(0.0, dot(toLightN, normal));

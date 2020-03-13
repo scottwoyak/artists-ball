@@ -1,85 +1,225 @@
-import { Triangle } from "./Triangle";
 import { glVec3 } from "./glVec";
 import { glUniformBlock } from "./glUniformBlock";
 import { ITriangleObj } from "./ITriangleObj";
+import { IndexedTriangle } from "./IndexedTriangle";
+import { gl } from "./app";
+import { Volume } from "./Volume";
 
+const MAX = 1000; // INFINITY in our rendering world
+
+/**
+ * Base class for representing an object from a bunch of triangles. The class
+ * efficiently manages the triangles by storing them in volumes and by
+ * passing them to WebGL using Uniform Buffers
+ */
 export class TriangleObj implements ITriangleObj {
-   private triangles: Triangle[] = [];
-   private boxMin: glVec3;
-   private boxMax: glVec3;
+   public vertices: glVec3[] = [];
+   public triangles: IndexedTriangle[] = [];
+   public boxMin = new glVec3([MAX, MAX, MAX]);
+   public boxMax = new glVec3([-MAX, -MAX, -MAX]);
+   public volumes: Volume[] = [];
 
-   protected constructor() {
+   public get width(): number {
+      return this.boxMax.x - this.boxMin.x;
    }
 
-   protected store(triangles: Triangle[]) {
+   public get height(): number {
+      return this.boxMax.y - this.boxMin.y;
+   }
 
-      console.log("NumTriangles: " + triangles.length);
-      this.triangles = triangles;
+   public get depth(): number {
+      return this.boxMax.z - this.boxMin.z;
+   }
 
-      const MAX = 1000; // INFINITY in our rendering world
+   protected push(tri: IndexedTriangle) {
+      this.triangles.push(tri);
+      this.boxMin.x = Math.min(this.boxMin.x, tri.minX);
+      this.boxMin.y = Math.min(this.boxMin.y, tri.minY);
+      this.boxMin.z = Math.min(this.boxMin.z, tri.minZ);
+      this.boxMax.x = Math.max(this.boxMax.x, tri.maxX);
+      this.boxMax.y = Math.max(this.boxMax.y, tri.maxY);
+      this.boxMax.z = Math.max(this.boxMax.z, tri.maxZ);
+   }
 
-      let minX = MAX;
-      let minY = MAX;
-      let minZ = MAX;
-      let maxX = -MAX;
-      let maxY = -MAX;
-      let maxZ = -MAX;
-      for (let i = 0; i < this.triangles.length; i++) {
-         minX = Math.min(minX, this.triangles[i].minX);
-         minY = Math.min(minY, this.triangles[i].minY);
-         minZ = Math.min(minZ, this.triangles[i].minZ);
-         maxX = Math.max(maxX, this.triangles[i].maxX);
-         maxY = Math.max(maxY, this.triangles[i].maxY);
-         maxZ = Math.max(maxZ, this.triangles[i].maxZ);
+   /**
+    * Scales the object to the specified size and centers it about (0,0,0)
+    * 
+    * @param size The max size for the width, height, and depth
+    */
+   protected autoAdjust(size: number) {
+      let trans = new glVec3([
+         -(this.boxMax.x + this.boxMin.x) / 2,
+         -(this.boxMax.y + this.boxMin.y) / 2,
+         -(this.boxMax.z + this.boxMin.z) / 2,
+      ]);
+
+      let scale = size / Math.max(this.boxMax.x - this.boxMin.x, Math.max(this.boxMax.y - this.boxMin.y, this.boxMax.z - this.boxMin.z));
+
+      for (let i = 0; i < this.vertices.length; i++) {
+         let v = this.vertices[i];
+
+         v.x = (v.x + trans.x) * scale;
+         v.y = (v.y + trans.y) * scale;
+         v.z = (v.z + trans.z) * scale;
       }
-      this.boxMin = new glVec3([minX, minY, minZ]);
-      this.boxMax = new glVec3([maxX, maxY, maxZ]);
+
+      this.boxMin.x = (this.boxMin.x + trans.x) * scale;
+      this.boxMin.y = (this.boxMin.y + trans.y) * scale;
+      this.boxMin.z = (this.boxMin.z + trans.z) * scale;
+      this.boxMax.x = (this.boxMax.x + trans.x) * scale;
+      this.boxMax.y = (this.boxMax.y + trans.y) * scale;
+      this.boxMax.z = (this.boxMax.z + trans.z) * scale;
    }
 
-   public get code(): string {
-      let code = "";
-      let numTriangles = this.triangles.length;
-      code += 'const int NUM_TRIANGLES = ' + numTriangles + ';\n';
-      if (numTriangles == 0) {
-         code += 'Triangle triangles[1];\n';
+   /**
+    * Shift the object in space.
+    * 
+    * @param offset The amount to shift
+    */
+   public translate(offset: glVec3) {
+
+      for (let i = 0; i < this.vertices.length; i++) {
+         let v = this.vertices[i];
+
+         v.x += offset.x;
+         v.y += offset.y;
+         v.z += offset.z;
+      }
+
+      this.boxMin.x += offset.x;
+      this.boxMin.y += offset.y;
+      this.boxMin.z += offset.z;
+      this.boxMax.x += offset.x;
+      this.boxMax.y += offset.y;
+      this.boxMax.z += offset.z;
+
+      for (let i = 0; i < this.volumes.length; i++) {
+         let vol = this.volumes[i];
+         vol.boxMin.x += offset.x;
+         vol.boxMin.y += offset.y;
+         vol.boxMin.z += offset.z;
+         vol.boxMax.x += offset.x;
+         vol.boxMax.y += offset.y;
+         vol.boxMax.z += offset.z;
+      }
+   }
+
+   private clamp(val: number, min: number, max: number): number {
+      val = Math.min(val, max);
+      val = Math.max(val, min);
+      return val;
+   }
+
+   /**
+    * Breaks the object into evenly spaced volumes. The number of volumes is automatically
+    * determined based on the number of triangles.
+    */
+   protected breakIntoVolumes() {
+      let numSteps;
+      if (this.triangles.length < 40) {
+         numSteps = 1;
+      } else if (this.triangles.length < 1500) {
+         numSteps = 2;
       }
       else {
-         code += 'layout (std140) uniform MyUniformBlock\n';
-         code += '{\n';
-         code += '   Triangle triangles[' + numTriangles + '];\n';
-         code += '};\n';
+         numSteps = 3;
       }
-      code += 'vec3 boxMin = vec3(' + this.boxMin.x + ', ' + this.boxMin.y + ', ' + this.boxMin.z + ');\n';
-      code += 'vec3 boxMax = vec3(' + this.boxMax.x + ', ' + this.boxMax.y + ', ' + this.boxMax.z + ');\n';
+      this.volumes = [];
+      for (let i = 0; i < Math.pow(numSteps, 3); i++) {
+         this.volumes.push(new Volume());
+      }
 
-      code += 'Triangle getTriangle(int index) { return triangles[index]; }\n';
-
-      return code;
+      for (let i = 0; i < this.triangles.length; i++) {
+         let t = this.triangles[i];
+         let x = Math.floor(numSteps * (t.minX - this.boxMin.x) / (this.boxMax.x - this.boxMin.x));
+         let y = Math.floor(numSteps * (t.minY - this.boxMin.y) / (this.boxMax.y - this.boxMin.y));
+         let z = Math.floor(numSteps * (t.minZ - this.boxMin.z) / (this.boxMax.z - this.boxMin.z));
+         x = this.clamp(x, 0, numSteps - 1);
+         y = this.clamp(y, 0, numSteps - 1);
+         z = this.clamp(z, 0, numSteps - 1);
+         let index = x + y * numSteps + z * numSteps * numSteps;
+         this.volumes[index].push(t);
+      }
    }
 
-   public uploadUniforms(program: WebGLProgram) {
-
-      let blockBinding = 2;
-      let block = new glUniformBlock(program, 'MyUniformBlock', blockBinding);
-
-      // put the triangle data into a Float32Array for uploading
-      let triangleData = new Float32Array(this.triangles.length * 12);
+   /**
+    * Creates a string in the for .OBJ file format
+    * 
+    * @returns the string
+    */
+   public toObjString() {
+      let str = "";
+      for (let i = 0; i < this.vertices.length; i++) {
+         let v = this.vertices[i];
+         str += 'v ' + v.x + ' ' + v.y + ' ' + v.z + '\n';
+      }
       for (let i = 0; i < this.triangles.length; i++) {
-         let tri = this.triangles[i];
-         triangleData[12 * i + 0] = tri.p0.x;
-         triangleData[12 * i + 1] = tri.p0.y;
-         triangleData[12 * i + 2] = tri.p0.z;
-         triangleData[12 * i + 3] = 0;
-         triangleData[12 * i + 4] = tri.p1.x;
-         triangleData[12 * i + 5] = tri.p1.y;
-         triangleData[12 * i + 6] = tri.p1.z;
-         triangleData[12 * i + 7] = 0;
-         triangleData[12 * i + 8] = tri.p2.x;
-         triangleData[12 * i + 9] = tri.p2.y;
-         triangleData[12 * i + 10] = tri.p2.z;
-         triangleData[12 * i + 11] = 0;
+         let t = this.triangles[i];
+         str += 'f ' + (t.i0 + 1) + ' ' + (t.i1 + 1) + ' ' + (t.i2 + 1) + '\n';
       }
 
-      block.upload(triangleData);
+      return str;
+   }
+
+   /**
+    * Uploads all the triangle data to WebGL
+    * 
+    * @param program The program to upload to
+    */
+   public uploadUniforms(program: WebGLProgram) {
+
+      // upload the big chunks as Uniform Blocks
+      let blockBinding = 2;
+      let vBlock = new glUniformBlock(program, 'MyVerticesBlock', blockBinding);
+
+      // put the data into a Float32Array for uploading
+      let vData = new Float32Array(this.vertices.length * 4);
+      for (let i = 0; i < this.vertices.length; i++) {
+         let v = this.vertices[i];
+         vData[4 * i + 0] = v.x;
+         vData[4 * i + 1] = v.y;
+         vData[4 * i + 2] = v.z;
+         vData[4 * i + 3] = 0;
+      }
+      vBlock.upload(vData);
+
+      blockBinding = 3;
+      let tBlock = new glUniformBlock(program, 'MyTrianglesBlock', blockBinding);
+
+      // put the data into a Float32Array for uploading
+      let tData = new Int32Array(this.triangles.length * 4);
+      let index = 0;
+      for (let v = 0; v < this.volumes.length; v++) {
+         let vol = this.volumes[v];
+         for (let i = 0; i < vol.triangles.length; i++) {
+            let t = vol.triangles[i];
+            tData[index++] = t.i0;
+            tData[index++] = t.i1;
+            tData[index++] = t.i2;
+            tData[index++] = 0;
+         }
+      }
+      tBlock.upload(tData);
+
+      // Upload the volume info as a standard uniform
+      gl.useProgram(program);
+      let startIndex = 0;
+      let loc;
+      for (let i = 0; i < this.volumes.length; i++) {
+         let vol = this.volumes[i];
+         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].startIndex');
+         gl.uniform1i(loc, startIndex);
+         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].numTriangles');
+         gl.uniform1i(loc, vol.triangles.length);
+         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].boxMin');
+         gl.uniform3fv(loc, new Float32Array(vol.boxMin.values));
+         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].boxMax');
+         gl.uniform3fv(loc, new Float32Array(vol.boxMax.values));
+         startIndex += vol.triangles.length;
+      }
+      loc = gl.getUniformLocation(program, 'object.boxMin');
+      gl.uniform3fv(loc, new Float32Array(this.boxMin.values));
+      loc = gl.getUniformLocation(program, 'object.boxMax');
+      gl.uniform3fv(loc, new Float32Array(this.boxMax.values));
    }
 }

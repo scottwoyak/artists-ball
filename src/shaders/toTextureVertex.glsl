@@ -1,9 +1,20 @@
-#version 300 es
+<VERSION>
+
+#define NOTHING
+#ifdef USE_TRIANGLES
+#define WEBGL2
+#endif
 
 precision highp float;
-in vec3 vertex;
 uniform vec3 uEye, uRay00, uRay01, uRay10, uRay11;
+
+#ifdef WEBGL2
+in vec3 vertex;
 out vec3 initialRay;
+#else
+attribute vec3 vertex;
+varying vec3 initialRay;
+#endif 
 
 void main()
 {

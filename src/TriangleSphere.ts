@@ -1,66 +1,94 @@
-import { Triangle } from "./Triangle";
 import { glVec3 } from "./glVec";
-import { glColor } from "./glColor";
 import { TriangleObj } from "./TriangleObj";
+import { IndexedTriangle } from "./IndexedTriangle";
 
+/**
+ * Creates a sphere using triangles
+ */
 export class TriangleSphere extends TriangleObj {
 
-   public constructor() {
-      super();
-   }
-
+   /**
+    * Creates the sphere
+    * 
+    * @param numSteps The number of bands used to cover the sphere
+    * @param radius The radius of the sphere
+    * @param center The center of the sphere
+    * @returns A Promise object
+    */
    create(numSteps: number, radius: number, center: glVec3): Promise<void> {
-      super.store(this.createTriangles(numSteps, radius, center));
+
+      // create the vertices
+      this.createVertices(numSteps, radius, center);
+
+      // create triangles from the vertices
+      this.connectVertices(numSteps);
+
+      // break the sphere into volumes
+      this.breakIntoVolumes();
+
       return Promise.resolve();
    }
 
-   createTriangles(numSteps: number, radius: number, center: glVec3): Triangle[] {
-      let offset = 0;
-      let triangles: Triangle[] = [];
+   private createVertices(numSteps: number, radius: number, center: glVec3) {
       for (let i = 0; i < numSteps; i++) {
-         let yA = radius * Math.cos(i / numSteps * Math.PI);
-         let yB = radius * Math.cos((i + 1) / numSteps * Math.PI);
+         if (i === 0) {
+            this.vertices.push(new glVec3([center.x, center.y + radius, center.z]));
+         }
+         else if (i === numSteps - 1) {
+            this.vertices.push(new glVec3([center.x, center.y - radius, center.z]));
+         }
+         else {
+            let y = radius * Math.cos(i / (numSteps - 1) * Math.PI);
+            let r = radius * Math.sin(i / (numSteps - 1) * Math.PI);
+            let offset = i % 2 ? 0 : ((2 * Math.PI) / numSteps) * 0.5;
 
-         let R1 = radius * Math.sin(i / numSteps * Math.PI);
-         let R2 = radius * Math.sin((i + 1) / numSteps * Math.PI);
+            for (let j = 0; j < numSteps; j++) {
 
-         for (let j = 0; j < numSteps; j++) {
-            let p1 = new glVec3([
-               center.x + R1 * Math.sin(((j + offset) / numSteps) * 2 * Math.PI),
-               center.y + yA,
-               center.z + R1 * Math.cos(((j + offset) / numSteps) * 2 * Math.PI),
-            ]);
-
-            let p2 = new glVec3([
-               center.x + R2 * Math.sin(((j + 0.5 + offset) / numSteps) * 2 * Math.PI),
-               center.y + yB,
-               center.z + R2 * Math.cos(((j + 0.5 + offset) / numSteps) * 2 * Math.PI),
-            ]);
-
-            let p3 = new glVec3([
-               center.x + R1 * Math.sin(((j + 1 + offset) / numSteps) * 2 * Math.PI),
-               center.y + yA,
-               center.z + R1 * Math.cos(((j + 1 + offset) / numSteps) * 2 * Math.PI),
-            ]);
-
-            let p4 = new glVec3([
-               center.x + R2 * Math.sin(((j + 1.5 + offset) / numSteps) * 2 * Math.PI),
-               center.y + yB,
-               center.z + R2 * Math.cos(((j + 1.5 + offset) / numSteps) * 2 * Math.PI),
-            ]);
-
-            // for the top and bottom we only need one set of triangles to close the surface
-            if (i > 0) {
-               triangles.push(new Triangle(p1, p2, p3));
-            }
-            if (i < numSteps - 1) {
-               triangles.push(new Triangle(p3, p2, p4));
+               this.vertices.push(new glVec3([
+                  center.x + r * Math.sin((j / numSteps) * 2 * Math.PI - offset),
+                  center.y + y,
+                  center.z + r * Math.cos((j / numSteps) * 2 * Math.PI - offset),
+               ]));
             }
          }
-         offset += 0.5;
-
       }
+   }
 
-      return triangles;
+   private connectVertices(numSteps: number) {
+      let first = 0;
+      let last = this.vertices.length - 1;
+      for (let i = 0; i < numSteps - 1; i++) {
+         for (let j = 0; j < numSteps; j++) {
+            if (i === 0) {
+               let i1 = first;
+               let i2 = j + 1;
+               let i3 = j === (numSteps - 1) ? 1 : i2 + 1;
+               this.push(new IndexedTriangle(this.vertices, i1, i2, i3));
+            }
+            else if (i === numSteps - 2) {
+               let startIndex = last - numSteps;
+               let i1 = last;
+               let i2 = startIndex + j;
+               let i3 = j === (numSteps - 1) ? startIndex : i2 + 1;
+               this.push(new IndexedTriangle(this.vertices, i1, i2, i3));
+            }
+            else {
+               let startA = 1 + (i - 1) * numSteps;
+               let startB = 1 + i * numSteps;
+               let i1 = startA + j;
+               let i2 = (j === (numSteps - 1)) ? startA : i1 + 1;
+               let i3 = startB + j;
+               let i4 = (j === (numSteps - 1)) ? startB : i3 + 1;
+               if (i % 2) {
+                  this.push(new IndexedTriangle(this.vertices, i1, i2, i4));
+                  this.push(new IndexedTriangle(this.vertices, i1, i3, i4));
+               }
+               else {
+                  this.push(new IndexedTriangle(this.vertices, i1, i2, i3));
+                  this.push(new IndexedTriangle(this.vertices, i2, i3, i4));
+               }
+            }
+         }
+      }
    }
 }

@@ -10,11 +10,11 @@ import { glColor } from './glColor';
 import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
 import { gl } from './app';
-import { TriangleSphere } from './TriangleSphere';
-import { TriangleCube } from './TriangleCube';
 import { TriangleObjFile } from './TriangleObjFile';
 import { ITriangleObj } from './ITriangleObj';
 import { Profiler } from './Profiler';
+import { TriangleCube } from './TriangleCube';
+import { TriangleSphere } from './TriangleSphere';
 
 
 /**
@@ -143,7 +143,7 @@ export class PathTracer {
          let radius = 0.5;
          let center = new glVec3([0, radius, 0]);
          let tObj = new TriangleSphere();
-         return tObj.create(10, radius, center).then(() => {
+         return tObj.create(8, radius, center).then(() => {
             this.compileShader(tObj);
          });
       }
@@ -159,7 +159,6 @@ export class PathTracer {
       else if (query && query.toLowerCase().endsWith('.obj')) {
          Uniforms.uBallRadius = 0;
          let size = 1.5;
-         let center = new glVec3([0, size / 2, 0]);
          let tObj = new TriangleObjFile();
          return tObj.create(query, size).then(() => {
             tObj.translate(new glVec3([0, tObj.height / 2, 0]));
@@ -176,8 +175,15 @@ export class PathTracer {
       // create the toTexture shader
       if (tObj) {
          this.toTextureProgram = Shaders.compileShader(
-            toTextureVertexSource,
-            toTextureFragmentSource.replace('<TRIANGLES>', tObj.code)
+            toTextureVertexSource
+               .replace('<VERSION>', '#version 300 es')
+               .replace('NOTHING', 'USE_TRIANGLES'),
+            toTextureFragmentSource
+               .replace('<VERSION>', '#version 300 es')
+               .replace('NOTHING', 'USE_TRIANGLES')
+               .replace('<NUM_VERTICES>', tObj.vertices.length.toString())
+               .replace('<NUM_VOLUMES>', tObj.volumes.length.toString())
+               .replace('<NUM_TRIANGLES>', tObj.triangles.length.toString())
          );
 
          // upload triangles to the GPU
@@ -185,8 +191,10 @@ export class PathTracer {
       }
       else {
          this.toTextureProgram = Shaders.compileShader(
-            toTextureVertexSource,
-            toTextureFragmentSource.replace('<TRIANGLES>', noTrianglesSource)
+            toTextureVertexSource
+               .replace('<VERSION>', ''),
+            toTextureFragmentSource
+               .replace('<VERSION>', '')
          );
       }
       this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
