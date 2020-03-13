@@ -65,24 +65,26 @@ struct Volume
    vec3 boxMax;
 };
 
-const int NUM_VOLUMES = 8;
-uniform Volume volumes[NUM_VOLUMES];
-
 // The following line is replaced with code generated in JavaScript
 <TRIANGLES>
 
-    Light Lights[NUM_LIGHTS];
-
-bool intersectBox(const vec3 origin, const vec3 ray, Volume vol)
+    // The central object being rendered
+    struct Object
 {
-   if (vol.numTriangles == 0)
-   {
-      return false;
-   }
+   Volume volumes[NUM_VOLUMES];
+   vec3 boxMin;
+   vec3 boxMax;
+};
 
+uniform Object object;
+
+Light Lights[NUM_LIGHTS];
+
+bool intersectBox(const vec3 origin, const vec3 ray, const vec3 boxMin, const vec3 boxMax)
+{
    vec3 rayInv = 1.0 / ray;
-   vec3 tbot = rayInv * (vol.boxMin - origin);
-   vec3 ttop = rayInv * (vol.boxMax - origin);
+   vec3 tbot = rayInv * (boxMin - origin);
+   vec3 ttop = rayInv * (boxMax - origin);
    vec3 tmin = min(ttop, tbot);
    vec3 tmax = max(ttop, tbot);
    vec2 t = max(tmin.xx, tmin.yz);
@@ -92,17 +94,19 @@ bool intersectBox(const vec3 origin, const vec3 ray, Volume vol)
    return t1 > max(t0, 0.0);
 }
 
-bool intersectBox(const vec3 origin, const vec3 ray)
+bool intersectVol(const vec3 origin, const vec3 ray, Volume vol)
 {
-   for (int i = 0; i < NUM_VOLUMES; i++)
+   if (vol.numTriangles == 0)
    {
-      if (intersectBox(origin, ray, volumes[i]))
-      {
-         return true;
-      }
+      return false;
    }
 
-   return false;
+   return intersectBox(origin, ray, vol.boxMin, vol.boxMax);
+}
+
+bool intersectObj(const vec3 origin, const vec3 ray, Object object)
+{
+   return intersectBox(origin, ray, object.boxMin, object.boxMax);
 }
 
 // Möller–Trumbore ray-triangle intersection algorithm
@@ -229,17 +233,20 @@ bool inShadow(vec3 origin, vec3 ray, float tLight)
       return true;
    }
 
-   for (int i = 0; i < NUM_VOLUMES; i++)
+   if (intersectObj(origin, ray, object))
    {
-      Volume vol = volumes[i];
-      if (intersectBox(origin, ray, vol))
+      for (int i = 0; i < NUM_VOLUMES; i++)
       {
-         for (int i = vol.startIndex; i < (vol.startIndex + vol.numTriangles); i++)
+         Volume vol = object.volumes[i];
+         if (intersectVol(origin, ray, vol))
          {
-            Triangle tri = getTriangle(i);
-            if (intersectTriangle(origin, ray, tri) < tLight)
+            for (int i = vol.startIndex; i < (vol.startIndex + vol.numTriangles); i++)
             {
-               return true;
+               Triangle tri = getTriangle(i);
+               if (intersectTriangle(origin, ray, tri) < tLight)
+               {
+                  return true;
+               }
             }
          }
       }
@@ -354,19 +361,22 @@ vec4 calculateColor(vec3 origin, vec3 ray)
 
       float tObj = INFINITY;
       int tIndex;
-      for (int i = 0; i < NUM_VOLUMES; i++)
+      if (intersectObj(origin, ray, object))
       {
-         Volume vol = volumes[i];
-         if (intersectBox(origin, ray, vol))
+         for (int i = 0; i < NUM_VOLUMES; i++)
          {
-            for (int i = vol.startIndex; i < (vol.startIndex + vol.numTriangles); i++)
+            Volume vol = object.volumes[i];
+            if (intersectVol(origin, ray, vol))
             {
-               Triangle tri = getTriangle(i);
-               float tTri = min(tObj, intersectTriangle(origin, ray, tri));
-               if (tTri < tObj)
+               for (int i = vol.startIndex; i < (vol.startIndex + vol.numTriangles); i++)
                {
-                  tObj = tTri;
-                  tIndex = i;
+                  Triangle tri = getTriangle(i);
+                  float tTri = min(tObj, intersectTriangle(origin, ray, tri));
+                  if (tTri < tObj)
+                  {
+                     tObj = tTri;
+                     tIndex = i;
+                  }
                }
             }
          }

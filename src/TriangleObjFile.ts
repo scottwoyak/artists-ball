@@ -136,38 +136,29 @@ export class TriangleObjFile {
       this.boxMax.z = (this.boxMax.z + trans.z) * scale + center.z;
    }
 
+   private clamp(val: number, min: number, max: number): number {
+      val = Math.min(val, max);
+      val = Math.max(val, min);
+      return val;
+   }
+
    private breakIntoVolumes(center: glVec3) {
       this.volumes = [];
-      for (let i = 0; i < 8; i++) {
+      let numSteps = this.triangles.length > 1500 ? 3 : 2;
+      for (let i = 0; i < Math.pow(numSteps, 3); i++) {
          this.volumes.push(new Volume);
       }
 
       for (let i = 0; i < this.triangles.length; i++) {
          let t = this.triangles[i];
-         if (t.minX <= center.x && t.minY <= center.y && t.minZ <= center.z) {
-            this.volumes[0].push(t);
-         }
-         else if (t.minX <= center.x && t.minY <= center.y && t.minZ > center.z) {
-            this.volumes[1].push(t);
-         }
-         else if (t.minX <= center.x && t.minY > center.y && t.minZ <= center.z) {
-            this.volumes[2].push(t);
-         }
-         else if (t.minX <= center.x && t.minY > center.y && t.minZ > center.z) {
-            this.volumes[3].push(t);
-         }
-         else if (t.minX > center.x && t.minY <= center.y && t.minZ <= center.z) {
-            this.volumes[4].push(t);
-         }
-         else if (t.minX > center.x && t.minY <= center.y && t.minZ > center.z) {
-            this.volumes[5].push(t);
-         }
-         else if (t.minX > center.x && t.minY > center.y && t.minZ <= center.z) {
-            this.volumes[6].push(t);
-         }
-         else { //} if (t.minX > center.x && t.minY > center.y && t.minZ > center.z) {
-            this.volumes[7].push(t);
-         }
+         let x = Math.floor(numSteps * (t.minX - this.boxMin.x) / (this.boxMax.x - this.boxMin.x));
+         let y = Math.floor(numSteps * (t.minY - this.boxMin.y) / (this.boxMax.y - this.boxMin.y));
+         let z = Math.floor(numSteps * (t.minZ - this.boxMin.z) / (this.boxMax.z - this.boxMin.z));
+         x = this.clamp(x, 0, numSteps - 1);
+         y = this.clamp(y, 0, numSteps - 1);
+         z = this.clamp(z, 0, numSteps - 1);
+         let index = x + y * numSteps + z * numSteps * numSteps;
+         this.volumes[index].push(t);
       }
    }
 
@@ -186,10 +177,10 @@ export class TriangleObjFile {
 
    public get code(): string {
       let code = "";
-      let numTriangles = this.triangles.length;
-      code += 'const int NUM_TRIANGLES = ' + numTriangles + ';\n';
+      code += 'const int NUM_VOLUMES = ' + this.volumes.length + ';\n';
+      code += 'const int NUM_TRIANGLES = ' + this.triangles.length + ';\n';
       code += '\n';
-      if (numTriangles == 0) {
+      if (this.triangles.length == 0) {
          code += 'Triangle triangles[1];\n';
          code += '\n';
       }
@@ -210,12 +201,9 @@ export class TriangleObjFile {
 
          code += 'layout (std140) uniform MyTrianglesBlock\n';
          code += '{\n';
-         code += '   ITriangle triangles[' + numTriangles + '];\n';
+         code += '   ITriangle triangles[' + this.triangles.length + '];\n';
          code += '};\n';
       }
-      code += 'vec3 boxMin = vec3(' + this.boxMin.x + ', ' + this.boxMin.y + ', ' + this.boxMin.z + ');\n';
-      code += 'vec3 boxMax = vec3(' + this.boxMax.x + ', ' + this.boxMax.y + ', ' + this.boxMax.z + ');\n';
-      code += '\n';
 
       code += 'Triangle getTriangle(int index)\n';
       code += '{\n';
@@ -232,25 +220,7 @@ export class TriangleObjFile {
 
    public uploadUniforms(program: WebGLProgram) {
 
-      // Upload the volume info as a standard uniform
-      gl.useProgram(program);
-      let startIndex = 0;
-      let loc;
-      for (let i = 0; i < this.volumes.length; i++) {
-         let vol = this.volumes[i];
-         loc = gl.getUniformLocation(program, 'volumes[' + i + '].startIndex');
-         gl.uniform1i(loc, startIndex);
-         loc = gl.getUniformLocation(program, 'volumes[' + i + '].numTriangles');
-         gl.uniform1i(loc, vol.triangles.length);
-         loc = gl.getUniformLocation(program, 'volumes[' + i + '].boxMin');
-         gl.uniform3fv(loc, new Float32Array(vol.boxMin.values));
-         loc = gl.getUniformLocation(program, 'volumes[' + i + '].boxMax');
-         gl.uniform3fv(loc, new Float32Array(vol.boxMax.values));
-         startIndex += vol.triangles.length;
-      }
-
       // upload the big chunks as Uniform Blocks
-
       let blockBinding = 2;
       let vBlock = new glUniformBlock(program, 'MyVerticesBlock', blockBinding);
 
@@ -282,6 +252,27 @@ export class TriangleObjFile {
          }
       }
       tBlock.upload(tData);
+
+      // Upload the volume info as a standard uniform
+      gl.useProgram(program);
+      let startIndex = 0;
+      let loc;
+      for (let i = 0; i < this.volumes.length; i++) {
+         let vol = this.volumes[i];
+         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].startIndex');
+         gl.uniform1i(loc, startIndex);
+         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].numTriangles');
+         gl.uniform1i(loc, vol.triangles.length);
+         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].boxMin');
+         gl.uniform3fv(loc, new Float32Array(vol.boxMin.values));
+         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].boxMax');
+         gl.uniform3fv(loc, new Float32Array(vol.boxMax.values));
+         startIndex += vol.triangles.length;
+      }
+      loc = gl.getUniformLocation(program, 'object.boxMin');
+      gl.uniform3fv(loc, new Float32Array(this.boxMin.values));
+      loc = gl.getUniformLocation(program, 'object.boxMax');
+      gl.uniform3fv(loc, new Float32Array(this.boxMax.values));
    }
 
 
