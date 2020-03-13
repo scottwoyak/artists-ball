@@ -132,6 +132,17 @@ export class glVec3 extends glVec {
       return new glVec3(this.values);
    }
 
+   /**
+    * Creates a string representation of the vector
+    * 
+    * @param digits The number of decimal places to display. This value is passed to toFixed().
+    * @param divider The string to separate each number.
+    * @returns A string representation.
+    */
+   public toString(digits: number, divider = ','): string {
+      return this.x.toFixed(digits) + divider + this.y.toFixed(digits) + divider + this.z.toFixed(digits);
+   }
+
    /** 
     * Normalizes this vector, and stores and returns the result.
     * 

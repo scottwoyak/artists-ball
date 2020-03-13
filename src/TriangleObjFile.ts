@@ -32,28 +32,39 @@ export class TriangleObjFile {
    private boxMax: glVec3;
    private volumes: Volume[];
 
+   public get width(): number {
+      return this.boxMax.x - this.boxMin.x;
+   }
+
+   public get height(): number {
+      return this.boxMax.y - this.boxMin.y;
+   }
+
+   public get depth(): number {
+      return this.boxMax.z - this.boxMin.z;
+   }
+
    /**
     * Loads a file and creates triangles for it
     * 
     * @param url The file to load
     * @param size The desired max width/height/depth of the scaled object
-    * @param center The center point for the object
     * @returns a promise object
     */
-   create(url: string, size: number, center: glVec3): Promise<void> {
+   create(url: string, size: number): Promise<void> {
 
       return fetch(url)
          .then(res => res.text())
          .then(res => {
-            this.createTriangles(res, size, center);
+            this.createTriangles(res, size);
          });
    }
 
-   private createTriangles(src: string, size: number, center: glVec3) {
+   private createTriangles(src: string, size: number) {
 
       this.parse(src);
-      this.autoAdjust(size, center);
-      this.breakIntoVolumes(center);
+      this.autoAdjust(size);
+      this.breakIntoVolumes();
 
       console.log('Num Triangles: ' + this.triangles.length);
 
@@ -111,7 +122,7 @@ export class TriangleObjFile {
       }
    }
 
-   private autoAdjust(size: number, center: glVec3) {
+   private autoAdjust(size: number) {
       let trans = new glVec3([
          -(this.boxMax.x + this.boxMin.x) / 2,
          -(this.boxMax.y + this.boxMin.y) / 2,
@@ -123,17 +134,45 @@ export class TriangleObjFile {
       for (let i = 0; i < this.vertices.length; i++) {
          let v = this.vertices[i];
 
-         v.x = (v.x + trans.x) * scale + center.x;
-         v.y = (v.y + trans.y) * scale + center.y;
-         v.z = (v.z + trans.z) * scale + center.z;
+         v.x = (v.x + trans.x) * scale;
+         v.y = (v.y + trans.y) * scale;
+         v.z = (v.z + trans.z) * scale;
       }
 
-      this.boxMin.x = (this.boxMin.x + trans.x) * scale + center.x;
-      this.boxMin.y = (this.boxMin.y + trans.y) * scale + center.y;
-      this.boxMin.z = (this.boxMin.z + trans.z) * scale + center.z;
-      this.boxMax.x = (this.boxMax.x + trans.x) * scale + center.x;
-      this.boxMax.y = (this.boxMax.y + trans.y) * scale + center.y;
-      this.boxMax.z = (this.boxMax.z + trans.z) * scale + center.z;
+      this.boxMin.x = (this.boxMin.x + trans.x) * scale;
+      this.boxMin.y = (this.boxMin.y + trans.y) * scale;
+      this.boxMin.z = (this.boxMin.z + trans.z) * scale;
+      this.boxMax.x = (this.boxMax.x + trans.x) * scale;
+      this.boxMax.y = (this.boxMax.y + trans.y) * scale;
+      this.boxMax.z = (this.boxMax.z + trans.z) * scale;
+   }
+
+   public translate(offset: glVec3) {
+
+      for (let i = 0; i < this.vertices.length; i++) {
+         let v = this.vertices[i];
+
+         v.x += offset.x;
+         v.y += offset.y;
+         v.z += offset.z;
+      }
+
+      this.boxMin.x += offset.x;
+      this.boxMin.y += offset.y;
+      this.boxMin.z += offset.z;
+      this.boxMax.x += offset.x;
+      this.boxMax.y += offset.y;
+      this.boxMax.z += offset.z;
+
+      for (let i = 0; i < this.volumes.length; i++) {
+         let vol = this.volumes[i];
+         vol.boxMin.x += offset.x;
+         vol.boxMin.y += offset.y;
+         vol.boxMin.z += offset.z;
+         vol.boxMax.x += offset.x;
+         vol.boxMax.y += offset.y;
+         vol.boxMax.z += offset.z;
+      }
    }
 
    private clamp(val: number, min: number, max: number): number {
@@ -142,7 +181,7 @@ export class TriangleObjFile {
       return val;
    }
 
-   private breakIntoVolumes(center: glVec3) {
+   private breakIntoVolumes() {
       this.volumes = [];
       let numSteps = this.triangles.length > 1500 ? 3 : 2;
       for (let i = 0; i < Math.pow(numSteps, 3); i++) {
@@ -159,6 +198,11 @@ export class TriangleObjFile {
          z = this.clamp(z, 0, numSteps - 1);
          let index = x + y * numSteps + z * numSteps * numSteps;
          this.volumes[index].push(t);
+      }
+
+      for (let i = 0; i < this.volumes.length; i++) {
+         let vol = this.volumes[i];
+         console.log('vol[' + i + '] min=' + vol.boxMin.toString(1) + ' max=' + vol.boxMax.toString(1));
       }
    }
 

@@ -159,9 +159,10 @@ export class PathTracer {
       else if (query && query.toLowerCase().endsWith('.obj')) {
          Uniforms.uBallRadius = 0;
          let size = 1.5;
-         let center = new glVec3([0, size / 2 + 0.1, 0]);
+         let center = new glVec3([0, size / 2, 0]);
          let tObj = new TriangleObjFile();
-         return tObj.create(query, size, center).then(() => {
+         return tObj.create(query, size).then(() => {
+            tObj.translate(new glVec3([0, tObj.height / 2, 0]));
             this.compileShader(tObj);
          });
       }
