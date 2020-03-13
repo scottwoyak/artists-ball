@@ -12,5 +12,5 @@ export interface ITriangleObj {
     * 
     * @param program The shader program
     */
-   uploadUniformBlock(program: WebGLProgram): void;
+   uploadUniforms(program: WebGLProgram): void;
 }

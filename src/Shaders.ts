@@ -5,6 +5,7 @@ import { gl } from "./app";
 export class Shaders {
 
    public static setUniforms(program: WebGLProgram, uniforms: any) {
+
       for (var name in uniforms) {
          var value = uniforms[name];
          var location = gl.getUniformLocation(program, name);
@@ -29,6 +30,7 @@ export class Shaders {
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
       if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+         console.log(source);
          throw 'compile error: ' + gl.getShaderInfoLog(shader);
       }
       return shader;

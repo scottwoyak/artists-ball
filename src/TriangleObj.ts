@@ -57,7 +57,7 @@ export class TriangleObj implements ITriangleObj {
       return code;
    }
 
-   public uploadUniformBlock(program: WebGLProgram) {
+   public uploadUniforms(program: WebGLProgram) {
 
       let blockBinding = 2;
       let block = new glUniformBlock(program, 'MyUniformBlock', blockBinding);

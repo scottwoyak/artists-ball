@@ -180,7 +180,7 @@ export class PathTracer {
          );
 
          // upload triangles to the GPU
-         tObj.uploadUniformBlock(this.toTextureProgram);
+         tObj.uploadUniforms(this.toTextureProgram);
       }
       else {
          this.toTextureProgram = Shaders.compileShader(
