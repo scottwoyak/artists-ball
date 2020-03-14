@@ -5,7 +5,6 @@ import toScreenVertexSource from './shaders/toScreenVertex.glsl';
 import toScreenFragmentSource from './shaders/toScreenFragment.glsl';
 import toTextureVertexSource from './shaders/toTextureVertex.glsl';
 import toTextureFragmentSource from './shaders/toTextureFragment.glsl';
-import noTrianglesSource from './shaders/noTriangles.glsl';
 import { glColor } from './glColor';
 import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';

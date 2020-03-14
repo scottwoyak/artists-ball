@@ -3,12 +3,12 @@
 #define NOTHING
 
 #ifdef USE_TRIANGLES
-#define WEBGL2
+#define 300ES
 #endif
 
 precision highp float;
 
-#ifdef WEBGL2
+#ifdef 300ES
 in vec3 initialRay;
 #else
 varying vec3 initialRay;
@@ -36,7 +36,7 @@ uniform float uBallLightTintStrength;
 uniform float uobjShadowShift;
 uniform float uobjShadowTintStrength;
 
-#ifdef WEBGL2
+#ifdef 300ES
 out vec4 fragColor;
 #else
 #define fragColor gl_FragColor

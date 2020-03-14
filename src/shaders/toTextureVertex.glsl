@@ -2,13 +2,13 @@
 
 #define NOTHING
 #ifdef USE_TRIANGLES
-#define WEBGL2
+#define 300ES
 #endif
 
 precision highp float;
 uniform vec3 uEye, uRay00, uRay01, uRay10, uRay11;
 
-#ifdef WEBGL2
+#ifdef 300ES
 in vec3 vertex;
 out vec3 initialRay;
 #else
