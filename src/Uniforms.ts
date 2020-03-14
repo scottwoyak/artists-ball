@@ -39,7 +39,6 @@ export interface IUniforms {
    uRay10: glVec3,
    uRay11: glVec3,
    uSample: number,
-   uPixel: number,
 }
 
 /**
@@ -78,5 +77,4 @@ export let Uniforms: IUniforms = {
    uRay10: new glVec3([0, 0, 0]),
    uRay11: new glVec3([0, 0, 0]),
    uSample: 0.0,
-   uPixel: 0.0,
 }

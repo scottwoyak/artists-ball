@@ -25,7 +25,6 @@ uniform float uAmbientLightIntensity;
 uniform vec3 uObjColor;
 uniform float uBallRadius;
 uniform float uSample;
-uniform float uPixel;
 uniform float uLightAlpha;
 uniform float uShadowAlpha;
 

@@ -94,8 +94,8 @@ body {
 
 #drawTime {
   position: absolute;
-  bottom: 8px;
-  left: 0px;
+  top: -495px;
+  left: 2px;
   padding: 2px;
   padding-right: 5px;
   padding-left: 5px;
@@ -210,6 +210,8 @@ body {
   }
 
   #drawTime {
+    top: -960px;
+    left: 4px;
     font-size: 16pt;
     font-weight: darker;
   }

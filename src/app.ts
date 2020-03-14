@@ -84,9 +84,6 @@ export class App {
          event.preventDefault();
          if (event.touches.length === 1) {
 
-            let x = event.touches[0].clientX;
-            let y = event.touches[0].clientY;
-
             this.onDown(event.touches[0].clientX, event.touches[0].clientY);
          }
       }
@@ -115,6 +112,10 @@ export class App {
       this.canvas.onmouseup = (event) => {
          this.mouseDown = false;
       };
+
+      this.canvas.onmouseleave = (event) => {
+         this.mouseDown = false;
+      }
 
       this.tracer = new PathTracer();
       this.tracer.create(this.query).then(() => {
@@ -255,8 +256,8 @@ export class App {
       if (this.mouseDown) {
          if (this.pointerMode === PointerMode.View) {
             if (this.pointerModeSpecial) {
-               this.zoomZ += (y - this.oldY) * 0.01;
-               this.zoomZ = clamp(this.zoomZ, 1, 7);
+               this.zoomZ -= (y - this.oldY) * 0.01;
+               this.zoomZ = clamp(this.zoomZ, 1, 8);
             }
             else {
                // update the angles based on how far we moved since last time

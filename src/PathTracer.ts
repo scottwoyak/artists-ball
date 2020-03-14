@@ -38,7 +38,7 @@ export class PathTracer {
    private toScreenVertexAttribute: number;
    private toTextureProgram: WebGLProgram;
    private toTextureVertexAttribute: number;
-   private analyzer: ColorAnalyzer = new ColorAnalyzer(Uniforms.uTextureSize);
+   private analyzer: ColorAnalyzer;
 
    private mainView = RenderMode.Artist;
    private smallViews = [
@@ -58,12 +58,15 @@ export class PathTracer {
 
       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+      // larger texture is higher resolution, but takes longer to compute
       if (isMobile) {
          Uniforms.uTextureSize = 256;
       }
       else {
-         Uniforms.uTextureSize = 512;
+         // Uniforms.uTextureSize = 512;
+         Uniforms.uTextureSize = 256;
       }
+      this.analyzer = new ColorAnalyzer(Uniforms.uTextureSize);
 
       // create vertex buffer - the block we'll draw our rendered texture on
       this.vertexBuffer = gl.createBuffer();
@@ -171,7 +174,7 @@ export class PathTracer {
    private compileShader(tObj?: ITriangleObj) {
       let p = new Profiler();
       // create the toTexture shader
-      if (tObj) {
+      if (tObj && tObj.triangles.length > 0) {
          this.toTextureProgram = glCompiler.compile(
             toTextureVertexSource
                .replace('<VERSION>', '#version 300 es')
@@ -206,7 +209,6 @@ export class PathTracer {
 
    public restart(): void {
       Uniforms.uSample = 0;
-      Uniforms.uPixel = 0;
    }
 
    private getEyeRay(matrix: glMat4, x: number, y: number): glVec3 {
@@ -272,9 +274,11 @@ export class PathTracer {
 
       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+      // size of the actual canvas. The texture we create is drawn to this item
       let size = document.body.clientWidth;
 
       if (isMobile === false) {
+         // not sure why, but this basically becomes full width on my phone
          size = 512;
       }
 
@@ -296,7 +300,7 @@ export class PathTracer {
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
       // display the smaller views
-      Uniforms.uScale = 0.25;
+      Uniforms.uScale = 0.2;
       for (let i = 0; i < this.smallViews.length; i++) {
          Uniforms.uXOffset = 1.0 - (this.smallViews.length - i - 0.5) * (2 * Uniforms.uScale);
          Uniforms.uYOffset = 1.0 - Uniforms.uScale;
