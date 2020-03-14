@@ -166,6 +166,19 @@ export class glVec3 extends glVec {
    }
 
    /**
+    * Adds values from this vector.
+    * 
+    * @param vec The vector to add.
+    * @returns This vector.
+    */
+   public add(vec: glVec3): glVec3 {
+      this.values[0] += vec.values[0];
+      this.values[1] += vec.values[1];
+      this.values[2] += vec.values[2];
+      return this;
+   }
+
+   /**
     * Computes the cross product of this vector and another vector.
     * 
     * @param other The other vector.

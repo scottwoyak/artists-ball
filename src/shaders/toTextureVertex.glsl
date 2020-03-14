@@ -2,13 +2,13 @@
 
 #define NOTHING
 #ifdef USE_TRIANGLES
-#define 300ES
+#define ES300
 #endif
 
 precision highp float;
 uniform vec3 uEye, uRay00, uRay01, uRay10, uRay11;
 
-#ifdef 300ES
+#ifdef ES300
 in vec3 vertex;
 out vec3 initialRay;
 #else

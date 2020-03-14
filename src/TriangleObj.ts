@@ -4,6 +4,7 @@ import { ITriangleObj } from "./ITriangleObj";
 import { IndexedTriangle } from "./IndexedTriangle";
 import { gl } from "./app";
 import { Volume } from "./Volume";
+import { glUniform } from "./glUniform";
 
 const MAX = 1000; // INFINITY in our rendering world
 
@@ -202,24 +203,17 @@ export class TriangleObj implements ITriangleObj {
       tBlock.upload(tData);
 
       // Upload the volume info as a standard uniform
-      gl.useProgram(program);
+      let uni = new glUniform(program);
       let startIndex = 0;
-      let loc;
       for (let i = 0; i < this.volumes.length; i++) {
          let vol = this.volumes[i];
-         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].startIndex');
-         gl.uniform1i(loc, startIndex);
-         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].numTriangles');
-         gl.uniform1i(loc, vol.triangles.length);
-         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].boxMin');
-         gl.uniform3fv(loc, new Float32Array(vol.boxMin.values));
-         loc = gl.getUniformLocation(program, 'object.volumes[' + i + '].boxMax');
-         gl.uniform3fv(loc, new Float32Array(vol.boxMax.values));
+         uni.set('object.volumes[' + i + '].startIndex', startIndex, true);
+         uni.set('object.volumes[' + i + '].numTriangles', vol.triangles.length, true);
+         uni.set('object.volumes[' + i + '].boxMin', vol.boxMin);
+         uni.set('object.volumes[' + i + '].boxMax', vol.boxMax);
          startIndex += vol.triangles.length;
       }
-      loc = gl.getUniformLocation(program, 'object.boxMin');
-      gl.uniform3fv(loc, new Float32Array(this.boxMin.values));
-      loc = gl.getUniformLocation(program, 'object.boxMax');
-      gl.uniform3fv(loc, new Float32Array(this.boxMax.values));
+      uni.set('object.boxMin', this.boxMin);
+      uni.set('object.boxMax', this.boxMax);
    }
 }

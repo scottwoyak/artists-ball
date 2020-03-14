@@ -3,12 +3,12 @@
 #define NOTHING
 
 #ifdef USE_TRIANGLES
-#define 300ES
+#define ES300
 #endif
 
 precision highp float;
 
-#ifdef 300ES
+#ifdef ES300
 in vec3 initialRay;
 #else
 varying vec3 initialRay;
@@ -36,7 +36,7 @@ uniform float uBallLightTintStrength;
 uniform float uobjShadowShift;
 uniform float uobjShadowTintStrength;
 
-#ifdef 300ES
+#ifdef ES300
 out vec4 fragColor;
 #else
 #define fragColor gl_FragColor
@@ -68,7 +68,7 @@ struct Light
    vec3 color;
 };
 
-Light Lights[NUM_LIGHTS];
+ Light Lights[NUM_LIGHTS];
 
 #ifdef USE_TRIANGLES
 struct Triangle

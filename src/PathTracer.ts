@@ -14,6 +14,7 @@ import { ITriangleObj } from './ITriangleObj';
 import { Profiler } from './Profiler';
 import { TriangleCube } from './TriangleCube';
 import { TriangleSphere } from './TriangleSphere';
+import { glUniform } from './glUniform';
 
 
 /**
@@ -165,7 +166,9 @@ export class PathTracer {
          });
       }
       else {
-         return Promise.resolve().then(() => { this.compileShader() })
+         return Promise.resolve().then(() => {
+            this.compileShader();
+         })
       }
    }
 
@@ -231,8 +234,8 @@ export class PathTracer {
       Uniforms.uRay10 = this.getEyeRay(matrix, +1, -1);
       Uniforms.uRay11 = this.getEyeRay(matrix, +1, +1);
       // set uniforms
-      gl.useProgram(this.toTextureProgram);
-      Shaders.setUniforms(this.toTextureProgram, Uniforms);
+      let uni = new glUniform(this.toTextureProgram);
+      uni.setAll(Uniforms);
 
       // render to texture
       gl.viewport(0, 0, Uniforms.uTextureSize, Uniforms.uTextureSize);
@@ -405,11 +408,12 @@ export class PathTracer {
       gl.vertexAttribPointer(this.toScreenVertexAttribute, 2, gl.FLOAT, false, 0, 0);
 
       // display the main screen
+      let uni = new glUniform(this.toScreenProgram);
       Uniforms.uScale = 1.0;
       Uniforms.uXOffset = 0.0;
       Uniforms.uYOffset = 0.0;
       Uniforms.uMode = this.mainView;
-      Shaders.setUniforms(this.toScreenProgram, Uniforms);
+      uni.setAll(Uniforms);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
       // display the smaller views
@@ -418,7 +422,7 @@ export class PathTracer {
          Uniforms.uXOffset = 1.0 - (this.smallViews.length - i - 0.5) * (2 * Uniforms.uScale);
          Uniforms.uYOffset = 1.0 - Uniforms.uScale;
          Uniforms.uMode = this.smallViews[i];
-         Shaders.setUniforms(this.toScreenProgram, Uniforms);
+         uni.setAll(Uniforms);
          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       }
    }
