@@ -1,11 +1,9 @@
-import { Shaders } from './Shaders';
 import { glMat4 } from './glMat';
 import { glVec3, glVec4 } from './glVec';
 import toScreenVertexSource from './shaders/toScreenVertex.glsl';
 import toScreenFragmentSource from './shaders/toScreenFragment.glsl';
 import toTextureVertexSource from './shaders/toTextureVertex.glsl';
 import toTextureFragmentSource from './shaders/toTextureFragment.glsl';
-import { glColor } from './glColor';
 import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
 import { gl } from './app';
@@ -15,7 +13,8 @@ import { Profiler } from './Profiler';
 import { TriangleCube } from './TriangleCube';
 import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
-
+import { glCompiler } from './glCompiler';
+import { ColorAnalyzer } from './ColorAnalyzer';
 
 /**
  * Rendering mode for displaying the texture
@@ -27,31 +26,19 @@ export enum RenderMode {
    Bands = 3,
 }
 
-interface IPixelData {
-   maxChroma: number,
-   highlightColor: glColor,
-   avgLightColor: glColor,
-   lightestLightColor: glColor,
-   darkestLightColor: glColor,
-   avgShadowColor: glColor,
-   lightestShadowColor: glColor,
-   darkestShadowColor: glColor,
-   terminatorColor: glColor,
-}
 /**
  * Class that does the work of building the Path Traced texture
  */
 export class PathTracer {
 
    private vertexBuffer: WebGLBuffer;
-
    private frameBuffer: WebGLFramebuffer;
    private textures: WebGLTexture[];
    private toScreenProgram: WebGLProgram;
    private toScreenVertexAttribute: number;
    private toTextureProgram: WebGLProgram;
    private toTextureVertexAttribute: number;
-   private pixels: Float32Array;
+   private analyzer: ColorAnalyzer = new ColorAnalyzer(Uniforms.uTextureSize);
 
    private mainView = RenderMode.Artist;
    private smallViews = [
@@ -68,6 +55,15 @@ export class PathTracer {
    ];
 
    public create(query: string): Promise<void> {
+
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (isMobile) {
+         Uniforms.uTextureSize = 256;
+      }
+      else {
+         Uniforms.uTextureSize = 512;
+      }
 
       // create vertex buffer - the block we'll draw our rendered texture on
       this.vertexBuffer = gl.createBuffer();
@@ -134,7 +130,7 @@ export class PathTracer {
       gl.bindTexture(gl.TEXTURE_2D, null);
 
       // create toScreen shader
-      this.toScreenProgram = Shaders.compileShader(toScreenVertexSource, toScreenFragmentSource);
+      this.toScreenProgram = glCompiler.compile(toScreenVertexSource, toScreenFragmentSource);
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
 
@@ -176,7 +172,7 @@ export class PathTracer {
       let p = new Profiler();
       // create the toTexture shader
       if (tObj) {
-         this.toTextureProgram = Shaders.compileShader(
+         this.toTextureProgram = glCompiler.compile(
             toTextureVertexSource
                .replace('<VERSION>', '#version 300 es')
                .replace('NOTHING', 'USE_TRIANGLES'),
@@ -192,7 +188,7 @@ export class PathTracer {
          tObj.uploadUniforms(this.toTextureProgram);
       }
       else {
-         this.toTextureProgram = Shaders.compileShader(
+         this.toTextureProgram = glCompiler.compile(
             toTextureVertexSource
                .replace('<VERSION>', ''),
             toTextureFragmentSource
@@ -248,7 +244,7 @@ export class PathTracer {
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      let data = this.getPixelData();
+      let data = this.analyzer.run(Uniforms.uLightAlpha, Uniforms.uShadowAlpha);
       Uniforms.uMaxChroma = data.maxChroma;
 
       let cr = new ColorRange([data.darkestLightColor.toHtmlColor(), data.avgLightColor.toHtmlColor(), data.lightestLightColor.toHtmlColor()]);
@@ -268,126 +264,9 @@ export class PathTracer {
       // ping pong textures
       this.textures.reverse();
 
-      /*
-      Uniforms.uPixel++;
-      if (Uniforms.uPixel > 15) {
-         Uniforms.uPixel = 0.0;
-         Uniforms.uSample++;
-         Uniforms.uRandom = Math.random();
-      }
-      */
       Uniforms.uSample++;
       Uniforms.uRandom = Math.random();
    };
-
-   private getPixelData(): IPixelData {
-
-      let data: IPixelData = {
-         maxChroma: 0,
-         avgLightColor: new glColor([0, 0, 0]),
-         lightestLightColor: new glColor([0, 0, 0]),
-         darkestLightColor: new glColor([1, 1, 1]),
-         avgShadowColor: new glColor([0, 0, 0]),
-         lightestShadowColor: new glColor([0, 0, 0]),
-         darkestShadowColor: new glColor([1, 1, 1]),
-         terminatorColor: new glColor([0, 0, 0]),
-         highlightColor: new glColor([0, 0, 0]),
-      }
-
-      let size = Uniforms.uTextureSize;
-
-      if (this.pixels === undefined) {
-         this.pixels = new Float32Array(size * size * 4);
-      }
-
-      // TODO handle case when the text type is UNSIGNED_BYTE
-      gl.readPixels(0, 0, Uniforms.uTextureSize, Uniforms.uTextureSize, gl.RGBA, gl.FLOAT, this.pixels);
-
-      let numLightPixels = 0;
-      let numShadowPixels = 0;
-      let numTerminatorPixels = 0;
-
-      for (let row = 0; row < size; row++) {
-         for (let col = 0; col < size; col++) {
-            let index = (row * size + col) * 4;
-            let r = this.pixels[index + 0];
-            let g = this.pixels[index + 1];
-            let b = this.pixels[index + 2];
-            let a = this.pixels[index + 3];
-
-            // ignore values that are not part of the ball
-            if (a === 1) {
-               continue;
-            }
-
-            let avg = (r + g + b) / 3;
-            let chroma = (Math.abs(r - avg) + Math.abs(g - avg) + Math.abs(b - avg)) / (4 / 3);
-
-            if (chroma > data.maxChroma) {
-               data.maxChroma = chroma;
-            }
-
-            let color = new glColor([r, g, b]);
-            if (a == Uniforms.uBALL_LIGHT) {
-               numLightPixels++;
-               if (data.lightestLightColor == null) {
-                  data.lightestLightColor = color;
-               }
-               if (data.darkestLightColor == null) {
-                  data.darkestLightColor = color;
-               }
-               data.lightestLightColor = glColor.lightest(data.lightestLightColor, color);
-               data.darkestLightColor = glColor.darkest(data.darkestLightColor, color);
-               data.avgLightColor.r += color.r;
-               data.avgLightColor.b += color.b;
-               data.avgLightColor.g += color.g;
-            }
-            else if (a == Uniforms.uBALL_SHADOW) {
-               numShadowPixels++;
-               if (data.lightestShadowColor == null) {
-                  data.lightestShadowColor = color;
-               }
-               if (data.darkestShadowColor == null) {
-                  data.darkestShadowColor = color;
-               }
-               data.lightestShadowColor = glColor.lightest(data.lightestShadowColor, color);
-               data.darkestShadowColor = glColor.darkest(data.darkestShadowColor, color);
-               data.avgShadowColor.r += color.r;
-               data.avgShadowColor.b += color.b;
-               data.avgShadowColor.g += color.g;
-            }
-            else if (a > Uniforms.uBALL_LIGHT) {
-               data.highlightColor = glColor.lightest(data.highlightColor, color);
-            }
-
-            let terminator = (Uniforms.uBALL_LIGHT + Uniforms.uBALL_SHADOW) / 2.0;
-            if (Math.abs(a - terminator) < 0.1) {
-               numTerminatorPixels++;
-               data.terminatorColor.r += color.r;
-               data.terminatorColor.b += color.b;
-               data.terminatorColor.g += color.g;
-            }
-         }
-      }
-
-      if (numLightPixels > 0) {
-         data.avgLightColor.r /= numLightPixels;
-         data.avgLightColor.g /= numLightPixels;
-         data.avgLightColor.b /= numLightPixels;
-      }
-      if (numShadowPixels > 0) {
-         data.avgShadowColor.r /= numShadowPixels;
-         data.avgShadowColor.g /= numShadowPixels;
-         data.avgShadowColor.b /= numShadowPixels;
-      }
-      if (numTerminatorPixels > 0) {
-         data.terminatorColor.r /= numTerminatorPixels;
-         data.terminatorColor.g /= numTerminatorPixels;
-         data.terminatorColor.b /= numTerminatorPixels;
-      }
-
-      return data;
-   }
 
    public displayTexture(): void {
 

@@ -22,19 +22,12 @@ uniform vec3 uLightPos;
 uniform float uLightIntensity;
 uniform vec3 uLightColor;
 uniform float uAmbientLightIntensity;
-uniform vec3 uBallColor;
+uniform vec3 uObjColor;
 uniform float uBallRadius;
 uniform float uSample;
 uniform float uPixel;
-uniform float uBALL_SPECULAR;
-uniform float uBALL_LIGHT;
-uniform float uBALL_SHADOW;
-
-uniform float uBallLightShift;
-uniform float uBallLightTintStrength;
-
-uniform float uobjShadowShift;
-uniform float uobjShadowTintStrength;
+uniform float uLightAlpha;
+uniform float uShadowAlpha;
 
 #ifdef ES300
 out vec4 fragColor;
@@ -345,47 +338,6 @@ float toGray(vec4 c)
    return l / 100.0;
 }
 
-vec4 toArtist(vec4 color)
-{
-   float percentShadow = clamp(uBALL_LIGHT - color.a, 0.0, 1.0);
-   float percentLight = 1.0 - percentShadow;
-
-   // temperature shift
-   vec4 rgblight = shiftTemperature(color, -uBallLightShift, uBallLightTintStrength);
-   vec4 rgbshadow = shiftTemperature(color, -uobjShadowShift, uobjShadowTintStrength);
-   vec4 rgbmix = mix(rgblight, rgbshadow, percentShadow);
-   vec4 hsv = rgb2hsv(rgbmix);
-
-   // correct overflows
-   if (hsv.x > 1.0)
-   {
-      hsv.x -= 1.0;
-   }
-   else if (hsv.x < 0.0)
-   {
-      hsv.x += 1.0;
-   }
-
-   // adjust light/dark value to match the old value in rgb space
-   float origValue = toGray(color);
-   float newValue = toGray(hsv2rgb(hsv));
-   for (int i = 0; i < 1000; i++)
-   {
-      if (abs(origValue - newValue) < 0.01)
-      {
-         break;
-      }
-      else
-      {
-         hsv.z += (origValue - newValue) / 10.0;
-         newValue = toGray(hsv2rgb(hsv));
-      }
-   }
-
-   // convert back to rgb
-   return hsv2rgb(clamp(hsv, 0.0, 1.0));
-}
-
 vec4 calculateColor(vec3 origin, vec3 ray)
 {
    vec3 accumulatedColor = vec3(0.0);
@@ -467,7 +419,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
       }
       else if (t == tBall)
       {
-         surfaceColor = vec3(uBallColor);
+         surfaceColor = vec3(uObjColor);
          normal = normalForSphere(hit, BALL_CENTER, uBallRadius);
 
          if (bounce == 0)
@@ -478,7 +430,7 @@ vec4 calculateColor(vec3 origin, vec3 ray)
 #ifdef USE_TRIANGLES
       else if (t == tObj)
       {
-         surfaceColor = uBallColor;
+         surfaceColor = uObjColor;
          normal = normalForTriangle(origin, hit, tIndex);
 
          if (bounce == 0)
@@ -561,11 +513,11 @@ vec4 calculateColor(vec3 origin, vec3 ray)
    {
       if (objShadow)
       {
-         alpha = uBALL_SHADOW;
+         alpha = uShadowAlpha;
       }
       else
       {
-         alpha = uBALL_LIGHT;
+         alpha = uLightAlpha;
       }
       alpha += clamp(specularContribution, 0.0, 1.0);
    }
@@ -586,24 +538,6 @@ vec4 calculateColor(vec3 origin, vec3 ray)
 
 void main()
 {
-   /*
-   float x = floor(gl_FragCoord.x);
-   float y = floor(gl_FragCoord.y);
-   float pixel = (4.0 * mod(y, 4.0) + mod(x, 4.0));
-   if (pixel != uPixel)
-   {
-      if (uSample == 0.0 && pixel > uPixel)
-      {
-         fragColor = vec4(0.0, 0.0, 0.0, 1.0);
-      }
-      else
-      {
-         fragColor = texture(uTexture, gl_FragCoord.xy / uTextureSize);
-      }
-      return;
-   }
-   */
-
    vec3 rand = uniformlyRandomVector(uRandom) * LIGHT_SIZE;
 
    Lights[0].intensity = uLightIntensity;

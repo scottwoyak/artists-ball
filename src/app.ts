@@ -50,7 +50,7 @@ export class App {
    private oldY: number;
 
    private lastTimes: number[] = [];
-   private readonly MAX_SAMPLES = 1000;
+   private readonly MAX_SAMPLES = 500;
 
    private query: string;
 
@@ -200,13 +200,13 @@ export class App {
          value: 50,
          colors: skinTones,
          oninput: () => {
-            Uniforms.uBallColor = this.ballColorSlider.glColor;
+            Uniforms.uObjColor = this.ballColorSlider.glColor;
             this.restart();
          }
       });
 
       // make sure gl matches the initial UI setting
-      Uniforms.uBallColor = this.ballColorSlider.glColor;
+      Uniforms.uObjColor = this.ballColorSlider.glColor;
 
       this.ambientIntensitySlider = new Slider(div, {
          id: 'AmbientIntensity',

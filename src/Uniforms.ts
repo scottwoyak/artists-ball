@@ -13,12 +13,6 @@ export interface IUniforms {
    uMode: RenderMode;
    uMaxChroma: number;
 
-   uBallLightShift: number;
-   uBallLightTintStrength: number;
-
-   uBallShadowShift: number;
-   uBallShadowTintStrength: number;
-
    uHighlightColor: glColor;
    uLightLightColor: glColor;
    uMidLightColor: glColor;
@@ -28,15 +22,14 @@ export interface IUniforms {
    uReflectedLightColor: glColor;
    uDarkAccentColor: glColor;
 
-   uBALL_SPECULAR: number;
-   uBALL_LIGHT: number;
-   uBALL_SHADOW: number;
+   uLightAlpha: number;
+   uShadowAlpha: number;
 
    uLightIntensity: number,
    uLightColor: glColor,
    uLightPos: glVec3,
    uAmbientLightIntensity: number,
-   uBallColor: glColor,
+   uObjColor: glColor,
    uBallRadius: number,
    uEye: glVec3,
    uTextureSize: number,
@@ -59,12 +52,6 @@ export let Uniforms: IUniforms = {
    uMode: 0,
    uMaxChroma: 1.0,
 
-   uBallLightShift: 0.0,
-   uBallLightTintStrength: 0.5,
-
-   uBallShadowShift: 0.0,
-   uBallShadowTintStrength: 0.5,
-
    uHighlightColor: undefined,
    uLightLightColor: undefined,
    uMidLightColor: undefined,
@@ -74,15 +61,14 @@ export let Uniforms: IUniforms = {
    uReflectedLightColor: undefined,
    uDarkAccentColor: undefined,
 
-   uBALL_SPECULAR: 1002,
-   uBALL_LIGHT: 1001,
-   uBALL_SHADOW: 1000,
+   uLightAlpha: 1001,
+   uShadowAlpha: 1000,
 
    uLightIntensity: 0.7,
    uLightColor: new glColor([1.0, 1.0, 1.0]),
    uLightPos: new glVec3(new SphericalCoord(2, 60, 110).toXYZ()),
    uAmbientLightIntensity: 0.3,
-   uBallColor: new glColor([0.5, 0.5, 0.8]),
+   uObjColor: new glColor([0.5, 0.5, 0.8]),
    uBallRadius: 0.5,
    uEye: new glVec3([0, 0, 0]),
    uTextureSize: 256,

@@ -15,9 +15,8 @@ uniform vec3 uShadowColor;
 uniform vec3 uReflectedLightColor;
 uniform vec3 uDarkAccentColor;
 
-uniform float uBALL_SPECULAR;
-uniform float uBALL_LIGHT;
-uniform float uBALL_SHADOW;
+uniform float uShadowAlpha;
+uniform float uLightAlpha;
 
 out vec4 fragColor;
 
@@ -112,7 +111,7 @@ vec4 renderAsChroma()
    }
    else
    {
-      if (color.a >= uBALL_SHADOW)
+      if (color.a >= uShadowAlpha)
       {
          float avg = (color.r + color.g + color.b) / 3.0;
          float rgb = (abs(avg - color.r) + abs(avg - color.g) + abs(avg - color.b)) / (4.0 / 3.0);
@@ -188,7 +187,7 @@ vec4 renderAsBands()
       vec4 color = texture(uTexture, texCoord);
 
       // define the terminator as the point where things are 50% in shadow
-      float terminator = ((uBALL_SHADOW + uBALL_LIGHT) / 2.0);
+      float terminator = ((uShadowAlpha + uLightAlpha) / 2.0);
       if (color.a > 1.0 && color.a <= terminator)
       {
          vec3 c = closest(color.rgb, uShadowColor, uReflectedLightColor, uDarkAccentColor);
@@ -199,7 +198,7 @@ vec4 renderAsBands()
          // only render the highlight where it's contribution is significant, i.e. greater
          // than some threshold
          const float SPECULAR_THRESHOLD = 0.1;
-         if (color.a > (uBALL_LIGHT + SPECULAR_THRESHOLD))
+         if (color.a > (uLightAlpha + SPECULAR_THRESHOLD))
          {
             return vec4(uHighlightColor, 1.0);
          }
