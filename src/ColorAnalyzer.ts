@@ -1,5 +1,5 @@
 import { glColor } from "./glColor";
-import { gl } from "./app";
+import { gl } from "./Globals";
 
 /**
  * The items returned from examining the current view

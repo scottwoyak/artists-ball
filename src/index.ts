@@ -1,7 +1,6 @@
-import { App } from "./app";
+import { BallApp } from "./BallApp";
 import './styles.css';
-
-let app: App;
+import { PlanesApp } from "./PlanesApp";
 
 window.onload = function () {
 
@@ -10,7 +9,19 @@ window.onload = function () {
       query = window.location.search.substr(1);
    }
 
-   app = new App(query);
-   document.body.appendChild(app.component());
+   let tokens = query.split('-');
+   let type = 'default';
+   if (tokens.length === 2) {
+      type = tokens[0];
+      query = tokens[1];
+   }
+   if (type === 'planes') {
+      let app = new PlanesApp(query);
+      document.body.appendChild(app.component());
+   }
+   else {
+      let app = new BallApp(query);
+      document.body.appendChild(app.component());
+   }
 }
 

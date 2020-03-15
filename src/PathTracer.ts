@@ -6,7 +6,7 @@ import toTextureVertexSource from './shaders/toTextureVertex.glsl';
 import toTextureFragmentSource from './shaders/toTextureFragment.glsl';
 import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
-import { gl } from './app';
+import { gl } from './Globals';
 import { TriangleObjFile } from './TriangleObjFile';
 import { ITriangleObj } from './ITriangleObj';
 import { Profiler } from './Profiler';

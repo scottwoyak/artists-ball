@@ -1,4 +1,4 @@
-import { gl } from "./app";
+import { gl } from "./Globals";
 
 export class glUniformBlock {
    private blockLocation: number;

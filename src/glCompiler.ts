@@ -1,4 +1,4 @@
-import { gl } from "./app";
+import { gl } from "./Globals";
 
 /**
  * Utility wrapper for compiling WebGL shader programs

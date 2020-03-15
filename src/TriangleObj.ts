@@ -2,7 +2,7 @@ import { glVec3 } from "./glVec";
 import { glUniformBlock } from "./glUniformBlock";
 import { ITriangleObj } from "./ITriangleObj";
 import { IndexedTriangle } from "./IndexedTriangle";
-import { gl } from "./app";
+import { gl } from "./Globals";
 import { Volume } from "./Volume";
 import { glUniform } from "./glUniform";
 

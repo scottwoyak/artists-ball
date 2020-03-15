@@ -1,5 +1,5 @@
 import { glVec3 } from "./glVec";
-import { gl } from "./app";
+import { gl } from "./Globals";
 import { glColor } from "./glColor";
 
 /**

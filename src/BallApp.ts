@@ -6,8 +6,7 @@ import { SphericalCoord } from "./SphericalCoord";
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { glColorWithTemperature } from "./glColorWithTemperature";
-
-export let gl: WebGLRenderingContext | WebGL2RenderingContext = null;
+import { Globals } from "./Globals";
 
 let skinTones = [
    new htmlColor([240, 223, 214]),
@@ -26,7 +25,7 @@ enum PointerMode {
    Light,
 }
 
-export class App {
+export class BallApp {
    public tracer: PathTracer;
    private modelview: glMat4;
    private projection: glMat4;
@@ -69,16 +68,17 @@ export class App {
       this.canvas.id = 'canvas';
       container.appendChild(this.canvas);
 
-      gl = this.canvas.getContext('webgl2') as WebGL2RenderingContext;
+      let context: WebGLRenderingContext | WebGL2RenderingContext = this.canvas.getContext('webgl2');
 
-      if (!gl) {
-         gl = this.canvas.getContext('webgl') as WebGLRenderingContext;
+      if (!context) {
+         context = this.canvas.getContext('webgl') as WebGLRenderingContext;
       }
 
-      if (!gl) {
+      if (!context) {
          // TODO display a message about not being able to create a WebGL context
          console.log("Unable to get WebGL context");
       }
+      Globals.gl = context;
 
       this.canvas.ontouchstart = (event: TouchEvent) => {
          event.preventDefault();
