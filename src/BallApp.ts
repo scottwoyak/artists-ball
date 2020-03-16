@@ -304,7 +304,7 @@ export class BallApp {
     */
    private click(x: number, y: number): boolean {
       // TODO handle this within the PathTracer class so that we don't have to hard code view stuff
-      let size = this.canvas.width / 4;
+      let size = 0.2 * this.canvas.width;
 
       if (y < size) {
 

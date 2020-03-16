@@ -5,7 +5,7 @@ import { glVec4, glVec3 } from "./glVec";
  */
 export class glMat4 {
    /** The matrix value stored as a 16 element array */
-   private values: number[];
+   public values: number[];
 
    /**
     * @param values If supplied, the initial matrix values. If not supplied, the matrix is 
@@ -104,6 +104,8 @@ export class glMat4 {
     */
    public invert(): glMat4 {
 
+      let result = new glMat4();
+
       let a00 = this.values[0], a01 = this.values[1], a02 = this.values[2], a03 = this.values[3];
       let a10 = this.values[4], a11 = this.values[5], a12 = this.values[6], a13 = this.values[7];
       let a20 = this.values[8], a21 = this.values[9], a22 = this.values[10], a23 = this.values[11];
@@ -130,30 +132,30 @@ export class glMat4 {
       }
       det = 1.0 / det;
 
-      this.values[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-      this.values[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-      this.values[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-      this.values[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-      this.values[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-      this.values[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-      this.values[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-      this.values[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-      this.values[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-      this.values[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-      this.values[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-      this.values[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-      this.values[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-      this.values[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-      this.values[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-      this.values[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+      result.values[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+      result.values[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+      result.values[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+      result.values[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+      result.values[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+      result.values[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+      result.values[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+      result.values[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+      result.values[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+      result.values[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+      result.values[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+      result.values[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+      result.values[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+      result.values[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+      result.values[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+      result.values[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
 
-      return this;
+      return result;
    }
 
    /**
-    * Transposes this matrix and returns the result (this).
+    * Transposes this matrix and returns the result as a new matrix.
     * 
-    * @returns This.
+    * @returns The transposed matrix.
     */
    public transpose(): glMat4 {
       let result = new glMat4();
@@ -164,26 +166,91 @@ export class glMat4 {
          }
       }
 
-      this.values = result.values;
-      return this;
+      return result;
+   }
+
+   /**
+    * Creates a matrix that contains a scale operation.
+    * 
+    * @param scale The scale factor
+    * @returns The transformation matrix.
+    */
+   public static fromScale(scale: number): glMat4 {
+
+      return new glMat4([
+         scale, 0, 0, 0,
+         0, scale, 0, 0,
+         0, 0, scale, 0,
+         0, 0, 0, 1
+      ]);
    }
 
    /**
     * Creates a matrix that contains a translation operation.
     * 
     * @param vec The translations.
-    * @returns The translation matrix.
+    * @returns The transformation matrix.
     */
    public static fromTranslation(v: glVec3): glMat4 {
 
-      let result = new glMat4([
+      return new glMat4([
          1, 0, 0, v.values[0],
          0, 1, 0, v.values[1],
          0, 0, 1, v.values[2],
          0, 0, 0, 1
       ]);
+   }
 
-      return result;
+   public static fromRotX(angle: number): glMat4 {
+
+      let c = Math.cos(angle)
+      let s = Math.sin(angle)
+      return new glMat4([
+         1, 0, 0, 0,
+         0, c, s, 0,
+         0, -s, c, 0,
+         0, 0, 0, 1
+      ]);
+   }
+
+   public static fromRotY(angle: number): glMat4 {
+
+      let c = Math.cos(angle)
+      let s = Math.sin(angle)
+      return new glMat4([
+         c, 0, -s, 0,
+         0, 1, 0, 0,
+         s, 0, c, 0,
+         0, 0, 0, 1
+      ]);
+   }
+
+   public static fromRotZ(angle: number): glMat4 {
+
+      let c = Math.cos(angle)
+      let s = Math.sin(angle)
+      return new glMat4([
+         c, s, 0, 0,
+         -s, c, 0, 0,
+         0, 0, 1, 0,
+         0, 0, 0, 1
+      ]);
+   }
+
+   public rotX(angle: number): glMat4 {
+      return glMat4.fromRotX(angle).multM(this);
+   }
+   public rotY(angle: number): glMat4 {
+      return glMat4.fromRotY(angle).multM(this);
+   }
+   public rotZ(angle: number): glMat4 {
+      return glMat4.fromRotZ(angle).multM(this);
+   }
+   public translate(offset: glVec3): glMat4 {
+      return glMat4.fromTranslation(offset).multM(this);
+   }
+   public scale(scale: number): glMat4 {
+      return glMat4.fromScale(scale).multM(this);
    }
 
    /**
@@ -194,11 +261,7 @@ export class glMat4 {
     * @param up The up vector.
     * @returns The viewing matrix.
     */
-   public static makeLookAt(
-      eye: glVec3,
-      center: glVec3,
-      up: glVec3,
-   ): glMat4 {
+   public static makeLookAt(eye: glVec3, center: glVec3, up: glVec3, ): glMat4 {
 
       // clone so we don't modify the origonals
       let z = eye.clone().subtract(center).normalize();
@@ -278,6 +341,18 @@ export class glMat4 {
          0, 0, C, D,
          0, 0, -1, 0
       ]);
+   }
+
+   public log(msg: string, digits: number = 2) {
+      console.log(msg);
+      for (let r = 0; r < 4; r++) {
+         let line = "";
+         for (let c = 0; c < 4; c++) {
+            line += this.get(r, c).toFixed(digits) + ' ';
+         }
+         console.log(line);
+      }
+      console.log();
    }
 
 }

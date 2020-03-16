@@ -8,13 +8,13 @@ import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
 import { gl } from './Globals';
 import { TriangleObjFile } from './TriangleObjFile';
-import { ITriangleObj } from './ITriangleObj';
 import { Profiler } from './Profiler';
 import { TriangleCube } from './TriangleCube';
 import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
 import { ColorAnalyzer } from './ColorAnalyzer';
+import { TriangleObj } from './TriangleObj';
 
 /**
  * Rendering mode for displaying the texture
@@ -159,7 +159,8 @@ export class PathTracer {
          Uniforms.uBallRadius = 0;
          let size = 1.5;
          let tObj = new TriangleObjFile();
-         return tObj.create(query, size).then(() => {
+         return tObj.create(query).then(() => {
+            tObj.autoCenter(size);
             tObj.translate(new glVec3([0, tObj.height / 2, 0]));
             this.compileShader(tObj);
          });
@@ -171,7 +172,7 @@ export class PathTracer {
       }
    }
 
-   private compileShader(tObj?: ITriangleObj) {
+   private compileShader(tObj?: TriangleObj) {
       let p = new Profiler();
       // create the toTexture shader
       if (tObj && tObj.triangles.length > 0) {

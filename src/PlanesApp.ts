@@ -1,13 +1,12 @@
 import { glVec3 } from "./glVec";
-import { PathTracer, RenderMode } from "./PathTracer";
 import { glMat4 } from "./glMat";
 import { Uniforms } from "./Uniforms";
 import { SphericalCoord } from "./SphericalCoord";
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
-import { glColorWithTemperature } from "./glColorWithTemperature";
 import { Globals } from "./Globals";
 import { hsvColor } from "./hsvColor";
+import { glRenderer } from "./glRenderer";
 
 enum PointerMode {
    View,
@@ -15,7 +14,7 @@ enum PointerMode {
 }
 
 export class PlanesApp {
-   public tracer: PathTracer;
+   public renderer: glRenderer;
    private modelview: glMat4;
    private projection: glMat4;
    private modelviewProjection: glMat4;
@@ -38,7 +37,6 @@ export class PlanesApp {
    private oldY: number;
 
    private lastTimes: number[] = [];
-   private readonly MAX_SAMPLES = 500;
 
    private query: string;
 
@@ -57,11 +55,7 @@ export class PlanesApp {
       this.canvas.id = 'canvas';
       container.appendChild(this.canvas);
 
-      let context: WebGLRenderingContext | WebGL2RenderingContext = this.canvas.getContext('webgl2');
-
-      if (!context) {
-         context = this.canvas.getContext('webgl') as WebGLRenderingContext;
-      }
+      let context = this.canvas.getContext('webgl') as WebGLRenderingContext;
 
       if (!context) {
          // TODO display a message about not being able to create a WebGL context
@@ -106,18 +100,14 @@ export class PlanesApp {
          this.mouseDown = false;
       }
 
-      this.tracer = new PathTracer();
-      this.tracer.create(this.query).then(() => {
+      this.renderer = new glRenderer();
+      this.renderer.create(this.query).then(() => {
          requestAnimationFrame(() => this.tick());
       })
 
       let drawTime = document.createElement('div');
       drawTime.id = 'drawTime';
       container.appendChild(drawTime);
-
-      let description = document.createElement('div');
-      description.id = 'description';
-      container.appendChild(description);
 
       let button = document.createElement('span');
       button.id = 'modeButton';
@@ -138,10 +128,6 @@ export class PlanesApp {
       }
       container.appendChild(button);
 
-      let progressSpan = document.createElement('span');
-      progressSpan.id = 'progressSpan';
-      container.appendChild(progressSpan);
-
       div.appendChild(document.createElement('br'));
       div.appendChild(document.createElement('br'));
 
@@ -154,7 +140,6 @@ export class PlanesApp {
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
             Uniforms.uLightIntensity = this.intensitySlider.value / 100;
-            this.restart();
          }
       });
 
@@ -188,7 +173,6 @@ export class PlanesApp {
          colors: colors,
          oninput: () => {
             Uniforms.uObjColor = this.ballColorSlider.glColor;
-            this.restart();
          },
          getText: (slider: Slider) => { return slider.value.toFixed() }
       });
@@ -205,7 +189,6 @@ export class PlanesApp {
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
             Uniforms.uAmbientLightIntensity = this.ambientIntensitySlider.value / 100;
-            this.restart();
          }
       });
 
@@ -219,8 +202,6 @@ export class PlanesApp {
 
       // use the value in rendering
       Uniforms.uLightColor = this.lightColorSlider.glColor;
-
-      this.restart();
    }
 
    private onDown(x: number, y: number) {
@@ -271,9 +252,6 @@ export class PlanesApp {
             }
          }
 
-         // clear the sample buffer
-         this.restart();
-
          // remember this coordinate
          this.oldX = x;
          this.oldY = y;
@@ -290,53 +268,11 @@ export class PlanesApp {
     * @returns true if a hit on one of the views occurs.
     */
    private click(x: number, y: number): boolean {
-      // TODO handle this within the PathTracer class so that we don't have to hard code view stuff
-      let size = this.canvas.width / 4;
-
-      if (y < size) {
-
-         if (x > this.canvas.width - 1 * size) {
-            this.swap(2);
-            this.setDescription();
-            return true;
-         }
-         else if (x > this.canvas.width - 2 * size) {
-            this.swap(1);
-            this.setDescription();
-            return true;
-         }
-         else if (x > this.canvas.width - 3 * size) {
-            this.swap(0);
-            this.setDescription();
-            return true;
-         }
-      }
 
       return false;
    }
 
-   private setDescription() {
-      let description = document.getElementById('description');
-      switch (this.tracer.renderMode) {
-         case RenderMode.Artist:
-            description.innerText = "";
-            break;
-
-         case RenderMode.Chroma:
-            description.innerText = "Chroma View: red=highest chroma";
-            break;
-
-         case RenderMode.Value:
-            description.innerText = "Value View";
-            break;
-
-         case RenderMode.Bands:
-            description.innerText = "5 Color + Highlight View";
-            break;
-      }
-   }
-
-   private updateTexture() {
+   private render() {
       this.modelview = glMat4.makeLookAt(
          Uniforms.uEye,
          new glVec3([0, 1, 0]),  // center point
@@ -345,33 +281,17 @@ export class PlanesApp {
 
       this.projection = glMat4.makePerspective(55, 1, 0.1, 100);
       this.modelviewProjection = this.projection.multM(this.modelview);
-      this.tracer.updateTexture(this.modelviewProjection);
+      this.renderer.render(this.modelviewProjection);
    };
-
-   private displayTexture(): void {
-      this.tracer.displayTexture();
-   };
-
-   public restart(): void {
-      this.tracer.restart();
-   }
-
-   public swap(pos: number) {
-      this.tracer.swap(pos);
-   }
 
    public tick() {
 
       this.updateTimerLabel();
-      this.updateProgress();
-      if (Uniforms.uSample < this.MAX_SAMPLES) {
-         Uniforms.uEye.values[0] = this.zoomZ * Math.sin(this.angleY) * Math.cos(this.angleX);
-         Uniforms.uEye.values[1] = this.zoomZ * Math.sin(this.angleX);
-         Uniforms.uEye.values[2] = this.zoomZ * Math.cos(this.angleY) * Math.cos(this.angleX);
+      Uniforms.uEye.values[0] = this.zoomZ * Math.sin(this.angleY) * Math.cos(this.angleX);
+      Uniforms.uEye.values[1] = this.zoomZ * Math.sin(this.angleX);
+      Uniforms.uEye.values[2] = this.zoomZ * Math.cos(this.angleY) * Math.cos(this.angleX);
 
-         this.updateTexture();
-         this.displayTexture();
-      }
+      this.render();
 
       requestAnimationFrame(() => this.tick());
    }
@@ -389,20 +309,7 @@ export class PlanesApp {
          this.lastTimes.shift();
       }
 
-      drawTimeLabel.style.visibility = Uniforms.uSample < this.MAX_SAMPLES ? 'visible' : 'hidden';
-   }
-
-   private updateProgress() {
-      let progress = Uniforms.uSample / this.MAX_SAMPLES;
-      let span = document.getElementById('progressSpan') as HTMLSpanElement;
-      if (progress >= 0 && progress < 1) {
-         span.style.visibility = 'visible';
-         let w = this.canvas.width;
-         span.style.right = w * (1 - progress) + 'px';
-      }
-      else {
-         span.style.visibility = 'hidden';
-      }
+      //      drawTimeLabel.style.visibility = Uniforms.uSample < this.MAX_SAMPLES ? 'visible' : 'hidden';
    }
 }
 

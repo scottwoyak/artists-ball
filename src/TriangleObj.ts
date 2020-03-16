@@ -2,11 +2,9 @@ import { glVec3 } from "./glVec";
 import { glUniformBlock } from "./glUniformBlock";
 import { ITriangleObj } from "./ITriangleObj";
 import { IndexedTriangle } from "./IndexedTriangle";
-import { gl } from "./Globals";
 import { Volume } from "./Volume";
 import { glUniform } from "./glUniform";
-
-const MAX = 1000; // INFINITY in our rendering world
+import { Profiler } from "./Profiler";
 
 /**
  * Base class for representing an object from a bunch of triangles. The class
@@ -16,8 +14,8 @@ const MAX = 1000; // INFINITY in our rendering world
 export class TriangleObj implements ITriangleObj {
    public vertices: glVec3[] = [];
    public triangles: IndexedTriangle[] = [];
-   public boxMin = new glVec3([MAX, MAX, MAX]);
-   public boxMax = new glVec3([-MAX, -MAX, -MAX]);
+   public boxMin = new glVec3([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]);
+   public boxMax = new glVec3([-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE]);
    public volumes: Volume[] = [];
 
    public get width(): number {
@@ -30,6 +28,14 @@ export class TriangleObj implements ITriangleObj {
 
    public get depth(): number {
       return this.boxMax.z - this.boxMin.z;
+   }
+
+   public get center(): glVec3 {
+      return new glVec3([
+         (this.boxMin.x + this.boxMax.x) / 2,
+         (this.boxMin.y + this.boxMax.y) / 2,
+         (this.boxMin.z + this.boxMax.z) / 2,
+      ]);
    }
 
    protected push(tri: IndexedTriangle) {
@@ -47,14 +53,16 @@ export class TriangleObj implements ITriangleObj {
     * 
     * @param size The max size for the width, height, and depth
     */
-   protected autoAdjust(size: number) {
+   public autoCenter(size: number) {
+      let p = new Profiler();
+
       let trans = new glVec3([
          -(this.boxMax.x + this.boxMin.x) / 2,
          -(this.boxMax.y + this.boxMin.y) / 2,
          -(this.boxMax.z + this.boxMin.z) / 2,
       ]);
 
-      let scale = size / Math.max(this.boxMax.x - this.boxMin.x, Math.max(this.boxMax.y - this.boxMin.y, this.boxMax.z - this.boxMin.z));
+      let scale = size / Math.max(this.width, this.height, this.depth);
 
       for (let i = 0; i < this.vertices.length; i++) {
          let v = this.vertices[i];
@@ -70,6 +78,18 @@ export class TriangleObj implements ITriangleObj {
       this.boxMax.x = (this.boxMax.x + trans.x) * scale;
       this.boxMax.y = (this.boxMax.y + trans.y) * scale;
       this.boxMax.z = (this.boxMax.z + trans.z) * scale;
+
+      for (let i = 0; i < this.volumes.length; i++) {
+         let v = this.volumes[i];
+         v.boxMin.x = (v.boxMin.x + trans.x) * scale;
+         v.boxMin.y = (v.boxMin.y + trans.y) * scale;
+         v.boxMin.z = (v.boxMin.z + trans.z) * scale;
+         v.boxMax.x = (v.boxMax.x + trans.x) * scale;
+         v.boxMax.y = (v.boxMax.y + trans.y) * scale;
+         v.boxMax.z = (v.boxMax.z + trans.z) * scale;
+      }
+
+      p.log('autoAdjust()');
    }
 
    /**

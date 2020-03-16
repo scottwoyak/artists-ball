@@ -51,4 +51,10 @@ export class IndexedTriangle {
    get maxZ(): number {
       return Math.max(this.p0.z, Math.max(this.p1.z, this.p2.z));
    }
+
+   get normal(): glVec3 {
+      let a = this.p1.clone().subtract(this.p0);
+      let b = this.p2.clone().subtract(this.p1);
+      return a.cross(b).normalize();
+   }
 }

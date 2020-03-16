@@ -70,7 +70,7 @@ export class TriangleSphere extends TriangleObj {
                let i1 = last;
                let i2 = startIndex + j;
                let i3 = j === (numSteps - 1) ? startIndex : i2 + 1;
-               this.push(new IndexedTriangle(this.vertices, i1, i2, i3));
+               this.push(new IndexedTriangle(this.vertices, i1, i3, i2));
             }
             else {
                let startA = 1 + (i - 1) * numSteps;
@@ -80,11 +80,11 @@ export class TriangleSphere extends TriangleObj {
                let i3 = startB + j;
                let i4 = (j === (numSteps - 1)) ? startB : i3 + 1;
                if (i % 2) {
-                  this.push(new IndexedTriangle(this.vertices, i1, i2, i4));
+                  this.push(new IndexedTriangle(this.vertices, i1, i4, i2));
                   this.push(new IndexedTriangle(this.vertices, i1, i3, i4));
                }
                else {
-                  this.push(new IndexedTriangle(this.vertices, i1, i2, i3));
+                  this.push(new IndexedTriangle(this.vertices, i1, i3, i2));
                   this.push(new IndexedTriangle(this.vertices, i2, i3, i4));
                }
             }

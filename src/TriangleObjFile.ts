@@ -1,6 +1,7 @@
 import { glVec3 } from "./glVec";
 import { IndexedTriangle } from "./IndexedTriangle";
 import { TriangleObj } from "./TriangleObj";
+import { Profiler } from "./Profiler";
 
 /**
  * Class that loads a .obj file and creates triangles for it
@@ -14,24 +15,25 @@ export class TriangleObjFile extends TriangleObj {
     * @param size The desired max width/height/depth of the scaled object
     * @returns a promise object
     */
-   create(url: string, size: number): Promise<void> {
+   create(url: string): Promise<void> {
 
       return fetch(url)
          .then(res => res.text())
          .then(res => {
-            this.createTriangles(res, size);
+            this.createTriangles(res);
          });
    }
 
-   private createTriangles(src: string, size: number) {
+   private createTriangles(src: string) {
 
       this.parse(src);
-      super.autoAdjust(size);
       super.breakIntoVolumes();
    }
 
    private parse(src: string) {
+      let p = new Profiler();
       let lines = src.split('\n');
+      p.log('split');
 
       for (let i = 0; i < lines.length; i++) {
          let line = lines[i];
@@ -58,5 +60,6 @@ export class TriangleObjFile extends TriangleObj {
             }
          }
       }
+      p.log('parse');
    }
 }
