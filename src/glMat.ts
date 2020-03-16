@@ -237,20 +237,20 @@ export class glMat4 {
       ]);
    }
 
-   public rotX(angle: number): glMat4 {
-      return glMat4.fromRotX(angle).multM(this);
+   public rotX(angle: number) {
+      this.values = glMat4.fromRotX(angle).multM(this).values;
    }
-   public rotY(angle: number): glMat4 {
-      return glMat4.fromRotY(angle).multM(this);
+   public rotY(angle: number) {
+      this.values = glMat4.fromRotY(angle).multM(this).values;
    }
-   public rotZ(angle: number): glMat4 {
-      return glMat4.fromRotZ(angle).multM(this);
+   public rotZ(angle: number) {
+      this.values = glMat4.fromRotZ(angle).multM(this).values;
    }
-   public translate(offset: glVec3): glMat4 {
-      return glMat4.fromTranslation(offset).multM(this);
+   public translate(offset: glVec3) {
+      this.values = glMat4.fromTranslation(offset).multM(this).values;
    }
-   public scale(scale: number): glMat4 {
-      return glMat4.fromScale(scale).multM(this);
+   public scale(scale: number) {
+      this.values = glMat4.fromScale(scale).multM(this).values;
    }
 
    /**

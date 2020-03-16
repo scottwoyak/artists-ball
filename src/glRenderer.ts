@@ -20,7 +20,7 @@ export class glRenderer {
    private vertexAttribute: glAttribute;
    private normalAttribute: glAttribute;
 
-   private model = new glMat4();
+   public model = new glMat4();
    private view = new glMat4();
    private projection = new glMat4();
 
@@ -96,16 +96,16 @@ export class glRenderer {
    public orient(tObj: TriangleObj, query: string) {
 
       let center = tObj.center;
-      this.model = this.model.translate(new glVec3([-center.x, -center.y, -center.z]));
-      this.model = this.model.scale(1.75 / Math.max(tObj.width, tObj.height, tObj.depth));
+      this.model.translate(new glVec3([-center.x, -center.y, -center.z]));
+      this.model.scale(1.75 / Math.max(tObj.width, tObj.height, tObj.depth));
 
       if (query.toLowerCase() === 'skull.obj') {
-         this.model = this.model.rotX(Math.PI / 2);
-         this.model = this.model.rotY(Math.PI);
+         this.model.rotX(Math.PI / 2);
+         this.model.rotY(Math.PI);
       }
    }
 
-   public render(mvp: glMat4): void {
+   public render(): void {
 
       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
@@ -125,7 +125,7 @@ export class glRenderer {
       gl.clearColor(0, 0, 0, 1);
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
-      this.model = this.model.rotY(Math.PI / 180);
+      //      this.model = this.model.rotY(Math.PI / 180);
       let uni = new glUniform(this.program);
       uni.set('model', this.model.transpose());
       uni.set('view', this.view.transpose());

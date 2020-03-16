@@ -28,15 +28,10 @@ export class PlanesApp {
    private ballColorSlider: Slider;
    private ambientIntensitySlider: Slider;
 
-   private angleX = 0.5;
-   private angleY = 0.75;
-   private zoomZ = 3.5;
-
    private mouseDown = false;
    private oldX: number;
    private oldY: number;
-
-   private lastTimes: number[] = [];
+   private dirty: boolean = true;
 
    private query: string;
 
@@ -104,10 +99,6 @@ export class PlanesApp {
       this.renderer.create(this.query).then(() => {
          requestAnimationFrame(() => this.tick());
       })
-
-      let drawTime = document.createElement('div');
-      drawTime.id = 'drawTime';
-      container.appendChild(drawTime);
 
       let button = document.createElement('span');
       button.id = 'modeButton';
@@ -222,33 +213,33 @@ export class PlanesApp {
 
    private onMove(x: number, y: number) {
       if (this.mouseDown) {
+         this.dirty = true;
+
          if (this.pointerMode === PointerMode.View) {
             if (this.pointerModeSpecial) {
-               this.zoomZ -= (y - this.oldY) * 0.01;
-               this.zoomZ = clamp(this.zoomZ, 1, 8);
+               this.renderer.model.rotZ((this.oldY - y) * 0.01);
             }
             else {
-               // update the angles based on how far we moved since last time
-               this.angleY -= (x - this.oldX) * 0.01;
-               this.angleX += (y - this.oldY) * 0.01;
-
-               // don't go upside down
-               this.angleX = Math.max(this.angleX, -Math.PI / 2 + 0.01);
-               this.angleX = Math.min(this.angleX, Math.PI / 2 - 0.01);
+               this.renderer.model.rotX((y - this.oldY) * 0.01);
+               this.renderer.model.rotY((x - this.oldX) * 0.01);
             }
          }
          else if (this.pointerMode === PointerMode.Light) {
 
             if (this.pointerModeSpecial) {
+               /*
                this.pos.radius -= (y - this.oldY) * 0.005;
                this.pos.radius = clamp(this.pos.radius, Uniforms.uBallRadius + 0.5, 5);
                Uniforms.uLightPos.values = this.pos.toXYZ();
+               */
             }
             else {
+               /*
                this.pos.rotationAngle += (x - this.oldX);
                this.pos.elevationAngle += (y - this.oldY);
                this.pos.elevationAngle = clamp(this.pos.elevationAngle, 0, 180);
                Uniforms.uLightPos.values = this.pos.toXYZ();
+               */
             }
          }
 
@@ -272,55 +263,13 @@ export class PlanesApp {
       return false;
    }
 
-   private render() {
-      this.modelview = glMat4.makeLookAt(
-         Uniforms.uEye,
-         new glVec3([0, 1, 0]),  // center point
-         new glVec3([0, 1, 0])   // up vector
-      );
-
-      this.projection = glMat4.makePerspective(55, 1, 0.1, 100);
-      this.modelviewProjection = this.projection.multM(this.modelview);
-      this.renderer.render(this.modelviewProjection);
-   };
-
    public tick() {
 
-      this.updateTimerLabel();
-      Uniforms.uEye.values[0] = this.zoomZ * Math.sin(this.angleY) * Math.cos(this.angleX);
-      Uniforms.uEye.values[1] = this.zoomZ * Math.sin(this.angleX);
-      Uniforms.uEye.values[2] = this.zoomZ * Math.cos(this.angleY) * Math.cos(this.angleX);
-
-      this.render();
+      if (this.dirty) {
+         this.renderer.render();
+         this.dirty = false;
+      }
 
       requestAnimationFrame(() => this.tick());
-   }
-
-   private updateTimerLabel() {
-
-      let t = window.performance.now();
-      let drawTimeLabel = document.getElementById('drawTime');
-      if (this.lastTimes.length > 0) {
-         let elapsedMs = (t - this.lastTimes[0]) / this.lastTimes.length;
-         drawTimeLabel.innerText = elapsedMs.toFixed(0) + 'ms';
-      }
-      this.lastTimes.push(t);
-      if (this.lastTimes.length > 30) {
-         this.lastTimes.shift();
-      }
-
-      //      drawTimeLabel.style.visibility = Uniforms.uSample < this.MAX_SAMPLES ? 'visible' : 'hidden';
-   }
-}
-
-function clamp(value: number, min: number, max: number): number {
-   if (value < min) {
-      return min;
-   }
-   else if (value > max) {
-      return max;
-   }
-   else {
-      return value;
    }
 }
