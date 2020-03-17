@@ -5,6 +5,8 @@ import { htmlColor } from "./htmlColor";
  */
 export class htmlColorWithAlpha extends htmlColor {
 
+   public static readonly transparent = new htmlColorWithAlpha([0, 0, 0, 0]);
+
    /** The transparency (alpha) value */
    public a: number = 255;
 

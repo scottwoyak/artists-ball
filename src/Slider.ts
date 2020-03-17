@@ -1,6 +1,7 @@
 import { htmlColor } from "./htmlColor";
 import { ColorRange } from "./ColorRange";
 import { glColor } from "./glColor";
+import { htmlColorWithAlpha } from "./htmlColorWithAlpha";
 
 /**
  * Interface for data passed to the Slider constructor
@@ -11,7 +12,7 @@ export interface ISliderSetup {
    min: number,
    max: number,
    value: number,
-   colors: htmlColor[],
+   colors?: htmlColor[],
    oninput?: () => void,
    getText?: (slider: Slider) => string,
 }
@@ -48,13 +49,21 @@ export class Slider {
       this._range.min = setup.min.toString();
       this._range.max = setup.max.toString();
       this._range.value = setup.value.toString();
-      this._range.addEventListener('input', () => this.updateSpanColor());
+      this._range.addEventListener('input', () => {
+         this.updateSpanColor();
+         this.updateSpanText()
+      });
       parent.appendChild(this._range);
 
-      this._colorSpan = document.createElement('span');
-      this._colorSpan.id = setup.id + 'ColorSpan';
-      this._colorSpan.className = 'SliderColorSpan';
-      parent.appendChild(this._colorSpan);
+      if (setup.colors) {
+         this._colorSpan = document.createElement('span');
+         this._colorSpan.id = setup.id + 'ColorSpan';
+         this._colorSpan.className = 'SliderColorSpan';
+         parent.appendChild(this._colorSpan);
+
+         // set the initial color.
+         this.colors = setup.colors;
+      }
 
       this._valueSpan = document.createElement('span');
       this._valueSpan.id = setup.id + 'ValueSpan';
@@ -62,8 +71,8 @@ export class Slider {
       //      this._valueSpan.innerText = setup.value.toString();
       parent.appendChild(this._valueSpan);
 
-      // set the initial color
-      this.colors = setup.colors;
+      // set the initial span text
+      this.updateSpanText();
 
       this._range.oninput = setup.oninput;
    }
@@ -72,9 +81,17 @@ export class Slider {
     * Sets the span color to the currently selected color.
     */
    private updateSpanColor(): void {
-      let val = (this.value - this.min) / (this.max - this.min);
-      let color = htmlColor.fromColor(this._colors.get(val));
-      this._colorSpan.style.backgroundColor = color.toHex()
+      if (this._colors) {
+         let val = (this.value - this.min) / (this.max - this.min);
+         let color = htmlColor.fromColor(this._colors.get(val));
+         this._colorSpan.style.backgroundColor = color.toHex()
+      }
+   }
+
+   /**
+ * Sets the span color to the currently selected color.
+ */
+   private updateSpanText(): void {
       if (this._getText) {
          this._valueSpan.innerText = this._getText(this);
       }
@@ -141,8 +158,13 @@ export class Slider {
     * @returns The current color.
     */
    public get htmlColor(): htmlColor {
-      let val = (this.value - this.min) / (this.max - this.min);
-      return this._colors.get(val);
+      if (this._colors) {
+         let val = (this.value - this.min) / (this.max - this.min);
+         return this._colors.get(val);
+      }
+      else {
+         return htmlColorWithAlpha.transparent;
+      }
    }
 
    /**
@@ -151,7 +173,12 @@ export class Slider {
     * @returns The current color.
     */
    public get glColor(): glColor {
-      let val = (this.value - this.min) / (this.max - this.min);
-      return this._colors.get(val).toGlColor();
+      if (this._colors) {
+         let val = (this.value - this.min) / (this.max - this.min);
+         return this._colors.get(val).toGlColor();
+      }
+      else {
+         return new glColor([0, 0, 0]);
+      }
    }
 }

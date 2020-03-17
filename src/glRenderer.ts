@@ -27,6 +27,14 @@ export class glRenderer {
    private vertices: number[] = [];
    private normals: number[] = [];
 
+   public lightIntensity = 0.8;
+   public ambientIntensity = 0.2;
+   public threshold1 = 1 / 3;
+   public threshold2 = 2 / 3;
+   public lightLight = 5 / 6;
+   public midLight = 0.5;
+   public darkLight = 1 / 6;
+
    public create(query: string): Promise<void> {
 
       gl.enable(gl.DEPTH_TEST);
@@ -99,9 +107,15 @@ export class glRenderer {
       this.model.translate(new glVec3([-center.x, -center.y, -center.z]));
       this.model.scale(1.75 / Math.max(tObj.width, tObj.height, tObj.depth));
 
-      if (query.toLowerCase() === 'skull.obj') {
-         this.model.rotX(Math.PI / 2);
-         this.model.rotY(Math.PI);
+      switch (query.toLowerCase()) {
+         case 'skull.obj':
+            this.model.rotX(Math.PI / 2);
+            this.model.rotY(Math.PI);
+            break;
+
+         case 'femalehead.obj':
+            this.model.rotY(Math.PI);
+            break;
       }
    }
 
@@ -125,11 +139,18 @@ export class glRenderer {
       gl.clearColor(0, 0, 0, 1);
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
-      //      this.model = this.model.rotY(Math.PI / 180);
       let uni = new glUniform(this.program);
       uni.set('model', this.model.transpose());
       uni.set('view', this.view.transpose());
       uni.set('projection', this.projection.transpose());
+      uni.set('uLightIntensity', this.lightIntensity);
+      uni.set('uAmbientIntensity', this.ambientIntensity);
+      uni.set('uThreshold1', this.threshold1);
+      uni.set('uThreshold2', this.threshold2);
+      uni.set('uLightLight', this.lightLight);
+      uni.set('uMidLight', this.midLight);
+      uni.set('uDarkLight', this.darkLight);
+
       gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
    }
 }

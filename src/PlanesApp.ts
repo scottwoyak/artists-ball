@@ -1,11 +1,6 @@
-import { glVec3 } from "./glVec";
-import { glMat4 } from "./glMat";
-import { Uniforms } from "./Uniforms";
-import { SphericalCoord } from "./SphericalCoord";
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { Globals } from "./Globals";
-import { hsvColor } from "./hsvColor";
 import { glRenderer } from "./glRenderer";
 
 enum PointerMode {
@@ -15,18 +10,9 @@ enum PointerMode {
 
 export class PlanesApp {
    public renderer: glRenderer;
-   private modelview: glMat4;
-   private projection: glMat4;
-   private modelviewProjection: glMat4;
    private pointerMode: PointerMode = PointerMode.View;
    private pointerModeSpecial = false;
-   private pos: SphericalCoord;
    private canvas: HTMLCanvasElement;
-
-   private intensitySlider: Slider;
-   private lightColorSlider: Slider;
-   private ballColorSlider: Slider;
-   private ambientIntensitySlider: Slider;
 
    private mouseDown = false;
    private oldX: number;
@@ -122,77 +108,98 @@ export class PlanesApp {
       div.appendChild(document.createElement('br'));
       div.appendChild(document.createElement('br'));
 
-      this.intensitySlider = new Slider(div, {
+      let lightSlider = new Slider(div, {
          id: 'LightIntensity',
-         label: 'Light Intensity',
+         label: 'Light',
          min: 0,
          max: 100,
-         value: Uniforms.uLightIntensity * 100,
+         value: this.renderer.lightIntensity * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            Uniforms.uLightIntensity = this.intensitySlider.value / 100;
+            this.renderer.lightIntensity = lightSlider.value / 100;
+            this.dirty = true;
          }
       });
 
-      // build a range of colors
-      let colors = [];
-      for (let i = 0; i < 10; i++) {
-         colors.push(new hsvColor([i / 9, 0.5, 0.8]).toHtmlColor());
-      }
-      this.lightColorSlider = new Slider(div, {
-         id: 'LightColor',
-         label: 'Light Color',
-         min: 0,
-         max: 360,
-         value: 180,
-         colors: colors,
-         oninput: () => {
-            this.setLightColor();
-         },
-         getText: (slider: Slider) => { return slider.value.toFixed() }
-      });
-
-      // apply the initial colors
-      this.setLightColor();
-
-      this.ballColorSlider = new Slider(div, {
-         id: 'BallColor',
-         label: 'Ball Color',
-         min: 0,
-         max: 360,
-         value: 180,
-         colors: colors,
-         oninput: () => {
-            Uniforms.uObjColor = this.ballColorSlider.glColor;
-         },
-         getText: (slider: Slider) => { return slider.value.toFixed() }
-      });
-
-      // make sure gl matches the initial UI setting
-      Uniforms.uObjColor = this.ballColorSlider.glColor;
-
-      this.ambientIntensitySlider = new Slider(div, {
+      let ambientSlider = new Slider(div, {
          id: 'AmbientIntensity',
-         label: 'Ambient Light',
+         label: 'Ambient',
          min: 0,
          max: 100,
-         value: Uniforms.uAmbientLightIntensity * 100,
+         value: this.renderer.ambientIntensity * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            Uniforms.uAmbientLightIntensity = this.ambientIntensitySlider.value / 100;
+            this.renderer.ambientIntensity = ambientSlider.value / 100;
+            this.dirty = true;
          }
+      });
+
+      let t1Slider = new Slider(div, {
+         id: 'Threshold1',
+         label: 'Threshold 1',
+         min: 0,
+         max: 90,
+         value: this.renderer.threshold1 * 90,
+         oninput: () => {
+            this.renderer.threshold1 = t1Slider.value / 90;
+            this.dirty = true;
+         },
+         getText: () => { return (90 * this.renderer.threshold1).toFixed(0) + "º" }
+      });
+
+      let t2Slider = new Slider(div, {
+         id: 'Threshold2',
+         label: 'Threshold 2',
+         min: 0,
+         max: 90,
+         value: this.renderer.threshold2 * 90,
+         oninput: () => {
+            this.renderer.threshold2 = t2Slider.value / 90;
+            this.dirty = true;
+         },
+         getText: () => { return (90 * this.renderer.threshold2).toFixed(0) + "º" }
+      });
+
+      let lightLightSlider = new Slider(div, {
+         id: 'LightLight',
+         label: 'Light Light',
+         min: 0,
+         max: 100,
+         value: this.renderer.lightLight * 100,
+         colors: [htmlColor.black, htmlColor.white],
+         oninput: () => {
+            this.renderer.lightLight = lightLightSlider.value / 100;
+            this.dirty = true;
+         },
+      });
+
+      let midLightSlider = new Slider(div, {
+         id: 'MidLight',
+         label: 'Mid Light',
+         min: 0,
+         max: 100,
+         value: this.renderer.midLight * 100,
+         colors: [htmlColor.black, htmlColor.white],
+         oninput: () => {
+            this.renderer.midLight = midLightSlider.value / 100;
+            this.dirty = true;
+         },
+      });
+
+      let darkLightSlider = new Slider(div, {
+         id: 'DarkLight',
+         label: 'Dark Light',
+         min: 0,
+         max: 100,
+         value: this.renderer.darkLight * 100,
+         colors: [htmlColor.black, htmlColor.white],
+         oninput: () => {
+            this.renderer.darkLight = darkLightSlider.value / 100;
+            this.dirty = true;
+         },
       });
 
       return div;
-   }
-
-   private setLightColor() {
-
-      // update the colors for the intensity slider
-      this.intensitySlider.colors = [htmlColor.black, this.lightColorSlider.htmlColor];
-
-      // use the value in rendering
-      Uniforms.uLightColor = this.lightColorSlider.glColor;
    }
 
    private onDown(x: number, y: number) {
@@ -205,8 +212,6 @@ export class PlanesApp {
 
       this.oldX = x;
       this.oldY = y;
-
-      this.pos = SphericalCoord.fromXYZ(Uniforms.uLightPos.values);
 
       this.mouseDown = true;
    }
