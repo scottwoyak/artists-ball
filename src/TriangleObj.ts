@@ -1,6 +1,5 @@
 import { glVec3 } from "./glVec";
 import { glUniformBlock } from "./glUniformBlock";
-import { ITriangleObj } from "./ITriangleObj";
 import { IndexedTriangle } from "./IndexedTriangle";
 import { Volume } from "./Volume";
 import { glUniform } from "./glUniform";
@@ -11,7 +10,7 @@ import { Profiler } from "./Profiler";
  * efficiently manages the triangles by storing them in volumes and by
  * passing them to WebGL using Uniform Buffers
  */
-export class TriangleObj implements ITriangleObj {
+export class TriangleObj {
    public vertices: glVec3[] = [];
    public triangles: IndexedTriangle[] = [];
    public boxMin = new glVec3([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]);
