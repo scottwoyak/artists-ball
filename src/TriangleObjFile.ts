@@ -60,6 +60,9 @@ export class TriangleObjFile extends TriangleObj {
             }
          }
       }
+
+      console.log('Vertices: ' + this.vertices.length);
+      console.log('Triangles: ' + this.triangles.length);
       p.log('parse');
    }
 }

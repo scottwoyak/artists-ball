@@ -8,8 +8,8 @@ import { TriangleCube } from './TriangleCube';
 import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
-import { glAttribute } from './glAttribute';
 import { TriangleObj } from './TriangleObj';
+import { glStdObject } from './glStdObject';
 
 export enum LightValues {
    LightLight,
@@ -23,20 +23,11 @@ export enum LightValues {
 export class glRenderer {
 
    private program: WebGLProgram;
-   private vertexAttribute: glAttribute;
-   private normalAttribute: glAttribute;
-
-   public model = new glMat4();
    private view = new glMat4();
    private projection = new glMat4();
 
-   private vertices: number[] = [];
-   private normals: number[] = [];
-
-   //   public lightIntensity = 0.8;
-   //   public ambientIntensity = 0.2;
-   public lightIntensity = 1.0;
-   public ambientIntensity = 0.0;
+   public lightIntensity = 0.8;
+   public ambientIntensity = 0.2;
    public threshold1 = 15;
    public threshold2 = 55;
 
@@ -49,8 +40,27 @@ export class glRenderer {
 
    private autoRender = 0;
 
+   private ball: glStdObject;
+   private obj: glStdObject;
+
    public constructor() {
       this.syncColors();
+   }
+
+   public rotX(angle: number) {
+      this.obj.rotX(angle);
+   }
+   public rotY(angle: number) {
+      this.obj.rotY(angle);
+   }
+   public rotZ(angle: number) {
+      this.obj.rotZ(angle);
+   }
+   public scale(scale: number) {
+      this.obj.scale(scale);
+   }
+   public translate(offset: glVec3) {
+      this.obj.translate(offset);
    }
 
    public colorAt(deg: number): number {
@@ -65,10 +75,6 @@ export class glRenderer {
    }
 
    public syncColors() {
-      console.log('color at 0 = ' + this.colorAt(0));
-      console.log('color at ' + this.threshold1.toFixed(0) + ' = ' + this.colorAt(this.threshold1));
-      console.log('color at ' + this.threshold2.toFixed(0) + ' = ' + this.colorAt(this.threshold2));
-      console.log('color at 90 = ' + this.colorAt(0));
       this.lightLight = this.colorAt(0.5 * this.threshold1);
       this.midLight = this.colorAt((this.threshold1 + this.threshold2) / 2);
       this.darkLight = this.colorAt((this.threshold2 + 90) / 2);
@@ -101,16 +107,16 @@ export class glRenderer {
       // create shaders
       this.program = glCompiler.compile(vertexSource, fragmentSource);
 
-      // create attributes (and associated buffers)
-      this.vertexAttribute = new glAttribute(this.program, 'aVertex');
-      this.normalAttribute = new glAttribute(this.program, 'aNormal');
+      let tBall = new TriangleSphere();
+      tBall.createNow(500, 0.5, new glVec3([0, 0, 0]));
+      this.ball = new glStdObject(tBall, this.program);
 
       if (query && query.toLowerCase() === 'trianglesphere') {
          let radius = 0.75;
          let center = new glVec3([0, 0, 0]);
          let tObj = new TriangleSphere();
          return tObj.create(500, radius, center).then(() => {
-            this.uploadTriangles(tObj);
+            this.obj = new glStdObject(tObj, this.program);
          });
       }
       else if (query && query.toLowerCase() === 'trianglecube') {
@@ -118,13 +124,13 @@ export class glRenderer {
          let center = new glVec3([0, size / 2.0, 0]);
          let tObj = new TriangleCube();
          return tObj.create(size, center).then(() => {
-            this.uploadTriangles(tObj);
+            this.obj = new glStdObject(tObj, this.program);
          });
       }
       else if (query && query.toLowerCase().endsWith('.obj')) {
          let tObj = new TriangleObjFile();
          return tObj.create(query).then(() => {
-            this.uploadTriangles(tObj);
+            this.obj = new glStdObject(tObj, this.program);
             this.orient(tObj, query);
          });
       }
@@ -133,48 +139,21 @@ export class glRenderer {
       }
    }
 
-   private pushVec(array: number[], vec: glVec3) {
-      array.push(vec.x);
-      array.push(vec.y);
-      array.push(vec.z);
-   }
-
-   private uploadTriangles(tObj: TriangleObj) {
-
-      this.vertices = [];
-      this.normals = [];
-      if (tObj) {
-         for (let i = 0; i < tObj.triangles.length; i++) {
-            this.pushVec(this.vertices, tObj.triangles[i].p0);
-            this.pushVec(this.vertices, tObj.triangles[i].p1);
-            this.pushVec(this.vertices, tObj.triangles[i].p2);
-
-            let normal = tObj.triangles[i].normal;
-            this.pushVec(this.normals, normal);
-            this.pushVec(this.normals, normal);
-            this.pushVec(this.normals, normal);
-         }
-      }
-
-      this.vertexAttribute.upload(this.vertices);
-      this.normalAttribute.upload(this.normals);
-   }
-
    public orient(tObj: TriangleObj, query: string) {
 
       let center = tObj.center;
-      this.model.translate(new glVec3([-center.x, -center.y, -center.z]));
-      this.model.scale(1.75 / Math.max(tObj.width, tObj.height, tObj.depth));
+      this.obj.translate(new glVec3([-center.x, -center.y, -center.z]));
+      this.obj.scale(1.75 / Math.max(tObj.width, tObj.height, tObj.depth));
 
       // orient each file so that it is facing forward
       switch (query.toLowerCase()) {
          case 'skull.obj':
-            this.model.rotX(toRad(90));
-            this.model.rotY(toRad(180));
+            this.obj.rotX(toRad(90));
+            this.obj.rotY(toRad(180));
             break;
 
          case 'femalehead.obj':
-            this.model.rotY(toRad(180));
+            this.obj.rotY(toRad(180));
             break;
       }
    }
@@ -202,7 +181,6 @@ export class glRenderer {
       this.view = new glMat4();
 
       let uni = new glUniform(this.program);
-      uni.set('model', this.model.transpose());
       uni.set('view', this.view.transpose());
       uni.set('projection', this.projection.transpose());
       uni.set('uLightIntensity', this.lightIntensity);
@@ -214,14 +192,21 @@ export class glRenderer {
       uni.set('uDarkLight', this.darkLight);
       uni.set('uAutoRender', this.autoRender, true);
 
-      gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
+      this.obj.draw();
 
       gl.clear(gl.DEPTH_BUFFER_BIT);
       this.view.scale(this.miniSize);
       this.view.translate(new glVec3([1 - this.miniSize, 1 - this.miniSize, 0]));
       uni.set('view', this.view.transpose());
       uni.set('uAutoRender', this.autoRender === 0 ? 1 : 0, true);
-      gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
+      this.obj.draw();
+
+      this.view = new glMat4();
+      this.view.scale(this.miniSize);
+      this.view.translate(new glVec3([-(1 - this.miniSize), 1 - this.miniSize, 0]));
+      uni.set('view', this.view.transpose());
+      uni.set('uAutoRender', this.autoRender, true);
+      this.ball.draw();
    }
 
    /**
@@ -241,5 +226,4 @@ export class glRenderer {
          return false;
       }
    }
-
 }

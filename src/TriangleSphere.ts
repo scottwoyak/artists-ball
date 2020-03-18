@@ -17,6 +17,13 @@ export class TriangleSphere extends TriangleObj {
     */
    create(numSteps: number, radius: number, center: glVec3): Promise<void> {
 
+      this.createNow(numSteps, radius, center);
+
+      return Promise.resolve();
+   }
+
+   public createNow(numSteps: number, radius: number, center: glVec3) {
+
       // create the vertices
       this.createVertices(numSteps, radius, center);
 
@@ -26,7 +33,6 @@ export class TriangleSphere extends TriangleObj {
       // break the sphere into volumes
       this.breakIntoVolumes();
 
-      return Promise.resolve();
    }
 
    private createVertices(numSteps: number, radius: number, center: glVec3) {

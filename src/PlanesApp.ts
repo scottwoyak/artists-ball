@@ -168,6 +168,11 @@ export class PlanesApp {
          oninput: () => {
             this.renderer.threshold1 = this.threshold1Slider.value;
 
+            if (this.renderer.threshold1 > this.renderer.threshold2) {
+               this.renderer.threshold2 = this.renderer.threshold1;
+               this.threshold2Slider.value = this.renderer.threshold2;
+            }
+
             if (this.sync) {
                this.syncColors();
             }
@@ -186,6 +191,11 @@ export class PlanesApp {
          oninput: () => {
             this.renderer.threshold2 = this.threshold2Slider.value;
 
+            if (this.renderer.threshold2 < this.renderer.threshold1) {
+               this.renderer.threshold1 = this.renderer.threshold2;
+               this.threshold1Slider.value = this.renderer.threshold1;
+            }
+
             if (this.sync) {
                this.syncColors();
             }
@@ -203,7 +213,16 @@ export class PlanesApp {
          value: this.renderer.lightLight * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            this.renderer.lightLight = this.lightLightSlider.value / 100;
+            let value = this.lightLightSlider.value / 100;
+            this.renderer.lightLight = value;
+            if (value < this.renderer.midLight) {
+               this.renderer.midLight = value;
+               this.midLightSlider.value = 100 * value;
+            }
+            if (value < this.renderer.darkLight) {
+               this.renderer.darkLight = value;
+               this.darkLightSlider.value = 100 * value;
+            }
 
             if (this.sync) {
                this.syncThresholds(LightValues.LightLight);
@@ -222,7 +241,16 @@ export class PlanesApp {
          value: this.renderer.midLight * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            this.renderer.midLight = this.midLightSlider.value / 100;
+            let value = this.midLightSlider.value / 100;
+            this.renderer.midLight = value;
+            if (value < this.renderer.darkLight) {
+               this.renderer.darkLight = value;
+               this.darkLightSlider.value = 100 * value;
+            }
+            if (value > this.renderer.lightLight) {
+               this.renderer.lightLight = value;
+               this.lightLightSlider.value = 100 * value;
+            }
 
             if (this.sync) {
                this.syncThresholds(LightValues.MidLight);
@@ -241,7 +269,16 @@ export class PlanesApp {
          value: this.renderer.darkLight * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            this.renderer.darkLight = this.darkLightSlider.value / 100;
+            let value = this.darkLightSlider.value / 100;
+            this.renderer.darkLight = value;
+            if (value > this.renderer.midLight) {
+               this.renderer.midLight = 100 * value;
+               this.midLightSlider.value = this.renderer.midLight;
+            }
+            if (value > this.renderer.midLight) {
+               this.renderer.midLight = value;
+               this.midLightSlider.value = 100 * value;
+            }
 
             if (this.sync) {
                this.syncThresholds(LightValues.DarkLight);
@@ -292,11 +329,11 @@ export class PlanesApp {
 
          if (this.pointerMode === PointerMode.View) {
             if (this.pointerModeSpecial) {
-               this.renderer.model.rotZ((this.oldY - y) * 0.01);
+               this.renderer.rotZ((this.oldY - y) * 0.01);
             }
             else {
-               this.renderer.model.rotX((y - this.oldY) * 0.01);
-               this.renderer.model.rotY((x - this.oldX) * 0.01);
+               this.renderer.rotX((y - this.oldY) * 0.01);
+               this.renderer.rotY((x - this.oldX) * 0.01);
             }
          }
          else if (this.pointerMode === PointerMode.Light) {
