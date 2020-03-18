@@ -4,6 +4,7 @@ import { IndexedTriangle } from "./IndexedTriangle";
 import { Volume } from "./Volume";
 import { glUniform } from "./glUniform";
 import { Profiler } from "./Profiler";
+import { clamp } from "./Globals";
 
 /**
  * Base class for representing an object from a bunch of triangles. The class
@@ -124,12 +125,6 @@ export class TriangleObj {
       }
    }
 
-   private clamp(val: number, min: number, max: number): number {
-      val = Math.min(val, max);
-      val = Math.max(val, min);
-      return val;
-   }
-
    /**
     * Breaks the object into evenly spaced volumes. The number of volumes is automatically
     * determined based on the number of triangles.
@@ -154,9 +149,9 @@ export class TriangleObj {
          let x = Math.floor(numSteps * (t.minX - this.boxMin.x) / (this.boxMax.x - this.boxMin.x));
          let y = Math.floor(numSteps * (t.minY - this.boxMin.y) / (this.boxMax.y - this.boxMin.y));
          let z = Math.floor(numSteps * (t.minZ - this.boxMin.z) / (this.boxMax.z - this.boxMin.z));
-         x = this.clamp(x, 0, numSteps - 1);
-         y = this.clamp(y, 0, numSteps - 1);
-         z = this.clamp(z, 0, numSteps - 1);
+         x = clamp(x, 0, numSteps - 1);
+         y = clamp(y, 0, numSteps - 1);
+         z = clamp(z, 0, numSteps - 1);
          let index = x + y * numSteps + z * numSteps * numSteps;
          this.volumes[index].push(t);
       }

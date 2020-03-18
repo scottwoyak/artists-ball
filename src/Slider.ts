@@ -116,6 +116,17 @@ export class Slider {
    }
 
    /**
+    * Sets the value of the slider (and associated content)
+    * 
+    * @param val the desired slider value
+    */
+   public set value(val: number) {
+      this._range.valueAsNumber = val;
+      this.updateSpanColor();
+      this.updateSpanText();
+   }
+
+   /**
     * Gets the min slider value.
     * 
     * @returns The min slider value.

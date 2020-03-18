@@ -1,7 +1,7 @@
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { Globals } from "./Globals";
-import { glRenderer } from "./glRenderer";
+import { glRenderer, LightValues } from "./glRenderer";
 
 enum PointerMode {
    View,
@@ -20,6 +20,13 @@ export class PlanesApp {
    private dirty: boolean = true;
 
    private query: string;
+   private sync: boolean = true;
+
+   private threshold1Slider: Slider;
+   private threshold2Slider: Slider;
+   private lightLightSlider: Slider;
+   private midLightSlider: Slider;
+   private darkLightSlider: Slider;
 
    public constructor(query: string) {
       this.query = query;
@@ -108,6 +115,7 @@ export class PlanesApp {
       div.appendChild(document.createElement('br'));
       div.appendChild(document.createElement('br'));
 
+      /*
       let lightSlider = new Slider(div, {
          id: 'LightIntensity',
          label: 'Light',
@@ -133,34 +141,61 @@ export class PlanesApp {
             this.dirty = true;
          }
       });
+      */
 
-      let t1Slider = new Slider(div, {
+      let syncLabel = document.createElement('label');
+      syncLabel.id = 'SyncLabel';
+      syncLabel.className = 'Label';
+      syncLabel.innerText = 'Synchronize Values';
+      div.appendChild(syncLabel);
+
+      let syncCheckbox = document.createElement('input');
+      syncCheckbox.type = 'checkbox';
+      syncCheckbox.id = 'SyncCheckBox';
+      syncCheckbox.className = 'SyncCheckBox';
+      syncCheckbox.checked = this.sync;
+      syncCheckbox.oninput = () => { this.sync = !this.sync; }
+      div.appendChild(syncCheckbox);
+
+      div.appendChild(document.createElement('br'));
+
+      this.threshold1Slider = new Slider(div, {
          id: 'Threshold1',
          label: 'Threshold 1',
          min: 0,
          max: 90,
-         value: this.renderer.threshold1 * 90,
+         value: this.renderer.threshold1,
          oninput: () => {
-            this.renderer.threshold1 = t1Slider.value / 90;
+            this.renderer.threshold1 = this.threshold1Slider.value;
+
+            if (this.sync) {
+               this.syncColors();
+            }
+
             this.dirty = true;
          },
-         getText: () => { return (90 * this.renderer.threshold1).toFixed(0) + "º" }
+         getText: () => { return this.renderer.threshold1.toFixed(0) + "º" }
       });
 
-      let t2Slider = new Slider(div, {
+      this.threshold2Slider = new Slider(div, {
          id: 'Threshold2',
          label: 'Threshold 2',
          min: 0,
          max: 90,
-         value: this.renderer.threshold2 * 90,
+         value: this.renderer.threshold2,
          oninput: () => {
-            this.renderer.threshold2 = t2Slider.value / 90;
+            this.renderer.threshold2 = this.threshold2Slider.value;
+
+            if (this.sync) {
+               this.syncColors();
+            }
+
             this.dirty = true;
          },
-         getText: () => { return (90 * this.renderer.threshold2).toFixed(0) + "º" }
+         getText: () => { return this.renderer.threshold2.toFixed(0) + "º" }
       });
 
-      let lightLightSlider = new Slider(div, {
+      this.lightLightSlider = new Slider(div, {
          id: 'LightLight',
          label: 'Light Light',
          min: 0,
@@ -168,12 +203,18 @@ export class PlanesApp {
          value: this.renderer.lightLight * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            this.renderer.lightLight = lightLightSlider.value / 100;
+            this.renderer.lightLight = this.lightLightSlider.value / 100;
+
+            if (this.sync) {
+               this.syncThresholds(LightValues.LightLight);
+            }
+
             this.dirty = true;
          },
+         getText: () => { return (100 * this.renderer.lightLight).toFixed(0) + "%" }
       });
 
-      let midLightSlider = new Slider(div, {
+      this.midLightSlider = new Slider(div, {
          id: 'MidLight',
          label: 'Mid Light',
          min: 0,
@@ -181,12 +222,18 @@ export class PlanesApp {
          value: this.renderer.midLight * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            this.renderer.midLight = midLightSlider.value / 100;
+            this.renderer.midLight = this.midLightSlider.value / 100;
+
+            if (this.sync) {
+               this.syncThresholds(LightValues.MidLight);
+            }
+
             this.dirty = true;
          },
+         getText: () => { return (100 * this.renderer.midLight).toFixed(0) + "%" }
       });
 
-      let darkLightSlider = new Slider(div, {
+      this.darkLightSlider = new Slider(div, {
          id: 'DarkLight',
          label: 'Dark Light',
          min: 0,
@@ -194,12 +241,35 @@ export class PlanesApp {
          value: this.renderer.darkLight * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            this.renderer.darkLight = darkLightSlider.value / 100;
+            this.renderer.darkLight = this.darkLightSlider.value / 100;
+
+            if (this.sync) {
+               this.syncThresholds(LightValues.DarkLight);
+            }
+
             this.dirty = true;
          },
+         getText: () => { return (100 * this.renderer.darkLight).toFixed(0) + "%" }
       });
 
       return div;
+   }
+
+   private syncColors() {
+      this.renderer.syncColors();
+
+      this.lightLightSlider.value = 100 * this.renderer.lightLight;
+      this.midLightSlider.value = 100 * this.renderer.midLight;
+      this.darkLightSlider.value = 100 * this.renderer.darkLight;
+   }
+
+   private syncThresholds(change: LightValues) {
+      this.renderer.syncThresholds(change);
+
+      this.threshold1Slider.value = this.renderer.threshold1;
+      this.threshold2Slider.value = this.renderer.threshold2;
+
+      this.syncColors();
    }
 
    private onDown(x: number, y: number) {
@@ -255,9 +325,7 @@ export class PlanesApp {
    }
 
    /**
-    * Processes a click/touch event at the designated coordinates. If a hit
-    * occurs, the clicked on view is swapped for the primary view and true
-    * is returned. If no hit occurs, false is returned.
+    * Processes a click/touch event at the designated coordinates.
     * 
     * @param x The x coordinate.
     * @param y The y coordinate.
@@ -265,7 +333,8 @@ export class PlanesApp {
     */
    private click(x: number, y: number): boolean {
 
-      return false;
+      let size = this.canvas.width;
+      return this.renderer.click(x / size, 1 - (y / size));
    }
 
    public tick() {

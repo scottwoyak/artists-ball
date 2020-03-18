@@ -6,7 +6,7 @@ import { SphericalCoord } from "./SphericalCoord";
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { glColorWithTemperature } from "./glColorWithTemperature";
-import { Globals } from "./Globals";
+import { Globals, clamp } from "./Globals";
 
 let skinTones = [
    new htmlColor([240, 223, 214]),
@@ -419,14 +419,3 @@ export class BallApp {
    }
 }
 
-function clamp(value: number, min: number, max: number): number {
-   if (value < min) {
-      return min;
-   }
-   else if (value > max) {
-      return max;
-   }
-   else {
-      return value;
-   }
-}
