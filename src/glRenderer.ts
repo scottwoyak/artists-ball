@@ -10,6 +10,8 @@ import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
 import { TriangleObj } from './TriangleObj';
 import { glStdObject } from './glStdObject';
+import { TriangleArrow } from './TriangleArrow';
+import { glColor } from './glColor';
 
 /**
  * Class that renders triangles and a light source
@@ -23,6 +25,7 @@ export class glRenderer {
    public lightIntensity = 0.8;
    public ambientIntensity = 0.2;
 
+   private uColor = new glColor([1, 1, 1]);
    private uThreshold1 = 15;
    private uThreshold2 = 55;
 
@@ -38,7 +41,9 @@ export class glRenderer {
    private uUseThresholds = true;
 
    private ball: glStdObject;
+   private arrow: glStdObject;
    private obj: glStdObject;
+
 
    public uLightDirection = new glVec3([1.0, -1.0, 0.5]);
 
@@ -162,6 +167,10 @@ export class glRenderer {
       tBall.createNow(500, 0.5, new glVec3([0, 0, 0]));
       this.ball = new glStdObject(tBall, this.program);
 
+      let tArrow = new TriangleArrow();
+      tArrow.createNow();
+      this.arrow = new glStdObject(tArrow, this.program);
+
       if (query && query.toLowerCase() === 'trianglesphere') {
          let radius = 0.75;
          let center = new glVec3([0, 0, 0]);
@@ -243,6 +252,7 @@ export class glRenderer {
       uni.set('uDarkLight', this.uDarkLight);
       uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
       uni.set('uLightDirection', this.uLightDirection);
+      uni.set('uColor', this.uColor);
 
       this.obj.draw();
 
@@ -259,6 +269,33 @@ export class glRenderer {
       uni.set('view', this.view.transpose());
       uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
       this.ball.draw();
+
+      uni.set('uLightDirection', new glVec3([1, -0.5, 0.5]));
+      uni.set('uUseThresholds', 0, true);
+
+      // back out angles as if looking down the z-axis
+      let x = this.uLightDirection.x;
+      let y = this.uLightDirection.y;
+      let z = this.uLightDirection.z;
+
+      // start by looking down from the Z direction
+      let radius = Math.sqrt(x * x + y * y + z * z);
+      let elevationAngle = Math.acos(z / radius);
+      let rotationAngle = Math.atan2(y, x);
+
+      // first reset things so that we're looking down the z-axis
+      this.arrow.clearTransforms();
+      this.arrow.translate(new glVec3([0.0, 0.55, 0.0]));
+      this.arrow.rotX(toRad(90));
+
+      // rotate to match the light source
+      this.arrow.rotY(-elevationAngle);
+      this.arrow.rotZ(-rotationAngle);
+
+      //uni.set('uColor', new glColor([1.0, 0.86, 0.6]));
+      uni.set('uColor', new glColor([1.0, 0.9, 0.7]));
+      uni.set('uAmbientIntensity', 0.4);
+      this.arrow.draw();
    }
 
    /**

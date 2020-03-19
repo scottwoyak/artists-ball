@@ -41,6 +41,9 @@ export class glStdObject {
    public translate(offset: glVec3) {
       this.model.translate(offset);
    }
+   public clearTransforms() {
+      this.model = new glMat4();
+   }
 
 
    private pushVec(array: number[], vec: glVec3) {

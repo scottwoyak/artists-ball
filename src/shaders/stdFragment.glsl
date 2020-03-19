@@ -7,6 +7,7 @@ varying vec3 vVertex;
 uniform float uLightIntensity;
 uniform float uAmbientIntensity;
 uniform vec3 uLightDirection;
+uniform vec3 uColor;
 
 uniform int uUseThresholds;
 uniform float uThreshold1;
@@ -65,5 +66,7 @@ void main()
       rgb += specular;
    }
 
-   gl_FragColor = vec4(rgb, rgb, rgb, 1.0);
+   vec3 rgbv = vec3(rgb, rgb, rgb);
+   rgbv *= uColor;
+   gl_FragColor = vec4(rgbv, 1.0);
 }
