@@ -1,7 +1,10 @@
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
-import { Globals } from "./Globals";
-import { glRenderer, LightValues } from "./glRenderer";
+import { Globals, toRad } from "./Globals";
+import { glRenderer } from "./glRenderer";
+import { SphericalCoord } from "./SphericalCoord";
+import { glMat4 } from "./glMat";
+import { glVec4 } from "./glVec";
 
 enum PointerMode {
    View,
@@ -20,7 +23,6 @@ export class PlanesApp {
    private dirty: boolean = true;
 
    private query: string;
-   private sync: boolean = true;
 
    private threshold1Slider: Slider;
    private threshold2Slider: Slider;
@@ -153,8 +155,11 @@ export class PlanesApp {
       syncCheckbox.type = 'checkbox';
       syncCheckbox.id = 'SyncCheckBox';
       syncCheckbox.className = 'SyncCheckBox';
-      syncCheckbox.checked = this.sync;
-      syncCheckbox.oninput = () => { this.sync = !this.sync; }
+      syncCheckbox.checked = this.renderer.sync;
+      syncCheckbox.oninput = () => {
+         this.renderer.sync = !this.renderer.sync;
+         this.updateSliders();
+      }
       div.appendChild(syncCheckbox);
 
       div.appendChild(document.createElement('br'));
@@ -167,16 +172,7 @@ export class PlanesApp {
          value: this.renderer.threshold1,
          oninput: () => {
             this.renderer.threshold1 = this.threshold1Slider.value;
-
-            if (this.renderer.threshold1 > this.renderer.threshold2) {
-               this.renderer.threshold2 = this.renderer.threshold1;
-               this.threshold2Slider.value = this.renderer.threshold2;
-            }
-
-            if (this.sync) {
-               this.syncColors();
-            }
-
+            this.updateSliders();
             this.dirty = true;
          },
          getText: () => { return this.renderer.threshold1.toFixed(0) + "º" }
@@ -190,16 +186,7 @@ export class PlanesApp {
          value: this.renderer.threshold2,
          oninput: () => {
             this.renderer.threshold2 = this.threshold2Slider.value;
-
-            if (this.renderer.threshold2 < this.renderer.threshold1) {
-               this.renderer.threshold1 = this.renderer.threshold2;
-               this.threshold1Slider.value = this.renderer.threshold1;
-            }
-
-            if (this.sync) {
-               this.syncColors();
-            }
-
+            this.updateSliders();
             this.dirty = true;
          },
          getText: () => { return this.renderer.threshold2.toFixed(0) + "º" }
@@ -213,21 +200,8 @@ export class PlanesApp {
          value: this.renderer.lightLight * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            let value = this.lightLightSlider.value / 100;
-            this.renderer.lightLight = value;
-            if (value < this.renderer.midLight) {
-               this.renderer.midLight = value;
-               this.midLightSlider.value = 100 * value;
-            }
-            if (value < this.renderer.darkLight) {
-               this.renderer.darkLight = value;
-               this.darkLightSlider.value = 100 * value;
-            }
-
-            if (this.sync) {
-               this.syncThresholds(LightValues.LightLight);
-            }
-
+            this.renderer.lightLight = this.lightLightSlider.value / 100;
+            this.updateSliders();
             this.dirty = true;
          },
          getText: () => { return (100 * this.renderer.lightLight).toFixed(0) + "%" }
@@ -241,21 +215,8 @@ export class PlanesApp {
          value: this.renderer.midLight * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            let value = this.midLightSlider.value / 100;
-            this.renderer.midLight = value;
-            if (value < this.renderer.darkLight) {
-               this.renderer.darkLight = value;
-               this.darkLightSlider.value = 100 * value;
-            }
-            if (value > this.renderer.lightLight) {
-               this.renderer.lightLight = value;
-               this.lightLightSlider.value = 100 * value;
-            }
-
-            if (this.sync) {
-               this.syncThresholds(LightValues.MidLight);
-            }
-
+            this.renderer.midLight = this.midLightSlider.value / 100;
+            this.updateSliders();
             this.dirty = true;
          },
          getText: () => { return (100 * this.renderer.midLight).toFixed(0) + "%" }
@@ -269,21 +230,8 @@ export class PlanesApp {
          value: this.renderer.darkLight * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            let value = this.darkLightSlider.value / 100;
-            this.renderer.darkLight = value;
-            if (value > this.renderer.midLight) {
-               this.renderer.midLight = 100 * value;
-               this.midLightSlider.value = this.renderer.midLight;
-            }
-            if (value > this.renderer.midLight) {
-               this.renderer.midLight = value;
-               this.midLightSlider.value = 100 * value;
-            }
-
-            if (this.sync) {
-               this.syncThresholds(LightValues.DarkLight);
-            }
-
+            this.renderer.darkLight = this.darkLightSlider.value / 100;
+            this.updateSliders();
             this.dirty = true;
          },
          getText: () => { return (100 * this.renderer.darkLight).toFixed(0) + "%" }
@@ -292,21 +240,12 @@ export class PlanesApp {
       return div;
    }
 
-   private syncColors() {
-      this.renderer.syncColors();
-
+   private updateSliders() {
+      this.threshold1Slider.value = this.renderer.threshold1;
+      this.threshold2Slider.value = this.renderer.threshold2;
       this.lightLightSlider.value = 100 * this.renderer.lightLight;
       this.midLightSlider.value = 100 * this.renderer.midLight;
       this.darkLightSlider.value = 100 * this.renderer.darkLight;
-   }
-
-   private syncThresholds(change: LightValues) {
-      this.renderer.syncThresholds(change);
-
-      this.threshold1Slider.value = this.renderer.threshold1;
-      this.threshold2Slider.value = this.renderer.threshold2;
-
-      this.syncColors();
    }
 
    private onDown(x: number, y: number) {
@@ -337,6 +276,7 @@ export class PlanesApp {
             }
          }
          else if (this.pointerMode === PointerMode.Light) {
+            let pos = SphericalCoord.fromXYZ(this.renderer.uLightDirection.values);
 
             if (this.pointerModeSpecial) {
                /*
@@ -346,13 +286,22 @@ export class PlanesApp {
                */
             }
             else {
-               /*
-               this.pos.rotationAngle += (x - this.oldX);
-               this.pos.elevationAngle += (y - this.oldY);
-               this.pos.elevationAngle = clamp(this.pos.elevationAngle, 0, 180);
-               Uniforms.uLightPos.values = this.pos.toXYZ();
-               */
+               let matY = glMat4.fromRotY(toRad(x - this.oldX));
+               let matX = glMat4.fromRotX(toRad(y - this.oldY));
+               let vec = new glVec4([
+                  this.renderer.uLightDirection.x,
+                  this.renderer.uLightDirection.y,
+                  this.renderer.uLightDirection.z,
+                  1
+               ]);
+               vec = matX.multV(vec);
+               vec = matY.multV(vec);
+               this.renderer.uLightDirection.x = vec.values[0];
+               this.renderer.uLightDirection.y = vec.values[1];
+               this.renderer.uLightDirection.z = vec.values[2];
             }
+
+            this.dirty = true;
          }
 
          // remember this coordinate

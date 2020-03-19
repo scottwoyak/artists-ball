@@ -8,14 +8,14 @@ uniform float uLightLight;
 uniform float uMidLight;
 uniform float uDarkLight;
 uniform int uAutoRender;
+uniform vec3 uLightDirection;
 
 void main()
 {
    vec3 color = vec3(1.0, 1.0, 1.0);
-   vec3 sunlightDirection = vec3(1.0, -1.0, 0.5);
 
    // dot product equals cos of angle between the vectors
-   float lightness = clamp(dot(normalize(vNormal), normalize(-sunlightDirection)), 0.0, 1.0);
+   float lightness = clamp(dot(normalize(vNormal), normalize(-uLightDirection)), 0.0, 1.0);
 
    if (uAutoRender == 1)
    {
@@ -23,7 +23,6 @@ void main()
    }
    else
    {
-
       float threshold = 1.0 - lightness;
 
       float v1 = min(uThreshold1, uThreshold2);

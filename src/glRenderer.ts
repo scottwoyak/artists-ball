@@ -11,12 +11,6 @@ import { glCompiler } from './glCompiler';
 import { TriangleObj } from './TriangleObj';
 import { glStdObject } from './glStdObject';
 
-export enum LightValues {
-   LightLight,
-   MidLight,
-   DarkLight
-}
-
 /**
  * Class that renders triangles and a light source
  */
@@ -28,23 +22,36 @@ export class glRenderer {
 
    public lightIntensity = 0.8;
    public ambientIntensity = 0.2;
-   public threshold1 = 15;
-   public threshold2 = 55;
 
-   public lightLight: number;
-   public midLight: number;
-   public darkLight: number;
+   private uThreshold1 = 15;
+   private uThreshold2 = 55;
+
+   private uLightLight: number;
+   private uMidLight: number;
+   private uDarkLight: number;
+
+   private _sync: boolean = true;
 
    // size of the smaller view
-   private readonly miniSize = 0.3;
+   private readonly miniSize = 0.2;
 
    private autoRender = 0;
 
    private ball: glStdObject;
    private obj: glStdObject;
 
+   public uLightDirection = new glVec3([1.0, -1.0, 0.5]);
+
    public constructor() {
-      this.syncColors();
+      this.computeColors();
+   }
+
+   public get sync(): boolean {
+      return this._sync;
+   }
+   public set sync(val: boolean) {
+      this._sync = val;
+      this.computeColors();
    }
 
    public rotX(angle: number) {
@@ -63,41 +70,85 @@ export class glRenderer {
       this.obj.translate(offset);
    }
 
-   public colorAt(deg: number): number {
+   public get lightLight(): number {
+      return this.uLightLight;
+   }
+   public set lightLight(val: number) {
+      this.uLightLight = val;
+      this.uMidLight = Math.min(this.uMidLight, val);
+      this.uDarkLight = Math.min(this.uDarkLight, val);
+
+      if (this.sync) {
+         this.uThreshold1 = 2 * (this.thresholdAt(this.uLightLight));
+         this.uThreshold2 = 2 * this.thresholdAt(this.uDarkLight) - 90;
+         this.computeColors();
+      }
+   }
+
+   public get midLight(): number {
+      return this.uMidLight;
+   }
+   public set midLight(val: number) {
+      this.uMidLight = val;
+      this.uLightLight = Math.max(this.uLightLight, val);
+      this.uDarkLight = Math.min(this.uDarkLight, val);
+
+      if (this.sync) {
+         let range = this.uThreshold2 - this.uThreshold1
+         this.uThreshold1 = this.thresholdAt(this.uMidLight) - range / 2;
+         this.uThreshold2 = this.thresholdAt(this.uMidLight) + range / 2;
+         this.computeColors();
+      }
+   }
+
+   public get darkLight(): number {
+      return this.uDarkLight;
+   }
+   public set darkLight(val: number) {
+      this.uDarkLight = val;
+      this.uLightLight = Math.max(this.uLightLight, val);
+      this.uMidLight = Math.max(this.uMidLight, val);
+
+      if (this.sync) {
+         this.uThreshold2 = 2 * this.thresholdAt(this.uDarkLight) - 90;
+         this.uThreshold1 = 2 * this.thresholdAt(this.uMidLight) - this.uThreshold2;
+         this.computeColors();
+      }
+   }
+
+   public get threshold1(): number {
+      return this.uThreshold1;
+   }
+   public set threshold1(val: number) {
+      this.uThreshold1 = val;
+      this.uThreshold2 = Math.max(this.uThreshold2, val);
+      this.computeColors();
+   }
+
+   public get threshold2(): number {
+      return this.uThreshold2;
+   }
+   public set threshold2(val: number) {
+      this.uThreshold2 = val;
+      this.uThreshold1 = Math.min(this.uThreshold1, val);
+      this.computeColors();
+   }
+
+   private colorAt(deg: number): number {
       deg = clamp(deg, 0, 90);
       return mix(this.ambientIntensity, this.lightIntensity, Math.cos(toRad(deg)));
    }
 
-   public thresholdAt(color: number): number {
+   private thresholdAt(color: number): number {
       color = clamp(color, this.ambientIntensity, this.lightIntensity);
       let val = (color - this.ambientIntensity) / (this.lightIntensity - this.ambientIntensity);
       return toDeg(Math.acos(val));
    }
 
-   public syncColors() {
-      this.lightLight = this.colorAt(0.5 * this.threshold1);
-      this.midLight = this.colorAt((this.threshold1 + this.threshold2) / 2);
-      this.darkLight = this.colorAt((this.threshold2 + 90) / 2);
-   }
-
-   public syncThresholds(change: LightValues) {
-      switch (change) {
-         case LightValues.LightLight:
-            this.threshold1 = (1 / 0.5) * (this.thresholdAt(this.lightLight));
-            this.threshold2 = 2 * this.thresholdAt(this.midLight) - this.threshold1;
-            break;
-
-         case LightValues.MidLight:
-            let range = this.threshold2 - this.threshold1
-            this.threshold1 = this.thresholdAt(this.midLight) - range / 2;
-            this.threshold2 = this.thresholdAt(this.midLight) + range / 2;
-            break;
-
-         case LightValues.DarkLight:
-            this.threshold2 = 2 * this.thresholdAt(this.darkLight) - 90;
-            this.threshold1 = 2 * this.thresholdAt(this.midLight) - this.threshold2;
-            break;
-      }
+   private computeColors() {
+      this.uLightLight = this.colorAt(0.5 * this.threshold1);
+      this.uMidLight = this.colorAt(mix(this.threshold1, this.threshold2, 0.7));
+      this.uDarkLight = this.colorAt((this.threshold2 + 90) / 2);
    }
 
    public create(query: string): Promise<void> {
@@ -187,10 +238,11 @@ export class glRenderer {
       uni.set('uAmbientIntensity', this.ambientIntensity);
       uni.set('uThreshold1', this.threshold1 / 90);
       uni.set('uThreshold2', this.threshold2 / 90);
-      uni.set('uLightLight', this.lightLight);
-      uni.set('uMidLight', this.midLight);
-      uni.set('uDarkLight', this.darkLight);
+      uni.set('uLightLight', this.uLightLight);
+      uni.set('uMidLight', this.uMidLight);
+      uni.set('uDarkLight', this.uDarkLight);
       uni.set('uAutoRender', this.autoRender, true);
+      uni.set('uLightDirection', this.uLightDirection);
 
       this.obj.draw();
 
