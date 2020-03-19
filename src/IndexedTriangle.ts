@@ -53,8 +53,8 @@ export class IndexedTriangle {
    }
 
    get normal(): glVec3 {
-      let a = this.p1.clone().subtract(this.p0);
-      let b = this.p2.clone().subtract(this.p1);
+      let a = this.p1.subtract(this.p0);
+      let b = this.p2.subtract(this.p1);
       return a.cross(b).normalize();
    }
 }

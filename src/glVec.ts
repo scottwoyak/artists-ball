@@ -34,22 +34,6 @@ class glVec {
       }
       return Math.sqrt(sum);
    }
-
-   /** 
-    * Normalizes this vector, and stores and returns the result.
-    * 
-    * @returns The resulting normalized vector.
-    */
-   protected normalize(): glVec {
-      let mag = this.magnitude();
-      if (mag !== 0) {
-         for (let i = 0; i < this.values.length; i++) {
-            this.values[i] /= mag;
-         }
-      }
-
-      return this;
-   }
 }
 
 /**
@@ -149,33 +133,43 @@ export class glVec3 extends glVec {
     * @returns The resulting normalized vector.
     */
    public normalize(): glVec3 {
-      return super.normalize() as glVec3;
+      let mag = this.magnitude();
+      let ret = this.clone();
+      if (mag !== 0) {
+         for (let i = 0; i < this.values.length; i++) {
+            ret.values[i] /= mag;
+         }
+      }
+
+      return ret;
    }
 
    /**
     * Subtracts values from this vector.
     * 
     * @param vec The vector to subtract.
-    * @returns This vector.
+    * @returns The computed vector.
     */
    public subtract(vec: glVec3): glVec3 {
-      this.values[0] -= vec.values[0];
-      this.values[1] -= vec.values[1];
-      this.values[2] -= vec.values[2];
-      return this;
+      return new glVec3([
+         this.values[0] - vec.values[0],
+         this.values[1] - vec.values[1],
+         this.values[2] - vec.values[2]
+      ]);
    }
 
    /**
     * Adds values from this vector.
     * 
     * @param vec The vector to add.
-    * @returns This vector.
+    * @returns The computed vector.
     */
    public add(vec: glVec3): glVec3 {
-      this.values[0] += vec.values[0];
-      this.values[1] += vec.values[1];
-      this.values[2] += vec.values[2];
-      return this;
+      return new glVec3([
+         this.values[0] + vec.values[0],
+         this.values[1] + vec.values[1],
+         this.values[2] + vec.values[2]
+      ]);
    }
 
    /**

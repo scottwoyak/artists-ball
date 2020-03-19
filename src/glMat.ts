@@ -264,9 +264,9 @@ export class glMat4 {
    public static makeLookAt(eye: glVec3, center: glVec3, up: glVec3, ): glMat4 {
 
       // clone so we don't modify the origonals
-      let z = eye.clone().subtract(center).normalize();
-      let x = up.clone().cross(z).normalize();
-      let y = z.clone().cross(x).normalize();
+      let z = eye.subtract(center).normalize();
+      let x = up.cross(z).normalize();
+      let y = z.cross(x).normalize();
 
       let m = new glMat4([
          x.values[0], x.values[1], x.values[2], 0,
