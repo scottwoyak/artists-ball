@@ -5,7 +5,7 @@ import { glVec3 } from "./glVec";
 import { gl } from "./Globals";
 import { glUniform } from "./glUniform";
 
-export class glStdObject {
+export class glObject {
    private tObj: TriangleObj;
    private program: WebGLProgram;
    private vertexBuffer: glBuffer;

@@ -9,7 +9,7 @@ import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
 import { TriangleObj } from './TriangleObj';
-import { glStdObject } from './glStdObject';
+import { glObject } from './glObject';
 import { TriangleArrow } from './TriangleArrow';
 import { glColor } from './glColor';
 
@@ -40,9 +40,9 @@ export class glRenderer {
 
    private uUseThresholds = true;
 
-   private ball: glStdObject;
-   private arrow: glStdObject;
-   private obj: glStdObject;
+   private ball: glObject;
+   private arrow: glObject;
+   private obj: glObject;
 
 
    public uLightDirection = new glVec3([1.0, -1.0, 0.5]);
@@ -165,18 +165,18 @@ export class glRenderer {
 
       let tBall = new TriangleSphere();
       tBall.createNow(500, 0.5, new glVec3([0, 0, 0]));
-      this.ball = new glStdObject(tBall, this.program);
+      this.ball = new glObject(tBall, this.program);
 
       let tArrow = new TriangleArrow();
       tArrow.createNow();
-      this.arrow = new glStdObject(tArrow, this.program);
+      this.arrow = new glObject(tArrow, this.program);
 
       if (query && query.toLowerCase() === 'trianglesphere') {
          let radius = 0.75;
          let center = new glVec3([0, 0, 0]);
          let tObj = new TriangleSphere();
          return tObj.create(500, radius, center).then(() => {
-            this.obj = new glStdObject(tObj, this.program);
+            this.obj = new glObject(tObj, this.program);
          });
       }
       else if (query && query.toLowerCase() === 'trianglecube') {
@@ -184,13 +184,13 @@ export class glRenderer {
          let center = new glVec3([0, size / 2.0, 0]);
          let tObj = new TriangleCube();
          return tObj.create(size, center).then(() => {
-            this.obj = new glStdObject(tObj, this.program);
+            this.obj = new glObject(tObj, this.program);
          });
       }
       else if (query && query.toLowerCase().endsWith('.obj')) {
          let tObj = new TriangleObjFile();
          return tObj.create(query).then(() => {
-            this.obj = new glStdObject(tObj, this.program);
+            this.obj = new glObject(tObj, this.program);
             this.orient(tObj, query);
          });
       }
