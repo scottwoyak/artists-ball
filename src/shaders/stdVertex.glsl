@@ -6,9 +6,11 @@ uniform mat4 view;
 uniform mat4 projection;
 
 varying vec3 vNormal;
+varying vec3 vVertex;
 
 void main()
 {
    gl_Position = projection * view * model * vec4(aVertex, 1.0);
    vNormal = (model * vec4(aNormal, 0.0)).xyz;
+   vVertex = (model * vec4(aVertex, 1.0)).xyz;
 }

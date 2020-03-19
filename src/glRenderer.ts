@@ -35,7 +35,7 @@ export class glRenderer {
    // size of the smaller view
    private readonly miniSize = 0.2;
 
-   private autoRender = 0;
+   private uUseThresholds = true;
 
    private ball: glStdObject;
    private obj: glStdObject;
@@ -241,7 +241,7 @@ export class glRenderer {
       uni.set('uLightLight', this.uLightLight);
       uni.set('uMidLight', this.uMidLight);
       uni.set('uDarkLight', this.uDarkLight);
-      uni.set('uAutoRender', this.autoRender, true);
+      uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
       uni.set('uLightDirection', this.uLightDirection);
 
       this.obj.draw();
@@ -250,14 +250,14 @@ export class glRenderer {
       this.view.scale(this.miniSize);
       this.view.translate(new glVec3([1 - this.miniSize, 1 - this.miniSize, 0]));
       uni.set('view', this.view.transpose());
-      uni.set('uAutoRender', this.autoRender === 0 ? 1 : 0, true);
+      uni.set('uUseThresholds', this.uUseThresholds ? 0 : 1, true);
       this.obj.draw();
 
       this.view = new glMat4();
       this.view.scale(this.miniSize);
       this.view.translate(new glVec3([-(1 - this.miniSize), 1 - this.miniSize, 0]));
       uni.set('view', this.view.transpose());
-      uni.set('uAutoRender', this.autoRender, true);
+      uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
       this.ball.draw();
    }
 
@@ -273,7 +273,7 @@ export class glRenderer {
    public click(x: number, y: number): boolean {
 
       if (x > (1 - this.miniSize) && y > (1 - this.miniSize)) {
-         this.autoRender = this.autoRender === 0 ? 1 : 0;
+         this.uUseThresholds = !this.uUseThresholds;
          this.render();
          return false;
       }

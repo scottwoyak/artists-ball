@@ -1,50 +1,69 @@
 precision highp float;
+
+// interpolated values from the vertex shader
 varying vec3 vNormal;
+varying vec3 vVertex;
+
 uniform float uLightIntensity;
 uniform float uAmbientIntensity;
+uniform vec3 uLightDirection;
+
+uniform int uUseThresholds;
 uniform float uThreshold1;
 uniform float uThreshold2;
 uniform float uLightLight;
 uniform float uMidLight;
 uniform float uDarkLight;
-uniform int uAutoRender;
-uniform vec3 uLightDirection;
 
 void main()
 {
-   vec3 color = vec3(1.0, 1.0, 1.0);
+   vec3 eye = vec3(0.0, 0.0, -10.0);
+   vec3 toLight = normalize(-uLightDirection);
+   vec3 toEye = normalize(eye - vVertex);
+   vec3 normal = normalize(vNormal); // vNormal is interpolated and no long normal
 
-   // dot product equals cos of angle between the vectors
-   float lightness = clamp(dot(normalize(vNormal), normalize(-uLightDirection)), 0.0, 1.0);
+   // compute diffuse contribution = cos of angle between the vectors (dot product)
+   float diffuseFactor = clamp(dot(normal, toLight), 0.0, 1.0);
+   float diffuse = diffuseFactor * uLightIntensity;
 
-   if (uAutoRender == 1)
+   // compute specular contribution
+   float shininess = 50.0;
+   vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
+   float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
+   float specular = pow(cosAngle, shininess);
+
+   float rgb;
+   if (uUseThresholds == 0)
    {
-      lightness = uAmbientIntensity + (1.0 - uAmbientIntensity) * lightness * uLightIntensity;
+      rgb = uAmbientIntensity + diffuse + specular;
    }
    else
    {
-      float threshold = 1.0 - lightness;
+      float threshold = 1.0 - diffuseFactor;
 
       float v1 = min(uThreshold1, uThreshold2);
       float v2 = max(uThreshold1, uThreshold2);
 
       if (threshold < v1)
       {
-         lightness = uLightLight;
+         rgb = uLightLight;
       }
       else if (threshold < v2)
       {
-         lightness = uMidLight;
+         rgb = uMidLight;
       }
       else if (threshold < 1.0)
       {
-         lightness = uDarkLight;
+         rgb = uDarkLight;
       }
       else
       {
          // in shadow
-         lightness = uAmbientIntensity;
+         rgb = uAmbientIntensity;
       }
+
+      rgb += specular;
    }
-   gl_FragColor = vec4(color * lightness, 1.0);
+
+   gl_FragColor = vec4(rgb, rgb, rgb, 1.0);
 }
