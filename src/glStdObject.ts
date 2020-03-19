@@ -1,5 +1,5 @@
 import { TriangleObj } from "./TriangleObj";
-import { glAttribute } from "./glAttribute";
+import { glBuffer } from "./glBuffer";
 import { glMat4 } from "./glMat";
 import { glVec3 } from "./glVec";
 import { gl } from "./Globals";
@@ -8,8 +8,8 @@ import { glUniform } from "./glUniform";
 export class glStdObject {
    private tObj: TriangleObj;
    private program: WebGLProgram;
-   private vertexAttribute: glAttribute;
-   private normalAttribute: glAttribute;
+   private vertexBuffer: glBuffer;
+   private normalBuffer: glBuffer;
    private model = new glMat4();
    private vertices: number[] = [];
    private normals: number[] = [];
@@ -19,9 +19,9 @@ export class glStdObject {
       this.tObj = tObj;
       this.program = program;
 
-      // create attributes (and associated buffers)
-      this.vertexAttribute = new glAttribute(program, 'aVertex');
-      this.normalAttribute = new glAttribute(program, 'aNormal');
+      // create buffers (and associated attributes)
+      this.vertexBuffer = new glBuffer(program, 'aVertex');
+      this.normalBuffer = new glBuffer(program, 'aNormal');
 
       this.uploadTriangles();
    }
@@ -51,6 +51,7 @@ export class glStdObject {
 
    public uploadTriangles() {
 
+      // convert the triangles into arrays that can be uploaded
       this.vertices = [];
       this.normals = [];
       for (let i = 0; i < this.tObj.triangles.length; i++) {
@@ -64,8 +65,8 @@ export class glStdObject {
          this.pushVec(this.normals, normal);
       }
 
-      this.vertexAttribute.upload(this.vertices);
-      this.normalAttribute.upload(this.normals);
+      this.vertexBuffer.upload(this.vertices);
+      this.normalBuffer.upload(this.normals);
    }
 
    public draw() {
@@ -73,10 +74,8 @@ export class glStdObject {
       let uni = new glUniform(this.program);
       uni.set('model', this.model.transpose());
 
-      this.vertexAttribute.bind();
-      this.vertexAttribute.preDraw();
-      this.normalAttribute.bind();
-      this.normalAttribute.preDraw();
+      this.vertexBuffer.bind();
+      this.normalBuffer.bind();
       gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
    }
 }
