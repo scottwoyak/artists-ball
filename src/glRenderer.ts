@@ -22,7 +22,7 @@ export class glRenderer {
    private view = new glMat4();
    private projection = new glMat4();
 
-   public lightIntensity = 0.8;
+   public lightIntensity = 0.7;
    public ambientIntensity = 0.2;
 
    private uColor = new glColor([1, 1, 1]);
@@ -141,13 +141,13 @@ export class glRenderer {
 
    private colorAt(deg: number): number {
       deg = clamp(deg, 0, 90);
-      return mix(this.ambientIntensity, this.lightIntensity, Math.cos(toRad(deg)));
+      //      return mix(this.ambientIntensity, this.lightIntensity, Math.cos(toRad(deg)));
+      return this.ambientIntensity + this.lightIntensity * Math.cos(toRad(deg));
    }
 
    private thresholdAt(color: number): number {
-      color = clamp(color, this.ambientIntensity, this.lightIntensity);
-      let val = (color - this.ambientIntensity) / (this.lightIntensity - this.ambientIntensity);
-      return toDeg(Math.acos(val));
+      color = clamp(color, this.ambientIntensity, this.ambientIntensity + this.lightIntensity);
+      return toDeg(Math.acos(color - this.ambientIntensity) / this.lightIntensity);
    }
 
    private computeColors() {

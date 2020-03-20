@@ -31,7 +31,7 @@ void main()
    float shininess = 50.0;
    vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
    float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
-   float specular = pow(cosAngle, shininess);
+   float specular = 0.2 * pow(cosAngle, shininess);
 
    float rgb;
    if (uUseThresholds == 0)
@@ -63,7 +63,10 @@ void main()
          rgb = uAmbientIntensity;
       }
 
-      rgb += specular;
+      if (specular > 0.05)
+      {
+         rgb = 1.0;
+      }
    }
 
    vec3 rgbv = vec3(rgb, rgb, rgb);
