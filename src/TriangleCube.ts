@@ -20,7 +20,7 @@ export class TriangleCube extends TriangleObj {
    createFace(i1: number, i2: number, i3: number, i4: number) {
 
       this.push(new IndexedTriangle(this.vertices, i1, i2, i3, this.normals));
-      this.push(new IndexedTriangle(this.vertices, i2, i3, i4, this.normals));
+      this.push(new IndexedTriangle(this.vertices, i2, i4, i3, this.normals));
    }
 
    createTriangles(size: number, center: glVec3) {
@@ -35,12 +35,12 @@ export class TriangleCube extends TriangleObj {
       this.vertices.push(new glVec3([center.x + size / 2, center.y + size / 2, center.z + size / 2]));
 
       this.createFace(0, 1, 2, 3);
-      this.createFace(4, 5, 6, 7);
+      this.createFace(4, 6, 5, 7);
 
-      this.createFace(0, 1, 4, 5);
+      this.createFace(0, 4, 1, 5);
       this.createFace(2, 3, 6, 7);
 
       this.createFace(0, 2, 4, 6);
-      this.createFace(1, 3, 5, 7);
+      this.createFace(1, 5, 3, 7);
    }
 }

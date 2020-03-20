@@ -1,4 +1,4 @@
-import { TriangleObj } from "./TriangleObj";
+import { TriangleObj, NormalType } from "./TriangleObj";
 import { glBuffer } from "./glBuffer";
 import { glMat4 } from "./glMat";
 import { glVec3 } from "./glVec";
@@ -80,5 +80,10 @@ export class glObject {
       this.vertexBuffer.bind();
       this.normalBuffer.bind();
       gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
+   }
+
+   public optimize(normalType: NormalType) {
+      this.tObj.optimize(normalType);
+      this.uploadTriangles();
    }
 }

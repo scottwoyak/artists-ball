@@ -5,6 +5,7 @@ import { glRenderer } from "./glRenderer";
 import { SphericalCoord } from "./SphericalCoord";
 import { glMat4 } from "./glMat";
 import { glVec4 } from "./glVec";
+import { NormalType } from "./TriangleObj";
 
 enum PointerMode {
    View,
@@ -88,6 +89,15 @@ export class PlanesApp {
 
       this.canvas.onmouseleave = (event) => {
          this.mouseDown = false;
+      }
+
+      document.onkeypress = (event: KeyboardEvent) => {
+         if (event.key === 'o') {
+            this.renderer.optimize(NormalType.Smooth);
+         }
+         else if (event.key === 'p') {
+            this.renderer.optimize(NormalType.Flat);
+         }
       }
 
       this.renderer = new glRenderer();

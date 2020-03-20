@@ -1,11 +1,47 @@
 import { glVec3 } from "./glVec";
-import { glUniformBlock } from "./glUniformBlock";
 import { IndexedTriangle } from "./IndexedTriangle";
 import { Volume } from "./Volume";
-import { glUniform } from "./glUniform";
 import { Profiler } from "./Profiler";
 import { clamp } from "./Globals";
 
+export enum NormalType {
+   Smooth,
+   Flat
+}
+
+/**
+ * Class used to compute normals for vertices that join multiple faces
+ */
+class MultiNormVertex {
+   private normals: glVec3[] = [];
+
+   /**
+    * Stores a normal for this vertex
+    * 
+    * @param normal Stores a normal for the vertex
+    */
+   public push(normal: glVec3) {
+      this.normals.push(normal);
+   }
+
+   /**
+    * Computes the normal by averaging all the individual normals associated with the vertex
+    */
+   public get normal(): glVec3 {
+      let n = new glVec3();
+      for (let i = 0; i < this.normals.length; i++) {
+         n.x += this.normals[i].x;
+         n.y += this.normals[i].y;
+         n.z += this.normals[i].z;
+      }
+      n.x /= this.normals.length;
+      n.y /= this.normals.length;
+      n.z /= this.normals.length;
+
+      //console.log(this.normals.length);
+      return n;
+   }
+}
 /**
  * Base class for representing an object from a bunch of triangles. The class
  * efficiently manages the triangles by storing them in volumes and by
@@ -158,23 +194,133 @@ export class TriangleObj {
       }
    }
 
+   public computeNormals(type: NormalType) {
+      let p = new Profiler();
+
+      let normals: glVec3[] = [];
+      let multiNormVertices: MultiNormVertex[] = [];
+      if (type === NormalType.Smooth) {
+         for (let i = 0; i < this.vertices.length; i++) {
+            multiNormVertices.push(new MultiNormVertex());
+         }
+
+         // store the normals with each vertex - we'll later average these
+         for (let i = 0; i < this.triangles.length; i++) {
+            let tri = this.triangles[i];
+            let n = tri.computeNormal();
+            multiNormVertices[tri.iV0].push(n);
+            multiNormVertices[tri.iV1].push(n);
+            multiNormVertices[tri.iV2].push(n);
+         }
+
+         // create a new normals array
+         for (let i = 0; i < multiNormVertices.length; i++) {
+            normals.push(multiNormVertices[i].normal);
+         }
+
+         // update the triangles
+         for (let i = 0; i < this.triangles.length; i++) {
+            let tri = this.triangles[i];
+            tri.normals = normals;
+            tri.iN0 = tri.iV0;
+            tri.iN1 = tri.iV1;
+            tri.iN2 = tri.iV2;
+         }
+      }
+      else {
+         for (let i = 0; i < this.triangles.length; i++) {
+            let tri = this.triangles[i];
+            normals.push(tri.computeNormal());
+            let index = normals.length - 1;
+
+            tri.normals = normals;
+            tri.iN0 = index;
+            tri.iN1 = index;
+            tri.iN2 = index;
+         }
+      }
+      this.normals = normals;
+
+      p.log('computeNormals');
+   }
+
    /**
     * Creates a string in the for .OBJ file format
     * 
     * @returns the string
     */
    public toObjString() {
-      // TODO add normals
+
       let str = "";
       for (let i = 0; i < this.vertices.length; i++) {
          let v = this.vertices[i];
          str += 'v ' + v.x + ' ' + v.y + ' ' + v.z + '\n';
       }
+      for (let i = 0; i < this.normals.length; i++) {
+         let n = this.normals[i];
+         str += 'vn ' + n.x + ' ' + n.y + ' ' + n.z + '\n';
+      }
       for (let i = 0; i < this.triangles.length; i++) {
          let t = this.triangles[i];
-         str += 'f ' + (t.iV0 + 1) + ' ' + (t.iV1 + 1) + ' ' + (t.iV2 + 1) + '\n';
+         str += 'f ' +
+            (t.iV0 + 1) + '//' + (t.iN0 + 1) + ' ' +
+            (t.iV1 + 1) + '//' + (t.iN1 + 1) + ' ' +
+            (t.iV2 + 1) + '//' + (t.iN2 + 1) + '\n';
       }
 
       return str;
+   }
+
+   public optimize(normalType: NormalType) {
+
+      let msg = 'Optimized .OBJ content copied to clipboard\n\n';
+      msg += 'Num Triangles: ' + this.triangles.length + '\n';
+
+      let vertexToIndexMap = new Map<string, number>();
+      let indexToIndexMap = new Map<number, number>();
+
+      // first generate a unique set of vertices
+      let uniqueVertices: glVec3[] = [];
+      for (let i = 0; i < this.vertices.length; i++) {
+
+         let oldVertex = this.vertices[i];
+         let key = this.vertices[i].toString(4, ' ');
+         let oldIndex = i + 1;
+         let newIndex;
+         if (vertexToIndexMap.has(key)) {
+            // just map the old index to the existing entry
+            newIndex = vertexToIndexMap.get(key);
+         }
+         else {
+            // create a new entry
+            newIndex = uniqueVertices.length + 1;
+            vertexToIndexMap.set(key, newIndex);
+            uniqueVertices.push(oldVertex);
+         }
+         // store the translation
+         indexToIndexMap.set(oldIndex, newIndex);
+      }
+
+      let oldSize = this.vertices.length;
+      let newSize = uniqueVertices.length;
+      msg += 'Num Vertices: ' + oldSize + ' to ' + newSize + ', ' + (100 * newSize / oldSize).toFixed() + ' %\n';
+
+      // reset all the vertices
+      this.vertices = uniqueVertices;
+      for (let i = 0; i < this.triangles.length; i++) {
+         let tri = this.triangles[i];
+         tri.vertices = uniqueVertices;
+         tri.iV0 = indexToIndexMap.get(tri.iV0 + 1) - 1;
+         tri.iV1 = indexToIndexMap.get(tri.iV1 + 1) - 1;
+         tri.iV2 = indexToIndexMap.get(tri.iV2 + 1) - 1;
+      }
+
+      oldSize = this.normals.length;
+      this.computeNormals(normalType);
+      newSize = this.normals.length;
+      msg += 'Num Normals: ' + oldSize + ' to ' + newSize + ', ' + (100 * newSize / oldSize).toFixed() + ' %';
+
+      let str = this.toObjString();
+      navigator.clipboard.writeText(str).then(() => { alert(msg) });
    }
 }

@@ -1,6 +1,6 @@
 import { glVec3 } from "./glVec";
 import { IndexedTriangle } from "./IndexedTriangle";
-import { TriangleObj } from "./TriangleObj";
+import { TriangleObj, NormalType } from "./TriangleObj";
 import { Profiler } from "./Profiler";
 
 /**
@@ -45,6 +45,7 @@ export class TriangleObjFile extends TriangleObj {
    }
 
    private parse(src: string) {
+
       let p = new Profiler();
       let lines = src.split('\n');
       p.log('split');
@@ -72,8 +73,12 @@ export class TriangleObjFile extends TriangleObj {
             }
          }
       }
+      if (this.normals.length === 0) {
+         this.computeNormals(NormalType.Smooth);
+      }
 
       console.log('Vertices: ' + this.vertices.length);
+      console.log('Normals: ' + this.normals.length);
       console.log('Triangles: ' + this.triangles.length);
       p.log('parse');
    }

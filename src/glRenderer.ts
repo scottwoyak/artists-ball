@@ -8,7 +8,7 @@ import { TriangleCube } from './TriangleCube';
 import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
-import { TriangleObj } from './TriangleObj';
+import { TriangleObj, NormalType } from './TriangleObj';
 import { glObject } from './glObject';
 import { TriangleArrow } from './TriangleArrow';
 import { glColor } from './glColor';
@@ -175,13 +175,14 @@ export class glRenderer {
          let radius = 0.75;
          let center = new glVec3([0, 0, 0]);
          let tObj = new TriangleSphere();
-         return tObj.create(500, radius, center).then(() => {
+         return tObj.create(100, radius, center).then(() => {
+            tObj.computeNormals(NormalType.Smooth);
             this.obj = new glObject(tObj, this.program);
          });
       }
       else if (query && query.toLowerCase() === 'trianglecube') {
          let size = 0.8;
-         let center = new glVec3([0, size / 2.0, 0]);
+         let center = new glVec3([0, 0, 0]);
          let tObj = new TriangleCube();
          return tObj.create(size, center).then(() => {
             this.obj = new glObject(tObj, this.program);
@@ -213,6 +214,20 @@ export class glRenderer {
             break;
 
          case 'femalehead.obj':
+            this.obj.rotY(toRad(180));
+            break;
+
+         case 'wolf.obj':
+            this.obj.rotY(toRad(-140));
+            this.obj.rotX(toRad(5));
+            break;
+
+         case 'sheephead.obj':
+            this.obj.rotY(toRad(-160));
+            break;
+
+         case 'tom.obj':
+         case 'malehead.obj':
             this.obj.rotY(toRad(180));
             break;
       }
@@ -314,5 +329,10 @@ export class glRenderer {
          this.render();
          return false;
       }
+   }
+
+   public optimize(normalType: NormalType) {
+      this.obj.optimize(normalType);
+      this.render();
    }
 }
