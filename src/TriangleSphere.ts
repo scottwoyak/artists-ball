@@ -29,10 +29,6 @@ export class TriangleSphere extends TriangleObj {
 
       // create triangles from the vertices
       this.connectVertices(numSteps);
-
-      // break the sphere into volumes
-      this.breakIntoVolumes();
-
    }
 
    private createVertices(numSteps: number, radius: number, center: glVec3) {

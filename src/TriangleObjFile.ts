@@ -27,9 +27,6 @@ export class TriangleObjFile extends TriangleObj {
    private createTriangles(src: string) {
 
       this.parse(src);
-      let p = new Profiler();
-      super.breakIntoVolumes();
-      p.log('volumes');
    }
 
    private parseFace(line: string): { iV: number[], iN: number[] } {

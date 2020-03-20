@@ -130,7 +130,7 @@ export class TriangleObj {
     * Breaks the object into evenly spaced volumes. The number of volumes is automatically
     * determined based on the number of triangles.
     */
-   protected breakIntoVolumes() {
+   public breakIntoVolumes() {
       let numSteps;
       if (this.triangles.length < 40) {
          numSteps = 1;
@@ -164,6 +164,7 @@ export class TriangleObj {
     * @returns the string
     */
    public toObjString() {
+      // TODO add normals
       let str = "";
       for (let i = 0; i < this.vertices.length; i++) {
          let v = this.vertices[i];
@@ -175,60 +176,5 @@ export class TriangleObj {
       }
 
       return str;
-   }
-
-   /**
-    * Uploads all the triangle data to WebGL
-    * 
-    * @param program The program to upload to
-    */
-   public uploadUniforms(program: WebGLProgram) {
-
-      // upload the big chunks as Uniform Blocks
-      let blockBinding = 2;
-      let vBlock = new glUniformBlock(program, 'MyVerticesBlock', blockBinding);
-
-      // put the data into a Float32Array for uploading
-      let vData = new Float32Array(this.vertices.length * 4);
-      for (let i = 0; i < this.vertices.length; i++) {
-         let v = this.vertices[i];
-         vData[4 * i + 0] = v.x;
-         vData[4 * i + 1] = v.y;
-         vData[4 * i + 2] = v.z;
-         vData[4 * i + 3] = 0;
-      }
-      vBlock.upload(vData);
-
-      blockBinding = 3;
-      let tBlock = new glUniformBlock(program, 'MyTrianglesBlock', blockBinding);
-
-      // put the data into a Float32Array for uploading
-      let tData = new Int32Array(this.triangles.length * 4);
-      let index = 0;
-      for (let v = 0; v < this.volumes.length; v++) {
-         let vol = this.volumes[v];
-         for (let i = 0; i < vol.triangles.length; i++) {
-            let t = vol.triangles[i];
-            tData[index++] = t.iV0;
-            tData[index++] = t.iV1;
-            tData[index++] = t.iV2;
-            tData[index++] = 0;
-         }
-      }
-      tBlock.upload(tData);
-
-      // Upload the volume info as a standard uniform
-      let uni = new glUniform(program);
-      let startIndex = 0;
-      for (let i = 0; i < this.volumes.length; i++) {
-         let vol = this.volumes[i];
-         uni.set('object.volumes[' + i + '].startIndex', startIndex, true);
-         uni.set('object.volumes[' + i + '].numTriangles', vol.triangles.length, true);
-         uni.set('object.volumes[' + i + '].boxMin', vol.boxMin);
-         uni.set('object.volumes[' + i + '].boxMax', vol.boxMax);
-         startIndex += vol.triangles.length;
-      }
-      uni.set('object.boxMin', this.boxMin);
-      uni.set('object.boxMax', this.boxMax);
    }
 }

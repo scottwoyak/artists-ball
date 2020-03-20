@@ -15,6 +15,7 @@ import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
 import { ColorAnalyzer } from './ColorAnalyzer';
 import { TriangleObj } from './TriangleObj';
+import { glUniformBlock } from './glUniformBlock';
 
 /**
  * Rendering mode for displaying the texture
@@ -143,6 +144,7 @@ export class PathTracer {
          let center = new glVec3([0, radius, 0]);
          let tObj = new TriangleSphere();
          return tObj.create(8, radius, center).then(() => {
+            tObj.breakIntoVolumes();
             this.compileShader(tObj);
          });
       }
@@ -162,6 +164,7 @@ export class PathTracer {
          return tObj.create(query).then(() => {
             tObj.autoCenter(size);
             tObj.translate(new glVec3([0, tObj.height / 2, 0]));
+            tObj.breakIntoVolumes();
             this.compileShader(tObj);
          });
       }
@@ -189,7 +192,7 @@ export class PathTracer {
          );
 
          // upload triangles to the GPU
-         tObj.uploadUniforms(this.toTextureProgram);
+         this.uploadUniforms(tObj);
       }
       else {
          this.toTextureProgram = glCompiler.compile(
@@ -202,6 +205,61 @@ export class PathTracer {
       this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
       gl.enableVertexAttribArray(this.toTextureVertexAttribute);
       p.log('compile');
+   }
+
+   /**
+    * Uploads all the triangle data to WebGL
+    * 
+    * @param program The program to upload to
+    */
+   private uploadUniforms(tObj: TriangleObj) {
+
+      // upload the big chunks as Uniform Blocks
+      let blockBinding = 2;
+      let vBlock = new glUniformBlock(this.toTextureProgram, 'MyVerticesBlock', blockBinding);
+
+      // put the data into a Float32Array for uploading
+      let vData = new Float32Array(tObj.vertices.length * 4);
+      for (let i = 0; i < tObj.vertices.length; i++) {
+         let v = tObj.vertices[i];
+         vData[4 * i + 0] = v.x;
+         vData[4 * i + 1] = v.y;
+         vData[4 * i + 2] = v.z;
+         vData[4 * i + 3] = 0;
+      }
+      vBlock.upload(vData);
+
+      blockBinding = 3;
+      let tBlock = new glUniformBlock(this.toTextureProgram, 'MyTrianglesBlock', blockBinding);
+
+      // put the data into a Float32Array for uploading
+      let tData = new Int32Array(tObj.triangles.length * 4);
+      let index = 0;
+      for (let v = 0; v < tObj.volumes.length; v++) {
+         let vol = tObj.volumes[v];
+         for (let i = 0; i < vol.triangles.length; i++) {
+            let t = vol.triangles[i];
+            tData[index++] = t.iV0;
+            tData[index++] = t.iV1;
+            tData[index++] = t.iV2;
+            tData[index++] = 0;
+         }
+      }
+      tBlock.upload(tData);
+
+      // Upload the volume info as a standard uniform
+      let uni = new glUniform(this.toTextureProgram);
+      let startIndex = 0;
+      for (let i = 0; i < tObj.volumes.length; i++) {
+         let vol = tObj.volumes[i];
+         uni.set('object.volumes[' + i + '].startIndex', startIndex, true);
+         uni.set('object.volumes[' + i + '].numTriangles', vol.triangles.length, true);
+         uni.set('object.volumes[' + i + '].boxMin', vol.boxMin);
+         uni.set('object.volumes[' + i + '].boxMax', vol.boxMax);
+         startIndex += vol.triangles.length;
+      }
+      uni.set('object.boxMin', tObj.boxMin);
+      uni.set('object.boxMax', tObj.boxMax);
    }
 
    public get renderMode(): RenderMode {

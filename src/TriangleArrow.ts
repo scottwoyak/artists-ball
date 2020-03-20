@@ -26,10 +26,6 @@ export class TriangleArrow extends TriangleObj {
 
       // create the vertices
       this.doCreate();
-
-      // break the sphere into volumes
-      this.breakIntoVolumes();
-
    }
 
    private doCreate() {
