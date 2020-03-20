@@ -170,7 +170,7 @@ export class TriangleObj {
       }
       for (let i = 0; i < this.triangles.length; i++) {
          let t = this.triangles[i];
-         str += 'f ' + (t.i0 + 1) + ' ' + (t.i1 + 1) + ' ' + (t.i2 + 1) + '\n';
+         str += 'f ' + (t.iV0 + 1) + ' ' + (t.iV1 + 1) + ' ' + (t.iV2 + 1) + '\n';
       }
 
       return str;
@@ -208,9 +208,9 @@ export class TriangleObj {
          let vol = this.volumes[v];
          for (let i = 0; i < vol.triangles.length; i++) {
             let t = vol.triangles[i];
-            tData[index++] = t.i0;
-            tData[index++] = t.i1;
-            tData[index++] = t.i2;
+            tData[index++] = t.iV0;
+            tData[index++] = t.iV1;
+            tData[index++] = t.iV2;
             tData[index++] = 0;
          }
       }

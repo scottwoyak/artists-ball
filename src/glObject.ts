@@ -58,9 +58,9 @@ export class glObject {
       this.vertices = [];
       this.normals = [];
       for (let i = 0; i < this.tObj.triangles.length; i++) {
-         this.pushVec(this.vertices, this.tObj.triangles[i].p0);
-         this.pushVec(this.vertices, this.tObj.triangles[i].p1);
-         this.pushVec(this.vertices, this.tObj.triangles[i].p2);
+         this.pushVec(this.vertices, this.tObj.triangles[i].v0);
+         this.pushVec(this.vertices, this.tObj.triangles[i].v1);
+         this.pushVec(this.vertices, this.tObj.triangles[i].v2);
 
          let normal = this.tObj.triangles[i].normal;
          this.pushVec(this.normals, normal);
