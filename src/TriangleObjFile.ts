@@ -32,6 +32,21 @@ export class TriangleObjFile extends TriangleObj {
       p.log('volumes');
    }
 
+   private parseFace(line: string): { iV: number[], iN: number[] } {
+      let ret = {
+         iV: [] as number[],
+         iN: [] as number[],
+      }
+      let tokens = line.match(/\S+/g);
+      let numVals = tokens.length - 1;
+      for (let i = 0; i < numVals; i++) {
+         let vals = tokens[i + 1].split('/');
+         ret.iV.push(parseInt(vals[0]) - 1);
+         ret.iN.push(vals.length === 3 ? parseInt(vals[2]) - 1 : -1);
+      }
+      return ret;
+   }
+
    private parse(src: string) {
       let p = new Profiler();
       let lines = src.split('\n');
@@ -44,21 +59,19 @@ export class TriangleObjFile extends TriangleObj {
             let vec = new glVec3([parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3])])
             this.vertices.push(vec);
          }
-         else if (line.startsWith('f ')) {
+         else if (line.startsWith('vn ')) {
             let tokens = line.match(/\S+/g);
-            if (tokens.length === 5) {
-               let i1 = parseInt(tokens[1].split('/')[0]) - 1;
-               let i2 = parseInt(tokens[2].split('/')[0]) - 1;
-               let i3 = parseInt(tokens[3].split('/')[0]) - 1;
-               let i4 = parseInt(tokens[4].split('/')[0]) - 1;
-               this.push(new IndexedTriangle(this.vertices, i1, i2, i3));
-               this.push(new IndexedTriangle(this.vertices, i1, i3, i4));
+            let vec = new glVec3([parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3])])
+            this.normals.push(vec);
+         }
+         else if (line.startsWith('f ')) {
+            let ret = this.parseFace(line);
+            if (ret.iN.length === 4) {
+               this.push(new IndexedTriangle(this.vertices, ret.iV[0], ret.iV[1], ret.iV[2], this.normals, ret.iN[0], ret.iN[1], ret.iN[2]));
+               this.push(new IndexedTriangle(this.vertices, ret.iV[0], ret.iV[2], ret.iV[3], this.normals, ret.iN[0], ret.iN[2], ret.iN[3]));
             }
             else {
-               let i1 = parseInt(tokens[1].split('/')[0]) - 1;
-               let i2 = parseInt(tokens[2].split('/')[0]) - 1;
-               let i3 = parseInt(tokens[3].split('/')[0]) - 1;
-               this.push(new IndexedTriangle(this.vertices, i1, i2, i3));
+               this.push(new IndexedTriangle(this.vertices, ret.iV[0], ret.iV[1], ret.iV[2], this.normals, ret.iN[0], ret.iN[1], ret.iN[2]));
             }
          }
       }

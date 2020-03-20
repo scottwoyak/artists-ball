@@ -13,6 +13,7 @@ import { clamp } from "./Globals";
  */
 export class TriangleObj {
    public vertices: glVec3[] = [];
+   public normals: glVec3[] = [];
    public triangles: IndexedTriangle[] = [];
    public boxMin = new glVec3([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]);
    public boxMax = new glVec3([-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE]);

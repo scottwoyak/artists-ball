@@ -54,8 +54,8 @@ export class TriangleArrow extends TriangleObj {
       for (let i = 0; i < NUM_STEPS; i++) {
          let i1 = 2 + i;
          let i2 = (i == NUM_STEPS - 1) ? 0 : i1 + 1;
-         this.push(new IndexedTriangle(this.vertices, iTip, i2, i1));
-         this.push(new IndexedTriangle(this.vertices, iBase, i1, i2));
+         this.push(new IndexedTriangle(this.vertices, iTip, i2, i1, this.normals));
+         this.push(new IndexedTriangle(this.vertices, iBase, i1, i2, this.normals));
       }
 
       // build the arrow shaft
@@ -80,9 +80,9 @@ export class TriangleArrow extends TriangleObj {
          let i3 = i1 + NUM_STEPS;
          let i4 = i2 + NUM_STEPS;
 
-         this.push(new IndexedTriangle(this.vertices, i1, i2, i3));
-         this.push(new IndexedTriangle(this.vertices, i4, i3, i2));
-         this.push(new IndexedTriangle(this.vertices, i3, i4, iEnd));
+         this.push(new IndexedTriangle(this.vertices, i1, i2, i3, this.normals));
+         this.push(new IndexedTriangle(this.vertices, i4, i3, i2, this.normals));
+         this.push(new IndexedTriangle(this.vertices, i3, i4, iEnd, this.normals));
       }
    }
 }

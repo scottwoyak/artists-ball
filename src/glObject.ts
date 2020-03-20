@@ -58,14 +58,14 @@ export class glObject {
       this.vertices = [];
       this.normals = [];
       for (let i = 0; i < this.tObj.triangles.length; i++) {
-         this.pushVec(this.vertices, this.tObj.triangles[i].v0);
-         this.pushVec(this.vertices, this.tObj.triangles[i].v1);
-         this.pushVec(this.vertices, this.tObj.triangles[i].v2);
+         let tri = this.tObj.triangles[i];
+         this.pushVec(this.vertices, tri.v0);
+         this.pushVec(this.vertices, tri.v1);
+         this.pushVec(this.vertices, tri.v2);
 
-         let normal = this.tObj.triangles[i].normal;
-         this.pushVec(this.normals, normal);
-         this.pushVec(this.normals, normal);
-         this.pushVec(this.normals, normal);
+         this.pushVec(this.normals, tri.n0);
+         this.pushVec(this.normals, tri.n1);
+         this.pushVec(this.normals, tri.n2);
       }
 
       this.vertexBuffer.upload(this.vertices);

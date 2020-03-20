@@ -19,8 +19,8 @@ export class TriangleCube extends TriangleObj {
 
    createFace(i1: number, i2: number, i3: number, i4: number) {
 
-      this.push(new IndexedTriangle(this.vertices, i1, i2, i3));
-      this.push(new IndexedTriangle(this.vertices, i2, i3, i4));
+      this.push(new IndexedTriangle(this.vertices, i1, i2, i3, this.normals));
+      this.push(new IndexedTriangle(this.vertices, i2, i3, i4, this.normals));
    }
 
    createTriangles(size: number, center: glVec3) {
