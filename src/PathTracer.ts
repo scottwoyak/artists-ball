@@ -7,10 +7,7 @@ import toTextureFragmentSource from './shaders/toTextureFragment.glsl';
 import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
 import { gl } from './Globals';
-import { TriangleObjFile } from './TriangleObjFile';
 import { Profiler } from './Profiler';
-import { TriangleCube } from './TriangleCube';
-import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
 import { ColorAnalyzer } from './ColorAnalyzer';
@@ -55,7 +52,7 @@ export class PathTracer {
       +1, +1
    ];
 
-   public create(query: string): Promise<void> {
+   public constructor(tObj: TriangleObj) {
 
       var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
@@ -138,41 +135,7 @@ export class PathTracer {
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
 
-      if (query && query.toLowerCase() === 'trianglesphere') {
-         Uniforms.uBallRadius = 0;
-         let radius = 0.5;
-         let center = new glVec3([0, radius, 0]);
-         let tObj = new TriangleSphere();
-         return tObj.create(8, radius, center).then(() => {
-            tObj.breakIntoVolumes();
-            this.compileShader(tObj);
-         });
-      }
-      else if (query && query.toLowerCase() === 'trianglecube') {
-         Uniforms.uBallRadius = 0;
-         let size = 0.8;
-         let center = new glVec3([0, size / 2.0, 0]);
-         let tObj = new TriangleCube();
-         return tObj.create(size, center).then(() => {
-            this.compileShader(tObj);
-         });
-      }
-      else if (query && query.toLowerCase().endsWith('.obj')) {
-         Uniforms.uBallRadius = 0;
-         let size = 1.5;
-         let tObj = new TriangleObjFile();
-         return tObj.create(query).then(() => {
-            tObj.autoCenter(size);
-            tObj.translate(new glVec3([0, tObj.height / 2, 0]));
-            tObj.breakIntoVolumes();
-            this.compileShader(tObj);
-         });
-      }
-      else {
-         return Promise.resolve().then(() => {
-            this.compileShader();
-         })
-      }
+      this.compileShader(tObj);
    }
 
    private compileShader(tObj?: TriangleObj) {

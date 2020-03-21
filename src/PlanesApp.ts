@@ -4,8 +4,11 @@ import { Globals, toRad } from "./Globals";
 import { glRenderer } from "./glRenderer";
 import { SphericalCoord } from "./SphericalCoord";
 import { glMat4 } from "./glMat";
-import { glVec4 } from "./glVec";
-import { NormalType } from "./TriangleObj";
+import { glVec4, glVec3 } from "./glVec";
+import { NormalType, TriangleObj } from "./TriangleObj";
+import { TriangleSphere } from "./TriangleSphere";
+import { TriangleCube } from "./TriangleCube";
+import { TriangleObjFile } from "./TriangleObjFile";
 
 enum PointerMode {
    View,
@@ -54,6 +57,8 @@ export class PlanesApp {
       }
       Globals.gl = context;
 
+      this.renderer = new glRenderer();
+
       this.canvas.ontouchstart = (event: TouchEvent) => {
          event.preventDefault();
          if (event.touches.length === 1) {
@@ -100,8 +105,8 @@ export class PlanesApp {
          }
       }
 
-      this.renderer = new glRenderer();
-      this.renderer.create(this.query).then(() => {
+      this.loadModel(this.query).then((tObj: TriangleObj) => {
+         //this.renderer.setModel(tObj);
          requestAnimationFrame(() => this.tick());
       })
 
@@ -248,6 +253,71 @@ export class PlanesApp {
       });
 
       return div;
+   }
+
+   private loadModel(query: string): Promise<TriangleObj> {
+
+      if (query && query.toLowerCase() === 'trianglesphere') {
+         let radius = 0.75;
+         let center = new glVec3([0, 0, 0]);
+         let tObj = new TriangleSphere(100, radius, center)
+         tObj.computeNormals(NormalType.Smooth);
+         this.renderer.setModel(tObj);
+         return Promise.resolve(tObj);
+      }
+      else if (query && query.toLowerCase() === 'trianglecube') {
+         let size = 0.8;
+         let center = new glVec3([0, 0, 0]);
+         let tObj = new TriangleCube(size, center);
+         this.renderer.setModel(tObj);
+         return Promise.resolve(tObj);
+      }
+      else if (query && query.toLowerCase().endsWith('.obj')) {
+         return fetch(query)
+            .then(res => res.text())
+            .then(res => {
+               let tObj = new TriangleObjFile(res);
+               this.renderer.setModel(tObj);
+               this.orient(tObj, query);
+               return tObj;
+            });
+      }
+      else {
+         return Promise.reject('Unknown model: \'' + query + '\'');
+      }
+   }
+
+   public orient(tObj: TriangleObj, query: string) {
+
+      let center = tObj.center;
+      this.renderer.translate(new glVec3([-center.x, -center.y, -center.z]));
+      this.renderer.scale(1.75 / Math.max(tObj.width, tObj.height, tObj.depth));
+
+      // orient each file so that it is facing forward
+      switch (query.toLowerCase()) {
+         case 'skull.obj':
+            this.renderer.rotX(toRad(90));
+            this.renderer.rotY(toRad(180));
+            break;
+
+         case 'femalehead.obj':
+            this.renderer.rotY(toRad(180));
+            break;
+
+         case 'wolf.obj':
+            this.renderer.rotY(toRad(-140));
+            this.renderer.rotX(toRad(5));
+            break;
+
+         case 'sheephead.obj':
+            this.renderer.rotY(toRad(-160));
+            break;
+
+         case 'tom.obj':
+         case 'malehead.obj':
+            this.renderer.rotY(toRad(180));
+            break;
+      }
    }
 
    private updateSliders() {

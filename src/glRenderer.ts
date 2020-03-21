@@ -3,8 +3,6 @@ import { glVec3 } from './glVec';
 import vertexSource from './shaders/stdVertex.glsl';
 import fragmentSource from './shaders/stdFragment.glsl';
 import { gl, clamp, mix, toRad, toDeg } from './Globals';
-import { TriangleObjFile } from './TriangleObjFile';
-import { TriangleCube } from './TriangleCube';
 import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
@@ -47,8 +45,24 @@ export class glRenderer {
 
    public uLightDirection = new glVec3([1.0, -1.0, 0.5]);
 
+   public setModel(tObj: TriangleObj) {
+      this.obj = new glObject(tObj, this.program);
+   }
+
    public constructor() {
+
       this.computeColors();
+
+      gl.enable(gl.DEPTH_TEST);
+
+      this.program = glCompiler.compile(vertexSource, fragmentSource);
+
+      let tBall = new TriangleSphere(100, 0.5, new glVec3([0, 0, 0]));
+      tBall.computeNormals(NormalType.Smooth);
+      this.ball = new glObject(tBall, this.program);
+
+      let tArrow = new TriangleArrow();
+      this.arrow = new glObject(tArrow, this.program);
    }
 
    public get sync(): boolean {
@@ -154,83 +168,6 @@ export class glRenderer {
       this.uLightLight = this.colorAt(0.5 * this.threshold1);
       this.uMidLight = this.colorAt(mix(this.threshold1, this.threshold2, 0.7));
       this.uDarkLight = this.colorAt((this.threshold2 + 90) / 2);
-   }
-
-   public create(query: string): Promise<void> {
-
-      gl.enable(gl.DEPTH_TEST);
-
-      // create shaders
-      this.program = glCompiler.compile(vertexSource, fragmentSource);
-
-      let tBall = new TriangleSphere();
-      tBall.createNow(500, 0.5, new glVec3([0, 0, 0]));
-      this.ball = new glObject(tBall, this.program);
-
-      let tArrow = new TriangleArrow();
-      tArrow.createNow();
-      this.arrow = new glObject(tArrow, this.program);
-
-      if (query && query.toLowerCase() === 'trianglesphere') {
-         let radius = 0.75;
-         let center = new glVec3([0, 0, 0]);
-         let tObj = new TriangleSphere();
-         return tObj.create(100, radius, center).then(() => {
-            tObj.computeNormals(NormalType.Smooth);
-            this.obj = new glObject(tObj, this.program);
-         });
-      }
-      else if (query && query.toLowerCase() === 'trianglecube') {
-         let size = 0.8;
-         let center = new glVec3([0, 0, 0]);
-         let tObj = new TriangleCube();
-         return tObj.create(size, center).then(() => {
-            this.obj = new glObject(tObj, this.program);
-         });
-      }
-      else if (query && query.toLowerCase().endsWith('.obj')) {
-         let tObj = new TriangleObjFile();
-         return tObj.create(query).then(() => {
-            this.obj = new glObject(tObj, this.program);
-            this.orient(tObj, query);
-         });
-      }
-      else {
-         return Promise.resolve();
-      }
-   }
-
-   public orient(tObj: TriangleObj, query: string) {
-
-      let center = tObj.center;
-      this.obj.translate(new glVec3([-center.x, -center.y, -center.z]));
-      this.obj.scale(1.75 / Math.max(tObj.width, tObj.height, tObj.depth));
-
-      // orient each file so that it is facing forward
-      switch (query.toLowerCase()) {
-         case 'skull.obj':
-            this.obj.rotX(toRad(90));
-            this.obj.rotY(toRad(180));
-            break;
-
-         case 'femalehead.obj':
-            this.obj.rotY(toRad(180));
-            break;
-
-         case 'wolf.obj':
-            this.obj.rotY(toRad(-140));
-            this.obj.rotX(toRad(5));
-            break;
-
-         case 'sheephead.obj':
-            this.obj.rotY(toRad(-160));
-            break;
-
-         case 'tom.obj':
-         case 'malehead.obj':
-            this.obj.rotY(toRad(180));
-            break;
-      }
    }
 
    public render(): void {

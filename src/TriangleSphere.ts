@@ -13,16 +13,10 @@ export class TriangleSphere extends TriangleObj {
     * @param numSteps The number of bands used to cover the sphere
     * @param radius The radius of the sphere
     * @param center The center of the sphere
-    * @returns A Promise object
     */
-   create(numSteps: number, radius: number, center: glVec3): Promise<void> {
+   public constructor(numSteps: number, radius: number, center: glVec3) {
 
-      this.createNow(numSteps, radius, center);
-
-      return Promise.resolve();
-   }
-
-   public createNow(numSteps: number, radius: number, center: glVec3) {
+      super();
 
       // create the vertices
       this.createVertices(numSteps, radius, center);

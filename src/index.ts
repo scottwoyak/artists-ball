@@ -1,4 +1,4 @@
-import { BallApp } from "./BallApp";
+import { PathTracerApp } from "./PathTracerApp";
 import './styles.css';
 import { PlanesApp } from "./PlanesApp";
 
@@ -22,7 +22,7 @@ window.onload = function () {
       document.body.appendChild(app.component());
    }
    else {
-      let app = new BallApp(query);
+      let app = new PathTracerApp(query);
       document.body.appendChild(app.component());
    }
 }

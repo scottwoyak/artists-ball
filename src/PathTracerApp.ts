@@ -7,6 +7,10 @@ import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { glColorWithTemperature } from "./glColorWithTemperature";
 import { Globals, clamp } from "./Globals";
+import { TriangleObj } from "./TriangleObj";
+import { TriangleSphere } from "./TriangleSphere";
+import { TriangleCube } from "./TriangleCube";
+import { TriangleObjFile } from "./TriangleObjFile";
 
 let skinTones = [
    new htmlColor([240, 223, 214]),
@@ -25,7 +29,7 @@ enum PointerMode {
    Light,
 }
 
-export class BallApp {
+export class PathTracerApp {
    public tracer: PathTracer;
    private modelview: glMat4;
    private projection: glMat4;
@@ -117,8 +121,9 @@ export class BallApp {
          this.mouseDown = false;
       }
 
-      this.tracer = new PathTracer();
-      this.tracer.create(this.query).then(() => {
+      this.loadModel(this.query).then((tObj: TriangleObj) => {
+         this.tracer = new PathTracer(tObj);
+         //this.renderer.setModel(tObj);
          requestAnimationFrame(() => this.tick());
       })
 
@@ -223,6 +228,40 @@ export class BallApp {
       });
 
       return div;
+   }
+
+   private loadModel(query: string): Promise<TriangleObj> {
+      if (query && query.toLowerCase() === 'trianglesphere') {
+         Uniforms.uBallRadius = 0;
+         let radius = 0.5;
+         let center = new glVec3([0, radius, 0]);
+         let tObj = new TriangleSphere(8, radius, center);
+         tObj.breakIntoVolumes();
+         return Promise.resolve(tObj);
+      }
+      else if (query && query.toLowerCase() === 'trianglecube') {
+         Uniforms.uBallRadius = 0;
+         let size = 0.8;
+         let center = new glVec3([0, size / 2.0, 0]);
+         let tObj = new TriangleCube(size, center);
+         return Promise.resolve(tObj);
+      }
+      else if (query && query.toLowerCase().endsWith('.obj')) {
+         Uniforms.uBallRadius = 0;
+         return fetch(query)
+            .then(res => res.text())
+            .then(res => {
+               let tObj = new TriangleObjFile(res);
+               let size = 1.5;
+               tObj.autoCenter(size);
+               tObj.translate(new glVec3([0, tObj.height / 2, 0]));
+               tObj.breakIntoVolumes();
+               return tObj;
+            });
+      }
+      else {
+         return Promise.resolve(null);
+      }
    }
 
    private setLightColor() {
@@ -366,7 +405,9 @@ export class BallApp {
    };
 
    public restart(): void {
-      this.tracer.restart();
+      if (this.tracer) {
+         this.tracer.restart();
+      }
    }
 
    public swap(pos: number) {

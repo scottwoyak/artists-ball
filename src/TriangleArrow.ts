@@ -7,28 +7,9 @@ import { IndexedTriangle } from "./IndexedTriangle";
  */
 export class TriangleArrow extends TriangleObj {
 
-   /**
-    * Creates the sphere
-    * 
-    * @param numSteps The number of bands used to cover the sphere
-    * @param radius The radius of the sphere
-    * @param center The center of the sphere
-    * @returns A Promise object
-    */
-   create(): Promise<void> {
+   public constructor() {
 
-      this.createNow();
-
-      return Promise.resolve();
-   }
-
-   public createNow() {
-
-      // create the vertices
-      this.doCreate();
-   }
-
-   private doCreate() {
+      super();
       const NUM_STEPS = 30;
       const TIP = new glVec3([0, 0, 0]);
       const TOTAL_LENGTH = 0.4;

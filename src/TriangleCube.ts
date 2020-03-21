@@ -5,7 +5,9 @@ import { Volume } from "./Volume";
 
 export class TriangleCube extends TriangleObj {
 
-   create(size: number, center: glVec3): Promise<void> {
+   public constructor(size: number, center: glVec3) {
+
+      super();
 
       this.createTriangles(size, center);
 
@@ -13,8 +15,6 @@ export class TriangleCube extends TriangleObj {
       this.volumes[0].boxMin = this.boxMin.clone();
       this.volumes[0].boxMax = this.boxMax.clone();
       this.volumes[0].triangles = this.triangles;
-
-      return Promise.resolve();
    }
 
    createFace(i1: number, i2: number, i3: number, i4: number) {

@@ -8,24 +8,10 @@ import { Profiler } from "./Profiler";
  */
 export class TriangleObjFile extends TriangleObj {
 
-   /**
-    * Loads a file and creates triangles for it
-    * 
-    * @param url The file to load
-    * @param size The desired max width/height/depth of the scaled object
-    * @returns a promise object
-    */
-   create(url: string): Promise<void> {
 
-      return fetch(url)
-         .then(res => res.text())
-         .then(res => {
-            this.createTriangles(res);
-         });
-   }
+   public constructor(src: string) {
 
-   private createTriangles(src: string) {
-
+      super();
       this.parse(src);
    }
 
