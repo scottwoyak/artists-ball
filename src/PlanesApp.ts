@@ -1,7 +1,7 @@
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { Globals, toRad } from "./Globals";
-import { glRenderer } from "./glRenderer";
+import { PlanesRenderer } from "./PlanesRenderer";
 import { SphericalCoord } from "./SphericalCoord";
 import { glMat4 } from "./glMat";
 import { glVec4, glVec3 } from "./glVec";
@@ -16,7 +16,7 @@ enum PointerMode {
 }
 
 export class PlanesApp {
-   public renderer: glRenderer;
+   public renderer: PlanesRenderer;
    private pointerMode: PointerMode = PointerMode.View;
    private pointerModeSpecial = false;
    private canvas: HTMLCanvasElement;
@@ -57,7 +57,7 @@ export class PlanesApp {
       }
       Globals.gl = context;
 
-      this.renderer = new glRenderer();
+      this.renderer = new PlanesRenderer();
 
       this.canvas.ontouchstart = (event: TouchEvent) => {
          event.preventDefault();

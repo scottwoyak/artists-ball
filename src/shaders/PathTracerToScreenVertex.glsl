@@ -1,7 +1,5 @@
-#version 300 es
-
-in vec3 vertex;
-out vec2 texCoord;
+attribute vec3 vertex;
+varying vec2 texCoord;
 uniform float uScale;
 uniform float uXOffset;
 uniform float uYOffset;

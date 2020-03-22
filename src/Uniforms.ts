@@ -1,4 +1,4 @@
-import { RenderMode } from "./PathTracer";
+import { RenderMode } from "./PathTracerRenderer";
 import { glColor } from "./glColor";
 import { glVec3 } from "./glVec";
 import { SphericalCoord } from "./SphericalCoord";

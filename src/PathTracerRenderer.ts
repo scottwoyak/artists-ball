@@ -1,12 +1,12 @@
 import { glMat4 } from './glMat';
 import { glVec3, glVec4 } from './glVec';
-import toScreenVertexSource from './shaders/toScreenVertex.glsl';
-import toScreenFragmentSource from './shaders/toScreenFragment.glsl';
-import toTextureVertexSource from './shaders/toTextureVertex.glsl';
-import toTextureFragmentSource from './shaders/toTextureFragment.glsl';
+import toScreenVertexSource from './shaders/PathTracerToScreenVertex.glsl';
+import toScreenFragmentSource from './shaders/PathTracerToScreenFragment.glsl';
+import toTextureVertexSource from './shaders/PathTracerToTextureVertex.glsl';
+import toTextureFragmentSource from './shaders/PathTracerToTextureFragment.glsl';
 import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
-import { gl } from './Globals';
+import { gl, isMobile } from './Globals';
 import { Profiler } from './Profiler';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
@@ -27,7 +27,7 @@ export enum RenderMode {
 /**
  * Class that does the work of building the Path Traced texture
  */
-export class PathTracer {
+export class PathTracerRenderer {
 
    private vertexBuffer: WebGLBuffer;
    private frameBuffer: WebGLFramebuffer;
@@ -53,8 +53,6 @@ export class PathTracer {
    ];
 
    public constructor(tObj: TriangleObj) {
-
-      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
       // larger texture is higher resolution, but takes longer to compute
       if (isMobile) {
@@ -293,8 +291,6 @@ export class PathTracer {
    };
 
    public displayTexture(): void {
-
-      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
       // size of the actual canvas. The texture we create is drawn to this item
       let size = document.body.clientWidth;

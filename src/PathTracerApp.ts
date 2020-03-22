@@ -1,5 +1,5 @@
 import { glVec3 } from "./glVec";
-import { PathTracer, RenderMode } from "./PathTracer";
+import { PathTracerRenderer, RenderMode } from "./PathTracerRenderer";
 import { glMat4 } from "./glMat";
 import { Uniforms } from "./Uniforms";
 import { SphericalCoord } from "./SphericalCoord";
@@ -30,7 +30,7 @@ enum PointerMode {
 }
 
 export class PathTracerApp {
-   public tracer: PathTracer;
+   public renderer: PathTracerRenderer;
    private modelview: glMat4;
    private projection: glMat4;
    private modelviewProjection: glMat4;
@@ -122,7 +122,7 @@ export class PathTracerApp {
       }
 
       this.loadModel(this.query).then((tObj: TriangleObj) => {
-         this.tracer = new PathTracer(tObj);
+         this.renderer = new PathTracerRenderer(tObj);
          //this.renderer.setModel(tObj);
          requestAnimationFrame(() => this.tick());
       })
@@ -369,7 +369,7 @@ export class PathTracerApp {
 
    private setDescription() {
       let description = document.getElementById('description');
-      switch (this.tracer.renderMode) {
+      switch (this.renderer.renderMode) {
          case RenderMode.Artist:
             description.innerText = "";
             break;
@@ -397,21 +397,21 @@ export class PathTracerApp {
 
       this.projection = glMat4.makePerspective(55, 1, 0.1, 100);
       this.modelviewProjection = this.projection.multM(this.modelview);
-      this.tracer.updateTexture(this.modelviewProjection);
+      this.renderer.updateTexture(this.modelviewProjection);
    };
 
    private displayTexture(): void {
-      this.tracer.displayTexture();
+      this.renderer.displayTexture();
    };
 
    public restart(): void {
-      if (this.tracer) {
-         this.tracer.restart();
+      if (this.renderer) {
+         this.renderer.restart();
       }
    }
 
    public swap(pos: number) {
-      this.tracer.swap(pos);
+      this.renderer.swap(pos);
    }
 
    public tick() {

@@ -1,8 +1,8 @@
 import { glMat4 } from './glMat';
 import { glVec3 } from './glVec';
-import vertexSource from './shaders/stdVertex.glsl';
-import fragmentSource from './shaders/stdFragment.glsl';
-import { gl, clamp, mix, toRad, toDeg } from './Globals';
+import vertexSource from './shaders/PlanesVertex.glsl';
+import fragmentSource from './shaders/PlanesFragment.glsl';
+import { gl, clamp, mix, toRad, toDeg, isMobile } from './Globals';
 import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
@@ -10,14 +10,17 @@ import { TriangleObj, NormalType } from './TriangleObj';
 import { glObject } from './glObject';
 import { TriangleArrow } from './TriangleArrow';
 import { glColor } from './glColor';
+import { ShadowMap } from './ShadowMap';
+import { TextureRenderer } from './TextureRenderer';
 
 /**
  * Class that renders triangles and a light source
  */
-export class glRenderer {
+export class PlanesRenderer {
 
    private program: WebGLProgram;
    private view = new glMat4();
+   private shadowView = new glMat4();
    private projection = new glMat4();
 
    public lightIntensity = 0.7;
@@ -42,12 +45,9 @@ export class glRenderer {
    private arrow: glObject;
    private obj: glObject;
 
+   private shadowMap: ShadowMap;
 
-   public uLightDirection = new glVec3([1.0, -1.0, 0.5]);
-
-   public setModel(tObj: TriangleObj) {
-      this.obj = new glObject(tObj, this.program);
-   }
+   public uLightDirection = new glVec3([1.0, -1.0, 1.5]);
 
    public constructor() {
 
@@ -170,11 +170,13 @@ export class glRenderer {
       this.uDarkLight = this.colorAt((this.threshold2 + 90) / 2);
    }
 
+   public setModel(tObj: TriangleObj) {
+      this.obj = new glObject(tObj, this.program);
+   }
+
    public render(): void {
 
-      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-      // size of the actual canvas. The texture we create is drawn to this item
+      // size of the actual canvas.
       let size = document.body.clientWidth;
 
       if (isMobile === false) {
@@ -185,7 +187,54 @@ export class glRenderer {
       gl.canvas.width = size;
       gl.canvas.height = size;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+      this.renderToShadowMap();
+      this.renderToScreen();
+   }
+
+   public renderToShadowMap(): void {
+
+      if (!this.shadowMap) {
+         this.shadowMap = new ShadowMap(gl.canvas.width, gl.canvas.height);
+      }
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowMap.frameBuffer);
+
       gl.useProgram(this.program);
+
+      gl.clearColor(0.5, 0.5, 0.5, 1);
+      gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+
+      let center = new glVec3([0, 0, 0]);
+      let up = new glVec3([0, 1, 0]);
+      let mat = glMat4.makeLookAt(this.uLightDirection, center, up);
+      mat.set(0, 3, 0);
+      mat.set(1, 3, 0);
+      mat.set(2, 3, 0);
+      this.shadowView = mat;
+
+      let uni = new glUniform(this.program);
+      uni.set('uUseShadows', 0, true);
+      uni.set('view', this.shadowView.transpose());
+      uni.set('projection', this.projection.transpose());
+
+      this.obj.draw();
+
+      //      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+   }
+
+   public renderToScreen(): void {
+
+      /*
+      // display the depth buffer for testing purposes
+      let tr = new TextureRenderer();
+      tr.render(this.shadowMap.depthTexture);
+      */
+
+      gl.useProgram(this.program);
+
+      gl.bindTexture(gl.TEXTURE_2D, this.shadowMap.depthTexture)
 
       gl.clearColor(0.5, 0.5, 0.5, 1);
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
@@ -194,7 +243,9 @@ export class glRenderer {
 
       let uni = new glUniform(this.program);
       uni.set('view', this.view.transpose());
+      uni.set('shadowView', this.shadowView.transpose());
       uni.set('projection', this.projection.transpose());
+      uni.set('uUseShadows', 1, true);
       uni.set('uLightIntensity', this.lightIntensity);
       uni.set('uAmbientIntensity', this.ambientIntensity);
       uni.set('uThreshold1', this.threshold1 / 90);
@@ -214,6 +265,17 @@ export class glRenderer {
       uni.set('view', this.view.transpose());
       uni.set('uUseThresholds', this.uUseThresholds ? 0 : 1, true);
       this.obj.draw();
+
+      this.drawBall();
+
+      gl.bindTexture(gl.TEXTURE_2D, null);
+   }
+
+   private drawBall() {
+
+      let uni = new glUniform(this.program);
+      // stop using the shadowmap
+      uni.set('uUseShadows', 0, true);
 
       this.view = new glMat4();
       this.view.scale(this.miniSize);
@@ -244,7 +306,6 @@ export class glRenderer {
       this.arrow.rotY(-elevationAngle);
       this.arrow.rotZ(-rotationAngle);
 
-      //uni.set('uColor', new glColor([1.0, 0.86, 0.6]));
       uni.set('uColor', new glColor([1.0, 0.9, 0.7]));
       uni.set('uAmbientIntensity', 0.4);
       this.arrow.draw();

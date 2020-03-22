@@ -1,7 +1,5 @@
-#version 300 es
-
 precision highp float;
-in vec2 texCoord;
+varying vec2 texCoord;
 uniform sampler2D uTexture;
 uniform int uMode;
 uniform float uMaxChroma;
@@ -17,8 +15,6 @@ uniform vec3 uDarkAccentColor;
 
 uniform float uShadowAlpha;
 uniform float uLightAlpha;
-
-out vec4 fragColor;
 
 #define MODE_SCIENCE 0
 #define MODE_VALUE 1
@@ -95,14 +91,14 @@ float toGray(vec4 c)
 
 vec4 renderAsValue()
 {
-   vec4 color = texture(uTexture, texCoord);
+   vec4 color = texture2D(uTexture, texCoord);
    float rgb = toGray(color);
    return vec4(rgb, rgb, rgb, 1.0);
 }
 
 vec4 renderAsChroma()
 {
-   vec4 color = texture(uTexture, texCoord);
+   vec4 color = texture2D(uTexture, texCoord);
 
    // render the scale as a bar on the left
    if (texCoord.x < 0.03)
@@ -184,7 +180,7 @@ vec4 renderAsBands()
    }
    else
    {
-      vec4 color = texture(uTexture, texCoord);
+      vec4 color = texture2D(uTexture, texCoord);
 
       // define the terminator as the point where things are 50% in shadow
       float terminator = ((uShadowAlpha + uLightAlpha) / 2.0);
@@ -218,7 +214,7 @@ vec4 renderAsBands()
 vec4 renderAsScience()
 {
    // just return the texture
-   return texture(uTexture, texCoord);
+   return texture2D(uTexture, texCoord);
 }
 
 void main()
@@ -232,18 +228,18 @@ void main()
 
    if (uMode == MODE_VALUE)
    {
-      fragColor = renderAsValue();
+      gl_FragColor = renderAsValue();
    }
    else if (uMode == MODE_CHROMA)
    {
-      fragColor = renderAsChroma();
+      gl_FragColor = renderAsChroma();
    }
    else if (uMode == MODE_BANDS)
    {
-      fragColor = renderAsBands();
+      gl_FragColor = renderAsBands();
    }
    else
    {
-      fragColor = renderAsScience();
+      gl_FragColor = renderAsScience();
    }
 }

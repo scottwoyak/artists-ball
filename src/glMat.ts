@@ -1,4 +1,5 @@
 import { glVec4, glVec3 } from "./glVec";
+import { toDeg, toRad } from "./Globals";
 
 /**
  * An x-y-z-w matrix for use in WebGL applications.
@@ -194,9 +195,9 @@ export class glMat4 {
    public static fromTranslation(v: glVec3): glMat4 {
 
       return new glMat4([
-         1, 0, 0, v.values[0],
-         0, 1, 0, v.values[1],
-         0, 0, 1, v.values[2],
+         1, 0, 0, v.x,
+         0, 1, 0, v.y,
+         0, 0, 1, v.z,
          0, 0, 0, 1
       ]);
    }
@@ -263,22 +264,21 @@ export class glMat4 {
     */
    public static makeLookAt(eye: glVec3, center: glVec3, up: glVec3, ): glMat4 {
 
-      // clone so we don't modify the origonals
-      let z = eye.subtract(center).normalize();
-      let x = up.cross(z).normalize();
-      let y = z.cross(x).normalize();
+      let a = eye.subtract(center).normalize();
+      let b = up.cross(a).normalize();
+      let c = a.cross(b).normalize();
 
       let m = new glMat4([
-         x.values[0], x.values[1], x.values[2], 0,
-         y.values[0], y.values[1], y.values[2], 0,
-         z.values[0], z.values[1], z.values[2], 0,
+         b.x, b.y, b.z, 0,
+         c.x, c.y, c.z, 0,
+         a.x, a.y, a.z, 0,
          0, 0, 0, 1
       ]);
 
       var t = new glMat4([
-         1, 0, 0, -eye.values[0],
-         0, 1, 0, -eye.values[1],
-         0, 0, 1, -eye.values[2],
+         1, 0, 0, -eye.x,
+         0, 1, 0, -eye.y,
+         0, 0, 1, -eye.z,
          0, 0, 0, 1
       ]);
 
