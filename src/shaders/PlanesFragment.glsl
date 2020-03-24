@@ -13,9 +13,11 @@ uniform vec3 uColor;
 uniform int uUseThresholds;
 uniform float uThreshold1;
 uniform float uThreshold2;
+uniform float uHighlight;
 uniform float uLightLight;
 uniform float uMidLight;
 uniform float uDarkLight;
+uniform float uShadow;
 
 uniform int uUseShadows;
 uniform sampler2D uShadowTexture;
@@ -78,7 +80,14 @@ void main()
 {
    if (in_shadow())
    {
-      gl_FragColor = vec4(vec3(uAmbientIntensity), 1.0);
+      if (uUseThresholds == 0)
+      {
+         gl_FragColor = vec4(vec3(uAmbientIntensity), 1.0);
+      }
+      else
+      {
+         gl_FragColor = vec4(vec3(uShadow), 1.0);
+      }
       return;
    }
 
@@ -123,13 +132,12 @@ void main()
       }
       else
       {
-         // in shadow
-         rgb = uAmbientIntensity;
+         rgb = uShadow;
       }
 
       if (specular > 0.05)
       {
-         rgb = 1.0;
+         rgb = uHighlight;
       }
    }
 

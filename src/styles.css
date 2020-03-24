@@ -36,6 +36,21 @@ body {
   vertical-align: bottom;
 }
 
+.PlanesApp .SliderRange {
+  width: 35%;
+}
+
+.PlanesApp .SliderLabel {
+  width: 18%;
+}
+
+.PlanesApp #ThresholdCanvas {
+  position: absolute;
+  left: 70%;
+  width: 150px;
+  height: 150px;
+}
+
 .SliderRange::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;

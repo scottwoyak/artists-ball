@@ -1,6 +1,15 @@
 import { gl } from "./Globals";
 
-export class ShadowMap {
+export enum FrameBufferStyle {
+   Normal,
+   Depth,
+   Float
+}
+
+/**
+ * A frame buffer that can be rendered to
+ */
+export class glTextureFrameBuffer {
 
    public frameBuffer: WebGLFramebuffer;
    public colorTexture: WebGLTexture;
@@ -12,16 +21,64 @@ export class ShadowMap {
     * @param width The width (in pixels) of the rendering (must be power of 2)
     * @param height The height (in pixels) of the rendering (must be power of 2)
     */
-   public constructor(width: number, height: number) {
+   public constructor(width: number, height: number, style: FrameBufferStyle) {
 
+      switch (style) {
+         case FrameBufferStyle.Normal:
+            this.create(width, height);
+            break;
+
+         case FrameBufferStyle.Depth:
+            this.createDepth(width, height);
+            break;
+
+         case FrameBufferStyle.Float:
+            this.createFloat(width, height);
+            break;
+      }
+   }
+
+   private create(width: number, height: number) {
+
+      // Step 1: Create a frame buffer object
+      this.frameBuffer = gl.createFramebuffer();
+
+      // Step 2: Create and initialize a texture buffer to hold the colors.
+      this.colorTexture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, this.colorTexture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0,
+         gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+      // Step 4: Attach the specific buffers to the frame buffer.
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.colorTexture, 0);
+
+      // Step 5: Verify that the frame buffer is valid.
+      let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+      if (status !== gl.FRAMEBUFFER_COMPLETE) {
+         let msg = "The created frame buffer is invalid: " + status.toString();
+         alert(msg);
+         console.log(msg);
+      }
+
+      // Unbind these new objects, which makes the default frame buffer the
+      // target for rendering.
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+   }
+
+   private createDepth(width: number, height: number) {
       let depth_texture_extension = gl.getExtension('WEBGL_depth_texture');
       if (!depth_texture_extension) {
-         console.log('This WebGL program requires the use of the ' +
-            'WEBGL_depth_texture extension. This extension is not supported ' +
-            'by your browser, so this WEBGL program is terminating.');
+         alert('This WebGL program requires the use of the WEBGL_depth_texture extension.');
          return;
       }
 
+      console.log('creating texture: ' + width + ' ' + height);
       // Step 1: Create a frame buffer object
       this.frameBuffer = gl.createFramebuffer();
 
@@ -55,12 +112,17 @@ export class ShadowMap {
       // Step 5: Verify that the frame buffer is valid.
       let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
       if (status !== gl.FRAMEBUFFER_COMPLETE) {
-         console.log("The created frame buffer is invalid: " + status.toString());
+         let msg = "The created frame buffer is invalid: " + status.toString();
+         alert(msg);
+         console.log(msg);
       }
 
       // Unbind these new objects, which makes the default frame buffer the
       // target for rendering.
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+   }
+
+   public createFloat(width: number, height: number) {
    }
 }

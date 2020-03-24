@@ -36,11 +36,16 @@ export class Slider {
 
       this._getText = setup.getText;
 
+      let div = document.createElement('div');
+      div.id = setup.id;
+      div.className = 'SliderDiv';
+      parent.appendChild(div);
+
       let label = document.createElement('label');
       label.id = setup.id + 'Label';
       label.className = 'SliderLabel';
       label.innerText = setup.label;
-      parent.appendChild(label);
+      div.appendChild(label);
 
       this._range = document.createElement('input');
       this._range.type = 'range';
@@ -53,13 +58,13 @@ export class Slider {
          this.updateSpanColor();
          this.updateSpanText()
       });
-      parent.appendChild(this._range);
+      div.appendChild(this._range);
 
       if (setup.colors) {
          this._colorSpan = document.createElement('span');
          this._colorSpan.id = setup.id + 'ColorSpan';
          this._colorSpan.className = 'SliderColorSpan';
-         parent.appendChild(this._colorSpan);
+         div.appendChild(this._colorSpan);
 
          // set the initial color.
          this.colors = setup.colors;
@@ -69,7 +74,7 @@ export class Slider {
       this._valueSpan.id = setup.id + 'ValueSpan';
       this._valueSpan.className = 'SliderValueSpan';
       //      this._valueSpan.innerText = setup.value.toString();
-      parent.appendChild(this._valueSpan);
+      div.appendChild(this._valueSpan);
 
       // set the initial span text
       this.updateSpanText();

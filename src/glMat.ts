@@ -26,6 +26,16 @@ export class glMat4 {
    }
 
    /**
+    * Get's an identity matrix. Same as creating a new matrix, but syntactically
+    * shows what is happening.
+    * 
+    * @returns A new idenity matrix.
+    */
+   public static identity(): glMat4 {
+      return new glMat4();
+   }
+
+   /**
     * Creates a copy of the matrix.
     * 
     * @returns A copy of the matrix.

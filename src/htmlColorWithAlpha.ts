@@ -1,4 +1,5 @@
 import { htmlColor } from "./htmlColor";
+import { toCss } from "./Globals";
 
 /**
  * An html color with a transparency value
@@ -34,6 +35,6 @@ export class htmlColorWithAlpha extends htmlColor {
     * @returns A css string.
     */
    public toCss(): string {
-      return 'rgb(' + this.r + ',' + this.g + ',' + this.b + ',' + this.a + ')';
+      return toCss(this.r, this.g, this.b, this.a);
    }
 }

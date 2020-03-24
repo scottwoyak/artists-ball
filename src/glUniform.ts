@@ -55,6 +55,16 @@ export class glUniform {
    }
 
    /**
+    * Sets an integer uniform value (same as set(name, value, true))
+    * 
+    * @param name The variable name
+    * @param value The value
+    */
+   public seti(name: string, value: number) {
+      this.set(name, value, true);
+   }
+
+   /**
     * Sets all values for variables stored as members of an object
     * 
     * @param uniforms The object with member values

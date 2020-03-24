@@ -22,8 +22,12 @@ export function toRad(deg: number): number {
    return (Math.PI / 180) * deg;
 }
 
-export function mix(v1: number, v2: number, mix: number) {
+export function mix(v1: number, v2: number, mix: number): number {
    return v1 + clamp(mix, 0, 1) * (v2 - v1);
+}
+
+export function toCss(r: number, g: number, b: number, a?: number): string {
+   return 'rgb(' + r + ',' + g + ',' + b + (a === undefined ? '' : ',' + a) + ')';
 }
 
 export class Globals {
@@ -35,3 +39,4 @@ export class Globals {
       gl = context;
    }
 }
+

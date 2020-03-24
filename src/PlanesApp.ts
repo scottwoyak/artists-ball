@@ -9,6 +9,7 @@ import { NormalType, TriangleObj } from "./TriangleObj";
 import { TriangleSphere } from "./TriangleSphere";
 import { TriangleCube } from "./TriangleCube";
 import { TriangleObjFile } from "./TriangleObjFile";
+import { ThresholdCtrl } from "./ThresholdCtrl";
 
 enum PointerMode {
    View,
@@ -28,11 +29,14 @@ export class PlanesApp {
 
    private query: string;
 
-   private threshold1Slider: Slider;
-   private threshold2Slider: Slider;
+   //   private threshold1Slider: Slider;
+   //   private threshold2Slider: Slider;
+   private highlightSlider: Slider
    private lightLightSlider: Slider;
    private midLightSlider: Slider;
    private darkLightSlider: Slider;
+   private shadowSlider: Slider;
+   private thresholdCtrl: ThresholdCtrl;
 
    public constructor(query: string) {
       this.query = query;
@@ -40,6 +44,7 @@ export class PlanesApp {
 
    public component(): HTMLElement {
       const div = document.createElement('div');
+      div.className = 'PlanesApp';
 
       const container = document.createElement('span');
       container.className = 'container';
@@ -130,55 +135,10 @@ export class PlanesApp {
       container.appendChild(button);
 
       div.appendChild(document.createElement('br'));
-      div.appendChild(document.createElement('br'));
+
+      this.thresholdCtrl = new ThresholdCtrl(div, this);
 
       /*
-      let lightSlider = new Slider(div, {
-         id: 'LightIntensity',
-         label: 'Light',
-         min: 0,
-         max: 100,
-         value: this.renderer.lightIntensity * 100,
-         colors: [htmlColor.black, htmlColor.white],
-         oninput: () => {
-            this.renderer.lightIntensity = lightSlider.value / 100;
-            this.dirty = true;
-         }
-      });
-
-      let ambientSlider = new Slider(div, {
-         id: 'AmbientIntensity',
-         label: 'Ambient',
-         min: 0,
-         max: 100,
-         value: this.renderer.ambientIntensity * 100,
-         colors: [htmlColor.black, htmlColor.white],
-         oninput: () => {
-            this.renderer.ambientIntensity = ambientSlider.value / 100;
-            this.dirty = true;
-         }
-      });
-      */
-
-      let syncLabel = document.createElement('label');
-      syncLabel.id = 'SyncLabel';
-      syncLabel.className = 'Label';
-      syncLabel.innerText = 'Synchronize Values';
-      div.appendChild(syncLabel);
-
-      let syncCheckbox = document.createElement('input');
-      syncCheckbox.type = 'checkbox';
-      syncCheckbox.id = 'SyncCheckBox';
-      syncCheckbox.className = 'SyncCheckBox';
-      syncCheckbox.checked = this.renderer.sync;
-      syncCheckbox.oninput = () => {
-         this.renderer.sync = !this.renderer.sync;
-         this.updateSliders();
-      }
-      div.appendChild(syncCheckbox);
-
-      div.appendChild(document.createElement('br'));
-
       this.threshold1Slider = new Slider(div, {
          id: 'Threshold1',
          label: 'Threshold 1',
@@ -205,6 +165,22 @@ export class PlanesApp {
             this.dirty = true;
          },
          getText: () => { return this.renderer.threshold2.toFixed(0) + "º" }
+      });
+      */
+
+      this.highlightSlider = new Slider(div, {
+         id: 'Highlight',
+         label: 'Highlight',
+         min: 0,
+         max: 100,
+         value: this.renderer.highlight * 100,
+         colors: [htmlColor.black, htmlColor.white],
+         oninput: () => {
+            this.renderer.highlight = this.highlightSlider.value / 100;
+            this.updateSliders();
+            this.dirty = true;
+         },
+         getText: () => { return (100 * this.renderer.highlight).toFixed(0) + "%" }
       });
 
       this.lightLightSlider = new Slider(div, {
@@ -250,6 +226,21 @@ export class PlanesApp {
             this.dirty = true;
          },
          getText: () => { return (100 * this.renderer.darkLight).toFixed(0) + "%" }
+      });
+
+      this.shadowSlider = new Slider(div, {
+         id: 'Shadow',
+         label: 'Shadow',
+         min: 0,
+         max: 100,
+         value: this.renderer.shadow * 100,
+         colors: [htmlColor.black, htmlColor.white],
+         oninput: () => {
+            this.renderer.shadow = this.shadowSlider.value / 100;
+            this.updateSliders();
+            this.dirty = true;
+         },
+         getText: () => { return (100 * this.renderer.lightLight).toFixed(0) + "%" }
       });
 
       return div;
@@ -321,11 +312,13 @@ export class PlanesApp {
    }
 
    private updateSliders() {
-      this.threshold1Slider.value = this.renderer.threshold1;
-      this.threshold2Slider.value = this.renderer.threshold2;
+      //      this.threshold1Slider.value = this.renderer.threshold1;
+      //      this.threshold2Slider.value = this.renderer.threshold2;
+      this.highlightSlider.value = 100 * this.renderer.highlight;
       this.lightLightSlider.value = 100 * this.renderer.lightLight;
       this.midLightSlider.value = 100 * this.renderer.midLight;
       this.darkLightSlider.value = 100 * this.renderer.darkLight;
+      this.shadowSlider.value = 100 * this.renderer.shadow;
    }
 
    private onDown(x: number, y: number) {
@@ -407,6 +400,7 @@ export class PlanesApp {
 
       if (this.dirty) {
          this.renderer.render();
+         this.thresholdCtrl.draw();
          this.dirty = false;
       }
 
