@@ -249,16 +249,16 @@ export class TriangleObj {
     * 
     * @returns the string
     */
-   public toObjString() {
+   public toObjString(digits = 8) {
 
       let str = "";
       for (let i = 0; i < this.vertices.length; i++) {
          let v = this.vertices[i];
-         str += 'v ' + v.x + ' ' + v.y + ' ' + v.z + '\n';
+         str += 'v ' + v.x.toPrecision(digits) + ' ' + v.y.toPrecision(digits) + ' ' + v.z.toPrecision(digits) + '\n';
       }
       for (let i = 0; i < this.normals.length; i++) {
          let n = this.normals[i];
-         str += 'vn ' + n.x + ' ' + n.y + ' ' + n.z + '\n';
+         str += 'vn ' + n.x.toPrecision(digits) + ' ' + n.y.toPrecision(digits) + ' ' + n.z.toPrecision(digits) + '\n';
       }
       for (let i = 0; i < this.triangles.length; i++) {
          let t = this.triangles[i];
@@ -320,7 +320,7 @@ export class TriangleObj {
       newSize = this.normals.length;
       msg += 'Num Normals: ' + oldSize + ' to ' + newSize + ', ' + (100 * newSize / oldSize).toFixed() + ' %';
 
-      let str = this.toObjString();
+      let str = this.toObjString(6);
       navigator.clipboard.writeText(str).then(() => { alert(msg) });
    }
 }

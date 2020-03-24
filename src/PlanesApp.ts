@@ -29,14 +29,22 @@ export class PlanesApp {
 
    private query: string;
 
-   //   private threshold1Slider: Slider;
-   //   private threshold2Slider: Slider;
    private highlightSlider: Slider
    private lightLightSlider: Slider;
    private midLightSlider: Slider;
    private darkLightSlider: Slider;
    private shadowSlider: Slider;
    private thresholdCtrl: ThresholdCtrl;
+
+   public set threshold1(val: number) {
+      this.renderer.threshold1 = val;
+      this.dirty = true;
+   }
+
+   public set threshold2(val: number) {
+      this.renderer.threshold2 = val;
+      this.dirty = true;
+   }
 
    public constructor(query: string) {
       this.query = query;
@@ -138,36 +146,6 @@ export class PlanesApp {
 
       this.thresholdCtrl = new ThresholdCtrl(div, this);
 
-      /*
-      this.threshold1Slider = new Slider(div, {
-         id: 'Threshold1',
-         label: 'Threshold 1',
-         min: 0,
-         max: 90,
-         value: this.renderer.threshold1,
-         oninput: () => {
-            this.renderer.threshold1 = this.threshold1Slider.value;
-            this.updateSliders();
-            this.dirty = true;
-         },
-         getText: () => { return this.renderer.threshold1.toFixed(0) + "º" }
-      });
-
-      this.threshold2Slider = new Slider(div, {
-         id: 'Threshold2',
-         label: 'Threshold 2',
-         min: 0,
-         max: 90,
-         value: this.renderer.threshold2,
-         oninput: () => {
-            this.renderer.threshold2 = this.threshold2Slider.value;
-            this.updateSliders();
-            this.dirty = true;
-         },
-         getText: () => { return this.renderer.threshold2.toFixed(0) + "º" }
-      });
-      */
-
       this.highlightSlider = new Slider(div, {
          id: 'Highlight',
          label: 'Highlight',
@@ -240,7 +218,7 @@ export class PlanesApp {
             this.updateSliders();
             this.dirty = true;
          },
-         getText: () => { return (100 * this.renderer.lightLight).toFixed(0) + "%" }
+         getText: () => { return (100 * this.renderer.shadow).toFixed(0) + "%" }
       });
 
       return div;

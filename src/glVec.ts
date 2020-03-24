@@ -37,6 +37,70 @@ class glVec {
 }
 
 /**
+ * An x-y vector.
+ */
+export class glVec2 extends glVec {
+
+   /**
+    * @param vals If supplied, the initial values for the vector
+    */
+   public constructor(vals?: number[]) {
+      if (vals) {
+         super(vals);
+      }
+      else {
+         super(2);
+      }
+   }
+
+   /**
+    * Gets the X component of the vector
+    * 
+    * @returns The value
+    */
+   public get x(): number {
+      return this.values[0];
+   }
+
+   /**
+    * Sets the X component of the vector
+    * 
+    * @param val The value
+    */
+   public set x(val: number) {
+      this.values[0] = val;
+   }
+
+   /**
+    * Gets the Y component of the vector
+    *
+    * @returns The value
+    */
+   public get y(): number {
+      return this.values[1];
+   }
+
+   /**
+    * Sets the Y component of the vector
+    * 
+    * @param val The value
+    */
+   public set y(val: number) {
+      this.values[1] = val;
+   }
+
+   /**
+    * Computes the distance to another point
+    * 
+    * @param other The other point
+    * @returns The distance between this point and the other point
+    */
+   public distance(other: glVec2): number {
+      return Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
+   }
+}
+
+/**
  * An x-y-z vector.
  */
 export class glVec3 extends glVec {

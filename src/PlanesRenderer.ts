@@ -1,5 +1,5 @@
 import { glMat4 } from './glMat';
-import { glVec3 } from './glVec';
+import { glVec3, glVec2 } from './glVec';
 import vertexSource from './shaders/PlanesVertex.glsl';
 import fragmentSource from './shaders/PlanesFragment.glsl';
 import { gl, clamp, mix, toRad, toDeg, isMobile } from './Globals';
@@ -13,6 +13,14 @@ import { glColor } from './glColor';
 import { TextureRenderer } from './TextureRenderer';
 import { glTextureFrameBuffer, FrameBufferStyle } from './glTextureFrameBuffer';
 import { textureSize } from './ThresholdCtrl';
+
+export class BallImageData {
+   public image: ImageData;
+   public ballCenter: glVec2;
+   public ballRadius: number;
+}
+
+const BALL_RADIUS = 0.5;
 
 /**
  * Class that renders triangles and a light source
@@ -59,7 +67,7 @@ export class PlanesRenderer {
 
       this.program = glCompiler.compile(vertexSource, fragmentSource);
 
-      let tBall = new TriangleSphere(100, 0.5, new glVec3([0, 0, 0]));
+      let tBall = new TriangleSphere(100, BALL_RADIUS, new glVec3([0, 0, 0]));
       tBall.computeNormals(NormalType.Smooth);
       this.ball = new glObject(tBall, this.program);
 
@@ -189,13 +197,38 @@ export class PlanesRenderer {
       gl.canvas.width = size;
       gl.canvas.height = size;
 
-      this.renderBall();
+      //this.renderBall();
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       this.renderToShadowMap();
       this.renderToScreen();
    }
 
-   public renderBall(): Uint8Array {
+   private setStdUniforms(): glUniform {
+      let uni = new glUniform(this.program);
+      uni.set('view', this.view.transpose());
+      uni.set('shadowView', this.shadowView.transpose());
+      uni.set('projection', this.projection.transpose());
+      uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
+      uni.set('uLightDirection', this.uLightDirection);
+      uni.seti('uUseShadows', 1);
+
+      uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
+      uni.set('uThreshold2', 1 - Math.sin(toRad(this.threshold2 + 90)));
+
+      uni.set('uLightIntensity', this.uLightIntensity);
+      uni.set('uAmbientIntensity', this.uAmbientIntensity);
+      uni.set('uHighlight', this.uHighlight);
+      uni.set('uLightLight', this.uLightLight);
+      uni.set('uMidLight', this.uMidLight);
+      uni.set('uDarkLight', this.uDarkLight);
+      uni.set('uShadow', this.uShadow);
+
+      uni.set('uColor', this.uColor);
+
+      return uni;
+   }
+
+   public getBallImage(): BallImageData {
 
       if (!this.textureFrameBuffer) {
          this.textureFrameBuffer = new glTextureFrameBuffer(textureSize, textureSize, FrameBufferStyle.Depth);
@@ -206,34 +239,58 @@ export class PlanesRenderer {
       gl.bindTexture(gl.TEXTURE_2D, this.textureFrameBuffer.colorTexture);
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.textureFrameBuffer.frameBuffer);
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.textureFrameBuffer.colorTexture, 0);
+      gl.bindTexture(gl.TEXTURE_2D, null);
 
       gl.useProgram(this.program);
 
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
-      let uni = new glUniform(this.program);
-      uni.set('view', glMat4.identity());
-      uni.set('projection', glMat4.identity());
+      let uni = this.setStdUniforms();
+
+      let view = new glMat4();
+      view.translate(new glVec3([-0.45, -0.45, 0]));
+      uni.set('view', view.transpose());
+
+      // always render with bands
       uni.seti('uUseThresholds', 1);
+
+      // shoot the light straight down
       uni.set('uLightDirection', new glVec3([0, -1, 0]));
+
+      // don't cast shadows
       uni.seti('uUseShadows', 0);
-      uni.set('uLightIntensity', this.uLightIntensity);
-      uni.set('uAmbientIntensity', this.uAmbientIntensity);
-      uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
-      uni.set('uThreshold2', 1 - Math.sin(toRad(this.threshold2 + 90)));
-      uni.set('uHighlight', this.uHighlight);
-      uni.set('uLightLight', this.uLightLight);
-      uni.set('uMidLight', this.uMidLight);
-      uni.set('uDarkLight', this.uDarkLight);
-      uni.set('uShadow', this.uShadow);
-      uni.set('uColor', this.uColor);
-      gl.bindTexture(gl.TEXTURE_2D, null);
+
       this.ball.draw();
+
+      let data = new BallImageData();
+      data.ballRadius = BALL_RADIUS;
+      let c = 0.05 + BALL_RADIUS;
+      data.ballCenter = new glVec2([c, c]);
+
+      // normalize value since our drawing space is -1 to 1
+      data.ballRadius /= 2;
+      data.ballCenter.x /= 2;
+      data.ballCenter.y /= 2;
+
+      // draw the arrow
+      uni.set('uLightDirection', new glVec3([1, -0.5, 0.5]));
+      uni.set('uUseThresholds', 0, true);
+
+      // first reset things so that we're looking down the z-axis
+      this.arrow.clearTransforms();
+      this.arrow.translate(new glVec3([0.0, 1.0, 0.0]));
+
+      uni.set('uColor', new glColor([1.0, 0.9, 0.7]));
+      uni.set('uAmbientIntensity', 0.4);
+      this.arrow.draw();
+
 
       let pixels = new Uint8Array(textureSize * textureSize * 4);
       gl.readPixels(0, 0, textureSize, textureSize, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
-      return pixels;
+      data.image = new ImageData(new Uint8ClampedArray(pixels), textureSize, textureSize);
+
+      return data;
    }
 
    private renderToShadowMap(): void {
@@ -257,24 +314,13 @@ export class PlanesRenderer {
       mat.set(2, 3, 0);
       this.shadowView = mat;
 
-      let uni = new glUniform(this.program);
-      uni.set('uUseShadows', 0, true);
+      let uni = this.setStdUniforms();
+
+      // change the view matrix so that our view is from the light
       uni.set('view', this.shadowView.transpose());
-      uni.set('shadowView', this.shadowView.transpose());
-      uni.set('projection', this.projection.transpose());
-      uni.set('uUseShadows', 1, true);
-      uni.set('uLightIntensity', this.uLightIntensity);
-      uni.set('uAmbientIntensity', this.uAmbientIntensity);
-      uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
-      uni.set('uThreshold2', 1 - Math.sin(toRad(this.threshold2 + 90)));
-      uni.set('uHighlight', this.uHighlight);
-      uni.set('uLightLight', this.uLightLight);
-      uni.set('uMidLight', this.uMidLight);
-      uni.set('uDarkLight', this.uDarkLight);
-      uni.set('uShadow', this.uShadow);
-      uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
-      uni.set('uLightDirection', this.uLightDirection);
-      uni.set('uColor', this.uColor);
+
+      // don't try to use the shadow texture while we're creating it
+      uni.seti('uUseShadows', 0);
 
       this.obj.draw();
 
@@ -309,28 +355,14 @@ export class PlanesRenderer {
 
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
+      // reset the view matrix
       this.view = new glMat4();
 
-      let uni = new glUniform(this.program);
-      uni.set('view', this.view.transpose());
-      uni.set('shadowView', this.shadowView.transpose());
-      uni.set('projection', this.projection.transpose());
-      uni.set('uUseShadows', 1, true);
-      uni.set('uLightIntensity', this.uLightIntensity);
-      uni.set('uAmbientIntensity', this.uAmbientIntensity);
-      uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
-      uni.set('uThreshold2', 1 - Math.sin(toRad(this.threshold2 + 90)));
-      uni.set('uHighlight', this.uHighlight);
-      uni.set('uLightLight', this.uLightLight);
-      uni.set('uMidLight', this.uMidLight);
-      uni.set('uDarkLight', this.uDarkLight);
-      uni.set('uShadow', this.uShadow);
-      uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
-      uni.set('uLightDirection', this.uLightDirection);
-      uni.set('uColor', this.uColor);
-
+      // draw the main object
+      let uni = this.setStdUniforms();
       this.obj.draw();
 
+      // draw the object in the upper right at a reduced size and opposite banding
       gl.clear(gl.DEPTH_BUFFER_BIT);
       this.view.scale(this.miniSize);
       this.view.translate(new glVec3([1 - this.miniSize, 1 - this.miniSize, 0]));
@@ -338,6 +370,7 @@ export class PlanesRenderer {
       uni.set('uUseThresholds', this.uUseThresholds ? 0 : 1, true);
       this.obj.draw();
 
+      // draw the ball
       this.drawBall();
 
       gl.bindTexture(gl.TEXTURE_2D, null);
@@ -345,24 +378,10 @@ export class PlanesRenderer {
 
    private drawBall() {
 
-      let uni = new glUniform(this.program);
+      let uni = this.setStdUniforms();
+
       // stop using the shadowmap
-      uni.set('uUseShadows', 0, true);
-      uni.set('view', this.view.transpose());
-      uni.set('shadowView', this.shadowView.transpose());
-      uni.set('projection', this.projection.transpose());
-      uni.set('uLightIntensity', this.uLightIntensity);
-      uni.set('uAmbientIntensity', this.uAmbientIntensity);
-      uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
-      uni.set('uThreshold2', 1 - Math.sin(toRad(this.threshold2 + 90)));
-      uni.set('uHighlight', this.uHighlight);
-      uni.set('uLightLight', this.uLightLight);
-      uni.set('uMidLight', this.uMidLight);
-      uni.set('uDarkLight', this.uDarkLight);
-      uni.set('uShadow', this.uShadow);
-      uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
-      uni.set('uLightDirection', this.uLightDirection);
-      uni.set('uColor', this.uColor);
+      uni.seti('uUseShadows', 0);
 
       this.view = new glMat4();
       this.view.scale(this.miniSize);
