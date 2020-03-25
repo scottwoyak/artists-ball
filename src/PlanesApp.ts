@@ -4,12 +4,13 @@ import { Globals, toRad } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
 import { SphericalCoord } from "./SphericalCoord";
 import { glMat4 } from "./glMat";
-import { glVec4, glVec3 } from "./glVec";
+import { glVec4, glVec3, glVec2 } from "./glVec";
 import { NormalType, TriangleObj } from "./TriangleObj";
 import { TriangleSphere } from "./TriangleSphere";
 import { TriangleCube } from "./TriangleCube";
 import { TriangleObjFile } from "./TriangleObjFile";
 import { ThresholdCtrl } from "./ThresholdCtrl";
+import { PointerEventHandler } from "./PointerEventHandler";
 
 enum PointerMode {
    View,
@@ -21,10 +22,8 @@ export class PlanesApp {
    private pointerMode: PointerMode = PointerMode.View;
    private pointerModeSpecial = false;
    private canvas: HTMLCanvasElement;
+   private handler: PointerEventHandler;
 
-   private mouseDown = false;
-   private oldX: number;
-   private oldY: number;
    private dirty: boolean = true;
 
    private query: string;
@@ -73,42 +72,10 @@ export class PlanesApp {
 
       this.renderer = new PlanesRenderer();
 
-      this.canvas.ontouchstart = (event: TouchEvent) => {
-         event.preventDefault();
-         if (event.touches.length === 1) {
-
-            this.onDown(event.touches[0].clientX, event.touches[0].clientY);
-         }
-      }
-
-      this.canvas.ontouchmove = (event: TouchEvent) => {
-         event.preventDefault();
-         this.onMove(event.touches[0].clientX, event.touches[0].clientY);
-      }
-
-      this.canvas.ontouchend = (event: TouchEvent) => {
-         event.preventDefault();
-         this.mouseDown = false;
-      }
-
-      this.canvas.onmousedown = (event: MouseEvent) => {
-         this.onDown(event.x, event.y);
-
-         // disable selection because dragging is used for rotating the camera and moving objects
-         return false;
-      }
-
-      this.canvas.onmousemove = (event: MouseEvent) => {
-         this.onMove(event.x, event.y);
-      }
-
-      this.canvas.onmouseup = (event) => {
-         this.mouseDown = false;
-      };
-
-      this.canvas.onmouseleave = (event) => {
-         this.mouseDown = false;
-      }
+      this.handler = new PointerEventHandler(this.canvas);
+      this.handler.onDown = (pos) => this.onDown(pos);
+      this.handler.onMove = (pos) => this.onMove(pos);
+      this.handler.onClick = (pos) => this.onClick(pos);
 
       document.onkeypress = (event: KeyboardEvent) => {
          if (event.key === 'o') {
@@ -305,46 +272,38 @@ export class PlanesApp {
       }
    }
 
-   private onDown(x: number, y: number) {
+   private onDown(pos: glVec2) {
 
-      if (this.click(x, y)) {
-         return;
-      };
-
-      this.pointerModeSpecial = (x < 0.1 * this.canvas.width) ? true : false;
-
-      this.oldX = x;
-      this.oldY = y;
-
-      this.mouseDown = true;
+      this.pointerModeSpecial = (pos.x < 0.1 * this.canvas.width) ? true : false;
    }
 
-   private onMove(x: number, y: number) {
-      if (this.mouseDown) {
+   private onMove(pos: glVec2) {
+      if (this.handler.mouseDown) {
          this.dirty = true;
 
+         let old = this.handler.lastPos;
          if (this.pointerMode === PointerMode.View) {
             if (this.pointerModeSpecial) {
-               this.renderer.rotZ((this.oldY - y) * 0.01);
+               this.renderer.rotZ((old.y - pos.y) * 0.01);
             }
             else {
-               this.renderer.rotX((y - this.oldY) * 0.01);
-               this.renderer.rotY((x - this.oldX) * 0.01);
+               this.renderer.rotX((pos.y - old.y) * 0.01);
+               this.renderer.rotY((pos.x - old.x) * 0.01);
             }
          }
          else if (this.pointerMode === PointerMode.Light) {
-            let pos = SphericalCoord.fromXYZ(this.renderer.uLightDirection.values);
 
             if (this.pointerModeSpecial) {
                /*
-               this.pos.radius -= (y - this.oldY) * 0.005;
+               let sPos = SphericalCoord.fromXYZ(this.renderer.uLightDirection.values);
+               this.pos.radius -= (y - old.y) * 0.005;
                this.pos.radius = clamp(this.pos.radius, Uniforms.uBallRadius + 0.5, 5);
                Uniforms.uLightPos.values = this.pos.toXYZ();
                */
             }
             else {
-               let matY = glMat4.fromRotY(toRad(x - this.oldX));
-               let matX = glMat4.fromRotX(toRad(y - this.oldY));
+               let matY = glMat4.fromRotY(toRad(pos.x - old.x));
+               let matX = glMat4.fromRotX(toRad(pos.y - old.y));
                let vec = new glVec4([
                   this.renderer.uLightDirection.x,
                   this.renderer.uLightDirection.y,
@@ -360,10 +319,6 @@ export class PlanesApp {
 
             this.dirty = true;
          }
-
-         // remember this coordinate
-         this.oldX = x;
-         this.oldY = y;
       }
    }
 
@@ -374,17 +329,17 @@ export class PlanesApp {
     * @param y The y coordinate.
     * @returns true if a hit on one of the views occurs.
     */
-   private click(x: number, y: number): boolean {
+   private onClick(pos: glVec2): boolean {
 
       let size = this.canvas.width;
 
       // TODO get the size of the area from the renderer
-      if (x < size / 5 && y < size / 5) {
+      if (pos.x < size / 5 && pos.y < size / 5) {
          this.toggleMode();
          return true;
       }
 
-      return this.renderer.click(x / size, 1 - (y / size));
+      return this.renderer.click(pos.x / size, 1 - (pos.y / size));
    }
 
    public tick() {

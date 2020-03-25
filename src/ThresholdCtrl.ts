@@ -1,6 +1,7 @@
 import { PlanesApp } from "./PlanesApp";
 import { toRad, toDeg, clamp } from "./Globals";
 import { glVec2 } from "./glVec";
+import { PointerEventHandler } from "./PointerEventHandler";
 
 // TODO make these variables
 export let textureSize = 256;
@@ -10,9 +11,9 @@ export class ThresholdCtrl {
    private canvas: HTMLCanvasElement;
    private hiddenCanvas: HTMLCanvasElement;
    private app: PlanesApp;
-   private mouseDown = false;
    private mouseOffset = new glVec2();
    private hit = 0;
+   private handler: PointerEventHandler;
 
    private ballCenter: glVec2;
    private p1: glVec2;
@@ -34,72 +35,37 @@ export class ThresholdCtrl {
       this.hiddenCanvas.style.display = 'none';
       parent.appendChild(this.hiddenCanvas);
 
-      this.canvas.ontouchstart = (event: TouchEvent) => {
-         event.preventDefault();
-         if (event.touches.length === 1) {
-
-            this.onDown(event.touches[0].clientX, event.touches[0].clientY);
-         }
-      }
-
-      this.canvas.ontouchmove = (event: TouchEvent) => {
-         event.preventDefault();
-         this.onMove(event.touches[0].clientX, event.touches[0].clientY);
-      }
-
-      this.canvas.ontouchend = (event: TouchEvent) => {
-         event.preventDefault();
-         this.mouseDown = false;
-      }
-
-      this.canvas.onmousedown = (event: MouseEvent) => {
-         this.onDown(event.x - this.canvas.offsetLeft, event.y - this.canvas.offsetTop);
-
-         // disable selection because dragging is used for rotating the camera and moving objects
-         return false;
-      }
-
-      this.canvas.onmousemove = (event: MouseEvent) => {
-         this.onMove(event.x - this.canvas.offsetLeft, event.y - this.canvas.offsetTop);
-      }
-
-      this.canvas.onmouseup = (event) => {
-         this.mouseDown = false;
-      };
-
-      this.canvas.onmouseleave = (event) => {
-         this.mouseDown = false;
-      }
+      this.handler = new PointerEventHandler(this.canvas);
+      this.handler.onDown = (pos) => this.onDown(pos);
+      this.handler.onMove = (pos) => this.onMove(pos);
 
    }
-   private onDown(x: number, y: number) {
+   private onDown(pos: glVec2) {
 
-      this.hitTest(x, y);
-
-      this.mouseDown = true;
+      this.hitTest(pos);
    }
 
-   private hitTest(x: number, y: number) {
-      let d1 = this.p1.distance(new glVec2([x, y]));
-      let d2 = this.p2.distance(new glVec2([x, y]));
+   private hitTest(pos: glVec2) {
+      let d1 = this.p1.distance(pos);
+      let d2 = this.p2.distance(pos);
 
       const HIT_RADIUS = 15;
       if (d1 < HIT_RADIUS && d1 <= d2) {
          this.hit = 1;
-         this.mouseOffset = new glVec2([this.p1.x - x, this.p1.y - y]);
+         this.mouseOffset = new glVec2([this.p1.x - pos.x, this.p1.y - pos.y]);
       }
       else if (d2 < HIT_RADIUS && d2 <= d1) {
          this.hit = 2;
-         this.mouseOffset = new glVec2([this.p2.x - x, this.p2.y - y]);
+         this.mouseOffset = new glVec2([this.p2.x - pos.x, this.p2.y - pos.y]);
       }
       else {
          this.hit = 0;
       }
    }
 
-   private onMove(x: number, y: number) {
-      if (this.mouseDown && this.hit > 0) {
-         let hitPt = new glVec2([x - this.mouseOffset.x, y - this.mouseOffset.y]);
+   private onMove(pos: glVec2) {
+      if (this.handler.mouseDown && this.hit > 0) {
+         let hitPt = new glVec2([pos.x - this.mouseOffset.x, pos.y - this.mouseOffset.y]);
          hitPt.x = Math.max(hitPt.x, this.ballCenter.x);
          hitPt.y = Math.min(hitPt.y, this.ballCenter.y);
          let radius = this.ballCenter.distance(hitPt);

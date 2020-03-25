@@ -54,6 +54,15 @@ export class glVec2 extends glVec {
    }
 
    /**
+    * Creates a copy of the vector.
+    *
+    * @returns A copy of the vector.
+    */
+   public clone(): glVec2 {
+      return new glVec2(this.values);
+   }
+
+   /**
     * Gets the X component of the vector
     * 
     * @returns The value
