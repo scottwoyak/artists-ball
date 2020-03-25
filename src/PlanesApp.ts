@@ -35,6 +35,7 @@ export class PlanesApp {
    private darkLightSlider: Slider;
    private shadowSlider: Slider;
    private thresholdCtrl: ThresholdCtrl;
+   private modeButton: HTMLSpanElement;
 
    public set threshold1(val: number) {
       this.renderer.threshold1 = val;
@@ -123,24 +124,14 @@ export class PlanesApp {
          requestAnimationFrame(() => this.tick());
       })
 
-      let button = document.createElement('span');
-      button.id = 'modeButton';
-      button.innerHTML = 'View';
+      this.modeButton = document.createElement('span');
+      this.modeButton.id = 'modeButton';
+      this.modeButton.innerHTML = 'View';
       this.pointerMode = PointerMode.View;
-      button.onclick = () => {
-         switch (this.pointerMode) {
-            case PointerMode.View:
-               button.innerHTML = 'Light';
-               this.pointerMode = PointerMode.Light;
-               break;
-
-            case PointerMode.Light:
-               button.innerHTML = 'View';
-               this.pointerMode = PointerMode.View;
-               break;
-         }
+      this.modeButton.onclick = () => {
+         this.toggleMode();
       }
-      container.appendChild(button);
+      container.appendChild(this.modeButton);
 
       div.appendChild(document.createElement('br'));
 
@@ -284,6 +275,7 @@ export class PlanesApp {
 
          case 'tom.obj':
          case 'malehead.obj':
+         case 'head.obj':
             this.renderer.rotY(toRad(180));
             break;
       }
@@ -297,6 +289,20 @@ export class PlanesApp {
       this.midLightSlider.value = 100 * this.renderer.midLight;
       this.darkLightSlider.value = 100 * this.renderer.darkLight;
       this.shadowSlider.value = 100 * this.renderer.shadow;
+   }
+
+   private toggleMode() {
+      switch (this.pointerMode) {
+         case PointerMode.View:
+            this.modeButton.innerHTML = 'Light';
+            this.pointerMode = PointerMode.Light;
+            break;
+
+         case PointerMode.Light:
+            this.modeButton.innerHTML = 'View';
+            this.pointerMode = PointerMode.View;
+            break;
+      }
    }
 
    private onDown(x: number, y: number) {
@@ -371,6 +377,13 @@ export class PlanesApp {
    private click(x: number, y: number): boolean {
 
       let size = this.canvas.width;
+
+      // TODO get the size of the area from the renderer
+      if (x < size / 5 && y < size / 5) {
+         this.toggleMode();
+         return true;
+      }
+
       return this.renderer.click(x / size, 1 - (y / size));
    }
 

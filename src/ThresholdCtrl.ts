@@ -100,6 +100,8 @@ export class ThresholdCtrl {
    private onMove(x: number, y: number) {
       if (this.mouseDown && this.hit > 0) {
          let hitPt = new glVec2([x - this.mouseOffset.x, y - this.mouseOffset.y]);
+         hitPt.x = Math.max(hitPt.x, this.ballCenter.x);
+         hitPt.y = Math.min(hitPt.y, this.ballCenter.y);
          let radius = this.ballCenter.distance(hitPt);
          let angle = toDeg(Math.asin((hitPt.x - this.ballCenter.x) / radius));
          if (this.hit == 1) {
@@ -170,6 +172,4 @@ export class ThresholdCtrl {
 
       return new glVec2([center.x + ox, center.y - oy]);
    }
-
-
 }

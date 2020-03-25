@@ -431,8 +431,10 @@ export class PlanesRenderer {
       if (x > (1 - this.miniSize) && y > (1 - this.miniSize)) {
          this.uUseThresholds = !this.uUseThresholds;
          this.render();
-         return false;
+         return true;
       }
+
+      return false;
    }
 
    public optimize(normalType: NormalType) {

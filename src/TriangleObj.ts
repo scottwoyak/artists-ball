@@ -251,7 +251,12 @@ export class TriangleObj {
     */
    public toObjString(digits = 8) {
 
-      let str = "";
+      let str = '';
+      str += '# Vertices: ' + this.vertices.length + '\n';
+      str += '# Normals: ' + this.normals.length + '\n';
+      str += '# Triangles: ' + this.triangles.length + '\n';
+      str += '\n';
+
       for (let i = 0; i < this.vertices.length; i++) {
          let v = this.vertices[i];
          str += 'v ' + v.x.toPrecision(digits) + ' ' + v.y.toPrecision(digits) + ' ' + v.z.toPrecision(digits) + '\n';
