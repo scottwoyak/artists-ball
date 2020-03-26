@@ -37,9 +37,6 @@ export class PlanesRenderer {
    private uThreshold1 = 40;
    private uThreshold2 = 70;
 
-   private uAmbientIntensity = 0.2;
-   private uLightIntensity = 0.7;
-
    private uHighlight: number = 1.0;
    private uLightLight: number;
    private uMidLight: number;
@@ -205,8 +202,8 @@ export class PlanesRenderer {
       uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
       uni.set('uThreshold2', 1 - Math.sin(toRad(this.threshold2 + 90)));
 
-      uni.set('uLightIntensity', this.uLightIntensity);
-      uni.set('uAmbientIntensity', this.uAmbientIntensity);
+      uni.set('uLightIntensity', this.uHighlight - this.uShadow - 0.1);
+      uni.set('uAmbientIntensity', this.uShadow);
       uni.set('uHighlight', this.uHighlight);
       uni.set('uLightLight', this.uLightLight);
       uni.set('uMidLight', this.uMidLight);

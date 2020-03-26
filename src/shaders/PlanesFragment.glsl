@@ -101,10 +101,10 @@ void main()
    float diffuse = diffuseFactor * uLightIntensity;
 
    // compute specular contribution
-   float shininess = 50.0;
+   float shininess = 15.0;
    vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
    float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
-   float specular = 0.2 * pow(cosAngle, shininess);
+   float specular = 0.1 * pow(cosAngle, shininess);
 
    float rgb;
    if (uUseThresholds == 0)
