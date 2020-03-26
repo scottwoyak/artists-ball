@@ -1,8 +1,7 @@
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
-import { Globals, toRad } from "./Globals";
+import { Globals, toRad, isMobile } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
-import { SphericalCoord } from "./SphericalCoord";
 import { glMat4 } from "./glMat";
 import { glVec4, glVec3, glVec2 } from "./glVec";
 import { NormalType, TriangleObj } from "./TriangleObj";
@@ -11,6 +10,7 @@ import { TriangleCube } from "./TriangleCube";
 import { TriangleObjFile } from "./TriangleObjFile";
 import { ThresholdCtrl } from "./ThresholdCtrl";
 import { PointerEventHandler } from "./PointerEventHandler";
+import { Profiler } from "./Profiler";
 
 enum PointerMode {
    View,
@@ -22,6 +22,7 @@ export class PlanesApp {
    private pointerMode: PointerMode = PointerMode.View;
    private pointerModeSpecial = false;
    private canvas: HTMLCanvasElement;
+   private overlay: HTMLSpanElement;
    private handler: PointerEventHandler;
 
    private dirty: boolean = true;
@@ -54,13 +55,29 @@ export class PlanesApp {
       const div = document.createElement('div');
       div.className = 'PlanesApp';
 
-      const container = document.createElement('span');
+      const container = document.createElement('div');
       container.className = 'container';
       div.appendChild(container);
 
       this.canvas = document.createElement('canvas');
-      this.canvas.id = 'canvas';
+      this.canvas.id = 'MainCanvas';
       container.appendChild(this.canvas);
+
+      this.overlay = document.createElement('span');
+      this.overlay.id = 'Overlay';
+      container.appendChild(this.overlay);
+
+      let size = 512;
+      if (isMobile) {
+         size = document.body.clientWidth;
+      }
+      this.canvas.width = size;
+      this.canvas.height = size;
+      //this.overlay.style.width = size;
+      //this.overlay.height = size;
+      div.style.width = size + 'px';
+      this.overlay.style.lineHeight = size + 'px'; // vertically center text
+
 
       let context = this.canvas.getContext('webgl') as WebGLRenderingContext;
 
@@ -86,11 +103,6 @@ export class PlanesApp {
          }
       }
 
-      this.loadModel(this.query).then((tObj: TriangleObj) => {
-         //this.renderer.setModel(tObj);
-         requestAnimationFrame(() => this.tick());
-      })
-
       this.modeButton = document.createElement('span');
       this.modeButton.id = 'modeButton';
       this.modeButton.innerHTML = 'View';
@@ -100,11 +112,13 @@ export class PlanesApp {
       }
       container.appendChild(this.modeButton);
 
-      div.appendChild(document.createElement('br'));
+      const container2 = document.createElement('div');
+      container2.className = 'container';
+      div.appendChild(container2);
 
-      this.thresholdCtrl = new ThresholdCtrl(div, this);
+      this.thresholdCtrl = new ThresholdCtrl(container2, this);
 
-      this.highlightSlider = new Slider(div, {
+      this.highlightSlider = new Slider(container2, {
          id: 'Highlight',
          label: 'Highlight',
          min: 0,
@@ -119,7 +133,7 @@ export class PlanesApp {
          getText: () => { return (100 * this.renderer.highlight).toFixed(0) + "%" }
       });
 
-      this.lightLightSlider = new Slider(div, {
+      this.lightLightSlider = new Slider(container2, {
          id: 'LightLight',
          label: 'Light Light',
          min: 0,
@@ -134,7 +148,7 @@ export class PlanesApp {
          getText: () => { return (100 * this.renderer.lightLight).toFixed(0) + "%" }
       });
 
-      this.midLightSlider = new Slider(div, {
+      this.midLightSlider = new Slider(container2, {
          id: 'MidLight',
          label: 'Mid Light',
          min: 0,
@@ -149,7 +163,7 @@ export class PlanesApp {
          getText: () => { return (100 * this.renderer.midLight).toFixed(0) + "%" }
       });
 
-      this.darkLightSlider = new Slider(div, {
+      this.darkLightSlider = new Slider(container2, {
          id: 'DarkLight',
          label: 'Dark Light',
          min: 0,
@@ -164,7 +178,7 @@ export class PlanesApp {
          getText: () => { return (100 * this.renderer.darkLight).toFixed(0) + "%" }
       });
 
-      this.shadowSlider = new Slider(div, {
+      this.shadowSlider = new Slider(container2, {
          id: 'Shadow',
          label: 'Shadow',
          min: 0,
@@ -179,10 +193,15 @@ export class PlanesApp {
          getText: () => { return (100 * this.renderer.shadow).toFixed(0) + "%" }
       });
 
+      this.loadModel(this.query).then((tObj: TriangleObj) => {
+         //this.renderer.setModel(tObj);
+         requestAnimationFrame(() => this.tick());
+      })
+
       return div;
    }
 
-   private loadModel(query: string): Promise<TriangleObj> {
+   private async loadModel(query: string): Promise<TriangleObj> {
 
       if (query && query.toLowerCase() === 'trianglesphere') {
          let radius = 0.75;
@@ -200,14 +219,56 @@ export class PlanesApp {
          return Promise.resolve(tObj);
       }
       else if (query && query.toLowerCase().endsWith('.obj')) {
-         return fetch(query)
-            .then(res => res.text())
-            .then(res => {
-               let tObj = new TriangleObjFile(res);
-               this.renderer.setModel(tObj);
-               this.orient(tObj, query);
-               return tObj;
-            });
+
+         // Step 1: start the fetch and obtain a reader
+         let response = await fetch(query);
+
+         const reader = response.body.getReader();
+
+         // Step 2: get total length
+         const contentLength = +response.headers.get('Content-Length');
+
+         // Step 3: read the data
+         let receivedLength = 0; // received that many bytes at the moment
+         let chunks = []; // array of received binary chunks (comprises the body)
+         let tStart = Date.now();
+         while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+               this.overlay.innerText = 'Loading';
+               break;
+            }
+
+            chunks.push(value);
+            receivedLength += value.length;
+
+            if (Date.now() - tStart > 500) {
+               this.overlay.innerText = 'Downloading: ' + (100 * receivedLength / contentLength).toFixed() + '%';
+            }
+         }
+         console.log(Date.now() - tStart);
+
+         // TODO: move the code below to a WebWorker
+
+         // Step 4: concatenate chunks into single Uint8Array
+         let chunksAll = new Uint8Array(receivedLength); // (4.1)
+         let position = 0;
+         for (let chunk of chunks) {
+            chunksAll.set(chunk, position); // (4.2)
+            position += chunk.length;
+         }
+
+         // Step 5: decode into a string
+         let res = new TextDecoder("utf-8").decode(chunksAll);
+
+         let tObj = new TriangleObjFile(res);
+         this.renderer.setModel(tObj);
+         this.orient(tObj, query);
+
+         this.overlay.innerText = '';
+
+         return Promise.resolve(tObj);
       }
       else {
          return Promise.reject('Unknown model: \'' + query + '\'');
@@ -227,10 +288,6 @@ export class PlanesApp {
             this.renderer.rotY(toRad(180));
             break;
 
-         case 'femalehead.obj':
-            this.renderer.rotY(toRad(180));
-            break;
-
          case 'wolf.obj':
             this.renderer.rotY(toRad(-140));
             this.renderer.rotX(toRad(5));
@@ -240,9 +297,7 @@ export class PlanesApp {
             this.renderer.rotY(toRad(-160));
             break;
 
-         case 'tom.obj':
-         case 'malehead.obj':
-         case 'head.obj':
+         default:
             this.renderer.rotY(toRad(180));
             break;
       }
@@ -261,12 +316,12 @@ export class PlanesApp {
    private toggleMode() {
       switch (this.pointerMode) {
          case PointerMode.View:
-            this.modeButton.innerHTML = 'Light';
+            this.modeButton.innerText = 'Light';
             this.pointerMode = PointerMode.Light;
             break;
 
          case PointerMode.Light:
-            this.modeButton.innerHTML = 'View';
+            this.modeButton.innerText = 'View';
             this.pointerMode = PointerMode.View;
             break;
       }

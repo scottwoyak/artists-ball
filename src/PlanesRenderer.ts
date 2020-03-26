@@ -13,6 +13,7 @@ import { glColor } from './glColor';
 import { TextureRenderer } from './TextureRenderer';
 import { glTextureFrameBuffer, FrameBufferStyle } from './glTextureFrameBuffer';
 import { textureSize } from './ThresholdCtrl';
+import { htmlColor } from './htmlColor';
 
 export class BallImageData {
    public image: ImageData;
@@ -186,17 +187,6 @@ export class PlanesRenderer {
 
    public render(): void {
 
-      // size of the actual canvas.
-      let size = document.body.clientWidth;
-
-      if (isMobile === false) {
-         // not sure why, but this basically becomes full width on my phone
-         size = 512;
-      }
-
-      gl.canvas.width = size;
-      gl.canvas.height = size;
-
       //this.renderBall();
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       this.renderToShadowMap();
@@ -243,6 +233,11 @@ export class PlanesRenderer {
 
       gl.useProgram(this.program);
 
+
+      let style = getComputedStyle(<Element>gl.canvas);
+      let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
+      gl.clearColor(color.r, color.g, color.b, 1);
+      //gl.clearColor(0.5, 0.5, 0.6, 1);
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
       let uni = this.setStdUniforms();
@@ -303,7 +298,6 @@ export class PlanesRenderer {
 
       gl.useProgram(this.program);
 
-      gl.clearColor(0.5, 0.5, 0.6, 1);
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
       let center = new glVec3([0, 0, 0]);

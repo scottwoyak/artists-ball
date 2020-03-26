@@ -1,5 +1,6 @@
 import { Color } from "./Color";
 import { htmlColor } from "./htmlColor";
+import { clamp } from "./Globals";
 
 /**
  * Color class that requires RGB values to be between 0 and 1
@@ -33,9 +34,9 @@ export class glColor extends Color {
     * @param color A generic Color object.
     */
    public static fromColor(color: Color): glColor {
-      let r = glColor.clamp(color.r);
-      let g = glColor.clamp(color.g);
-      let b = glColor.clamp(color.b);
+      let r = clamp(color.r, 0, 1);
+      let g = clamp(color.g, 0, 1);
+      let b = clamp(color.b, 0, 1);
       return new glColor([r, g, b]);
    }
 
@@ -70,24 +71,6 @@ export class glColor extends Color {
       }
       else {
          return c2;
-      }
-   }
-
-   /**
-    * Clamps a number between 0 and 1.
-    * 
-    * @param val The value.
-    * @returns The clamped value
-    */
-   private static clamp(val: number): number {
-      if (val < 0) {
-         return 0;
-      }
-      else if (val > 1) {
-         return 1;
-      }
-      else {
-         return val;
       }
    }
 

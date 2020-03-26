@@ -68,6 +68,18 @@ export class htmlColor extends Color {
    }
 
    /**
+    * Converts a css style string (e.g. 'rgb(24,36,83)') to a color
+    * 
+    * @param css The css string.
+    * @returns The color.
+    */
+   public static fromCss(css: string): htmlColor {
+      let regex = /\d+/g;
+      let vals = css.match(regex).slice(0, 3);
+      return new htmlColor([parseInt(vals[0]), parseInt(vals[1]), parseInt(vals[2])]);
+   }
+
+   /**
     * Creates an htmlColor object from a hex string
     * 
     * @param hex The hex string

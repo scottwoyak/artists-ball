@@ -6,6 +6,24 @@ body {
   margin: 0px;
 }
 
+#MainCanvas {
+  background-color: rgb(128, 128, 150);
+}
+
+#Overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  font-size: 40px;
+  text-align: center;
+  color: white;
+  background-color: transparent;
+  user-select: none;
+  pointer-events: none;
+}
+
 .SliderLabel {
   display: inline-block;
   width: 25%;
@@ -46,7 +64,7 @@ body {
 
 .PlanesApp #ThresholdCanvas {
   position: absolute;
-  left: 70%;
+  right: 0px;
   width: 150px;
   height: 150px;
 }
