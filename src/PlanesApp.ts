@@ -279,7 +279,7 @@ export class PlanesApp {
 
       let center = tObj.center;
       this.renderer.translate(new glVec3([-center.x, -center.y, -center.z]));
-      this.renderer.scale(1.75 / Math.max(tObj.width, tObj.height, tObj.depth));
+      this.renderer.scale(2.0 / Math.sqrt(tObj.width * tObj.width + tObj.height * tObj.height + tObj.depth * tObj.depth));
 
       // orient each file so that it is facing forward
       switch (query.toLowerCase()) {
@@ -295,6 +295,9 @@ export class PlanesApp {
 
          case 'sheephead.obj':
             this.renderer.rotY(toRad(-160));
+            break;
+
+         case 'pose1.obj':
             break;
 
          default:
