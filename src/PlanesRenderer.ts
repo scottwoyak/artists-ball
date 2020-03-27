@@ -46,7 +46,7 @@ export class PlanesRenderer {
    // size of the smaller view
    private readonly miniSize = 0.2;
 
-   private uUseThresholds = true;
+   private uUseThresholds = false;
 
    private ball: glObject;
    private arrow: glObject;
