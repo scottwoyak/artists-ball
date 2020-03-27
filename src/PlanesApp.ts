@@ -10,7 +10,6 @@ import { TriangleCube } from "./TriangleCube";
 import { TriangleObjFile } from "./TriangleObjFile";
 import { ThresholdCtrl } from "./ThresholdCtrl";
 import { PointerEventHandler } from "./PointerEventHandler";
-import { Profiler } from "./Profiler";
 
 enum PointerMode {
    View,
@@ -93,6 +92,7 @@ export class PlanesApp {
       this.handler.onDown = (pos) => this.onDown(pos);
       this.handler.onMove = (pos) => this.onMove(pos);
       this.handler.onClick = (pos) => this.onClick(pos);
+      this.handler.onDblClick = (pos) => this.onDblClick(pos);
 
       document.onkeypress = (event: KeyboardEvent) => {
          if (event.key === 'o') {
@@ -398,6 +398,11 @@ export class PlanesApp {
       }
 
       return this.renderer.click(pos.x / size, 1 - (pos.y / size));
+   }
+
+   private onDblClick(pos: glVec2) {
+
+      this.toggleMode();
    }
 
    public tick() {

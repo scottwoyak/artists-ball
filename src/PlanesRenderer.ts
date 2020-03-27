@@ -272,7 +272,7 @@ export class PlanesRenderer {
       this.arrow.clearTransforms();
       this.arrow.translate(new glVec3([0.0, 1.0, 0.0]));
 
-      uni.set('uColor', new glColor([1.0, 0.9, 0.7]));
+      uni.set('uColor', new glColor([1.0, 1.0, 0.5]));
       uni.set('uAmbientIntensity', 0.4);
       this.arrow.draw();
 
