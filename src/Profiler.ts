@@ -3,10 +3,10 @@
  */
 export class Profiler {
    // the last time stamp
-   private t = window.performance.now();
+   private t = performance.now();
 
    public get elapsedMs() {
-      return (window.performance.now() - this.t);
+      return (performance.now() - this.t);
    }
    /**
     * Prints a message to console of the elapsed time since the last mark
@@ -22,7 +22,7 @@ export class Profiler {
     * Updates the timestamp to now
     */
    public mark() {
-      this.t = window.performance.now();
+      this.t = performance.now();
    }
 
 }

@@ -78,7 +78,6 @@ export class glTextureFrameBuffer {
          return;
       }
 
-      console.log('creating texture: ' + width + ' ' + height);
       // Step 1: Create a frame buffer object
       this.frameBuffer = gl.createFramebuffer();
 

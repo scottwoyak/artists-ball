@@ -4,6 +4,7 @@ import { glMat4 } from "./glMat";
 import { glVec3 } from "./glVec";
 import { gl } from "./Globals";
 import { glUniform } from "./glUniform";
+import { Profiler } from "./Profiler";
 
 export class glObject {
    private tObj: TriangleObj;
@@ -11,8 +12,6 @@ export class glObject {
    private vertexBuffer: glBuffer;
    private normalBuffer: glBuffer;
    private model = new glMat4();
-   private vertices: number[] = [];
-   private normals: number[] = [];
 
    public constructor(tObj: TriangleObj, program: WebGLProgram) {
 
@@ -45,7 +44,6 @@ export class glObject {
       this.model = new glMat4();
    }
 
-
    private pushVec(array: number[], vec: glVec3) {
       array.push(vec.x);
       array.push(vec.y);
@@ -54,22 +52,25 @@ export class glObject {
 
    public uploadTriangles() {
 
+      let p = new Profiler();
       // convert the triangles into arrays that can be uploaded
-      this.vertices = [];
-      this.normals = [];
+      let vertices: number[] = [];
+      let normals: number[] = [];
       for (let i = 0; i < this.tObj.triangles.length; i++) {
          let tri = this.tObj.triangles[i];
-         this.pushVec(this.vertices, tri.v0);
-         this.pushVec(this.vertices, tri.v1);
-         this.pushVec(this.vertices, tri.v2);
+         this.pushVec(vertices, tri.v0);
+         this.pushVec(vertices, tri.v1);
+         this.pushVec(vertices, tri.v2);
 
-         this.pushVec(this.normals, tri.n0);
-         this.pushVec(this.normals, tri.n1);
-         this.pushVec(this.normals, tri.n2);
+         this.pushVec(normals, tri.n0);
+         this.pushVec(normals, tri.n1);
+         this.pushVec(normals, tri.n2);
       }
+      p.log('to glVec[]');
 
-      this.vertexBuffer.upload(this.vertices);
-      this.normalBuffer.upload(this.normals);
+      this.vertexBuffer.upload(vertices);
+      this.normalBuffer.upload(normals);
+      p.log('upload');
    }
 
    public draw() {
@@ -79,7 +80,7 @@ export class glObject {
 
       this.vertexBuffer.bind();
       this.normalBuffer.bind();
-      gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
+      gl.drawArrays(gl.TRIANGLES, 0, this.tObj.triangles.length * 3);
    }
 
    public optimize(normalType: NormalType) {

@@ -3,15 +3,27 @@ import { IndexedTriangle } from "./IndexedTriangle";
 import { TriangleObj, NormalType } from "./TriangleObj";
 import { Profiler } from "./Profiler";
 
+export type StatusFunction = (status: string) => void;
+
 /**
  * Class that loads a .obj file and creates triangles for it
  */
 export class TriangleObjFile extends TriangleObj {
 
+   private updateStatus: StatusFunction;
 
-   public constructor(src: string) {
+   public constructor(src: string, statusFunction?: StatusFunction) {
 
       super();
+
+      // record the status function. If one is not supplied, create one that does nothing
+      if (statusFunction) {
+         this.updateStatus = statusFunction;
+      }
+      else {
+         this.updateStatus = (status) => { };
+      }
+
       this.parse(src);
    }
 
@@ -32,11 +44,19 @@ export class TriangleObjFile extends TriangleObj {
 
    private parse(src: string) {
 
+      this.updateStatus('Processing');
+      let t = Date.now();
+
       let p = new Profiler();
       let lines = src.split('\n');
       p.log('split');
 
       for (let i = 0; i < lines.length; i++) {
+         // report progress every 50 ms
+         if (Date.now() - t > 50) {
+            this.updateStatus('Processing: ' + (100 * i / lines.length).toFixed() + '%');
+            t = Date.now();
+         }
          let line = lines[i];
          if (line.startsWith('v ')) {
             let tokens = line.match(/\S+/g);
@@ -62,6 +82,7 @@ export class TriangleObjFile extends TriangleObj {
       if (this.normals.length === 0) {
          this.computeNormals(NormalType.Smooth);
       }
+      this.updateStatus('Processing: 100%');
 
       console.log('Vertices: ' + this.vertices.length);
       console.log('Normals: ' + this.normals.length);

@@ -9,6 +9,15 @@ export enum NormalType {
    Flat
 }
 
+export class TriangleObjData {
+   vertices: Float32Array;
+   normals: Float32Array;
+   nIndices: Int32Array;
+   vIndices: Int32Array;
+   boxMin: glVec3;
+   boxMax: glVec3;
+}
+
 /**
  * Class used to compute normals for vertices that join multiple faces
  */
@@ -327,5 +336,98 @@ export class TriangleObj {
 
       let str = this.toObjString(6);
       navigator.clipboard.writeText(str).then(() => { alert(msg) });
+   }
+
+   private pushVec(array: number[], vec: glVec3) {
+      array.push(vec.x);
+      array.push(vec.y);
+      array.push(vec.z);
+   }
+
+   public export(): TriangleObjData {
+
+      let data = new TriangleObjData;
+
+      // convert the triangles into arrays that can be uploaded
+      let vertices: number[] = [];
+      for (let i = 0; i < this.vertices.length; i++) {
+         this.pushVec(vertices, this.vertices[i]);
+      }
+
+      let normals: number[] = [];
+      for (let i = 0; i < this.normals.length; i++) {
+         this.pushVec(normals, this.normals[i]);
+      }
+
+      let vIndices: number[] = [];
+      let nIndices: number[] = [];
+      for (let i = 0; i < this.triangles.length; i++) {
+         let tri = this.triangles[i];
+
+         vIndices.push(tri.iV0);
+         vIndices.push(tri.iV1);
+         vIndices.push(tri.iV2);
+
+         nIndices.push(tri.iN0);
+         nIndices.push(tri.iN1);
+         nIndices.push(tri.iN2);
+      }
+
+      data.vertices = new Float32Array(vertices);
+      data.normals = new Float32Array(normals);
+      data.vIndices = new Int32Array(vIndices);
+      data.nIndices = new Int32Array(nIndices);
+      data.boxMin = this.boxMin.clone();
+      data.boxMax = this.boxMax.clone();
+
+      return data;
+   }
+
+
+   private static data2vertex(data: TriangleObjData, index: number): glVec3 {
+      return new glVec3([
+         data.vertices[3 * index + 0],
+         data.vertices[3 * index + 1],
+         data.vertices[3 * index + 2]
+      ]);
+   }
+
+   public static data2normal(data: TriangleObjData, index: number): glVec3 {
+      return new glVec3([
+         data.normals[3 * index + 0],
+         data.normals[3 * index + 1],
+         data.normals[3 * index + 2]
+      ]);
+   }
+
+   public static import(data: TriangleObjData): TriangleObj {
+      let tObj = new TriangleObj();
+
+      // restore vertices
+      for (let i = 0; i < data.vertices.length / 3; i++) {
+         tObj.vertices.push(this.data2vertex(data, i));
+      }
+
+      // restore normals
+      for (let i = 0; i < data.normals.length / 3; i++) {
+         tObj.normals.push(this.data2normal(data, i));
+      }
+
+      // restore triangles
+      for (let i = 0; i < data.vIndices.length / 3; i++) {
+         let iV0 = data.vIndices[3 * i + 0];
+         let iV1 = data.vIndices[3 * i + 1];
+         let iV2 = data.vIndices[3 * i + 2];
+         let iN0 = data.nIndices[3 * i + 0];
+         let iN1 = data.nIndices[3 * i + 1];
+         let iN2 = data.nIndices[3 * i + 2];
+         let t = new IndexedTriangle(tObj.vertices, iV0, iV1, iV2, tObj.normals, iN0, iN1, iN2);
+         tObj.triangles.push(t);
+      }
+
+      tObj.boxMin = new glVec3(data.boxMin.values);
+      tObj.boxMax = new glVec3(data.boxMax.values);
+
+      return tObj;
    }
 }

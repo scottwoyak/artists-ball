@@ -5,14 +5,14 @@ import { glVec3 } from "./glVec";
  */
 export class IndexedTriangle {
    vertices: glVec3[];
-   iV0: number;
-   iV1: number;
-   iV2: number;
+   public iV0: number;
+   public iV1: number;
+   public iV2: number;
 
    normals: glVec3[];
-   iN0: number;
-   iN1: number;
-   iN2: number;
+   public iN0: number;
+   public iN1: number;
+   public iN2: number;
 
    constructor(
       vertices: glVec3[], iV0: number, iV1: number, iV2: number,

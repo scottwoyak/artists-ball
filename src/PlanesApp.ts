@@ -4,12 +4,13 @@ import { Globals, toRad, isMobile } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
 import { glMat4 } from "./glMat";
 import { glVec4, glVec3, glVec2 } from "./glVec";
-import { NormalType, TriangleObj } from "./TriangleObj";
+import { NormalType, TriangleObj, TriangleObjData } from "./TriangleObj";
 import { TriangleSphere } from "./TriangleSphere";
 import { TriangleCube } from "./TriangleCube";
 import { TriangleObjFile } from "./TriangleObjFile";
 import { ThresholdCtrl } from "./ThresholdCtrl";
 import { PointerEventHandler } from "./PointerEventHandler";
+import LoaderWorker from 'worker-loader!./LoaderWorker';
 
 enum PointerMode {
    View,
@@ -193,15 +194,18 @@ export class PlanesApp {
          getText: () => { return (100 * this.renderer.shadow).toFixed(0) + "%" }
       });
 
-      this.loadModel(this.query).then((tObj: TriangleObj) => {
-         //this.renderer.setModel(tObj);
-         requestAnimationFrame(() => this.tick());
-      })
+      this.loadModel(this.query)
+         .then((tObj: TriangleObj) => {
+            requestAnimationFrame(() => this.tick());
+         })
+         .catch((err) => {
+            this.overlay.innerText = err.toString();
+         });
 
       return div;
    }
 
-   private async loadModel(query: string): Promise<TriangleObj> {
+   private loadModel(query: string): Promise<TriangleObj> {
 
       if (query && query.toLowerCase() === 'trianglesphere') {
          let radius = 0.75;
@@ -220,58 +224,35 @@ export class PlanesApp {
       }
       else if (query && query.toLowerCase().endsWith('.obj')) {
 
-         // Step 1: start the fetch and obtain a reader
-         let response = await fetch(query);
+         let promise = new Promise<TriangleObj>((resolve, reject) => {
+            const worker = new LoaderWorker();
+            let tStart = Date.now();
+            worker.onmessage = ({ data }: { data: any }) => {
 
-         const reader = response.body.getReader();
+               if (typeof data === 'string') {
+                  // avoid flashing messages for things that happen very quickly.
+                  if (Date.now() - tStart > 500) {
+                     this.overlay.innerText = data;
+                  }
+               }
+               else {
+                  let tObj = TriangleObj.import(data);
+                  this.renderer.setModel(tObj);
+                  this.orient(tObj, query);
 
-         // Step 2: get total length
-         const contentLength = +response.headers.get('Content-Length');
+                  this.overlay.innerText = '';
+                  resolve(tObj);
+               }
+            };
 
-         // Step 3: read the data
-         let receivedLength = 0; // received that many bytes at the moment
-         let chunks = []; // array of received binary chunks (comprises the body)
-         let tStart = Date.now();
-         while (true) {
-            const { done, value } = await reader.read();
+            worker.postMessage(query);
 
-            if (done) {
-               this.overlay.innerText = 'Loading';
-               break;
-            }
-
-            chunks.push(value);
-            receivedLength += value.length;
-
-            if (Date.now() - tStart > 500) {
-               this.overlay.innerText = 'Downloading: ' + (100 * receivedLength / contentLength).toFixed() + '%';
-            }
-         }
-         console.log(Date.now() - tStart);
-
-         // TODO: move the code below to a WebWorker
-
-         // Step 4: concatenate chunks into single Uint8Array
-         let chunksAll = new Uint8Array(receivedLength); // (4.1)
-         let position = 0;
-         for (let chunk of chunks) {
-            chunksAll.set(chunk, position); // (4.2)
-            position += chunk.length;
-         }
-
-         // Step 5: decode into a string
-         let res = new TextDecoder("utf-8").decode(chunksAll);
-
-         let tObj = new TriangleObjFile(res);
-         this.renderer.setModel(tObj);
-         this.orient(tObj, query);
-
-         this.overlay.innerText = '';
-
-         return Promise.resolve(tObj);
+         });
+         return promise;
       }
       else {
-         return Promise.reject('Unknown model: \'' + query + '\'');
+         // TODO multi line error messages not supported
+         return Promise.reject('Unknown Model:' + query);
       }
    }
 

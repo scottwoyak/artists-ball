@@ -32,7 +32,7 @@ export class PointerEventHandler {
             let pos = new glVec2([event.touches[0].clientX - rect.x, event.touches[0].clientY - rect.y]);
 
             let time = Date.now();
-            if (time - this.lastTouchTime < 300) {
+            if (time - this.lastTouchTime < DBL_CLICK_TIME) {
                this.ourDblClick(pos);
             }
             else {
