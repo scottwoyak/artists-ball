@@ -23,6 +23,12 @@ async function loadFile(file: string) {
    worker.postMessage('Downloading 0%');
 
    let response = await fetch(file);
+
+   if (response.status != 200) {
+      worker.postMessage(response.status + ': ' + file);
+      return;
+   }
+
    const reader = response.body.getReader();
    const contentLength = +response.headers.get('Content-Length');
 
