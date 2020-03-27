@@ -1,5 +1,5 @@
 import { PlanesApp } from "./PlanesApp";
-import { toRad, toDeg, clamp } from "./Globals";
+import { toRad, toDeg, clamp, isMobile } from "./Globals";
 import { glVec2 } from "./glVec";
 import { PointerEventHandler } from "./PointerEventHandler";
 
@@ -20,6 +20,10 @@ export class ThresholdCtrl {
    private p2: glVec2;
 
    public constructor(parent: HTMLElement, app: PlanesApp) {
+
+      if (isMobile) {
+         displaySize = 300;
+      }
 
       this.app = app;
       this.canvas = document.createElement('canvas');
@@ -76,8 +80,6 @@ export class ThresholdCtrl {
          else {
             this.app.threshold2 = clamp(angle, 0, 90);
          }
-         //this.draw();
-
       }
    }
 
