@@ -245,7 +245,9 @@ export class PlanesApp {
                }
             };
 
-            worker.postMessage(query);
+            let file = location.pathname + query;
+            alert('loading: ' + file);
+            worker.postMessage(file);
 
          });
          return promise;
@@ -288,8 +290,6 @@ export class PlanesApp {
    }
 
    private updateSliders() {
-      //      this.threshold1Slider.value = this.renderer.threshold1;
-      //      this.threshold2Slider.value = this.renderer.threshold2;
       this.highlightSlider.value = 100 * this.renderer.highlight;
       this.lightLightSlider.value = 100 * this.renderer.lightLight;
       this.midLightSlider.value = 100 * this.renderer.midLight;
