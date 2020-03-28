@@ -14,6 +14,7 @@ import { PointerEventHandler } from "./PointerEventHandler";
 // contents of worker.d.ts
 import LoaderWorker from 'worker-loader?name=LoaderWorker.worker.js!./LoaderWorker';
 import { DropDownMenu } from "./DropDownMenu";
+import { glColor } from "./glColor";
 
 enum PointerMode {
    View,
@@ -37,7 +38,6 @@ export class PlanesApp {
    private darkLightSlider: Slider;
    private shadowSlider: Slider;
    private thresholdCtrl: ThresholdCtrl;
-   private modeButton: HTMLSpanElement;
    private worker: LoaderWorker;
 
    public set threshold1(val: number) {
@@ -61,7 +61,6 @@ export class PlanesApp {
       const viewContainer = document.createElement('div');
       viewContainer.id = 'ViewContainer';
       viewContainer.className = 'container';
-      viewContainer.style.backgroundColor = 'green';
       div.appendChild(viewContainer);
       this.createViewElements(viewContainer);
       div.style.width = gl.canvas.width + 'px';
@@ -121,15 +120,6 @@ export class PlanesApp {
             this.renderer.optimize(NormalType.Flat);
          }
       }
-
-      this.modeButton = document.createElement('span');
-      this.modeButton.id = 'modeButton';
-      this.modeButton.innerHTML = 'View';
-      this.pointerMode = PointerMode.View;
-      this.modeButton.onclick = () => {
-         this.toggleMode();
-      }
-      parent.appendChild(this.modeButton);
 
       let menu = new DropDownMenu(parent, 'Models', 'ModelDropDown');
       menu.addItem('Male Head', () => this.loadModel('Head.obj'));
@@ -332,15 +322,16 @@ export class PlanesApp {
    private toggleMode() {
       switch (this.pointerMode) {
          case PointerMode.View:
-            this.modeButton.innerText = 'Light';
             this.pointerMode = PointerMode.Light;
+            this.renderer.ballColor = this.renderer.yellow;
             break;
 
          case PointerMode.Light:
-            this.modeButton.innerText = 'View';
             this.pointerMode = PointerMode.View;
+            this.renderer.ballColor = new glColor([1.0, 1.0, 1.0]);
             break;
       }
+      this.dirty = true;
    }
 
    private onDown(pos: glVec2) {
@@ -364,29 +355,19 @@ export class PlanesApp {
          }
          else if (this.pointerMode === PointerMode.Light) {
 
-            if (this.pointerModeSpecial) {
-               /*
-               let sPos = SphericalCoord.fromXYZ(this.renderer.uLightDirection.values);
-               this.pos.radius -= (y - old.y) * 0.005;
-               this.pos.radius = clamp(this.pos.radius, Uniforms.uBallRadius + 0.5, 5);
-               Uniforms.uLightPos.values = this.pos.toXYZ();
-               */
-            }
-            else {
-               let matY = glMat4.fromRotY(toRad(pos.x - old.x));
-               let matX = glMat4.fromRotX(toRad(pos.y - old.y));
-               let vec = new glVec4([
-                  this.renderer.uLightDirection.x,
-                  this.renderer.uLightDirection.y,
-                  this.renderer.uLightDirection.z,
-                  1
-               ]);
-               vec = matX.multV(vec);
-               vec = matY.multV(vec);
-               this.renderer.uLightDirection.x = vec.values[0];
-               this.renderer.uLightDirection.y = vec.values[1];
-               this.renderer.uLightDirection.z = vec.values[2];
-            }
+            let matY = glMat4.fromRotY(toRad(pos.x - old.x));
+            let matX = glMat4.fromRotX(toRad(pos.y - old.y));
+            let vec = new glVec4([
+               this.renderer.uLightDirection.x,
+               this.renderer.uLightDirection.y,
+               this.renderer.uLightDirection.z,
+               1
+            ]);
+            vec = matX.multV(vec);
+            vec = matY.multV(vec);
+            this.renderer.uLightDirection.x = vec.values[0];
+            this.renderer.uLightDirection.y = vec.values[1];
+            this.renderer.uLightDirection.z = vec.values[2];
 
             this.dirty = true;
          }

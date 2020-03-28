@@ -57,6 +57,9 @@ export class PlanesRenderer {
 
    public uLightDirection = new glVec3([1.0, -1.0, 1.5]);
 
+   public ballColor = new glColor([1, 1, 1]);
+   public readonly yellow = new glColor([1.0, 0.9, 0.7]);
+
    public constructor() {
 
       this.computeColors();
@@ -382,6 +385,7 @@ export class PlanesRenderer {
       this.view.translate(new glVec3([-(1 - this.miniSize), 1 - this.miniSize, 0]));
       uni.set('view', this.view.transpose());
       uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
+      uni.set('uColor', this.ballColor);
       this.ball.draw();
 
       uni.set('uLightDirection', new glVec3([1, -0.5, 0.5]));
@@ -406,7 +410,7 @@ export class PlanesRenderer {
       this.arrow.rotY(-elevationAngle);
       this.arrow.rotZ(-rotationAngle);
 
-      uni.set('uColor', new glColor([1.0, 0.9, 0.7]));
+      uni.set('uColor', this.yellow);
       uni.set('uAmbientIntensity', 0.4);
       this.arrow.draw();
    }
