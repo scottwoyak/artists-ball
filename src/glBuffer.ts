@@ -12,6 +12,12 @@ export class glBuffer {
       this.attributeLocation = gl.getAttribLocation(program, attributeName);
    }
 
+   public delete() {
+      gl.deleteBuffer(this.buffer);
+      this.buffer = undefined;
+      this.attributeLocation = undefined;
+   }
+
    public upload(vertices: number[]) {
       this.bind();
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);

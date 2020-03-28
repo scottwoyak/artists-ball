@@ -25,6 +25,11 @@ export class glObject {
       this.uploadTriangles();
    }
 
+   public delete() {
+      this.vertexBuffer.delete();
+      this.normalBuffer.delete();
+   }
+
    public rotX(angle: number) {
       this.model.rotX(angle);
    }

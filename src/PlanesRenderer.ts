@@ -179,6 +179,9 @@ export class PlanesRenderer {
    }
 
    public setModel(tObj: TriangleObj) {
+      if (this.obj) {
+         this.obj.delete();
+      }
       this.obj = new glObject(tObj, this.program);
    }
 

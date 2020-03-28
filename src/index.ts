@@ -1,5 +1,5 @@
 import { PathTracerApp } from "./PathTracerApp";
-import './styles.css';
+import './styles/styles.css';
 import { PlanesApp } from "./PlanesApp";
 
 window.onload = function () {
@@ -14,6 +14,10 @@ window.onload = function () {
       if (tokens.length === 2) {
          type = tokens[0];
          query = tokens[1];
+      }
+      else {
+         type = tokens[0];
+         query = '';
       }
    }
 

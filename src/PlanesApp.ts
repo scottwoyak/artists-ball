@@ -1,6 +1,6 @@
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
-import { Globals, toRad, isMobile } from "./Globals";
+import { Globals, toRad, isMobile, gl } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
 import { glMat4 } from "./glMat";
 import { glVec4, glVec3, glVec2 } from "./glVec";
@@ -13,6 +13,7 @@ import { PointerEventHandler } from "./PointerEventHandler";
 // specify loader and options here. This value must match the
 // contents of worker.d.ts
 import LoaderWorker from 'worker-loader?name=LoaderWorker.worker.js!./LoaderWorker';
+import { DropDownMenu } from "./DropDownMenu";
 
 enum PointerMode {
    View,
@@ -23,7 +24,6 @@ export class PlanesApp {
    public renderer: PlanesRenderer;
    private pointerMode: PointerMode = PointerMode.View;
    private pointerModeSpecial = false;
-   private canvas: HTMLCanvasElement;
    private overlay: HTMLSpanElement;
    private handler: PointerEventHandler;
 
@@ -38,6 +38,7 @@ export class PlanesApp {
    private shadowSlider: Slider;
    private thresholdCtrl: ThresholdCtrl;
    private modeButton: HTMLSpanElement;
+   private worker: LoaderWorker;
 
    public set threshold1(val: number) {
       this.renderer.threshold1 = val;
@@ -57,31 +58,46 @@ export class PlanesApp {
       const div = document.createElement('div');
       div.className = 'PlanesApp';
 
-      const container = document.createElement('div');
-      container.className = 'container';
-      div.appendChild(container);
+      const viewContainer = document.createElement('div');
+      viewContainer.id = 'ViewContainer';
+      viewContainer.className = 'container';
+      viewContainer.style.backgroundColor = 'green';
+      div.appendChild(viewContainer);
+      this.createViewElements(viewContainer);
+      div.style.width = gl.canvas.width + 'px';
 
-      this.canvas = document.createElement('canvas');
-      this.canvas.id = 'MainCanvas';
-      container.appendChild(this.canvas);
+      const ctrlsContainer = document.createElement('div');
+      ctrlsContainer.className = 'container';
+      ctrlsContainer.id = 'CtrlsContainer';
+      div.appendChild(ctrlsContainer);
+      this.createCtrlsElements(ctrlsContainer);
 
-      this.overlay = document.createElement('span');
+      return div;
+   }
+
+   private createViewElements(parent: HTMLElement) {
+
+      let canvas = document.createElement('canvas');
+      canvas.id = 'MainCanvas';
+      parent.appendChild(canvas);
+
+      this.overlay = document.createElement('div');
       this.overlay.id = 'Overlay';
-      container.appendChild(this.overlay);
+      parent.appendChild(this.overlay);
 
       let size = 512;
       if (isMobile) {
          size = document.body.clientWidth;
       }
-      this.canvas.width = size;
-      this.canvas.height = size;
-      //this.overlay.style.width = size;
-      //this.overlay.height = size;
-      div.style.width = size + 'px';
+      canvas.width = size;
+      canvas.height = size;
       this.overlay.style.lineHeight = size + 'px'; // vertically center text
 
+      // why do we have to manually set this height? If we don't it is 515.2 px high
+      parent.style.height = size + 'px';
 
-      let context = this.canvas.getContext('webgl') as WebGLRenderingContext;
+
+      let context = canvas.getContext('webgl') as WebGLRenderingContext;
 
       if (!context) {
          // TODO display a message about not being able to create a WebGL context
@@ -91,7 +107,7 @@ export class PlanesApp {
 
       this.renderer = new PlanesRenderer();
 
-      this.handler = new PointerEventHandler(this.canvas);
+      this.handler = new PointerEventHandler(canvas);
       this.handler.onDown = (pos) => this.onDown(pos);
       this.handler.onMove = (pos) => this.onMove(pos);
       this.handler.onClick = (pos) => this.onClick(pos);
@@ -113,15 +129,22 @@ export class PlanesApp {
       this.modeButton.onclick = () => {
          this.toggleMode();
       }
-      container.appendChild(this.modeButton);
+      parent.appendChild(this.modeButton);
 
-      const container2 = document.createElement('div');
-      container2.className = 'container';
-      div.appendChild(container2);
+      let menu = new DropDownMenu(parent, 'Models', 'ModelDropDown');
+      menu.addItem('Male Head', () => this.loadModel('Head.obj'));
+      menu.addItem('Female Pose', () => this.loadModel('Pose1.obj'));
+      menu.addItem('Female Head', () => this.loadModel('FemaleHead.obj'));
+      menu.addItem('Skull 1', () => this.loadModel('Skull.obj'));
+      menu.addItem('Skull 2', () => this.loadModel('SkullHigh.obj'));
+      menu.addItem('Arnold', () => this.loadModel('Arnold.obj'));
+      menu.addItem('Teapot', () => this.loadModel('Teapot.obj'));
+   }
 
-      this.thresholdCtrl = new ThresholdCtrl(container2, this);
+   private createCtrlsElements(parent: HTMLElement) {
+      this.thresholdCtrl = new ThresholdCtrl(parent, this);
 
-      this.highlightSlider = new Slider(container2, {
+      this.highlightSlider = new Slider(parent, {
          id: 'Highlight',
          label: 'Highlight',
          min: 0,
@@ -136,7 +159,7 @@ export class PlanesApp {
          getText: () => { return (100 * this.renderer.highlight).toFixed(0) + "%" }
       });
 
-      this.lightLightSlider = new Slider(container2, {
+      this.lightLightSlider = new Slider(parent, {
          id: 'LightLight',
          label: 'Light Light',
          min: 0,
@@ -151,7 +174,7 @@ export class PlanesApp {
          getText: () => { return (100 * this.renderer.lightLight).toFixed(0) + "%" }
       });
 
-      this.midLightSlider = new Slider(container2, {
+      this.midLightSlider = new Slider(parent, {
          id: 'MidLight',
          label: 'Mid Light',
          min: 0,
@@ -166,7 +189,7 @@ export class PlanesApp {
          getText: () => { return (100 * this.renderer.midLight).toFixed(0) + "%" }
       });
 
-      this.darkLightSlider = new Slider(container2, {
+      this.darkLightSlider = new Slider(parent, {
          id: 'DarkLight',
          label: 'Dark Light',
          min: 0,
@@ -181,7 +204,7 @@ export class PlanesApp {
          getText: () => { return (100 * this.renderer.darkLight).toFixed(0) + "%" }
       });
 
-      this.shadowSlider = new Slider(container2, {
+      this.shadowSlider = new Slider(parent, {
          id: 'Shadow',
          label: 'Shadow',
          min: 0,
@@ -196,18 +219,15 @@ export class PlanesApp {
          getText: () => { return (100 * this.renderer.shadow).toFixed(0) + "%" }
       });
 
-      this.loadModel(this.query)
-         .then((tObj: TriangleObj) => {
-            requestAnimationFrame(() => this.tick());
-         })
-         .catch((err) => {
-            this.overlay.innerText = err.toString();
-         });
-
-      return div;
+      this.loadModel(this.query);
    }
 
-   private loadModel(query: string): Promise<TriangleObj> {
+   private loadModel(query: string) {
+
+      // if nothing was specified, load the head model
+      if (!query) {
+         query = 'Head.obj';
+      }
 
       if (query && query.toLowerCase() === 'trianglesphere') {
          let radius = 0.75;
@@ -226,36 +246,43 @@ export class PlanesApp {
       }
       else if (query && query.toLowerCase().endsWith('.obj')) {
 
-         let promise = new Promise<TriangleObj>((resolve, reject) => {
-            const worker = new LoaderWorker();
-            let tStart = Date.now();
-            worker.onmessage = ({ data }: { data: any }) => {
+         // if a previous worker exists, close it
+         if (this.worker) {
+            this.worker.terminate();
+            this.worker = undefined;
+         }
 
-               if (typeof data === 'string') {
-                  // avoid flashing messages for things that happen very quickly.
-                  if (Date.now() - tStart > 500) {
-                     this.overlay.innerText = data;
-                  }
+         this.worker = new LoaderWorker();
+         let tStart = Date.now();
+         this.worker.onmessage = ({ data }: { data: any }) => {
+
+            if (typeof data === 'string') {
+               // avoid flashing messages for things that happen very quickly.
+               if (Date.now() - tStart > 500) {
+                  this.overlay.innerText = data;
                }
-               else {
-                  let tObj = TriangleObj.import(data);
-                  this.renderer.setModel(tObj);
-                  this.orient(tObj, query);
+            }
+            else {
+               let tObj = TriangleObj.import(data);
+               this.renderer.setModel(tObj);
+               this.orient(tObj, query);
 
-                  this.overlay.innerText = '';
-                  resolve(tObj);
-               }
-            };
+               this.overlay.innerText = '';
 
-            let file = query;
-            worker.postMessage(file);
+               this.worker.terminate();
+               this.worker = undefined;
 
-         });
-         return promise;
+               this.dirty = true;
+               requestAnimationFrame(() => this.tick());
+            }
+         };
+
+         this.worker.postMessage(query);
+
       }
       else {
          // TODO multi line error messages not supported
-         return Promise.reject('Unknown Model:' + query);
+         this.overlay.innerText = 'Unknown Model:' + query;
       }
    }
 
@@ -282,6 +309,10 @@ export class PlanesApp {
             break;
 
          case 'pose1.obj':
+            break;
+
+         case 'teapot.obj':
+            this.renderer.rotY(toRad(90));
             break;
 
          default:
@@ -314,7 +345,7 @@ export class PlanesApp {
 
    private onDown(pos: glVec2) {
 
-      this.pointerModeSpecial = (pos.x < 0.1 * this.canvas.width) ? true : false;
+      this.pointerModeSpecial = (pos.x < 0.1 * gl.canvas.width) ? true : false;
    }
 
    private onMove(pos: glVec2) {
@@ -371,7 +402,7 @@ export class PlanesApp {
     */
    private onClick(pos: glVec2): boolean {
 
-      let size = this.canvas.width;
+      let size = gl.canvas.width;
 
       // TODO get the size of the area from the renderer
       if (pos.x < size / 5 && pos.y < size / 5) {

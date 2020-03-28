@@ -1,0 +1,59 @@
+/* The container <div> - needed to position the dropdown content */
+.DropDown {
+  position: absolute;
+  left: 0px;
+  bottom: 0px;
+  display: inline-block;
+}
+
+/* Dropdown Button */
+.DropDownButton {
+  background-color: #3498db;
+  color: white;
+  padding: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Dropdown button on hover & focus */
+.DropDownButton:hover,
+.DropDownButton:focus {
+  background-color: #2980b9;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.DropDownMenu {
+  display: none;
+  position: absolute;
+  left: 0px;
+  bottom: 0px;
+  background-color: #f1f1f1;
+  min-width: 150px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.DropDownMenuItem {
+  color: black;
+  padding: 8px;
+  text-decoration: none;
+  display: block;
+  cursor: pointer;
+}
+
+/* Change color of dropdown links on hover */
+.DropDownMenuItem:hover {
+  background-color: #ddd;
+}
+
+/* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+.DropDownShow {
+  display: block;
+}
+
+@media only screen and (max-device-width: 800px) {
+  .DropDownMenu {
+    min-width: 300px;
+  }
+}
