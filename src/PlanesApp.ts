@@ -246,7 +246,6 @@ export class PlanesApp {
             };
 
             let file = location.pathname + query;
-            alert('loading: ' + file);
             worker.postMessage(file);
 
          });
