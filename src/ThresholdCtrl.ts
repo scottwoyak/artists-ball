@@ -104,14 +104,15 @@ export class ThresholdCtrl {
       ctx.fillStyle = 'limegreen';
       ctx.strokeStyle = 'black'
 
-      const KNOB_LENGTH = 25;
-      const KNOB_RADIUS = 8;
+      const KNOB_LENGTH = (25 / 150) * displaySize;
+      const KNOB_RADIUS = (8 / 150) * displaySize;
       let r = displaySize * ballImageData.ballRadius;
       let s1 = this.getPt(this.ballCenter, this.app.renderer.threshold1, r);
       this.p1 = this.getPt(this.ballCenter, this.app.renderer.threshold1, r + KNOB_LENGTH);
       let s2 = this.getPt(this.ballCenter, this.app.renderer.threshold2, r);
       this.p2 = this.getPt(this.ballCenter, this.app.renderer.threshold2, r + KNOB_LENGTH);
 
+      ctx.lineWidth = (1 / 150) * displaySize;
       ctx.beginPath();
       ctx.moveTo(s1.x, s1.y);
       ctx.lineTo(this.p1.x, this.p1.y);
