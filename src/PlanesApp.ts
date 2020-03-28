@@ -9,6 +9,9 @@ import { TriangleSphere } from "./TriangleSphere";
 import { TriangleCube } from "./TriangleCube";
 import { ThresholdCtrl } from "./ThresholdCtrl";
 import { PointerEventHandler } from "./PointerEventHandler";
+
+// specify loader and options here. This value must match the
+// contents of worker.d.ts
 import LoaderWorker from 'worker-loader?name=LoaderWorker.worker.js!./LoaderWorker';
 
 enum PointerMode {
