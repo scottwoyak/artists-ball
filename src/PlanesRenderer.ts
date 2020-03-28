@@ -240,14 +240,9 @@ export class PlanesRenderer {
       let style = getComputedStyle(<Element>gl.canvas);
       let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
       gl.clearColor(color.r, color.g, color.b, 1);
-      //gl.clearColor(0.5, 0.5, 0.6, 1);
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
       let uni = this.setStdUniforms();
-
-      let view = new glMat4();
-      view.translate(new glVec3([-0.45, -0.45, 0]));
-      uni.set('view', view.transpose());
 
       // always render with bands
       uni.seti('uUseThresholds', 1);
@@ -258,17 +253,18 @@ export class PlanesRenderer {
       // don't cast shadows
       uni.seti('uUseShadows', 0);
 
+      uni.set('view', new glMat4());
+
+      // move the ball to the lower left and partially offscreen
+      const scale = 1.75;
+      const offset = new glVec3([-0.6, -0.6, 0]);
+      this.ball.clearTransforms();
+      this.ball.scale(scale);
+      this.ball.translate(offset);
+
+      // render the ball
       this.ball.draw();
-
-      let data = new BallImageData();
-      data.ballRadius = BALL_RADIUS;
-      let c = 0.05 + BALL_RADIUS;
-      data.ballCenter = new glVec2([c, c]);
-
-      // normalize value since our drawing space is -1 to 1
-      data.ballRadius /= 2;
-      data.ballCenter.x /= 2;
-      data.ballCenter.y /= 2;
+      this.ball.clearTransforms();
 
       // draw the arrow
       uni.set('uLightDirection', new glVec3([1, -0.5, 0.5]));
@@ -276,17 +272,26 @@ export class PlanesRenderer {
 
       // first reset things so that we're looking down the z-axis
       this.arrow.clearTransforms();
-      this.arrow.translate(new glVec3([0.0, 1.0, 0.0]));
+      this.arrow.scale(1.25)
+      this.arrow.translate(new glVec3([offset.x, offset.y + scale * BALL_RADIUS + 0.1, 0.0]));
 
       uni.set('uColor', new glColor([1.0, 1.0, 0.5]));
       uni.set('uAmbientIntensity', 0.4);
       this.arrow.draw();
 
-
       let pixels = new Uint8Array(textureSize * textureSize * 4);
       gl.readPixels(0, 0, textureSize, textureSize, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
+      // create the data structure we'll return
+      let data = new BallImageData();
       data.image = new ImageData(new Uint8ClampedArray(pixels), textureSize, textureSize);
+
+      // convert from [-1,1] drawing space to [0,1]
+      data.ballRadius = scale * BALL_RADIUS;
+      data.ballCenter = new glVec2([offset.x, offset.y]);
+      data.ballRadius /= 2;
+      data.ballCenter.x = 0.5 * (data.ballCenter.x + 1);
+      data.ballCenter.y = 0.5 * (data.ballCenter.y + 1);
 
       return data;
    }

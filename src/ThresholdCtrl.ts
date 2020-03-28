@@ -7,6 +7,10 @@ import { PointerEventHandler } from "./PointerEventHandler";
 export let textureSize = 256;
 export let displaySize = 150;
 
+const NOMINAL_DISPLAY_SIZE = 150;
+const NOMINAL_KNOB_LENGTH = 25;
+const NOMINAL_KNOB_RADIUS = 10;
+
 export class ThresholdCtrl {
    private canvas: HTMLCanvasElement;
    private hiddenCanvas: HTMLCanvasElement;
@@ -42,7 +46,6 @@ export class ThresholdCtrl {
       this.handler = new PointerEventHandler(this.canvas);
       this.handler.onDown = (pos) => this.onDown(pos);
       this.handler.onMove = (pos) => this.onMove(pos);
-
    }
    private onDown(pos: glVec2) {
 
@@ -53,7 +56,7 @@ export class ThresholdCtrl {
       let d1 = this.p1.distance(pos);
       let d2 = this.p2.distance(pos);
 
-      const HIT_RADIUS = 15;
+      const HIT_RADIUS = NOMINAL_KNOB_RADIUS * (displaySize / NOMINAL_DISPLAY_SIZE);
       if (d1 < HIT_RADIUS && d1 <= d2) {
          this.hit = 1;
          this.mouseOffset = new glVec2([this.p1.x - pos.x, this.p1.y - pos.y]);
@@ -69,7 +72,7 @@ export class ThresholdCtrl {
 
    private onMove(pos: glVec2) {
       if (this.handler.mouseDown && this.hit > 0) {
-         let hitPt = new glVec2([pos.x - this.mouseOffset.x, pos.y - this.mouseOffset.y]);
+         let hitPt = new glVec2([pos.x + this.mouseOffset.x, pos.y + this.mouseOffset.y]);
          hitPt.x = Math.max(hitPt.x, this.ballCenter.x);
          hitPt.y = Math.min(hitPt.y, this.ballCenter.y);
          let radius = this.ballCenter.distance(hitPt);
@@ -104,8 +107,8 @@ export class ThresholdCtrl {
       ctx.fillStyle = 'limegreen';
       ctx.strokeStyle = 'black'
 
-      const KNOB_LENGTH = (25 / 150) * displaySize;
-      const KNOB_RADIUS = (8 / 150) * displaySize;
+      const KNOB_LENGTH = NOMINAL_KNOB_LENGTH * (displaySize / NOMINAL_DISPLAY_SIZE);
+      const KNOB_RADIUS = NOMINAL_KNOB_RADIUS * (displaySize / NOMINAL_DISPLAY_SIZE);
       let r = displaySize * ballImageData.ballRadius;
       let s1 = this.getPt(this.ballCenter, this.app.renderer.threshold1, r);
       this.p1 = this.getPt(this.ballCenter, this.app.renderer.threshold1, r + KNOB_LENGTH);
