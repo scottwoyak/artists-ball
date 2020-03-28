@@ -4,13 +4,12 @@ import { Globals, toRad, isMobile } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
 import { glMat4 } from "./glMat";
 import { glVec4, glVec3, glVec2 } from "./glVec";
-import { NormalType, TriangleObj, TriangleObjData } from "./TriangleObj";
+import { NormalType, TriangleObj } from "./TriangleObj";
 import { TriangleSphere } from "./TriangleSphere";
 import { TriangleCube } from "./TriangleCube";
-import { TriangleObjFile } from "./TriangleObjFile";
 import { ThresholdCtrl } from "./ThresholdCtrl";
 import { PointerEventHandler } from "./PointerEventHandler";
-import LoaderWorker from 'worker-loader!./LoaderWorker';
+import LoaderWorker from 'worker-loader?name=LoaderWorker.worker.js!./LoaderWorker';
 
 enum PointerMode {
    View,
