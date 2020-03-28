@@ -2,7 +2,7 @@ import { glMat4 } from './glMat';
 import { glVec3, glVec2 } from './glVec';
 import vertexSource from './shaders/PlanesVertex.glsl';
 import fragmentSource from './shaders/PlanesFragment.glsl';
-import { gl, clamp, mix, toRad, toDeg, isMobile } from './Globals';
+import { gl, clamp, mix, toRad } from './Globals';
 import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
@@ -21,6 +21,9 @@ export class BallImageData {
    public ballRadius: number;
 }
 
+export let DEFAULT_THRESHOLD1 = 40;
+export let DEFAULT_THRESHOLD2 = 70;
+
 const BALL_RADIUS = 0.5;
 
 /**
@@ -34,8 +37,8 @@ export class PlanesRenderer {
    private projection = new glMat4();
 
    private uColor = new glColor([1, 1, 1]);
-   private uThreshold1 = 40;
-   private uThreshold2 = 70;
+   private uThreshold1 = DEFAULT_THRESHOLD1;
+   private uThreshold2 = DEFAULT_THRESHOLD2;
 
    private uHighlight: number = 1.0;
    private uLightLight: number;
@@ -175,7 +178,7 @@ export class PlanesRenderer {
    }
 */
 
-   private computeColors() {
+   public computeColors() {
       this.uLightLight = this.colorAt(0.5 * this.threshold1);
       this.uMidLight = this.colorAt(mix(this.threshold1, this.threshold2, 0.5));
       this.uDarkLight = this.colorAt((this.threshold2 + 90) / 2);

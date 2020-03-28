@@ -1,7 +1,7 @@
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { Globals, toRad, isMobile, gl } from "./Globals";
-import { PlanesRenderer } from "./PlanesRenderer";
+import { PlanesRenderer, DEFAULT_THRESHOLD1, DEFAULT_THRESHOLD2 } from "./PlanesRenderer";
 import { glMat4 } from "./glMat";
 import { glVec4, glVec3, glVec2 } from "./glVec";
 import { NormalType, TriangleObj } from "./TriangleObj";
@@ -129,6 +129,12 @@ export class PlanesApp {
       menu.addItem('Skull 2', () => this.loadModel('SkullHigh.obj'));
       menu.addItem('Arnold', () => this.loadModel('Arnold.obj'));
       menu.addItem('Teapot', () => this.loadModel('Teapot.obj'));
+      menu.addItem('Reset', () => {
+         this.renderer.threshold1 = DEFAULT_THRESHOLD1;
+         this.renderer.threshold2 = DEFAULT_THRESHOLD2;
+         this.renderer.computeColors();
+         this.dirty = true;
+      })
    }
 
    private createCtrlsElements(parent: HTMLElement) {
