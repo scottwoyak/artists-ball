@@ -231,7 +231,7 @@ export class PlanesApp {
 
                if (typeof data === 'string') {
                   // avoid flashing messages for things that happen very quickly.
-                  if (Date.now() - tStart > 500) {
+                  if (Date.now() - tStart > 0) {
                      this.overlay.innerText = data;
                   }
                }
