@@ -96,6 +96,12 @@ void main()
    vec3 toEye = normalize(eye - vVertex);
    vec3 normal = normalize(vNormal); // vNormal is interpolated and no long normal
 
+   // swap normals for back facing triangles
+   if (dot(normal, toEye) < 0.0)
+   {
+      normal = -normal;
+   }
+
    // compute diffuse contribution = cos of angle between the vectors (dot product)
    float diffuseFactor = clamp(dot(normal, toLight), 0.0, 1.0);
    float diffuse = diffuseFactor * uLightIntensity;
