@@ -38,11 +38,11 @@
 
 @media only screen and (max-device-width: 800px) {
   .PlanesApp .SliderRange {
-    width: 30%;
+    width: 28%;
   }
 
   .PlanesApp .SliderLabel {
-    width: 20%;
+    width: 22%;
   }
 
   .PlanesApp #ThresholdCanvas {

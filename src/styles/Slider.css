@@ -59,6 +59,7 @@
   width: 15px;
   height: 15px;
   margin-right: 5px;
+  margin-bottom: 1px;
   border-radius: 50%;
   border: gray;
   border-style: solid;
@@ -92,9 +93,9 @@
   }
 
   .SliderColorSpan {
-    width: 30px;
-    height: 30px;
-    margin-right: 10px;
+    width: 34px;
+    height: 34px;
+    margin-bottom: 4px;
   }
 
   .SliderValueSpan {
