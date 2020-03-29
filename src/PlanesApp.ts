@@ -129,10 +129,11 @@ export class PlanesApp {
       menu.addItem('Skull 2', () => this.loadModel('SkullHigh.obj'));
       menu.addItem('Arnold', () => this.loadModel('Arnold.obj'));
       menu.addItem('Teapot', () => this.loadModel('Teapot.obj'));
-      menu.addItem('Reset', () => {
+      menu.addItem('Reset Sliders', () => {
          this.renderer.threshold1 = DEFAULT_THRESHOLD1;
          this.renderer.threshold2 = DEFAULT_THRESHOLD2;
          this.renderer.computeColors();
+         this.updateSliders();
          this.dirty = true;
       })
    }
