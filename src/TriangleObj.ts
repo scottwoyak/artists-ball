@@ -430,4 +430,32 @@ export class TriangleObj {
 
       return tObj;
    }
+
+   public combine(tObj: TriangleObj) {
+      let startVIndex = this.vertices.length;
+      let startNIndex = this.normals.length;
+
+      for (let i = 0; i < tObj.vertices.length; i++) {
+         this.vertices.push(tObj.vertices[i].clone());
+      }
+
+      for (let i = 0; i < tObj.normals.length; i++) {
+         this.normals.push(tObj.normals[i].clone());
+      }
+
+      for (let i = 0; i < tObj.triangles.length; i++) {
+         let tri = tObj.triangles[i];
+         this.push(new IndexedTriangle(
+            this.vertices,
+            tri.iV0 + startVIndex,
+            tri.iV1 + startVIndex,
+            tri.iV2 + startVIndex,
+            this.normals,
+            tri.iN0 + startNIndex,
+            tri.iN1 + startNIndex,
+            tri.iN2 + startNIndex
+         ));
+      }
+
+   }
 }

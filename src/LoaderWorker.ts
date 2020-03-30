@@ -76,6 +76,3 @@ async function loadFile(file: string) {
       worker.postMessage(err);
    }
 }
-
-
-

@@ -125,8 +125,11 @@ export class PlanesApp {
       menu.addItem('Male Head', () => this.loadModel('Head.obj'));
       menu.addItem('Female Pose', () => this.loadModel('Pose1.obj'));
       menu.addItem('Female Head', () => this.loadModel('FemaleHead.obj'));
-      menu.addItem('Skull 1', () => this.loadModel('Skull.obj'));
-      menu.addItem('Skull 2', () => this.loadModel('SkullHigh.obj'));
+      menu.addItem('Skull 1', () => this.loadModel('Skull1.obj'));
+      //menu.addItem('Skull 2', () => this.loadModel('Skull2.obj'));
+      menu.addItem('Skull 3', () => this.loadModel('Skull3.obj'));
+      //menu.addItem('Head Ecorche', () => this.loadModel('HeadEcorche.obj'));
+      menu.addItem('Pelvis', () => this.loadModel('Pelvis.obj'));
       menu.addItem('Arnold', () => this.loadModel('Arnold.obj'));
       menu.addItem('Teapot', () => this.loadModel('Teapot.obj'));
       menu.addItem('Reset Sliders', () => {
@@ -219,7 +222,7 @@ export class PlanesApp {
       this.loadModel(this.query);
    }
 
-   private loadModel(query: string) {
+   private async loadModel(query: string) {
 
       // if nothing was specified, load the head model
       if (!query) {
@@ -243,6 +246,25 @@ export class PlanesApp {
       }
       else if (query && query.toLowerCase().endsWith('.obj')) {
 
+         let tObj = await this.loadModelFile(query);
+         //tObj.combine(await this.loadModelFile('base.obj'));
+         this.renderer.setModel(tObj);
+         this.orient(tObj, query);
+
+         this.dirty = true;
+         requestAnimationFrame(() => this.tick());
+
+      }
+      else {
+         // TODO multi line error messages not supported
+         this.overlay.innerText = 'Unknown Model:' + query;
+      }
+   }
+
+   private loadModelFile(file: string): Promise<TriangleObj> {
+
+      return new Promise<TriangleObj>((resolve, reject) => {
+
          // if a previous worker exists, close it
          if (this.worker) {
             this.worker.terminate();
@@ -261,26 +283,19 @@ export class PlanesApp {
             }
             else {
                let tObj = TriangleObj.import(data);
-               this.renderer.setModel(tObj);
-               this.orient(tObj, query);
 
                this.overlay.innerText = '';
 
                this.worker.terminate();
                this.worker = undefined;
 
-               this.dirty = true;
-               requestAnimationFrame(() => this.tick());
+               resolve(tObj);
             }
          };
 
-         this.worker.postMessage(query);
+         this.worker.postMessage(file);
+      });
 
-      }
-      else {
-         // TODO multi line error messages not supported
-         this.overlay.innerText = 'Unknown Model:' + query;
-      }
    }
 
    public orient(tObj: TriangleObj, query: string) {
@@ -294,6 +309,11 @@ export class PlanesApp {
          case 'skull.obj':
             this.renderer.rotX(toRad(90));
             this.renderer.rotY(toRad(180));
+            break;
+
+         case 'pelvis.obj':
+            this.renderer.rotX(toRad(11));
+            this.renderer.rotZ(toRad(-87));
             break;
 
          case 'wolf.obj':
