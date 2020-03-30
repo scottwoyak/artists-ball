@@ -2,10 +2,14 @@ import { PlanesApp } from "./PlanesApp";
 import { toRad, toDeg, clamp, isMobile } from "./Globals";
 import { glVec2 } from "./glVec";
 import { PointerEventHandler } from "./PointerEventHandler";
+import { Profiler } from "./Profiler";
 
 // TODO make these variables
 export let textureSize = 256;
 export let displaySize = 150;
+
+export type ThresholdChangeFunction = (value: number) => void;
+
 
 const NOMINAL_DISPLAY_SIZE = 150;
 const NOMINAL_KNOB_LENGTH = 25;
@@ -23,13 +27,24 @@ export class ThresholdCtrl {
    private p1: glVec2;
    private p2: glVec2;
 
-   public constructor(parent: HTMLElement, app: PlanesApp) {
+   private onThreshold1Change: ThresholdChangeFunction;
+   private onThreshold2Change: ThresholdChangeFunction;
+
+   public constructor(
+      parent: HTMLElement,
+      app: PlanesApp,
+      onThreshold1Change: ThresholdChangeFunction,
+      onThreshold2Change: ThresholdChangeFunction
+   ) {
 
       if (isMobile) {
          displaySize = 300;
       }
 
       this.app = app;
+      this.onThreshold1Change = onThreshold1Change;
+      this.onThreshold2Change = onThreshold2Change;
+
       this.canvas = document.createElement('canvas');
       this.canvas.id = 'ThresholdCanvas';
       this.canvas.width = displaySize;
@@ -76,12 +91,12 @@ export class ThresholdCtrl {
          hitPt.x = Math.max(hitPt.x, this.ballCenter.x);
          hitPt.y = Math.min(hitPt.y, this.ballCenter.y);
          let radius = this.ballCenter.distance(hitPt);
-         let angle = toDeg(Math.asin((hitPt.x - this.ballCenter.x) / radius));
+         let angle = clamp(toDeg(Math.asin((hitPt.x - this.ballCenter.x) / radius)), 0, 90);
          if (this.hit == 1) {
-            this.app.threshold1 = clamp(angle, 0, 90);
+            this.onThreshold1Change(angle);
          }
          else {
-            this.app.threshold2 = clamp(angle, 0, 90);
+            this.onThreshold2Change(angle);
          }
       }
    }

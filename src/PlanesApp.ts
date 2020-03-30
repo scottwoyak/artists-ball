@@ -1,7 +1,7 @@
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { Globals, toRad, isMobile, gl } from "./Globals";
-import { PlanesRenderer, DEFAULT_THRESHOLD1, DEFAULT_THRESHOLD2 } from "./PlanesRenderer";
+import { PlanesRenderer } from "./PlanesRenderer";
 import { glMat4 } from "./glMat";
 import { glVec4, glVec3, glVec2 } from "./glVec";
 import { NormalType, TriangleObj } from "./TriangleObj";
@@ -39,16 +39,6 @@ export class PlanesApp {
    private shadowSlider: Slider;
    private thresholdCtrl: ThresholdCtrl;
    private worker: LoaderWorker;
-
-   public set threshold1(val: number) {
-      this.renderer.threshold1 = val;
-      this.dirty = true;
-   }
-
-   public set threshold2(val: number) {
-      this.renderer.threshold2 = val;
-      this.dirty = true;
-   }
 
    public constructor(query: string) {
       this.query = query;
@@ -132,17 +122,23 @@ export class PlanesApp {
       menu.addItem('Pelvis', () => this.loadModel('Pelvis.obj'));
       menu.addItem('Arnold', () => this.loadModel('Arnold.obj'));
       menu.addItem('Teapot', () => this.loadModel('Teapot.obj'));
-      menu.addItem('Reset Sliders', () => {
-         this.renderer.threshold1 = DEFAULT_THRESHOLD1;
-         this.renderer.threshold2 = DEFAULT_THRESHOLD2;
-         this.renderer.computeColors();
-         this.updateSliders();
-         this.dirty = true;
-      })
    }
 
    private createCtrlsElements(parent: HTMLElement) {
-      this.thresholdCtrl = new ThresholdCtrl(parent, this);
+      this.thresholdCtrl = new ThresholdCtrl(
+         parent,
+         this,
+         (value: number) => {
+            this.renderer.threshold1 = value;
+            this.updateSliders();
+            this.dirty = true;
+         },
+         (value: number) => {
+            this.renderer.threshold2 = value;
+            this.updateSliders();
+            this.dirty = true;
+         }
+      );
 
       this.highlightSlider = new Slider(parent, {
          id: 'Highlight',
@@ -166,13 +162,9 @@ export class PlanesApp {
          max: 100,
          value: this.renderer.lightLight * 100,
          colors: [htmlColor.black, htmlColor.white],
-         oninput: () => {
-            this.renderer.lightLight = this.lightLightSlider.value / 100;
-            this.updateSliders();
-            this.dirty = true;
-         },
          getText: () => { return (100 * this.renderer.lightLight).toFixed(0) + "%" }
       });
+      this.lightLightSlider.range.disabled = true;
 
       this.midLightSlider = new Slider(parent, {
          id: 'MidLight',
@@ -181,13 +173,9 @@ export class PlanesApp {
          max: 100,
          value: this.renderer.midLight * 100,
          colors: [htmlColor.black, htmlColor.white],
-         oninput: () => {
-            this.renderer.midLight = this.midLightSlider.value / 100;
-            this.updateSliders();
-            this.dirty = true;
-         },
          getText: () => { return (100 * this.renderer.midLight).toFixed(0) + "%" }
       });
+      this.midLightSlider.range.disabled = true;
 
       this.darkLightSlider = new Slider(parent, {
          id: 'DarkLight',
@@ -196,13 +184,9 @@ export class PlanesApp {
          max: 100,
          value: this.renderer.darkLight * 100,
          colors: [htmlColor.black, htmlColor.white],
-         oninput: () => {
-            this.renderer.darkLight = this.darkLightSlider.value / 100;
-            this.updateSliders();
-            this.dirty = true;
-         },
          getText: () => { return (100 * this.renderer.darkLight).toFixed(0) + "%" }
       });
+      this.darkLightSlider.range.disabled = true;
 
       this.shadowSlider = new Slider(parent, {
          id: 'Shadow',
@@ -306,7 +290,7 @@ export class PlanesApp {
 
       // orient each file so that it is facing forward
       switch (query.toLowerCase()) {
-         case 'skull.obj':
+         case 'skull1.obj':
             this.renderer.rotX(toRad(90));
             this.renderer.rotY(toRad(180));
             break;

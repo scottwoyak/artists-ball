@@ -2,7 +2,7 @@ import { glMat4 } from './glMat';
 import { glVec3, glVec2 } from './glVec';
 import vertexSource from './shaders/PlanesVertex.glsl';
 import fragmentSource from './shaders/PlanesFragment.glsl';
-import { gl, clamp, mix, toRad } from './Globals';
+import { gl, clamp, mix, toRad, toDeg } from './Globals';
 import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
@@ -24,6 +24,7 @@ export class BallImageData {
 export let DEFAULT_THRESHOLD1 = 40;
 export let DEFAULT_THRESHOLD2 = 70;
 
+const HIGHLIGHT_DIFF = 0.1;
 const BALL_RADIUS = 0.5;
 
 /**
@@ -99,55 +100,28 @@ export class PlanesRenderer {
       return this.uHighlight;
    }
    public set highlight(val: number) {
-      this.uHighlight = val;
-      this.uLightLight = Math.min(this.uLightLight, val);
-      this.uMidLight = Math.min(this.uMidLight, val);
-      this.uDarkLight = Math.min(this.uDarkLight, val);
-      this.uShadow = Math.min(this.uShadow, val);
+      this.uHighlight = Math.max(val, HIGHLIGHT_DIFF);
+      this.uShadow = Math.min(this.uShadow, this.uHighlight - HIGHLIGHT_DIFF);
+      this.computeColors();
    }
 
    public get lightLight(): number {
       return this.uLightLight;
    }
-   public set lightLight(val: number) {
-      this.uHighlight = Math.max(this.uHighlight, val);
-      this.uLightLight = val;
-      this.uMidLight = Math.min(this.uMidLight, val);
-      this.uDarkLight = Math.min(this.uDarkLight, val);
-      this.uShadow = Math.min(this.uShadow, val);
-   }
-
    public get midLight(): number {
       return this.uMidLight;
    }
-   public set midLight(val: number) {
-      this.uHighlight = Math.max(this.uHighlight, val);
-      this.uLightLight = Math.max(this.uLightLight, val);
-      this.uMidLight = val;
-      this.uDarkLight = Math.min(this.uDarkLight, val);
-      this.uShadow = Math.min(this.uShadow, val);
-   }
-
    public get darkLight(): number {
       return this.uDarkLight;
-   }
-   public set darkLight(val: number) {
-      this.uHighlight = Math.max(this.uHighlight, val);
-      this.uLightLight = Math.max(this.uLightLight, val);
-      this.uMidLight = Math.max(this.uMidLight, val);
-      this.uDarkLight = val;
-      this.uShadow = Math.min(this.uShadow, val);
    }
 
    public get shadow(): number {
       return this.uShadow;
    }
    public set shadow(val: number) {
-      this.uHighlight = Math.max(this.uHighlight, val);
-      this.uLightLight = Math.max(this.uLightLight, val);
-      this.uMidLight = Math.max(this.uMidLight, val);
-      this.uDarkLight = Math.max(this.uDarkLight, val);
-      this.uShadow = val;
+      this.uShadow = Math.min(val, 1 - HIGHLIGHT_DIFF);
+      this.uHighlight = Math.max(this.uHighlight, this.uShadow + HIGHLIGHT_DIFF);
+      this.computeColors();
    }
 
    public get threshold1(): number {
@@ -156,6 +130,7 @@ export class PlanesRenderer {
    public set threshold1(val: number) {
       this.uThreshold1 = val;
       this.uThreshold2 = Math.max(this.uThreshold2, val);
+      this.computeColors();
    }
 
    public get threshold2(): number {
@@ -164,19 +139,18 @@ export class PlanesRenderer {
    public set threshold2(val: number) {
       this.uThreshold2 = val;
       this.uThreshold1 = Math.min(this.uThreshold1, val);
+      this.computeColors();
    }
 
    private colorAt(deg: number): number {
       deg = clamp(deg, 0, 90);
-      return mix(this.uShadow, this.uHighlight - 0.1, Math.cos(toRad(deg)));
+      return mix(this.uShadow, this.uHighlight - HIGHLIGHT_DIFF, Math.cos(toRad(deg)));
    }
 
-   /*
    private thresholdAt(color: number): number {
-      color = clamp(color, this.ambientIntensity, this.ambientIntensity + this.lightIntensity);
-      return toDeg(Math.acos(color - this.ambientIntensity) / this.lightIntensity);
+      let acos = (color - this.uShadow) / (this.uHighlight - HIGHLIGHT_DIFF - this.uShadow);
+      return toDeg(Math.acos(acos));
    }
-*/
 
    public computeColors() {
       this.uLightLight = this.colorAt(0.5 * this.threshold1);
@@ -211,7 +185,7 @@ export class PlanesRenderer {
       uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
       uni.set('uThreshold2', 1 - Math.sin(toRad(this.threshold2 + 90)));
 
-      uni.set('uLightIntensity', this.uHighlight - this.uShadow - 0.1);
+      uni.set('uLightIntensity', this.uHighlight - this.uShadow - HIGHLIGHT_DIFF);
       uni.set('uAmbientIntensity', this.uShadow);
       uni.set('uHighlight', this.uHighlight);
       uni.set('uLightLight', this.uLightLight);

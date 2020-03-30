@@ -20,6 +20,27 @@
   margin-top: 5px;
 }
 
+.PlanesApp #LightLightRange::-webkit-slider-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+.PlanesApp #LightLightSliderRange::-moz-range-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+
+.PlanesApp #MidLightRange::-webkit-slider-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+.PlanesApp #MidLightSliderRange::-moz-range-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+
+.PlanesApp #DarkLightRange::-webkit-slider-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+.PlanesApp #DarkLightSliderRange::-moz-range-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+
 .PlanesApp .SliderRange {
   width: 35%;
 }
