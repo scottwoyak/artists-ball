@@ -9,6 +9,7 @@ import { TriangleSphere } from "./TriangleSphere";
 import { TriangleCube } from "./TriangleCube";
 import { ThresholdCtrl } from "./ThresholdCtrl";
 import { PointerEventHandler } from "./PointerEventHandler";
+import { saveAs } from 'file-saver';
 
 // specify loader and options here. This value must match the
 // contents of worker.d.ts
@@ -103,25 +104,36 @@ export class PlanesApp {
       this.handler.onDblClick = (pos) => this.onDblClick(pos);
 
       document.onkeypress = (event: KeyboardEvent) => {
-         if (event.key === 'o') {
-            this.renderer.optimize(NormalType.Smooth);
-         }
-         else if (event.key === 'p') {
-            this.renderer.optimize(NormalType.Flat);
+         switch (event.key) {
+            case 'o':
+               this.renderer.optimize(NormalType.Smooth);
+               break;
+
+            case 'p':
+               this.renderer.optimize(NormalType.Flat);
+               break;
+
+            case 's':
+               this.save();
+               break;
+
+            case 't':
+               this.test();
+               break;
          }
       }
 
       let menu = new DropDownMenu(parent, 'Models', 'ModelDropDown');
-      menu.addItem('Male Head', () => this.loadModel('Head.obj'));
-      menu.addItem('Female Pose', () => this.loadModel('Pose1.obj'));
-      menu.addItem('Female Head', () => this.loadModel('FemaleHead.obj'));
-      menu.addItem('Skull 1', () => this.loadModel('Skull1.obj'));
-      //menu.addItem('Skull 2', () => this.loadModel('Skull2.obj'));
-      menu.addItem('Skull 3', () => this.loadModel('Skull3.obj'));
-      //menu.addItem('Head Ecorche', () => this.loadModel('HeadEcorche.obj'));
-      menu.addItem('Pelvis', () => this.loadModel('Pelvis.obj'));
-      menu.addItem('Arnold', () => this.loadModel('Arnold.obj'));
-      menu.addItem('Teapot', () => this.loadModel('Teapot.obj'));
+      menu.addItem('Male Head', () => this.loadModel('Head.blob'));
+      menu.addItem('Female Pose', () => this.loadModel('Pose1.blob'));
+      menu.addItem('Female Head', () => this.loadModel('FemaleHead.blob'));
+      menu.addItem('Skull 1', () => this.loadModel('Skull1.blob'));
+      menu.addItem('Skull 2', () => this.loadModel('Skull2.blob'));
+      menu.addItem('Skull 3', () => this.loadModel('Skull3.blob'));
+      menu.addItem('Head Ecorche', () => this.loadModel('HeadEcorche.blob'));
+      menu.addItem('Pelvis', () => this.loadModel('Pelvis.blob'));
+      menu.addItem('Arnold', () => this.loadModel('Arnold.blob'));
+      menu.addItem('Teapot', () => this.loadModel('Teapot.blob'));
    }
 
    private createCtrlsElements(parent: HTMLElement) {
@@ -206,11 +218,11 @@ export class PlanesApp {
       this.loadModel(this.query);
    }
 
-   private async loadModel(query: string) {
+   private loadModel(query: string) {
 
       // if nothing was specified, load the head model
       if (!query) {
-         query = 'Head.obj';
+         query = 'Head.blob';
       }
 
       if (query && query.toLowerCase() === 'trianglesphere') {
@@ -230,14 +242,27 @@ export class PlanesApp {
       }
       else if (query && query.toLowerCase().endsWith('.obj')) {
 
-         let tObj = await this.loadModelFile(query);
-         //tObj.combine(await this.loadModelFile('base.obj'));
-         this.renderer.setModel(tObj);
-         this.orient(tObj, query);
+         this.loadModelFile(query).then((tObj) => {
 
-         this.dirty = true;
-         requestAnimationFrame(() => this.tick());
+            // uncomment to combine multiple obj files
+            //tObj.combine(await this.loadModelFile('base.obj'));
 
+            this.renderer.setModel(tObj);
+            this.orient(tObj, query);
+
+            this.dirty = true;
+            requestAnimationFrame(() => this.tick());
+         });
+      }
+      else if (query && query.toLowerCase().endsWith('.blob')) {
+
+         this.loadModelFile(query).then((tObj) => {
+            this.renderer.setModel(tObj);
+            this.orient(tObj, query);
+
+            this.dirty = true;
+            requestAnimationFrame(() => this.tick());
+         });
       }
       else {
          // TODO multi line error messages not supported
@@ -266,7 +291,7 @@ export class PlanesApp {
                }
             }
             else {
-               let tObj = TriangleObj.import(data);
+               let tObj = TriangleObj.fromData(data);
 
                this.overlay.innerText = '';
 
@@ -289,30 +314,32 @@ export class PlanesApp {
       this.renderer.scale(2.0 / Math.sqrt(tObj.width * tObj.width + tObj.height * tObj.height + tObj.depth * tObj.depth));
 
       // orient each file so that it is facing forward
-      switch (query.toLowerCase()) {
-         case 'skull1.obj':
+      let file = query.toLowerCase();
+      file = file.split('.')[0];
+      switch (file) {
+         case 'skull1':
             this.renderer.rotX(toRad(90));
             this.renderer.rotY(toRad(180));
             break;
 
-         case 'pelvis.obj':
+         case 'pelvis':
             this.renderer.rotX(toRad(11));
             this.renderer.rotZ(toRad(-87));
             break;
 
-         case 'wolf.obj':
+         case 'wolf':
             this.renderer.rotY(toRad(-140));
             this.renderer.rotX(toRad(5));
             break;
 
-         case 'sheephead.obj':
+         case 'sheephead':
             this.renderer.rotY(toRad(-160));
             break;
 
-         case 'pose1.obj':
+         case 'pose1':
             break;
 
-         case 'teapot.obj':
+         case 'teapot':
             this.renderer.rotY(toRad(90));
             break;
 
@@ -413,11 +440,26 @@ export class PlanesApp {
    public tick() {
 
       if (this.dirty) {
+         // TODO only redraw the threshold ctrl if a slider changed
          this.renderer.render();
          this.thresholdCtrl.draw();
          this.dirty = false;
       }
 
       requestAnimationFrame(() => this.tick());
+   }
+
+   private save() {
+      let tObj = this.renderer.tObj;
+
+      let name = tObj.name.split('.')[0] + '.blob';
+      saveAs(tObj.toBlob(), name);
+   }
+
+   private async test() {
+      // uncomment to test Blobs
+      let blob = this.renderer.tObj.toBlob();
+      let tObj = await TriangleObj.fromBlob(blob);
+      console.log(tObj.name);
    }
 }

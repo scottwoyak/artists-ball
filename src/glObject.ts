@@ -7,7 +7,7 @@ import { glUniform } from "./glUniform";
 import { Profiler } from "./Profiler";
 
 export class glObject {
-   private tObj: TriangleObj;
+   public readonly tObj: TriangleObj;
    private program: WebGLProgram;
    private vertexBuffer: glBuffer;
    private normalBuffer: glBuffer;

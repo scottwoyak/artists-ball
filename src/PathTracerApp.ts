@@ -251,7 +251,7 @@ export class PathTracerApp {
          return fetch(query)
             .then(res => res.text())
             .then(res => {
-               let tObj = new TriangleObjFile(res);
+               let tObj = new TriangleObjFile(query, res);
                let size = 1.5;
                tObj.autoCenter(size);
                tObj.translate(new glVec3([0, tObj.height / 2, 0]));

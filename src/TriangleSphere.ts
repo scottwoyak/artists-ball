@@ -16,7 +16,7 @@ export class TriangleSphere extends TriangleObj {
     */
    public constructor(numSteps: number, radius: number, center: glVec3) {
 
-      super();
+      super('Sphere');
 
       // create the vertices
       this.createVertices(numSteps, radius, center);

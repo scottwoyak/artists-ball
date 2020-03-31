@@ -3,6 +3,7 @@ import { IndexedTriangle } from "./IndexedTriangle";
 import { Volume } from "./Volume";
 import { Profiler } from "./Profiler";
 import { clamp } from "./Globals";
+import { BlobFile } from "./BlobFile";
 
 export enum NormalType {
    Smooth,
@@ -10,6 +11,7 @@ export enum NormalType {
 }
 
 export class TriangleObjData {
+   name: string;
    vertices: Float32Array;
    normals: Float32Array;
    nIndices: Int32Array;
@@ -63,6 +65,7 @@ export class TriangleObj {
    public boxMin = new glVec3([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]);
    public boxMax = new glVec3([-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE]);
    public volumes: Volume[] = [];
+   public name: string;
 
    public get width(): number {
       return this.boxMax.x - this.boxMin.x;
@@ -82,6 +85,10 @@ export class TriangleObj {
          (this.boxMin.y + this.boxMax.y) / 2,
          (this.boxMin.z + this.boxMax.z) / 2,
       ]);
+   }
+
+   public constructor(name?: string) {
+      this.name = name;
    }
 
    protected push(tri: IndexedTriangle) {
@@ -344,9 +351,37 @@ export class TriangleObj {
       array.push(vec.z);
    }
 
-   public export(): TriangleObjData {
+   public combine(tObj: TriangleObj) {
+      let startVIndex = this.vertices.length;
+      let startNIndex = this.normals.length;
+
+      for (let i = 0; i < tObj.vertices.length; i++) {
+         this.vertices.push(tObj.vertices[i].clone());
+      }
+
+      for (let i = 0; i < tObj.normals.length; i++) {
+         this.normals.push(tObj.normals[i].clone());
+      }
+
+      for (let i = 0; i < tObj.triangles.length; i++) {
+         let tri = tObj.triangles[i];
+         this.push(new IndexedTriangle(
+            this.vertices,
+            tri.iV0 + startVIndex,
+            tri.iV1 + startVIndex,
+            tri.iV2 + startVIndex,
+            this.normals,
+            tri.iN0 + startNIndex,
+            tri.iN1 + startNIndex,
+            tri.iN2 + startNIndex
+         ));
+      }
+   }
+
+   public toData(): TriangleObjData {
 
       let data = new TriangleObjData;
+      data.name = this.name;
 
       // convert the triangles into arrays that can be uploaded
       let vertices: number[] = [];
@@ -400,17 +435,18 @@ export class TriangleObj {
       ]);
    }
 
-   public static import(data: TriangleObjData): TriangleObj {
+   public static fromData(data: TriangleObjData): TriangleObj {
       let tObj = new TriangleObj();
+      tObj.name = data.name;
 
       // restore vertices
       for (let i = 0; i < data.vertices.length / 3; i++) {
-         tObj.vertices.push(this.data2vertex(data, i));
+         tObj.vertices.push(TriangleObj.data2vertex(data, i));
       }
 
       // restore normals
       for (let i = 0; i < data.normals.length / 3; i++) {
-         tObj.normals.push(this.data2normal(data, i));
+         tObj.normals.push(TriangleObj.data2normal(data, i));
       }
 
       // restore triangles
@@ -431,31 +467,50 @@ export class TriangleObj {
       return tObj;
    }
 
-   public combine(tObj: TriangleObj) {
-      let startVIndex = this.vertices.length;
-      let startNIndex = this.normals.length;
+   public toBlob(): Blob {
 
-      for (let i = 0; i < tObj.vertices.length; i++) {
-         this.vertices.push(tObj.vertices[i].clone());
+      // create a description
+      let info = {
+         FileType: 'Binary OBJ',
+         Version: '1.0',
+         Name: this.name,
       }
 
-      for (let i = 0; i < tObj.normals.length; i++) {
-         this.normals.push(tObj.normals[i].clone());
-      }
+      // get the raw data
+      let data = this.toData();
 
-      for (let i = 0; i < tObj.triangles.length; i++) {
-         let tri = tObj.triangles[i];
-         this.push(new IndexedTriangle(
-            this.vertices,
-            tri.iV0 + startVIndex,
-            tri.iV1 + startVIndex,
-            tri.iV2 + startVIndex,
-            this.normals,
-            tri.iN0 + startNIndex,
-            tri.iN1 + startNIndex,
-            tri.iN2 + startNIndex
-         ));
-      }
+      // break it into parts
+      let parts: BlobPart[] = [];
+      parts.push(data.vertices);
+      parts.push(data.normals);
+      parts.push(data.vIndices);
+      parts.push(data.nIndices);
+      parts.push(new Float32Array(data.boxMin.values));
+      parts.push(new Float32Array(data.boxMax.values));
 
+      // create the Blob
+      return BlobFile.createBlob(info, parts);
+   }
+
+   public static async fromBlob(blob: Blob): Promise<TriangleObj> {
+
+      let data = await TriangleObj.blobToData(blob);
+      return TriangleObj.fromData(data);
+   }
+
+   public static async blobToData(blob: Blob): Promise<TriangleObjData> {
+
+      let data = new TriangleObjData();
+      let bFile = await BlobFile.extract(blob);
+
+      data.name = bFile.info.name;
+      data.vertices = new Float32Array(await bFile.parts[0].arrayBuffer());
+      data.normals = new Float32Array(await bFile.parts[1].arrayBuffer());
+      data.vIndices = new Int32Array(await bFile.parts[2].arrayBuffer());
+      data.nIndices = new Int32Array(await bFile.parts[3].arrayBuffer());
+      data.boxMin = new glVec3(Array.from(new Float32Array(await bFile.parts[4].arrayBuffer())));
+      data.boxMax = new glVec3(Array.from(new Float32Array(await bFile.parts[5].arrayBuffer())));
+
+      return data;
    }
 }

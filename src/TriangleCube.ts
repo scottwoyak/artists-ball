@@ -7,7 +7,7 @@ export class TriangleCube extends TriangleObj {
 
    public constructor(size: number, center: glVec3) {
 
-      super();
+      super('Cube');
 
       this.createTriangles(size, center);
 

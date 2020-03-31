@@ -142,6 +142,10 @@ export class PlanesRenderer {
       this.computeColors();
    }
 
+   public get tObj(): TriangleObj {
+      return this.obj.tObj;
+   }
+
    private colorAt(deg: number): number {
       deg = clamp(deg, 0, 90);
       return mix(this.uShadow, this.uHighlight - HIGHLIGHT_DIFF, Math.cos(toRad(deg)));
@@ -167,7 +171,6 @@ export class PlanesRenderer {
 
    public render(): void {
 
-      //this.renderBall();
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       this.renderToShadowMap();
       this.renderToScreen();

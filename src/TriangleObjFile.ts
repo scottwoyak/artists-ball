@@ -12,9 +12,9 @@ export class TriangleObjFile extends TriangleObj {
 
    private updateStatus: StatusFunction;
 
-   public constructor(src: string, statusFunction?: StatusFunction) {
+   public constructor(name: string, src: string, statusFunction?: StatusFunction) {
 
-      super();
+      super(name);
 
       // record the status function. If one is not supplied, create one that does nothing
       if (statusFunction) {

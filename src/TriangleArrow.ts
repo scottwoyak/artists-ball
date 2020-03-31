@@ -9,7 +9,7 @@ export class TriangleArrow extends TriangleObj {
 
    public constructor() {
 
-      super();
+      super('Arrow');
       const NUM_STEPS = 30;
       const TIP = new glVec3([0, 0, 0]);
       const TOTAL_LENGTH = 0.4;
