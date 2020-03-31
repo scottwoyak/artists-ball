@@ -7,7 +7,10 @@ class BlobBreaker {
    }
 
    public next(len: number): Blob {
-      let b = this.blob.slice(this.start, this.start + len);
+      // oh, Apple
+      let slice = (<any>this.blob).webkitSlice ?? this.blob.slice;
+
+      let b = slice(this.start, this.start + len);
       this.start += len;
       return b;
    }
