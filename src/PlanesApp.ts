@@ -134,6 +134,17 @@ export class PlanesApp {
       menu.addItem('Pelvis', () => this.loadModel('Pelvis.blob'));
       menu.addItem('Arnold', () => this.loadModel('Arnold.blob'));
       menu.addItem('Teapot', () => this.loadModel('Teapot.blob'));
+      let subMenu = menu.addSubMenu('Heads', 'HeadsSubMenu');
+      subMenu.addItem('Head 1', () => this.loadModel('Head1.blob'));
+      subMenu.addItem('Head 2', () => this.loadModel('Head2.blob'));
+      subMenu.addItem('Head 3', () => this.loadModel('Head3.blob'));
+      subMenu.addItem('Head 4', () => this.loadModel('Head4.blob'));
+      subMenu.addItem('Head 5', () => this.loadModel('Head5.blob'));
+      subMenu.addItem('Head 6', () => this.loadModel('Head6.blob'));
+      subMenu.addItem('Head 7', () => this.loadModel('Head7.blob'));
+      subMenu.addItem('Head 8', () => this.loadModel('Head8.blob'));
+      subMenu.addItem('Head 9', () => this.loadModel('Head9.blob'));
+      subMenu.addItem('Head 10', () => this.loadModel('Head10.blob'));
    }
 
    private createCtrlsElements(parent: HTMLElement) {
