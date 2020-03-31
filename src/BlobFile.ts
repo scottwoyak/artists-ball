@@ -13,7 +13,27 @@ class BlobBreaker {
    }
 
    public async nextArrayBuffer(len: number): Promise<ArrayBuffer> {
-      return this.next(len).arrayBuffer();
+      // oh, Apple, everyone else implements Blob.arrayBuffer()
+      // return this.next(len).arrayBuffer();
+
+      // read the Blob the old fashioned way
+      return new Promise<ArrayBuffer>((resolve, reject) => {
+
+         let reader = new FileReader();
+
+         // register event handlers
+         reader.onloadend = () => {
+            resolve(reader.result as ArrayBuffer);
+         }
+
+         reader.onerror = () => {
+            reject(reader.error);
+         }
+
+         // start the read
+         let blob = this.next(len);
+         reader.readAsArrayBuffer(blob);
+      });
    }
 
    public async nextInt32Array(len: number): Promise<Int32Array> {
