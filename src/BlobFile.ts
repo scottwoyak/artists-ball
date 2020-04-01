@@ -1,3 +1,26 @@
+
+
+export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
+   // read the Blob the old fashioned way
+   return new Promise<ArrayBuffer>((resolve, reject) => {
+
+      let reader = new FileReader();
+
+      // register event handlers
+      reader.onloadend = () => {
+         resolve(reader.result as ArrayBuffer);
+      }
+
+      reader.onerror = () => {
+         reject(reader.error);
+      }
+
+      // start the read
+      reader.readAsArrayBuffer(blob);
+   });
+
+}
+
 class BlobBreaker {
    private start = 0;
    private blob: Blob;
@@ -7,31 +30,37 @@ class BlobBreaker {
    }
 
    public next(len: number): Blob {
-      // oh, Apple
-      if ((<any>this.blob).webkitSlice) {
-         let b = (<any>this.blob).webkitSlice(this.start, this.start + len);
-         this.start += len;
-         return b;
-      }
-      else {
-         let b = this.blob.slice(this.start, this.start + len);
-         this.start += len;
-         return b;
-      }
+      let b = this.blob.slice(this.start, this.start + len);
+      this.start += len;
+      return b;
    }
 
-   public async nextArrayBuffer(len: number): Promise<ArrayBuffer> {
+   public nextArrayBuffer(len: number): Promise<ArrayBuffer> {
       // oh, Apple, everyone else implements Blob.arrayBuffer()
       // return this.next(len).arrayBuffer();
 
+      return blobToArrayBuffer(this.next(len));
+   }
+
+   public async nextInt32Array(len: number): Promise<Int32Array> {
+      return new Int32Array(await this.nextArrayBuffer(len));
+   }
+
+   public async nextString(len: number): Promise<string> {
+
+      // oh, Apple, everyone else implements Blob.text()
+      //return this.next(len).text();
+
       // read the Blob the old fashioned way
-      return new Promise<ArrayBuffer>((resolve, reject) => {
+      return new Promise<string>((resolve, reject) => {
 
          let reader = new FileReader();
 
          // register event handlers
          reader.onloadend = () => {
-            resolve(reader.result as ArrayBuffer);
+            // decode into a string
+            let txt = new TextDecoder("utf-8").decode(reader.result as ArrayBuffer);
+            resolve(txt);
          }
 
          reader.onerror = () => {
@@ -43,15 +72,6 @@ class BlobBreaker {
          reader.readAsArrayBuffer(blob);
       });
    }
-
-   public async nextInt32Array(len: number): Promise<Int32Array> {
-      return new Int32Array(await this.nextArrayBuffer(len));
-   }
-
-   public async nextString(len: number): Promise<string> {
-      return this.next(len).text();
-   }
-
 }
 
 /**
