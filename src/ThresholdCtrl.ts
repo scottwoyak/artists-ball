@@ -59,8 +59,8 @@ export class ThresholdCtrl {
       parent.appendChild(this.hiddenCanvas);
 
       this.handler = new PointerEventHandler(this.canvas);
-      this.handler.onDown = (pos) => this.onDown(pos);
-      this.handler.onMove = (pos) => this.onMove(pos);
+      this.handler.onDown = (pos: glVec2) => this.onDown(pos);
+      this.handler.onDrag = (pos: glVec2, delta: glVec2) => this.onDrag(pos, delta);
    }
    private onDown(pos: glVec2) {
 
@@ -85,8 +85,8 @@ export class ThresholdCtrl {
       }
    }
 
-   private onMove(pos: glVec2) {
-      if (this.handler.mouseDown && this.hit > 0) {
+   private onDrag(pos: glVec2, delta: glVec2) {
+      if (this.hit > 0) {
          let hitPt = new glVec2([pos.x + this.mouseOffset.x, pos.y + this.mouseOffset.y]);
          hitPt.x = Math.max(hitPt.x, this.ballCenter.x);
          hitPt.y = Math.min(hitPt.y, this.ballCenter.y);

@@ -1,8 +1,11 @@
 import { glVec2 } from "./glVec";
 
-type PointerEventVoidFunction = (pos: glVec2) => void;
-type PointerEventBooleanFunction = (pos: glVec2) => boolean;
-type PointerEventScaleFunction = (scale: number, change: number) => void;
+type PointerScaleFunction = (scale: number, change: number) => void;
+type PointerDragFunction = (pos: glVec2, delta: glVec2) => void;
+type PointerUpFunction = () => void;
+type PointerDownFunction = (pos: glVec2) => void;
+type PointerDblClickFunction = (pos: glVec2) => boolean;
+type PointerClickFunction = (pos: glVec2) => boolean;
 
 const DBL_CLICK_TIME = 300; // ms
 
@@ -14,12 +17,12 @@ export class PointerEventHandler {
    private element: HTMLElement;
    public mouseDown = false;
 
-   public onUp: VoidFunction;
-   public onDown: PointerEventVoidFunction;
-   public onMove: PointerEventVoidFunction;
-   public onScale: PointerEventScaleFunction
-   public onClick: PointerEventBooleanFunction;
-   public onDblClick: PointerEventVoidFunction;
+   public onUp: PointerUpFunction;
+   public onDown: PointerDownFunction;
+   public onScale: PointerScaleFunction
+   public onClick: PointerClickFunction;
+   public onDblClick: PointerDblClickFunction;
+   public onDrag: PointerDragFunction;
 
    public lastPos: glVec2;
    private lastTouchTime: number;
@@ -38,11 +41,14 @@ export class PointerEventHandler {
          // prevent the browser from using the event
          event.preventDefault();
 
+         // if this is the first touch
          if (event.touches.length === 1) {
+
+            // record the primary touch id
             this.primaryTouchId = event.touches[0].identifier;
 
-            let rect = this.element.getBoundingClientRect();
-            let pos = new glVec2([event.touches[0].clientX - rect.x, event.touches[0].clientY - rect.y]);
+            // send out onDown() and potentially onDblClick() events
+            let pos = this.getPos(event.touches[0]);
 
             let time = Date.now();
             if (time - this.lastTouchTime < DBL_CLICK_TIME) {
@@ -53,8 +59,14 @@ export class PointerEventHandler {
             }
             this.lastTouchTime = time;
          }
-         else if (event.touches.length === 2) {
+         // if this is the second touch
+         else if (event.touches.length === 2 && this.primaryTouchId >= 0) {
+
+            // record the secondary touch id. It will always be the second element when
+            // there are only two elements
             this.secondaryTouchId = event.touches[1].identifier;
+
+            // set values for gestures
             let distance = this.computeTouchDistance(event);
             this.initialTouchDistance = distance;
             this.lastTouchDistance = distance;
@@ -62,29 +74,33 @@ export class PointerEventHandler {
       });
 
       element.addEventListener('touchmove', (event: TouchEvent) => {
+
+         // prevent the browser from using the event
          event.preventDefault();
 
+         // if the initial two touches are active
          if (this.primaryTouchId >= 0 && this.secondaryTouchId >= 0) {
 
+            // send out gesture events
             let distance = this.computeTouchDistance(event);
             let scale = distance / this.initialTouchDistance;
             let change = distance / this.lastTouchDistance;
-            if (this.onScale) {
-               this.onScale(scale, change);
-            }
+            this.ourOnScale(scale, change);
             this.lastTouchDistance = distance;
          }
-         let touch = this.getTouch(event, this.primaryTouchId);
+         // if only the initial touch is active
+         else if (this.primaryTouchId >= 0) {
 
-         if (touch) {
-            let rect = this.element.getBoundingClientRect();
-            let pos = new glVec2([event.touches[0].clientX - rect.x, event.touches[0].clientY - rect.y]);
-            this.ourOnMove(pos);
+            // send out the drag event
+            let touch = this.getTouch(event, this.primaryTouchId);
+            let pos = this.getPos(touch);
+            this.ourOnDrag(pos);
          }
       });
 
       element.addEventListener('touchend', (event: TouchEvent) => {
 
+         // prevent the browser from using the event
          event.preventDefault();
 
          if (this.secondaryTouchId >= 0) {
@@ -92,6 +108,14 @@ export class PointerEventHandler {
                this.secondaryTouchId = -1;
                this.initialTouchDistance = -1;
                this.lastTouchDistance = -1;
+
+               // if we lifted the second finger, but not the first, go back
+               // to the drag gesture, but adjust the rememberd position to
+               // be the current one so that things don't jump
+               let touch = this.getTouch(event, this.primaryTouchId);
+               if (touch) {
+                  this.lastPos = this.getPos(touch);
+               }
             }
          }
 
@@ -116,7 +140,9 @@ export class PointerEventHandler {
 
       element.onmousemove = (event: MouseEvent) => {
          let pos = new glVec2([(<any>event).layerX, (<any>event).layerY]);
-         this.ourOnMove(pos);
+         if (this.mouseDown) {
+            this.ourOnDrag(pos);
+         }
       }
 
       element.onmouseup = (event: MouseEvent) => {
@@ -144,6 +170,11 @@ export class PointerEventHandler {
 
       // no match was found
       return null;
+   }
+
+   private getPos(touch: Touch): glVec2 {
+      let rect = this.element.getBoundingClientRect();
+      return new glVec2([touch.clientX - rect.x, touch.clientY - rect.y]);
    }
 
    private computeTouchDistance(event: TouchEvent): number {
@@ -186,9 +217,10 @@ export class PointerEventHandler {
       }
    }
 
-   private ourOnMove(pos: glVec2) {
-      if (this.onMove) {
-         this.onMove(pos.clone());
+   private ourOnDrag(pos: glVec2) {
+      if (this.onDrag) {
+         let delta = new glVec2([pos.x - this.lastPos.x, pos.y - this.lastPos.y]);
+         this.onDrag(pos.clone(), delta);
       }
       this.lastPos = pos.clone();
    }
@@ -197,6 +229,12 @@ export class PointerEventHandler {
 
       if (this.onDblClick) {
          this.onDblClick(pos);
+      }
+   }
+
+   private ourOnScale(scale: number, change: number) {
+      if (this.onScale) {
+         this.onScale(scale, change);
       }
    }
 }

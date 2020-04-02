@@ -25,7 +25,6 @@ enum PointerMode {
 export class PlanesApp {
    public renderer: PlanesRenderer;
    private pointerMode: PointerMode = PointerMode.View;
-   private pointerModeSpecial = false;
    private overlay: HTMLSpanElement;
    private handler: PointerEventHandler;
 
@@ -98,10 +97,9 @@ export class PlanesApp {
       this.renderer = new PlanesRenderer();
 
       this.handler = new PointerEventHandler(canvas);
-      this.handler.onDown = (pos) => this.onDown(pos);
-      this.handler.onMove = (pos) => this.onMove(pos);
-      this.handler.onClick = (pos) => this.onClick(pos);
-      this.handler.onScale = (scale, change) => this.onScale(scale, change);
+      this.handler.onDrag = (pos: glVec2, delta: glVec2) => this.onDrag(pos, delta);
+      this.handler.onClick = (pos: glVec2) => this.onClick(pos);
+      this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
 
       document.onkeypress = (event: KeyboardEvent) => {
          switch (event.key) {
@@ -384,43 +382,30 @@ export class PlanesApp {
       this.dirty = true;
    }
 
-   private onDown(pos: glVec2) {
+   private onDrag(pos: glVec2, delta: glVec2) {
+      this.dirty = true;
 
-      this.pointerModeSpecial = (pos.x < 0.1 * gl.canvas.width) ? true : false;
-   }
+      if (this.pointerMode === PointerMode.View) {
+         this.renderer.rotX(delta.y * 0.01);
+         this.renderer.rotY(delta.x * 0.01);
+      }
+      else if (this.pointerMode === PointerMode.Light) {
 
-   private onMove(pos: glVec2) {
-      if (this.handler.mouseDown) {
+         let matY = glMat4.fromRotY(toRad(delta.x));
+         let matX = glMat4.fromRotX(toRad(delta.y));
+         let vec = new glVec4([
+            this.renderer.uLightDirection.x,
+            this.renderer.uLightDirection.y,
+            this.renderer.uLightDirection.z,
+            1
+         ]);
+         vec = matX.multV(vec);
+         vec = matY.multV(vec);
+         this.renderer.uLightDirection.x = vec.values[0];
+         this.renderer.uLightDirection.y = vec.values[1];
+         this.renderer.uLightDirection.z = vec.values[2];
+
          this.dirty = true;
-
-         let old = this.handler.lastPos;
-         if (this.pointerMode === PointerMode.View) {
-            if (this.pointerModeSpecial) {
-               this.renderer.zoom(1 - (old.y - pos.y) * 0.01);
-            }
-            else {
-               this.renderer.rotX((pos.y - old.y) * 0.01);
-               this.renderer.rotY((pos.x - old.x) * 0.01);
-            }
-         }
-         else if (this.pointerMode === PointerMode.Light) {
-
-            let matY = glMat4.fromRotY(toRad(pos.x - old.x));
-            let matX = glMat4.fromRotX(toRad(pos.y - old.y));
-            let vec = new glVec4([
-               this.renderer.uLightDirection.x,
-               this.renderer.uLightDirection.y,
-               this.renderer.uLightDirection.z,
-               1
-            ]);
-            vec = matX.multV(vec);
-            vec = matY.multV(vec);
-            this.renderer.uLightDirection.x = vec.values[0];
-            this.renderer.uLightDirection.y = vec.values[1];
-            this.renderer.uLightDirection.z = vec.values[2];
-
-            this.dirty = true;
-         }
       }
    }
 
@@ -446,6 +431,7 @@ export class PlanesApp {
 
    private onScale(scale: number, change: number) {
       this.renderer.zoom(change);
+      this.dirty = true;
    }
 
    public tick() {
