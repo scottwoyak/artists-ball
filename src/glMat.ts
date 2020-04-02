@@ -109,11 +109,11 @@ export class glMat4 {
    }
 
    /**
-    * Inverts this matrix and returns the result (this).
+    * Inverts this matrix and returns the result.
     * 
-    * @returns This.
+    * @returns The inverse of this.
     */
-   public invert(): glMat4 {
+   public inverse(): glMat4 {
 
       let result = new glMat4();
 
@@ -350,6 +350,33 @@ export class glMat4 {
          0, Y, B, 0,
          0, 0, C, D,
          0, 0, -1, 0
+      ]);
+   }
+
+   /**
+    * Creates a perspective matrix. See gluOrtho.
+    * 
+    * @param left The left clipping plane.
+    * @param right The right clipping plane.
+    * @param bottom The bottom clipping plane.
+    * @param top The top clipping plane.
+    * @param znear The near clipping plane.
+    * @param zfar The far clipping plane.
+    * @returns the perspective matrix.
+    */
+   public static makeOrtho(
+      left: number,
+      right: number,
+      bottom: number,
+      top: number,
+      near: number,
+      far: number): glMat4 {
+
+      return new glMat4([
+         2 / (right - left), 0, 0, (right + left) / (right - left),
+         0, 2 / (top - bottom), 0, (top + bottom) / (top - bottom),
+         0, 0, 2 / (far - near), (far + near) / (far - near),
+         0, 0, 0, 1
       ]);
    }
 

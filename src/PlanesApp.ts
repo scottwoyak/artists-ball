@@ -120,6 +120,11 @@ export class PlanesApp {
             case 't':
                this.test();
                break;
+
+            case 'd':
+               this.renderer.showShadowMap = !this.renderer.showShadowMap;
+               this.dirty = true;
+               break;
          }
       }
 
@@ -320,10 +325,6 @@ export class PlanesApp {
 
    public orient(tObj: TriangleObj, query: string) {
 
-      let center = tObj.center;
-      this.renderer.translate(new glVec3([-center.x, -center.y, -center.z]));
-      this.renderer.scale(2.0 / Math.sqrt(tObj.width * tObj.width + tObj.height * tObj.height + tObj.depth * tObj.depth));
-
       // orient each file so that it is facing forward
       let file = query.toLowerCase();
       file = file.split('.')[0];
@@ -395,7 +396,7 @@ export class PlanesApp {
          let old = this.handler.lastPos;
          if (this.pointerMode === PointerMode.View) {
             if (this.pointerModeSpecial) {
-               this.renderer.rotZ((old.y - pos.y) * 0.01);
+               this.renderer.zoom(1 - (old.y - pos.y) * 0.01);
             }
             else {
                this.renderer.rotX((pos.y - old.y) * 0.01);

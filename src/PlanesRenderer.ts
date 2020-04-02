@@ -34,7 +34,7 @@ export class PlanesRenderer {
 
    private program: WebGLProgram;
    private view = new glMat4();
-   private shadowView = new glMat4();
+   private lightView = new glMat4();
    private projection = new glMat4();
 
    private uColor = new glColor([1, 1, 1]);
@@ -63,6 +63,8 @@ export class PlanesRenderer {
 
    public ballColor = new glColor([1, 1, 1]);
    public readonly yellow = new glColor([1.0, 0.9, 0.7]);
+   private zoomFactor: number = 1;
+   public showShadowMap = false;
 
    public constructor() {
 
@@ -78,8 +80,13 @@ export class PlanesRenderer {
 
       let tArrow = new TriangleArrow();
       this.arrow = new glObject(tArrow, this.program);
+
+      this.projection = glMat4.makeOrtho(-1, 1, -1, 1, -100, 100);
    }
 
+   //
+   // The functions below change the model
+   //
    public rotX(angle: number) {
       this.obj.rotX(angle);
    }
@@ -94,6 +101,13 @@ export class PlanesRenderer {
    }
    public translate(offset: glVec3) {
       this.obj.translate(offset);
+   }
+
+   //
+   // The functions below change our view of the model
+   //
+   public zoom(zoom: number) {
+      this.zoomFactor *= zoom;
    }
 
    public get highlight(): number {
@@ -167,6 +181,11 @@ export class PlanesRenderer {
          this.obj.delete();
       }
       this.obj = new glObject(tObj, this.program);
+
+      let center = tObj.center;
+      this.obj.translate(new glVec3([-center.x, -center.y, -center.z]));
+      this.obj.scale(2.0 / Math.sqrt(tObj.width * tObj.width + tObj.height * tObj.height + tObj.depth * tObj.depth));
+      this.zoomFactor = 1;
    }
 
    public render(): void {
@@ -179,7 +198,7 @@ export class PlanesRenderer {
    private setStdUniforms(): glUniform {
       let uni = new glUniform(this.program);
       uni.set('view', this.view.transpose());
-      uni.set('shadowView', this.shadowView.transpose());
+      uni.set('lightView', this.lightView.transpose());
       uni.set('projection', this.projection.transpose());
       uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
       uni.set('uLightDirection', this.uLightDirection);
@@ -294,12 +313,13 @@ export class PlanesRenderer {
       mat.set(0, 3, 0);
       mat.set(1, 3, 0);
       mat.set(2, 3, 0);
-      this.shadowView = mat;
+      this.lightView = mat;
 
       let uni = this.setStdUniforms();
 
       // change the view matrix so that our view is from the light
-      uni.set('view', this.shadowView.transpose());
+      uni.set('view', this.lightView.transpose());
+      uni.set('projection', glMat4.identity());
 
       // don't try to use the shadow texture while we're creating it
       uni.seti('uUseShadows', 0);
@@ -312,50 +332,41 @@ export class PlanesRenderer {
 
    private renderToScreen(): void {
 
-      /*
       // display the depth buffer for testing purposes
-      let tr = new TextureRenderer();
-      tr.render(this.shadowMap.depthTexture);
-      */
+      if (this.showShadowMap) {
+         let tr = new TextureRenderer();
+         tr.render(this.shadowFrameBuffer.depthTexture);
+      }
+      else {
+         gl.useProgram(this.program);
 
-      /*
-      gl.bindTexture(gl.TEXTURE_2D, null);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+         gl.bindTexture(gl.TEXTURE_2D, this.shadowFrameBuffer.depthTexture)
 
-      // display the depth buffer for testing purposes
-      let tr = new TextureRenderer();
-      tr.render(this.textureFrameBuffer.colorTexture);
+         gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
-      gl.bindTexture(gl.TEXTURE_2D, null);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      return;
-      */
+         // reset the view matrix
+         this.view = new glMat4();
+         this.view.scale(this.zoomFactor);
 
-      gl.useProgram(this.program);
+         // draw the main object
+         let uni = this.setStdUniforms();
+         this.obj.draw();
 
-      gl.bindTexture(gl.TEXTURE_2D, this.shadowFrameBuffer.depthTexture)
+         // draw the object in the upper right at a reduced size and opposite banding
+         gl.clear(gl.DEPTH_BUFFER_BIT);
+         this.view = new glMat4();
+         this.view.scale(this.miniSize);
+         //this.view.scale(1 / this.zoomFactor);
+         this.view.translate(new glVec3([1 - this.miniSize, 1 - this.miniSize, 0]));
+         uni.set('view', this.view.transpose());
+         uni.set('uUseThresholds', this.uUseThresholds ? 0 : 1, true);
+         this.obj.draw();
 
-      gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+         // draw the ball
+         this.drawBall();
 
-      // reset the view matrix
-      this.view = new glMat4();
-
-      // draw the main object
-      let uni = this.setStdUniforms();
-      this.obj.draw();
-
-      // draw the object in the upper right at a reduced size and opposite banding
-      gl.clear(gl.DEPTH_BUFFER_BIT);
-      this.view.scale(this.miniSize);
-      this.view.translate(new glVec3([1 - this.miniSize, 1 - this.miniSize, 0]));
-      uni.set('view', this.view.transpose());
-      uni.set('uUseThresholds', this.uUseThresholds ? 0 : 1, true);
-      this.obj.draw();
-
-      // draw the ball
-      this.drawBall();
-
-      gl.bindTexture(gl.TEXTURE_2D, null);
+         gl.bindTexture(gl.TEXTURE_2D, null);
+      }
    }
 
    private drawBall() {

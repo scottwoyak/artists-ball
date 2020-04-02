@@ -245,7 +245,7 @@ export class PathTracerRenderer {
 
       let v = new glVec3([x, y, z]);
       let jitter = glMat4.fromTranslation(v);
-      let matrix = jitter.multM(modelviewProjection).invert();
+      let matrix = jitter.multM(modelviewProjection).inverse();
 
       Uniforms.uRay00 = this.getEyeRay(matrix, -1, -1);
       Uniforms.uRay01 = this.getEyeRay(matrix, -1, +1);
