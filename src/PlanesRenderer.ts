@@ -65,6 +65,7 @@ export class PlanesRenderer {
    public ballColor = new glColor([1, 1, 1]);
    public readonly yellow = new glColor([1.0, 0.9, 0.7]);
    private zoomFactor: number = 1;
+   private translation = new glVec2([0, 0]);
    public showShadowMap = false;
 
    public constructor() {
@@ -109,6 +110,11 @@ export class PlanesRenderer {
    //
    public zoom(zoom: number) {
       this.zoomFactor *= zoom;
+   }
+
+   public translateView(delta: glVec2) {
+      this.translation.x += delta.x;
+      this.translation.y += delta.y;
    }
 
    public get highlight(): number {
@@ -190,6 +196,7 @@ export class PlanesRenderer {
       // reset the view and the light
       this.view = glMat4.identity();
       this.zoomFactor = 1;
+      this.translation = new glVec2([0, 0]);
       this.uLightDirection = new glVec3([1.0, -1.0, 1.5]);
    }
 
@@ -352,6 +359,7 @@ export class PlanesRenderer {
          // reset the view matrix
          this.view = new glMat4();
          this.view.scale(this.zoomFactor);
+         this.view.translate(new glVec3([this.translation.x, this.translation.y, 0]));
 
          // draw the main object
          let uni = this.setStdUniforms();
@@ -361,7 +369,6 @@ export class PlanesRenderer {
          gl.clear(gl.DEPTH_BUFFER_BIT);
          this.view = new glMat4();
          this.view.scale(this.miniSize);
-         //this.view.scale(1 / this.zoomFactor);
          this.view.translate(new glVec3([1 - this.miniSize, 1 - this.miniSize, 0]));
          uni.set('view', this.view.transpose());
          uni.set('uUseThresholds', this.uUseThresholds ? 0 : 1, true);

@@ -1,7 +1,7 @@
 import { glVec2 } from "./glVec";
 
 type PointerRotateFunction = (angle: number, delta: number) => void;
-type PointerTranslateFunction = (pos: glVec2, delta: glVec2) => void;
+type PointerTranslateFunction = (delta: glVec2) => void;
 type PointerScaleFunction = (scale: number, change: number) => void;
 type PointerDragFunction = (pos: glVec2, delta: glVec2) => void;
 type PointerUpFunction = () => void;
@@ -35,6 +35,7 @@ export class PointerEventHandler {
    private initialTouchDistance: number;
    private lastTouchDistance: number;
    private lastTouchAngle: number;
+   private lastTouchCenter: glVec2;
 
    public constructor(element: HTMLElement) {
 
@@ -76,6 +77,7 @@ export class PointerEventHandler {
             this.initialTouchDistance = distance;
             this.lastTouchDistance = distance;
             this.lastTouchAngle = this.computeTouchAngle(event);
+            this.lastTouchCenter = this.computeTouchCenter(event);
          }
       });
 
@@ -97,6 +99,12 @@ export class PointerEventHandler {
             let angle = this.computeTouchAngle(event);
             this.ourOnRotate(angle, angle - this.lastTouchAngle);
             this.lastTouchAngle = angle;
+
+            let center = this.computeTouchCenter(event);
+            // reverse Y values so the bottom is zero instead of the top
+            let delta = [center.x - this.lastTouchCenter.x, this.lastTouchCenter.y - center.y];
+            this.ourOnTranslate(new glVec2(delta));
+            this.lastTouchCenter = center;
          }
          // if only the initial touch is active
          else if (this.primaryTouchId >= 0) {
@@ -139,6 +147,7 @@ export class PointerEventHandler {
             this.initialTouchDistance = -1;
             this.lastTouchDistance = -1;
             this.lastTouchAngle = -1;
+            this.lastTouchCenter = new glVec2([-1, -1]);
          }
       });
 
@@ -225,6 +234,18 @@ export class PointerEventHandler {
       return Math.atan2(y2 - y1, x2 - x1);
    }
 
+   private computeTouchCenter(event: TouchEvent): glVec2 {
+
+      let touches = this.getTouches(event);
+
+      let x1 = touches.primaryTouch.screenX;
+      let y1 = touches.primaryTouch.screenY;
+      let x2 = touches.secondaryTouch.screenX;
+      let y2 = touches.secondaryTouch.screenY;
+
+      return new glVec2([(x1 + x2) / 2, (y1 + y2) / 2]);
+   }
+
    private ourOnDown(pos: glVec2) {
 
       // check for a click handler
@@ -277,9 +298,9 @@ export class PointerEventHandler {
       }
    }
 
-   private ourOnTranslate(pos: glVec2, delta: glVec2) {
+   private ourOnTranslate(delta: glVec2) {
       if (this.onTranslate) {
-         this.onTranslate(pos, delta);
+         this.onTranslate(delta);
       }
    }
 }

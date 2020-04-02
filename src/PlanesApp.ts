@@ -101,6 +101,7 @@ export class PlanesApp {
       this.handler.onClick = (pos: glVec2) => this.onClick(pos);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
       this.handler.onRotate = (angle: number, delta: number) => this.onRotate(angle, delta);
+      this.handler.onTranslate = (delta: glVec2) => this.onTranslate(delta);
 
       document.onkeypress = (event: KeyboardEvent) => {
          switch (event.key) {
@@ -437,6 +438,20 @@ export class PlanesApp {
 
    private onRotate(angle: number, delta: number) {
       this.renderer.rotZ(delta);
+      this.dirty = true;
+   }
+
+   private onTranslate(delta: glVec2) {
+
+      let factor = 1;
+      if (isMobile) {
+         factor = 2;
+      }
+
+      this.renderer.translateView(new glVec2([
+         factor * 2 * delta.x / gl.canvas.width,
+         factor * 2 * delta.y / gl.canvas.height
+      ]));
       this.dirty = true;
    }
 
