@@ -26,6 +26,7 @@ export let DEFAULT_THRESHOLD2 = 70;
 
 const HIGHLIGHT_DIFF = 0.1;
 const BALL_RADIUS = 0.5;
+const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, 1.5];
 
 /**
  * Class that renders triangles and a light source
@@ -59,7 +60,7 @@ export class PlanesRenderer {
    private shadowFrameBuffer: glTextureFrameBuffer;
    private textureFrameBuffer: glTextureFrameBuffer;
 
-   public uLightDirection = new glVec3([1.0, -1.0, 1.5]);
+   public uLightDirection = new glVec3(INITIAL_LIGHT_DIRECTION);
 
    public ballColor = new glColor([1, 1, 1]);
    public readonly yellow = new glColor([1.0, 0.9, 0.7]);
@@ -185,7 +186,11 @@ export class PlanesRenderer {
       let center = tObj.center;
       this.obj.translate(new glVec3([-center.x, -center.y, -center.z]));
       this.obj.scale(2.0 / Math.sqrt(tObj.width * tObj.width + tObj.height * tObj.height + tObj.depth * tObj.depth));
+
+      // reset the view and the light
+      this.view = glMat4.identity();
       this.zoomFactor = 1;
+      this.uLightDirection = new glVec3([1.0, -1.0, 1.5]);
    }
 
    public render(): void {
