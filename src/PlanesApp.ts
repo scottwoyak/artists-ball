@@ -1,6 +1,6 @@
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
-import { Globals, toRad, isMobile, gl } from "./Globals";
+import { toRad, isMobile } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
 import { glMat4 } from "./glMat";
 import { glVec4, glVec3, glVec2 } from "./glVec";
@@ -15,7 +15,6 @@ import { saveAs } from 'file-saver';
 // contents of worker.d.ts
 import LoaderWorker from 'worker-loader?name=LoaderWorker.worker.js!./LoaderWorker';
 import { DropDownMenu, SubMenu } from "./DropDownMenu";
-import { glColor } from "./glColor";
 
 enum PointerMode {
    View,
@@ -28,6 +27,7 @@ const BLACK_COLOR = new htmlColor([0, 0, 0]);
 //const BLACK_COLOR = new htmlColor([30, 20, 0]);
 
 export class PlanesApp {
+   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    public renderer: PlanesRenderer;
    private pointerMode: PointerMode = PointerMode.View;
    private overlay: HTMLSpanElement;
@@ -58,7 +58,7 @@ export class PlanesApp {
       viewContainer.className = 'container';
       div.appendChild(viewContainer);
       this.createViewElements(viewContainer);
-      div.style.width = gl.canvas.width + 'px';
+      div.style.width = this.gl.canvas.width + 'px';
 
       const ctrlsContainer = document.createElement('div');
       ctrlsContainer.className = 'container';
@@ -97,9 +97,9 @@ export class PlanesApp {
          // TODO display a message about not being able to create a WebGL context
          console.log("Unable to get WebGL context");
       }
-      Globals.gl = context;
+      this.gl = context;
 
-      this.renderer = new PlanesRenderer();
+      this.renderer = new PlanesRenderer(this.gl);
       this.renderer.whiteColor = WHITE_COLOR;
       this.renderer.blackColor = BLACK_COLOR;
 
@@ -458,7 +458,7 @@ export class PlanesApp {
     */
    private onClick(pos: glVec2): boolean {
 
-      let size = gl.canvas.width;
+      let size = this.gl.canvas.width;
 
       // TODO get the size of the area from the renderer
       if (pos.x < size / 5 && pos.y < size / 5) {
@@ -487,8 +487,8 @@ export class PlanesApp {
       }
 
       this.renderer.translateView(new glVec2([
-         factor * 2 * delta.x / gl.canvas.width,
-         factor * 2 * delta.y / gl.canvas.height
+         factor * 2 * delta.x / this.gl.canvas.width,
+         factor * 2 * delta.y / this.gl.canvas.height
       ]));
       this.dirty = true;
    }

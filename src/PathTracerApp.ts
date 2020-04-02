@@ -6,7 +6,7 @@ import { SphericalCoord } from "./SphericalCoord";
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { glColorWithTemperature } from "./glColorWithTemperature";
-import { Globals, clamp } from "./Globals";
+import { clamp } from "./Globals";
 import { TriangleObj } from "./TriangleObj";
 import { TriangleSphere } from "./TriangleSphere";
 import { TriangleCube } from "./TriangleCube";
@@ -30,6 +30,7 @@ enum PointerMode {
 }
 
 export class PathTracerApp {
+   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    public renderer: PathTracerRenderer;
    private modelview: glMat4;
    private projection: glMat4;
@@ -82,7 +83,7 @@ export class PathTracerApp {
          // TODO display a message about not being able to create a WebGL context
          console.log("Unable to get WebGL context");
       }
-      Globals.gl = context;
+      this.gl = context;
 
       this.canvas.ontouchstart = (event: TouchEvent) => {
          event.preventDefault();
@@ -122,7 +123,7 @@ export class PathTracerApp {
       }
 
       this.loadModel(this.query).then((tObj: TriangleObj) => {
-         this.renderer = new PathTracerRenderer(tObj);
+         this.renderer = new PathTracerRenderer(this.gl, tObj);
          //this.renderer.setModel(tObj);
          requestAnimationFrame(() => this.tick());
       })

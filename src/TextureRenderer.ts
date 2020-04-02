@@ -1,6 +1,6 @@
 import vertexSource from './shaders/TextureRendererVertex.glsl';
 import fragmentSource from './shaders/TextureRendererFragment.glsl';
-import { gl, isMobile } from './Globals';
+import { isMobile } from './Globals';
 import { glCompiler } from './glCompiler';
 
 /**
@@ -8,6 +8,7 @@ import { glCompiler } from './glCompiler';
  */
 export class TextureRenderer {
 
+   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private program: WebGLProgram;
    private vertexBuffer: WebGLBuffer;
    private vertexAttribute: number;
@@ -19,7 +20,10 @@ export class TextureRenderer {
       +1, +1
    ];
 
-   public constructor() {
+   public constructor(glCtx: WebGLRenderingContext | WebGL2RenderingContext) {
+
+      this.gl = glCtx;
+      let gl = this.gl;
 
       // create vertex buffer - the block we'll draw our rendered texture on
       this.vertexBuffer = gl.createBuffer();
@@ -27,13 +31,14 @@ export class TextureRenderer {
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 
       // create shader
-      this.program = glCompiler.compile(vertexSource, fragmentSource);
+      this.program = glCompiler.compile(gl, vertexSource, fragmentSource);
       this.vertexAttribute = gl.getAttribLocation(this.program, 'vertex');
       gl.enableVertexAttribArray(this.vertexAttribute);
    }
 
    public render(texture: WebGLTexture): void {
 
+      let gl = this.gl;
       /*
       // size of the actual canvas. The texture we create is drawn to this item
       let size = document.body.clientWidth;

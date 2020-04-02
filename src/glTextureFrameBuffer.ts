@@ -1,5 +1,3 @@
-import { gl } from "./Globals";
-
 export enum FrameBufferStyle {
    Normal,
    Depth,
@@ -11,6 +9,7 @@ export enum FrameBufferStyle {
  */
 export class glTextureFrameBuffer {
 
+   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    public frameBuffer: WebGLFramebuffer;
    public colorTexture: WebGLTexture;
    public depthTexture: WebGLTexture;
@@ -18,10 +17,19 @@ export class glTextureFrameBuffer {
    /**
     * Create a frame buffer for rendering into texture objects.
     * 
+    * @param glCtx The WebGL context
     * @param width The width (in pixels) of the rendering (must be power of 2)
     * @param height The height (in pixels) of the rendering (must be power of 2)
     */
-   public constructor(width: number, height: number, style: FrameBufferStyle) {
+   public constructor(
+      glCtx: WebGLRenderingContext | WebGL2RenderingContext,
+      width: number,
+      height: number,
+      style: FrameBufferStyle
+   ) {
+
+      this.gl = glCtx;
+      let gl = this.gl;
 
       switch (style) {
          case FrameBufferStyle.Normal:
@@ -39,6 +47,8 @@ export class glTextureFrameBuffer {
    }
 
    private create(width: number, height: number) {
+
+      let gl = this.gl;
 
       // Step 1: Create a frame buffer object
       this.frameBuffer = gl.createFramebuffer();
@@ -72,6 +82,8 @@ export class glTextureFrameBuffer {
    }
 
    private createDepth(width: number, height: number) {
+      let gl = this.gl;
+
       let depth_texture_extension = gl.getExtension('WEBGL_depth_texture');
       if (!depth_texture_extension) {
          alert('This WebGL program requires the use of the WEBGL_depth_texture extension.');

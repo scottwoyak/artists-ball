@@ -1,5 +1,3 @@
-import { gl } from "./Globals";
-
 /**
  * Utility wrapper for compiling WebGL shader programs
  */
@@ -13,12 +11,17 @@ export class glCompiler {
 
    /**
     * Compiles a shader program
-    * 
+    *
+    * @param gl The WebGL context 
     * @param source The source code
     * @param type The shader type
     * @throws if the compilation fails
     */
-   private static compileShader(source: string, type: number) {
+   private static compileShader(
+      gl: WebGLRenderingContext | WebGL2RenderingContext,
+      source: string,
+      type: number
+   ) {
       let shader = gl.createShader(type);
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
@@ -32,15 +35,20 @@ export class glCompiler {
    /**
     * Compiles and links vertex and fragment shaders into a program
     * 
+    * @param gl The WebGL context
     * @param vertexSource Vertex shader source
     * @param fragmentSource Fragment shader source
     * @returns the program id
     * @throws if the compilation fails
     */
-   public static compile(vertexSource: string, fragmentSource: string) {
+   public static compile(
+      gl: WebGLRenderingContext | WebGL2RenderingContext,
+      vertexSource: string,
+      fragmentSource: string
+   ) {
       let program = gl.createProgram();
-      gl.attachShader(program, glCompiler.compileShader(vertexSource, gl.VERTEX_SHADER));
-      gl.attachShader(program, glCompiler.compileShader(fragmentSource, gl.FRAGMENT_SHADER));
+      gl.attachShader(program, glCompiler.compileShader(gl, vertexSource, gl.VERTEX_SHADER));
+      gl.attachShader(program, glCompiler.compileShader(gl, fragmentSource, gl.FRAGMENT_SHADER));
       gl.linkProgram(program);
       if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
          throw 'link error: ' + gl.getProgramInfoLog(program);

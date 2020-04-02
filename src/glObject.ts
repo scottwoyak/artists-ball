@@ -2,25 +2,32 @@ import { TriangleObj, NormalType } from "./TriangleObj";
 import { glBuffer } from "./glBuffer";
 import { glMat4 } from "./glMat";
 import { glVec3 } from "./glVec";
-import { gl } from "./Globals";
 import { glUniform } from "./glUniform";
 import { Profiler } from "./Profiler";
 
 export class glObject {
+   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    public readonly tObj: TriangleObj;
    private program: WebGLProgram;
    private vertexBuffer: glBuffer;
    private normalBuffer: glBuffer;
    private model = new glMat4();
 
-   public constructor(tObj: TriangleObj, program: WebGLProgram) {
+   public constructor(
+      glCtx: WebGLRenderingContext | WebGL2RenderingContext,
+      tObj: TriangleObj,
+      program: WebGLProgram
+   ) {
+
+      this.gl = glCtx;
+      let gl = this.gl;
 
       this.tObj = tObj;
       this.program = program;
 
       // create buffers (and associated attributes)
-      this.vertexBuffer = new glBuffer(program, 'aVertex');
-      this.normalBuffer = new glBuffer(program, 'aNormal');
+      this.vertexBuffer = new glBuffer(gl, program, 'aVertex');
+      this.normalBuffer = new glBuffer(gl, program, 'aNormal');
 
       this.uploadTriangles();
    }
@@ -80,7 +87,8 @@ export class glObject {
 
    public draw() {
 
-      let uni = new glUniform(this.program);
+      let gl = this.gl;
+      let uni = new glUniform(gl, this.program);
       uni.set('model', this.model.transpose());
 
       this.vertexBuffer.bind();

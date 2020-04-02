@@ -1,5 +1,4 @@
 import { glColor } from "./glColor";
-import { gl } from "./Globals";
 
 /**
  * The items returned from examining the current view
@@ -50,7 +49,11 @@ export class ColorAnalyzer {
     * @param alphaLight The alpha value for things in light. Values above this are due to specular lighting.
     * @param alphaShadow The alpha value for things in shadow.
     */
-   public run(alphaLight: number, alphaShadow: number): IColorData {
+   public run(
+      gl: WebGLRenderingContext | WebGL2RenderingContext,
+      alphaLight: number,
+      alphaShadow: number
+   ): IColorData {
 
       let data: IColorData = {
          maxChroma: 0,

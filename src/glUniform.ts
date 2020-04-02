@@ -1,5 +1,4 @@
 import { glVec3 } from "./glVec";
-import { gl } from "./Globals";
 import { glColor } from "./glColor";
 import { glMat4 } from "./glMat";
 
@@ -7,15 +6,25 @@ import { glMat4 } from "./glMat";
  * Utility class for setting uniform values in a shader
  */
 export class glUniform {
+
+   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
+
    // the WebGL shader program
    private program: WebGLProgram;
 
    /**
     * Creates an object for setting values and calls gl.useProgram
     * 
+    * @param glCtx The WebGL context
     * @param program The program associated with the uniform values
     */
-   public constructor(program: WebGLProgram) {
+   public constructor(
+      glCtx: WebGLRenderingContext | WebGL2RenderingContext,
+      program: WebGLProgram
+   ) {
+      this.gl = glCtx;
+      let gl = this.gl;
+
       this.program = program;
       gl.useProgram(program);
    }
@@ -28,6 +37,8 @@ export class glUniform {
     * @param int If true and the value is a number, it is treated as an integer
     */
    public set(name: string, value: number | glVec3 | glColor | glMat4, int: boolean = false) {
+
+      let gl = this.gl;
 
       let loc = gl.getUniformLocation(this.program, name);
       if (loc) {

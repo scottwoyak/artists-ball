@@ -2,7 +2,7 @@ import { glMat4 } from './glMat';
 import { glVec3, glVec2 } from './glVec';
 import vertexSource from './shaders/PlanesVertex.glsl';
 import fragmentSource from './shaders/PlanesFragment.glsl';
-import { gl, clamp, mix, toRad, toDeg } from './Globals';
+import { clamp, mix, toRad, toDeg } from './Globals';
 import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
@@ -28,17 +28,18 @@ const HIGHLIGHT_DIFF = 0.1;
 const BALL_RADIUS = 0.5;
 const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, 1.5];
 
+
 /**
  * Class that renders triangles and a light source
  */
 export class PlanesRenderer {
 
+   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private program: WebGLProgram;
    private view = new glMat4();
    private lightView = new glMat4();
    private projection = new glMat4();
 
-   private uColor = new glColor([1, 1, 1]);
    private uThreshold1 = DEFAULT_THRESHOLD1;
    private uThreshold2 = DEFAULT_THRESHOLD2;
 
@@ -71,20 +72,23 @@ export class PlanesRenderer {
    private translation = new glVec2([0, 0]);
    public showShadowMap = false;
 
-   public constructor() {
+   public constructor(glCtx: WebGLRenderingContext) {
+
+      this.gl = glCtx;
+      let gl = glCtx;
 
       this.computeColors();
 
       gl.enable(gl.DEPTH_TEST);
 
-      this.program = glCompiler.compile(vertexSource, fragmentSource);
+      this.program = glCompiler.compile(gl, vertexSource, fragmentSource);
 
       let tBall = new TriangleSphere(100, BALL_RADIUS, new glVec3([0, 0, 0]));
       tBall.computeNormals(NormalType.Smooth);
-      this.ball = new glObject(tBall, this.program);
+      this.ball = new glObject(gl, tBall, this.program);
 
       let tArrow = new TriangleArrow();
-      this.arrow = new glObject(tArrow, this.program);
+      this.arrow = new glObject(gl, tArrow, this.program);
 
       this.projection = glMat4.makeOrtho(-1, 1, -1, 1, -100, 100);
    }
@@ -190,7 +194,7 @@ export class PlanesRenderer {
       if (this.obj) {
          this.obj.delete();
       }
-      this.obj = new glObject(tObj, this.program);
+      this.obj = new glObject(this.gl, tObj, this.program);
 
       let center = tObj.center;
       this.obj.translate(new glVec3([-center.x, -center.y, -center.z]));
@@ -205,6 +209,7 @@ export class PlanesRenderer {
 
    public render(): void {
 
+      let gl = this.gl;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       this.renderToShadowMap();
       this.renderToScreen();
@@ -212,7 +217,7 @@ export class PlanesRenderer {
 
    private setStdUniforms(): glUniform {
 
-      let uni = new glUniform(this.program);
+      let uni = new glUniform(this.gl, this.program);
       uni.set('view', this.view.transpose());
       uni.set('lightView', this.lightView.transpose());
       uni.set('projection', this.projection.transpose());
@@ -239,8 +244,10 @@ export class PlanesRenderer {
 
    public getBallImage(): BallImageData {
 
+      let gl = this.gl;
+
       if (!this.textureFrameBuffer) {
-         this.textureFrameBuffer = new glTextureFrameBuffer(textureSize, textureSize, FrameBufferStyle.Depth);
+         this.textureFrameBuffer = new glTextureFrameBuffer(gl, textureSize, textureSize, FrameBufferStyle.Depth);
       }
 
       gl.viewport(0, 0, textureSize, textureSize);
@@ -315,8 +322,9 @@ export class PlanesRenderer {
 
    private renderToShadowMap(): void {
 
+      let gl = this.gl;
       if (!this.shadowFrameBuffer) {
-         this.shadowFrameBuffer = new glTextureFrameBuffer(gl.canvas.width, gl.canvas.height, FrameBufferStyle.Depth);
+         this.shadowFrameBuffer = new glTextureFrameBuffer(gl, gl.canvas.width, gl.canvas.height, FrameBufferStyle.Depth);
       }
 
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowFrameBuffer.frameBuffer);
@@ -350,9 +358,11 @@ export class PlanesRenderer {
 
    private renderToScreen(): void {
 
+      let gl = this.gl;
+
       // display the depth buffer for testing purposes
       if (this.showShadowMap) {
-         let tr = new TextureRenderer();
+         let tr = new TextureRenderer(gl);
          tr.render(this.shadowFrameBuffer.depthTexture);
       }
       else {

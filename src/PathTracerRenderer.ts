@@ -6,7 +6,7 @@ import toTextureVertexSource from './shaders/PathTracerToTextureVertex.glsl';
 import toTextureFragmentSource from './shaders/PathTracerToTextureFragment.glsl';
 import { ColorRange } from './ColorRange';
 import { Uniforms } from './Uniforms';
-import { gl, isMobile } from './Globals';
+import { isMobile } from './Globals';
 import { Profiler } from './Profiler';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
@@ -29,6 +29,7 @@ export enum RenderMode {
  */
 export class PathTracerRenderer {
 
+   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private vertexBuffer: WebGLBuffer;
    private frameBuffer: WebGLFramebuffer;
    private textures: WebGLTexture[];
@@ -52,7 +53,13 @@ export class PathTracerRenderer {
       +1, +1
    ];
 
-   public constructor(tObj: TriangleObj) {
+   public constructor(
+      glCtx: WebGLRenderingContext | WebGL2RenderingContext,
+      tObj: TriangleObj
+   ) {
+
+      this.gl = glCtx;
+      let gl = this.gl;
 
       // larger texture is higher resolution, but takes longer to compute
       if (isMobile) {
@@ -129,7 +136,7 @@ export class PathTracerRenderer {
       gl.bindTexture(gl.TEXTURE_2D, null);
 
       // create toScreen shader
-      this.toScreenProgram = glCompiler.compile(toScreenVertexSource, toScreenFragmentSource);
+      this.toScreenProgram = glCompiler.compile(gl, toScreenVertexSource, toScreenFragmentSource);
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
 
@@ -137,10 +144,13 @@ export class PathTracerRenderer {
    }
 
    private compileShader(tObj?: TriangleObj) {
+      let gl = this.gl;
+
       let p = new Profiler();
       // create the toTexture shader
       if (tObj && tObj.triangles.length > 0) {
          this.toTextureProgram = glCompiler.compile(
+            gl,
             toTextureVertexSource
                .replace('<VERSION>', '#version 300 es')
                .replace('NOTHING', 'USE_TRIANGLES'),
@@ -157,6 +167,7 @@ export class PathTracerRenderer {
       }
       else {
          this.toTextureProgram = glCompiler.compile(
+            gl,
             toTextureVertexSource
                .replace('<VERSION>', ''),
             toTextureFragmentSource
@@ -175,9 +186,11 @@ export class PathTracerRenderer {
     */
    private uploadUniforms(tObj: TriangleObj) {
 
+      let gl = this.gl as WebGL2RenderingContext;
+
       // upload the big chunks as Uniform Blocks
       let blockBinding = 2;
-      let vBlock = new glUniformBlock(this.toTextureProgram, 'MyVerticesBlock', blockBinding);
+      let vBlock = new glUniformBlock(gl, this.toTextureProgram, 'MyVerticesBlock', blockBinding);
 
       // put the data into a Float32Array for uploading
       let vData = new Float32Array(tObj.vertices.length * 4);
@@ -191,7 +204,7 @@ export class PathTracerRenderer {
       vBlock.upload(vData);
 
       blockBinding = 3;
-      let tBlock = new glUniformBlock(this.toTextureProgram, 'MyTrianglesBlock', blockBinding);
+      let tBlock = new glUniformBlock(gl, this.toTextureProgram, 'MyTrianglesBlock', blockBinding);
 
       // put the data into a Float32Array for uploading
       let tData = new Int32Array(tObj.triangles.length * 4);
@@ -209,7 +222,7 @@ export class PathTracerRenderer {
       tBlock.upload(tData);
 
       // Upload the volume info as a standard uniform
-      let uni = new glUniform(this.toTextureProgram);
+      let uni = new glUniform(gl, this.toTextureProgram);
       let startIndex = 0;
       for (let i = 0; i < tObj.volumes.length; i++) {
          let vol = tObj.volumes[i];
@@ -238,6 +251,8 @@ export class PathTracerRenderer {
 
    public updateTexture(modelviewProjection: glMat4): void {
 
+      let gl = this.gl;
+
       // implement aliasing by random sampling within a pixel
       let x = (Math.random() * 2 - 1) / Uniforms.uTextureSize;
       let y = (Math.random() * 2 - 1) / Uniforms.uTextureSize;
@@ -252,7 +267,7 @@ export class PathTracerRenderer {
       Uniforms.uRay10 = this.getEyeRay(matrix, +1, -1);
       Uniforms.uRay11 = this.getEyeRay(matrix, +1, +1);
       // set uniforms
-      let uni = new glUniform(this.toTextureProgram);
+      let uni = new glUniform(gl, this.toTextureProgram);
       uni.setAll(Uniforms);
 
       // render to texture
@@ -266,7 +281,7 @@ export class PathTracerRenderer {
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      let data = this.analyzer.run(Uniforms.uLightAlpha, Uniforms.uShadowAlpha);
+      let data = this.analyzer.run(gl, Uniforms.uLightAlpha, Uniforms.uShadowAlpha);
       Uniforms.uMaxChroma = data.maxChroma;
 
       let cr = new ColorRange([data.darkestLightColor.toHtmlColor(), data.avgLightColor.toHtmlColor(), data.lightestLightColor.toHtmlColor()]);
@@ -292,6 +307,8 @@ export class PathTracerRenderer {
 
    public displayTexture(): void {
 
+      let gl = this.gl;
+
       // size of the actual canvas. The texture we create is drawn to this item
       let size = document.body.clientWidth;
 
@@ -309,7 +326,7 @@ export class PathTracerRenderer {
       gl.vertexAttribPointer(this.toScreenVertexAttribute, 2, gl.FLOAT, false, 0, 0);
 
       // display the main screen
-      let uni = new glUniform(this.toScreenProgram);
+      let uni = new glUniform(gl, this.toScreenProgram);
       Uniforms.uScale = 1.0;
       Uniforms.uXOffset = 0.0;
       Uniforms.uYOffset = 0.0;
