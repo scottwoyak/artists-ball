@@ -1,13 +1,9 @@
-import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { toRad, isMobile } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
 import { glMat4 } from "./glMat";
 import { glVec4, glVec3, glVec2 } from "./glVec";
 import { NormalType, TriangleObj } from "./TriangleObj";
-import { TriangleSphere } from "./TriangleSphere";
-import { TriangleCube } from "./TriangleCube";
-import { ThresholdCtrl } from "./ThresholdCtrl";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { saveAs } from 'file-saver';
 
@@ -27,7 +23,7 @@ const WHITE_COLOR = new htmlColor([255, 250, 242]);
 const BLACK_COLOR = new htmlColor([0, 0, 0]);
 //const BLACK_COLOR = new htmlColor([30, 20, 0]);
 
-export class PlanesApp {
+export class ViewerApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    public renderer: PlanesRenderer;
    private pointerMode: PointerMode = PointerMode.View;
@@ -38,12 +34,6 @@ export class PlanesApp {
 
    private query: string;
 
-   private highlightSlider: Slider
-   private lightLightSlider: Slider;
-   private midLightSlider: Slider;
-   private darkLightSlider: Slider;
-   private shadowSlider: Slider;
-   private thresholdCtrl: ThresholdCtrl;
    private worker: LoaderWorker;
 
    public constructor(query: string) {
@@ -127,10 +117,6 @@ export class PlanesApp {
                this.save();
                break;
 
-            case 't':
-               this.test();
-               break;
-
             case 'd':
                this.renderer.showShadowMap = !this.renderer.showShadowMap;
                this.dirty = true;
@@ -142,21 +128,8 @@ export class PlanesApp {
    }
 
    private createCtrlsElements(parent: HTMLElement) {
-      this.thresholdCtrl = new ThresholdCtrl(
-         parent,
-         this,
-         (value: number) => {
-            this.renderer.threshold1 = value;
-            this.updateSliders();
-            this.dirty = true;
-         },
-         (value: number) => {
-            this.renderer.threshold2 = value;
-            this.updateSliders();
-            this.dirty = true;
-         }
-      );
 
+      /*
       this.highlightSlider = new Slider(parent, {
          id: 'Highlight',
          label: 'Highlight',
@@ -171,54 +144,7 @@ export class PlanesApp {
          },
          getText: () => { return (100 * this.renderer.highlight).toFixed(0) + "%" }
       });
-
-      this.lightLightSlider = new Slider(parent, {
-         id: 'LightLight',
-         label: 'Light Light',
-         min: 0,
-         max: 100,
-         value: this.renderer.lightLight * 100,
-         colors: [BLACK_COLOR, WHITE_COLOR],
-         getText: () => { return (100 * this.renderer.lightLight).toFixed(0) + "%" }
-      });
-      this.lightLightSlider.range.disabled = true;
-
-      this.midLightSlider = new Slider(parent, {
-         id: 'MidLight',
-         label: 'Mid Light',
-         min: 0,
-         max: 100,
-         value: this.renderer.midLight * 100,
-         colors: [BLACK_COLOR, WHITE_COLOR],
-         getText: () => { return (100 * this.renderer.midLight).toFixed(0) + "%" }
-      });
-      this.midLightSlider.range.disabled = true;
-
-      this.darkLightSlider = new Slider(parent, {
-         id: 'DarkLight',
-         label: 'Dark Light',
-         min: 0,
-         max: 100,
-         value: this.renderer.darkLight * 100,
-         colors: [BLACK_COLOR, WHITE_COLOR],
-         getText: () => { return (100 * this.renderer.darkLight).toFixed(0) + "%" }
-      });
-      this.darkLightSlider.range.disabled = true;
-
-      this.shadowSlider = new Slider(parent, {
-         id: 'Shadow',
-         label: 'Shadow',
-         min: 0,
-         max: 100,
-         value: this.renderer.shadow * 100,
-         colors: [BLACK_COLOR, WHITE_COLOR],
-         oninput: () => {
-            this.renderer.shadow = this.shadowSlider.value / 100;
-            this.updateSliders();
-            this.dirty = true;
-         },
-         getText: () => { return (100 * this.renderer.shadow).toFixed(0) + "%" }
-      });
+      */
    }
 
    private loadModel(query: string) {
@@ -228,22 +154,7 @@ export class PlanesApp {
          query = 'Pose_02.blob';
       }
 
-      if (query && query.toLowerCase() === 'trianglesphere') {
-         let radius = 0.75;
-         let center = new glVec3([0, 0, 0]);
-         let tObj = new TriangleSphere(100, radius, center)
-         tObj.computeNormals(NormalType.Smooth);
-         this.renderer.setModel(tObj);
-         return Promise.resolve(tObj);
-      }
-      else if (query && query.toLowerCase() === 'trianglecube') {
-         let size = 0.8;
-         let center = new glVec3([0, 0, 0]);
-         let tObj = new TriangleCube(size, center);
-         this.renderer.setModel(tObj);
-         return Promise.resolve(tObj);
-      }
-      else if (query && query.toLowerCase().endsWith('.obj')) {
+      if (query && query.toLowerCase().endsWith('.obj')) {
 
          this.loadModelFile(query).then((tObj) => {
 
@@ -360,14 +271,6 @@ export class PlanesApp {
       }
    }
 
-   private updateSliders() {
-      this.highlightSlider.value = 100 * this.renderer.highlight;
-      this.lightLightSlider.value = 100 * this.renderer.lightLight;
-      this.midLightSlider.value = 100 * this.renderer.midLight;
-      this.darkLightSlider.value = 100 * this.renderer.darkLight;
-      this.shadowSlider.value = 100 * this.renderer.shadow;
-   }
-
    private toggleMode() {
       switch (this.pointerMode) {
          case PointerMode.View:
@@ -459,7 +362,6 @@ export class PlanesApp {
       if (this.dirty) {
          // TODO only redraw the threshold ctrl if a slider changed
          this.renderer.render();
-         this.thresholdCtrl.draw();
          this.dirty = false;
       }
 
@@ -471,12 +373,5 @@ export class PlanesApp {
 
       let name = tObj.name.split('.')[0] + '.blob';
       saveAs(tObj.toBlob(), name);
-   }
-
-   private async test() {
-      // uncomment to test Blobs
-      let blob = this.renderer.tObj.toBlob();
-      let tObj = await TriangleObj.fromBlob(blob);
-      console.log(tObj.name);
    }
 }
