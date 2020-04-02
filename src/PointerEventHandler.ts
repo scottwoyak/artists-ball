@@ -1,5 +1,7 @@
 import { glVec2 } from "./glVec";
 
+type PointerRotateFunction = (angle: number, delta: number) => void;
+type PointerTranslateFunction = (pos: glVec2, delta: glVec2) => void;
 type PointerScaleFunction = (scale: number, change: number) => void;
 type PointerDragFunction = (pos: glVec2, delta: glVec2) => void;
 type PointerUpFunction = () => void;
@@ -19,7 +21,9 @@ export class PointerEventHandler {
 
    public onUp: PointerUpFunction;
    public onDown: PointerDownFunction;
-   public onScale: PointerScaleFunction
+   public onScale: PointerScaleFunction;
+   public onRotate: PointerRotateFunction;
+   public onTranslate: PointerTranslateFunction;
    public onClick: PointerClickFunction;
    public onDblClick: PointerDblClickFunction;
    public onDrag: PointerDragFunction;
@@ -30,12 +34,13 @@ export class PointerEventHandler {
    private secondaryTouchId: number = -1;
    private initialTouchDistance: number;
    private lastTouchDistance: number;
+   private lastTouchAngle: number;
 
    public constructor(element: HTMLElement) {
 
       this.element = element;
 
-      // element.ontouch isn't supported on desktop devices
+      // element.ontouch isn't supported on desktop devices so use addEventListener instead
       element.addEventListener('touchstart', (event: TouchEvent) => {
 
          // prevent the browser from using the event
@@ -70,6 +75,7 @@ export class PointerEventHandler {
             let distance = this.computeTouchDistance(event);
             this.initialTouchDistance = distance;
             this.lastTouchDistance = distance;
+            this.lastTouchAngle = this.computeTouchAngle(event);
          }
       });
 
@@ -87,6 +93,10 @@ export class PointerEventHandler {
             let change = distance / this.lastTouchDistance;
             this.ourOnScale(scale, change);
             this.lastTouchDistance = distance;
+
+            let angle = this.computeTouchAngle(event);
+            this.ourOnRotate(angle, angle - this.lastTouchAngle);
+            this.lastTouchAngle = angle;
          }
          // if only the initial touch is active
          else if (this.primaryTouchId >= 0) {
@@ -106,8 +116,6 @@ export class PointerEventHandler {
          if (this.secondaryTouchId >= 0) {
             if (this.getTouch(event, this.secondaryTouchId) === null) {
                this.secondaryTouchId = -1;
-               this.initialTouchDistance = -1;
-               this.lastTouchDistance = -1;
 
                // if we lifted the second finger, but not the first, go back
                // to the drag gesture, but adjust the rememberd position to
@@ -122,11 +130,15 @@ export class PointerEventHandler {
          if (this.primaryTouchId >= 0) {
             if (this.getTouch(event, this.primaryTouchId) === null) {
                this.primaryTouchId = -1;
-               this.initialTouchDistance = -1;
-               this.lastTouchDistance = -1;
 
                this.ourOnUp();
             }
+         }
+
+         if (this.secondaryTouchId === -1 || this.primaryTouchId === -1) {
+            this.initialTouchDistance = -1;
+            this.lastTouchDistance = -1;
+            this.lastTouchAngle = -1;
          }
       });
 
@@ -177,27 +189,49 @@ export class PointerEventHandler {
       return new glVec2([touch.clientX - rect.x, touch.clientY - rect.y]);
    }
 
-   private computeTouchDistance(event: TouchEvent): number {
+   private getTouches(event: TouchEvent): { primaryTouch: Touch, secondaryTouch: Touch } {
 
       if (this.primaryTouchId < 0 || this.secondaryTouchId < 0) {
          throw Error('Two touches expected');
       }
 
-      let touch1 = this.getTouch(event, this.primaryTouchId);
-      let touch2 = this.getTouch(event, this.secondaryTouchId);
+      return {
+         primaryTouch: this.getTouch(event, this.primaryTouchId),
+         secondaryTouch: this.getTouch(event, this.secondaryTouchId),
+      }
+   }
 
-      let x1 = touch1.screenX;
-      let y1 = touch1.screenY;
-      let x2 = touch2.screenX;
-      let y2 = touch2.screenY;
+   private computeTouchDistance(event: TouchEvent): number {
+
+      let touches = this.getTouches(event);
+
+      let x1 = touches.primaryTouch.screenX;
+      let y1 = touches.primaryTouch.screenY;
+      let x2 = touches.secondaryTouch.screenX;
+      let y2 = touches.secondaryTouch.screenY;
 
       return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
    }
 
+   private computeTouchAngle(event: TouchEvent): number {
+
+      let touches = this.getTouches(event);
+
+      let x1 = touches.primaryTouch.screenX;
+      let y1 = touches.primaryTouch.screenY;
+      let x2 = touches.secondaryTouch.screenX;
+      let y2 = touches.secondaryTouch.screenY;
+
+      return Math.atan2(y2 - y1, x2 - x1);
+   }
+
    private ourOnDown(pos: glVec2) {
+
+      // check for a click handler
       if (this.onClick && this.onClick(pos.clone())) {
          return;
       }
+      // if not handled by a click hander, send the onDown event
       else {
          this.mouseDown = true;
          this.lastPos = pos.clone();
@@ -226,7 +260,6 @@ export class PointerEventHandler {
    }
 
    private ourDblClick(pos: glVec2) {
-
       if (this.onDblClick) {
          this.onDblClick(pos);
       }
@@ -235,6 +268,18 @@ export class PointerEventHandler {
    private ourOnScale(scale: number, change: number) {
       if (this.onScale) {
          this.onScale(scale, change);
+      }
+   }
+
+   private ourOnRotate(angle: number, delta: number) {
+      if (this.onRotate) {
+         this.onRotate(angle, delta);
+      }
+   }
+
+   private ourOnTranslate(pos: glVec2, delta: glVec2) {
+      if (this.onTranslate) {
+         this.onTranslate(pos, delta);
       }
    }
 }

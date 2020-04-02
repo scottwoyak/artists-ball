@@ -100,6 +100,7 @@ export class PlanesApp {
       this.handler.onDrag = (pos: glVec2, delta: glVec2) => this.onDrag(pos, delta);
       this.handler.onClick = (pos: glVec2) => this.onClick(pos);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
+      this.handler.onRotate = (angle: number, delta: number) => this.onRotate(angle, delta);
 
       document.onkeypress = (event: KeyboardEvent) => {
          switch (event.key) {
@@ -431,6 +432,11 @@ export class PlanesApp {
 
    private onScale(scale: number, change: number) {
       this.renderer.zoom(change);
+      this.dirty = true;
+   }
+
+   private onRotate(angle: number, delta: number) {
+      this.renderer.rotZ(delta);
       this.dirty = true;
    }
 
