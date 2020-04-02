@@ -37,21 +37,7 @@ async function loadFile(file: string) {
          data = tObj.toData();
       }
       else if (file.toLowerCase().endsWith('.blob')) {
-         let blob: Blob;
-
-         // Apple solution
-         if ((<any>self).WebKitBlobBuilder) {
-            let BlobBuilder = (<any>self).WebKitBlobBuilder;
-            let bb = new BlobBuilder();
-            for (let i = 0; i < chunksAll.length; i++) {
-               bb.append(chunksAll[i]);
-            }
-            blob = bb.getBlob();
-         }
-         // Everyone elses solution
-         else {
-            blob = new Blob([chunksAll]);
-         }
+         let blob = new Blob([chunksAll]);
          data = await TriangleObj.blobToData(blob);
       }
 

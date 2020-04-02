@@ -3,7 +3,7 @@ import { IndexedTriangle } from "./IndexedTriangle";
 import { Volume } from "./Volume";
 import { Profiler } from "./Profiler";
 import { clamp } from "./Globals";
-import { BlobFile, blobToArrayBuffer } from "./BlobFile";
+import { BlobFile } from "./BlobFile";
 
 export enum NormalType {
    Smooth,
@@ -503,21 +503,12 @@ export class TriangleObj {
       let bFile = await BlobFile.extract(blob);
 
       data.name = bFile.info.name;
-
-      data.vertices = new Float32Array(await blobToArrayBuffer(bFile.parts[0]));
-      data.normals = new Float32Array(await blobToArrayBuffer(bFile.parts[1]));
-      data.vIndices = new Int32Array(await blobToArrayBuffer(bFile.parts[2]));
-      data.nIndices = new Int32Array(await blobToArrayBuffer(bFile.parts[3]));
-      data.boxMin = new glVec3(Array.from(new Float32Array(await blobToArrayBuffer(bFile.parts[4]))));
-      data.boxMax = new glVec3(Array.from(new Float32Array(await blobToArrayBuffer(bFile.parts[5]))));
-      /*
       data.vertices = new Float32Array(await bFile.parts[0].arrayBuffer());
       data.normals = new Float32Array(await bFile.parts[1].arrayBuffer());
       data.vIndices = new Int32Array(await bFile.parts[2].arrayBuffer());
       data.nIndices = new Int32Array(await bFile.parts[3].arrayBuffer());
       data.boxMin = new glVec3(Array.from(new Float32Array(await bFile.parts[4].arrayBuffer())));
       data.boxMax = new glVec3(Array.from(new Float32Array(await bFile.parts[5].arrayBuffer())));
-      */
 
       return data;
    }

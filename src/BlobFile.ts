@@ -1,76 +1,63 @@
+import './BlobShim';
 
+/**
+ * Internal class for slicing up Blobs
+ */
+class BlobSlicer {
 
-export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
-   // read the Blob the old fashioned way
-   return new Promise<ArrayBuffer>((resolve, reject) => {
-
-      let reader = new FileReader();
-
-      // register event handlers
-      reader.onloadend = () => {
-         resolve(reader.result as ArrayBuffer);
-      }
-
-      reader.onerror = () => {
-         reject(reader.error);
-      }
-
-      // start the read
-      reader.readAsArrayBuffer(blob);
-   });
-
-}
-
-class BlobBreaker {
+   // The start byte value for the next slice
    private start = 0;
+
+   // The Blob we're slicing 
    private blob: Blob;
 
+   /**
+    * @param blob The Blob to be sliced
+    */
    public constructor(blob: Blob) {
       this.blob = blob;
    }
 
+   /**
+    * Gets the next slice.
+    * 
+    * @param len The length of the slice.
+    * @returns The sliced Blob.
+    */
    public next(len: number): Blob {
       let b = this.blob.slice(this.start, this.start + len);
       this.start += len;
       return b;
    }
 
+   /**
+    * Slices the Blob and returns it as an ArrayBuffer.
+    * 
+    * @param len The length of the slice.
+    * @returns An ArrayBuffer promise.
+    */
    public nextArrayBuffer(len: number): Promise<ArrayBuffer> {
-      // oh, Apple, everyone else implements Blob.arrayBuffer()
-      // return this.next(len).arrayBuffer();
-
-      return blobToArrayBuffer(this.next(len));
+      return this.next(len).arrayBuffer();
    }
 
+   /**
+    * Slices the Blob and returns it as an Int32Array
+    *
+    * @param len The length of the slice.
+    * @returns An Int32Array promise.
+    */
    public async nextInt32Array(len: number): Promise<Int32Array> {
       return new Int32Array(await this.nextArrayBuffer(len));
    }
 
+   /**
+    * Slices the Blob and returns it as a string
+    *
+    * @param len The length of the slice.
+    * @returns A string promise.
+    */
    public async nextString(len: number): Promise<string> {
-
-      // oh, Apple, everyone else implements Blob.text()
-      //return this.next(len).text();
-
-      // read the Blob the old fashioned way
-      return new Promise<string>((resolve, reject) => {
-
-         let reader = new FileReader();
-
-         // register event handlers
-         reader.onloadend = () => {
-            // decode into a string
-            let txt = new TextDecoder("utf-8").decode(reader.result as ArrayBuffer);
-            resolve(txt);
-         }
-
-         reader.onerror = () => {
-            reject(reader.error);
-         }
-
-         // start the read
-         let blob = this.next(len);
-         reader.readAsArrayBuffer(blob);
-      });
+      return this.next(len).text();
    }
 }
 
@@ -89,34 +76,50 @@ export class BlobFile {
    public info: any;
    public parts: Blob[] = [];
 
+   /**
+    * @param info The information header to be stored with the Blob
+    * @param parts The data contents of the Blob
+    */
    private constructor(info: object, parts: Blob[]) {
       this.info = info;
       this.parts = parts;
    }
 
+   /**
+    * Converts a raw Blob object into a BlobFile
+    * 
+    * @param blob The Blob to process.
+    * @return A BlobFile promise.
+    */
    public static async extract(blob: Blob): Promise<BlobFile> {
 
-      let bb = new BlobBreaker(blob);
+      let blobSlicer = new BlobSlicer(blob);
 
       // first extract the number of entries
-      let numEntries = (await bb.nextInt32Array(4))[0];
+      let numEntries = (await blobSlicer.nextInt32Array(4))[0];
 
       // the the sizes array
-      let sizes = await bb.nextInt32Array(4 * (numEntries + 1));
+      let sizes = await blobSlicer.nextInt32Array(4 * (numEntries + 1));
 
       // then the info object
-      let jsonInfo = await bb.nextString(sizes[0]);
+      let jsonInfo = await blobSlicer.nextString(sizes[0]);
 
       // then all the sub blobs
       let parts: Blob[] = [];
       for (let i = 0; i < numEntries; i++) {
          let size = sizes[i + 1];
-         parts.push(bb.next(size));
+         parts.push(blobSlicer.next(size));
       }
 
       return new BlobFile(JSON.parse(jsonInfo), parts);
    }
 
+   /**
+    * Create a BlobFile Blob
+    * 
+    * @param info The information header to be stored with the Blob
+    * @param parts The data contents of the Blob
+    */
    public static createBlob(info: object, parts: BlobPart[]): Blob {
 
       let jsonInfo = JSON.stringify(info);
