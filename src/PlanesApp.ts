@@ -101,7 +101,7 @@ export class PlanesApp {
       this.handler.onDown = (pos) => this.onDown(pos);
       this.handler.onMove = (pos) => this.onMove(pos);
       this.handler.onClick = (pos) => this.onClick(pos);
-      this.handler.onDblClick = (pos) => this.onDblClick(pos);
+      this.handler.onScale = (scale, change) => this.onScale(scale, change);
 
       document.onkeypress = (event: KeyboardEvent) => {
          switch (event.key) {
@@ -444,9 +444,8 @@ export class PlanesApp {
       return this.renderer.click(pos.x / size, 1 - (pos.y / size));
    }
 
-   private onDblClick(pos: glVec2) {
-
-      this.toggleMode();
+   private onScale(scale: number, change: number) {
+      this.renderer.zoom(change);
    }
 
    public tick() {
