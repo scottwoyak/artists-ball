@@ -14,7 +14,7 @@ import { saveAs } from 'file-saver';
 // specify loader and options here. This value must match the
 // contents of worker.d.ts
 import LoaderWorker from 'worker-loader?name=LoaderWorker.worker.js!./LoaderWorker';
-import { DropDownMenu } from "./DropDownMenu";
+import { DropDownMenu, SubMenu } from "./DropDownMenu";
 import { glColor } from "./glColor";
 
 enum PointerMode {
@@ -128,18 +128,37 @@ export class PlanesApp {
          }
       }
 
+      let subMenu: SubMenu;
       let menu = new DropDownMenu(parent, 'Models', 'ModelDropDown');
-      menu.addItem('Male Head', () => this.loadModel('Head.blob'));
       menu.addItem('Female Pose', () => this.loadModel('Pose1.blob'));
       menu.addItem('Female Head', () => this.loadModel('FemaleHead.blob'));
       menu.addItem('Skull 1', () => this.loadModel('Skull1.blob'));
       menu.addItem('Skull 2', () => this.loadModel('Skull2.blob'));
       menu.addItem('Skull 3', () => this.loadModel('Skull3.blob'));
-      menu.addItem('Head Ecorche', () => this.loadModel('HeadEcorche.blob'));
       menu.addItem('Pelvis', () => this.loadModel('Pelvis.blob'));
+      menu.addItem('Head Ecorche', () => this.loadModel('HeadEcorche.blob'));
       menu.addItem('Arnold', () => this.loadModel('Arnold.blob'));
       menu.addItem('Teapot', () => this.loadModel('Teapot.blob'));
-      let subMenu = menu.addSubMenu('Heads', 'HeadsSubMenu');
+
+      subMenu = menu.addSubMenu('Poses', 'HeadsSubMenu');
+      subMenu.addItem('Pose 1', () => this.loadModel('Pose_01.blob'));
+      subMenu.addItem('Pose 2', () => this.loadModel('Pose_02.blob'));
+      subMenu.addItem('Pose 3', () => this.loadModel('Pose_03.blob'));
+      subMenu.addItem('Pose 4', () => this.loadModel('Pose_04.blob'));
+      subMenu.addItem('Pose 5', () => this.loadModel('Pose_05.blob'));
+      subMenu.addItem('Pose 6', () => this.loadModel('Pose_06.blob'));
+      subMenu.addItem('Pose 7', () => this.loadModel('Pose_07.blob'));
+      subMenu.addItem('Pose 8', () => this.loadModel('Pose_08.blob'));
+      subMenu.addItem('Pose 9', () => this.loadModel('Pose_09.blob'));
+      subMenu.addItem('Pose 10', () => this.loadModel('Pose_010.blob'));
+      subMenu.addItem('Pose 11', () => this.loadModel('Pose_011.blob'));
+      subMenu.addItem('Pose 12', () => this.loadModel('Pose_012.blob'));
+      subMenu.addItem('Pose 13', () => this.loadModel('Pose_013.blob'));
+      subMenu.addItem('Pose 14', () => this.loadModel('Pose_014.blob'));
+      subMenu.addItem('Pose 15', () => this.loadModel('Pose_015.blob'));
+      subMenu.addItem('Pose 16', () => this.loadModel('Pose_016.blob'));
+
+      subMenu = menu.addSubMenu('Heads', 'HeadsSubMenu');
       subMenu.addItem('Head 1', () => this.loadModel('Head1.blob'));
       subMenu.addItem('Head 2', () => this.loadModel('Head2.blob'));
       subMenu.addItem('Head 3', () => this.loadModel('Head3.blob'));
@@ -236,9 +255,9 @@ export class PlanesApp {
 
    private loadModel(query: string) {
 
-      // if nothing was specified, load the head model
+      // if nothing was specified, load an interesting model
       if (!query) {
-         query = 'Head.blob';
+         query = 'Pose_02.blob';
       }
 
       if (query && query.toLowerCase() === 'trianglesphere') {
@@ -260,14 +279,26 @@ export class PlanesApp {
 
          this.loadModelFile(query).then((tObj) => {
 
-            // uncomment to combine multiple obj files
-            //tObj.combine(await this.loadModelFile('base.obj'));
-
             this.renderer.setModel(tObj);
             this.orient(tObj, query);
 
             this.dirty = true;
             requestAnimationFrame(() => this.tick());
+
+            /*
+               let tokens = query.split('.');
+               let propFile = tokens[0] + '_Prop.' + tokens[1];
+               this.loadModelFile(propFile).then((tPropObj) => {
+                  tObj.combine(tPropObj);
+                  return tObj;
+               }).then(() => {
+                  this.renderer.setModel(tObj);
+                  this.orient(tObj, query);
+   
+                  this.dirty = true;
+                  requestAnimationFrame(() => this.tick());
+               });
+            */
          });
       }
       else if (query && query.toLowerCase().endsWith('.blob')) {
