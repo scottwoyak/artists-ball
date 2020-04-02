@@ -8,7 +8,10 @@ varying vec3 vShadowVertex;
 uniform float uLightIntensity;
 uniform float uAmbientIntensity;
 uniform vec3 uLightDirection;
-uniform vec3 uColor;
+
+// the colors we use to represent our lightest and darkest values
+uniform vec3 uWhiteColor;
+uniform vec3 uBlackColor;
 
 uniform int uUseThresholds;
 uniform float uThreshold1;
@@ -76,17 +79,23 @@ bool in_shadow(void)
    }
 }
 
+vec4 getColor(float val)
+{
+   vec3 rgb = mix(uBlackColor, uWhiteColor, val);
+   return vec4(rgb.r, rgb.g, rgb.b, 1.0);
+}
+
 void main()
 {
    if (in_shadow())
    {
       if (uUseThresholds == 0)
       {
-         gl_FragColor = vec4(vec3(uAmbientIntensity), 1.0);
+         gl_FragColor = getColor(uAmbientIntensity);
       }
       else
       {
-         gl_FragColor = vec4(vec3(uShadow), 1.0);
+         gl_FragColor = getColor(uShadow);
       }
       return;
    }
@@ -112,10 +121,10 @@ void main()
    float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
    float specular = 0.1 * pow(cosAngle, shininess);
 
-   float rgb;
+   float val;
    if (uUseThresholds == 0)
    {
-      rgb = uAmbientIntensity + diffuse + specular;
+      val = uAmbientIntensity + diffuse + specular;
    }
    else
    {
@@ -126,28 +135,26 @@ void main()
 
       if (threshold < v1)
       {
-         rgb = uLightLight;
+         val = uLightLight;
       }
       else if (threshold < v2)
       {
-         rgb = uMidLight;
+         val = uMidLight;
       }
       else if (threshold < 1.0)
       {
-         rgb = uDarkLight;
+         val = uDarkLight;
       }
       else
       {
-         rgb = uShadow;
+         val = uShadow;
       }
 
       if (specular > 0.05)
       {
-         rgb = uHighlight;
+         val = uHighlight;
       }
    }
 
-   vec3 rgbv = vec3(rgb, rgb, rgb);
-   rgbv *= uColor;
-   gl_FragColor = vec4(rgbv, 1.0);
+   gl_FragColor = getColor(val);
 }

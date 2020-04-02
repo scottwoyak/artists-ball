@@ -64,6 +64,9 @@ export class PlanesRenderer {
 
    public ballColor = new glColor([1, 1, 1]);
    public readonly yellow = new glColor([1.0, 0.9, 0.7]);
+   public whiteColor = new htmlColor([255, 255, 255]);
+   public blackColor = new htmlColor([0, 0, 0]);
+
    private zoomFactor: number = 1;
    private translation = new glVec2([0, 0]);
    public showShadowMap = false;
@@ -208,14 +211,15 @@ export class PlanesRenderer {
    }
 
    private setStdUniforms(): glUniform {
+
       let uni = new glUniform(this.program);
       uni.set('view', this.view.transpose());
       uni.set('lightView', this.lightView.transpose());
       uni.set('projection', this.projection.transpose());
-      uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
       uni.set('uLightDirection', this.uLightDirection);
       uni.seti('uUseShadows', 1);
 
+      uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
       uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
       uni.set('uThreshold2', 1 - Math.sin(toRad(this.threshold2 + 90)));
 
@@ -227,7 +231,8 @@ export class PlanesRenderer {
       uni.set('uDarkLight', this.uDarkLight);
       uni.set('uShadow', this.uShadow);
 
-      uni.set('uColor', this.uColor);
+      uni.set('uWhiteColor', this.whiteColor.toGlColor());
+      uni.set('uBlackColor', this.blackColor.toGlColor());
 
       return uni;
    }
@@ -286,7 +291,8 @@ export class PlanesRenderer {
       this.arrow.scale(1.25)
       this.arrow.translate(new glVec3([offset.x, offset.y + scale * BALL_RADIUS + 0.1, 0.0]));
 
-      uni.set('uColor', new glColor([1.0, 1.0, 0.5]));
+      uni.set('uWhiteColor', new glColor([1.0, 1.0, 0.5]));
+      uni.set('uBlackColor', htmlColor.black.toGlColor());
       uni.set('uAmbientIntensity', 0.4);
       this.arrow.draw();
 
@@ -393,7 +399,8 @@ export class PlanesRenderer {
       this.view.translate(new glVec3([-(1 - this.miniSize), 1 - this.miniSize, 0]));
       uni.set('view', this.view.transpose());
       uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
-      uni.set('uColor', this.ballColor);
+      uni.set('uWhiteColor', this.ballColor);
+      uni.set('uBlackColor', htmlColor.black.toGlColor());
       this.ball.draw();
 
       uni.set('uLightDirection', new glVec3([1, -0.5, 0.5]));
@@ -418,7 +425,8 @@ export class PlanesRenderer {
       this.arrow.rotY(-elevationAngle);
       this.arrow.rotZ(-rotationAngle);
 
-      uni.set('uColor', this.yellow);
+      uni.set('uWhiteColor', this.yellow);
+      uni.set('uBlackColor', htmlColor.black.toGlColor());
       uni.set('uAmbientIntensity', 0.4);
       this.arrow.draw();
    }

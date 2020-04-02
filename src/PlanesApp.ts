@@ -22,6 +22,11 @@ enum PointerMode {
    Light,
 }
 
+//const WHITE_COLOR = new htmlColor([255, 255, 255]);
+const WHITE_COLOR = new htmlColor([255, 250, 242]);
+const BLACK_COLOR = new htmlColor([0, 0, 0]);
+//const BLACK_COLOR = new htmlColor([30, 20, 0]);
+
 export class PlanesApp {
    public renderer: PlanesRenderer;
    private pointerMode: PointerMode = PointerMode.View;
@@ -95,6 +100,8 @@ export class PlanesApp {
       Globals.gl = context;
 
       this.renderer = new PlanesRenderer();
+      this.renderer.whiteColor = WHITE_COLOR;
+      this.renderer.blackColor = BLACK_COLOR;
 
       this.handler = new PointerEventHandler(canvas);
       this.handler.onDrag = (pos: glVec2, delta: glVec2) => this.onDrag(pos, delta);
@@ -193,7 +200,7 @@ export class PlanesApp {
          min: 0,
          max: 100,
          value: this.renderer.highlight * 100,
-         colors: [htmlColor.black, htmlColor.white],
+         colors: [BLACK_COLOR, WHITE_COLOR],
          oninput: () => {
             this.renderer.highlight = this.highlightSlider.value / 100;
             this.updateSliders();
@@ -208,7 +215,7 @@ export class PlanesApp {
          min: 0,
          max: 100,
          value: this.renderer.lightLight * 100,
-         colors: [htmlColor.black, htmlColor.white],
+         colors: [BLACK_COLOR, WHITE_COLOR],
          getText: () => { return (100 * this.renderer.lightLight).toFixed(0) + "%" }
       });
       this.lightLightSlider.range.disabled = true;
@@ -219,7 +226,7 @@ export class PlanesApp {
          min: 0,
          max: 100,
          value: this.renderer.midLight * 100,
-         colors: [htmlColor.black, htmlColor.white],
+         colors: [BLACK_COLOR, WHITE_COLOR],
          getText: () => { return (100 * this.renderer.midLight).toFixed(0) + "%" }
       });
       this.midLightSlider.range.disabled = true;
@@ -230,7 +237,7 @@ export class PlanesApp {
          min: 0,
          max: 100,
          value: this.renderer.darkLight * 100,
-         colors: [htmlColor.black, htmlColor.white],
+         colors: [BLACK_COLOR, WHITE_COLOR],
          getText: () => { return (100 * this.renderer.darkLight).toFixed(0) + "%" }
       });
       this.darkLightSlider.range.disabled = true;
@@ -241,7 +248,7 @@ export class PlanesApp {
          min: 0,
          max: 100,
          value: this.renderer.shadow * 100,
-         colors: [htmlColor.black, htmlColor.white],
+         colors: [BLACK_COLOR, WHITE_COLOR],
          oninput: () => {
             this.renderer.shadow = this.shadowSlider.value / 100;
             this.updateSliders();
@@ -409,7 +416,7 @@ export class PlanesApp {
 
          case PointerMode.Light:
             this.pointerMode = PointerMode.View;
-            this.renderer.ballColor = new glColor([1.0, 1.0, 1.0]);
+            this.renderer.ballColor = WHITE_COLOR.toGlColor();
             break;
       }
       this.dirty = true;
