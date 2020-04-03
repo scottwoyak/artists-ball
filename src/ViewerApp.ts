@@ -217,8 +217,8 @@ export class ViewerApp {
       this.dirty = true;
 
       if (this.pointerMode === PointerMode.View) {
-         this.renderer.rotX(delta.y * 0.01);
-         this.renderer.rotY(delta.x * 0.01);
+         this.renderer.obj.rotX(delta.y * 0.01);
+         this.renderer.obj.rotY(delta.x * 0.01);
       }
       else if (this.pointerMode === PointerMode.Light) {
 
@@ -266,7 +266,7 @@ export class ViewerApp {
    }
 
    private onRotate(angle: number, delta: number) {
-      this.renderer.rotZ(delta);
+      this.renderer.obj.rotZ(delta);
       this.dirty = true;
    }
 

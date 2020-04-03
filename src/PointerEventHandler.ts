@@ -110,9 +110,11 @@ export class PointerEventHandler {
          else if (this.primaryTouchId >= 0) {
 
             // send out the drag event
-            let touch = this.getTouch(event, this.primaryTouchId);
-            let pos = this.getPos(touch);
-            this.ourOnDrag(pos);
+            if (this.mouseDown) {
+               let touch = this.getTouch(event, this.primaryTouchId);
+               let pos = this.getPos(touch);
+               this.ourOnDrag(pos);
+            }
          }
       });
 

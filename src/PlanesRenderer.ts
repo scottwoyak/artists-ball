@@ -125,25 +125,6 @@ export class PlanesRenderer {
    }
 
    //
-   // The functions below change the model
-   //
-   public rotX(angle: number) {
-      this.obj.rotX(angle);
-   }
-   public rotY(angle: number) {
-      this.obj.rotY(angle);
-   }
-   public rotZ(angle: number) {
-      this.obj.rotZ(angle);
-   }
-   public scale(scale: number) {
-      this.obj.scale(scale);
-   }
-   public translate(offset: glVec3) {
-      this.obj.translate(offset);
-   }
-
-   //
    // The functions below change our view of the model
    //
    public zoom(zoom: number) {
