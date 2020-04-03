@@ -3,19 +3,13 @@ import { htmlColor } from "./htmlColor";
 import { toRad, isMobile } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
 import { glMat4 } from "./glMat";
-import { glVec4, glVec3, glVec2 } from "./glVec";
+import { glVec4, glVec2 } from "./glVec";
 import { NormalType, TriangleObj } from "./TriangleObj";
-import { TriangleSphere } from "./TriangleSphere";
-import { TriangleCube } from "./TriangleCube";
 import { ThresholdCtrl } from "./ThresholdCtrl";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { saveAs } from 'file-saver';
-
-// specify loader and options here. This value must match the
-// contents of worker.d.ts
-import LoaderWorker from 'worker-loader?name=LoaderWorker.worker.js!./LoaderWorker';
-import { DropDownMenu, SubMenu } from "./DropDownMenu";
 import { createModelsDropDownMenu } from "./ModelsDropDownMenu";
+import { ModelLoader } from "./ModelLoader";
 
 enum PointerMode {
    View,
@@ -44,7 +38,7 @@ export class PlanesApp {
    private darkLightSlider: Slider;
    private shadowSlider: Slider;
    private thresholdCtrl: ThresholdCtrl;
-   private worker: LoaderWorker;
+   private loader = new ModelLoader();
 
    public constructor(query: string) {
       this.query = query;
@@ -228,135 +222,26 @@ export class PlanesApp {
          query = 'Pose_02.blob';
       }
 
-      if (query && query.toLowerCase() === 'trianglesphere') {
-         let radius = 0.75;
-         let center = new glVec3([0, 0, 0]);
-         let tObj = new TriangleSphere(100, radius, center)
-         tObj.computeNormals(NormalType.Smooth);
-         this.renderer.setModel(tObj);
-         return Promise.resolve(tObj);
-      }
-      else if (query && query.toLowerCase() === 'trianglecube') {
-         let size = 0.8;
-         let center = new glVec3([0, 0, 0]);
-         let tObj = new TriangleCube(size, center);
-         this.renderer.setModel(tObj);
-         return Promise.resolve(tObj);
-      }
-      else if (query && query.toLowerCase().endsWith('.obj')) {
+      let lc = query.toLowerCase();
+      if (lc.endsWith('.obj') || lc.endsWith('.blob')) {
 
-         this.loadModelFile(query).then((tObj) => {
+         let statusFunc = (status: string) => {
+            this.overlay.innerText = status;
+         }
 
-            this.renderer.setModel(tObj);
-            this.orient(tObj, query);
+         this.loader.loadModelFile(query, statusFunc)
+            .then((tObj) => {
 
-            this.dirty = true;
-            requestAnimationFrame(() => this.tick());
+               this.renderer.setModel(tObj);
+               this.loader.orient(this.renderer.obj);
 
-            /*
-               let tokens = query.split('.');
-               let propFile = tokens[0] + '_Prop.' + tokens[1];
-               this.loadModelFile(propFile).then((tPropObj) => {
-                  tObj.combine(tPropObj);
-                  return tObj;
-               }).then(() => {
-                  this.renderer.setModel(tObj);
-                  this.orient(tObj, query);
-   
-                  this.dirty = true;
-                  requestAnimationFrame(() => this.tick());
-               });
-            */
-         });
-      }
-      else if (query && query.toLowerCase().endsWith('.blob')) {
-
-         this.loadModelFile(query).then((tObj) => {
-            this.renderer.setModel(tObj);
-            this.orient(tObj, query);
-
-            this.dirty = true;
-            requestAnimationFrame(() => this.tick());
-         });
+               this.dirty = true;
+               requestAnimationFrame(() => this.tick());
+            });
       }
       else {
          // TODO multi line error messages not supported
          this.overlay.innerText = 'Unknown Model:' + query;
-      }
-   }
-
-   private loadModelFile(file: string): Promise<TriangleObj> {
-
-      return new Promise<TriangleObj>((resolve, reject) => {
-
-         // if a previous worker exists, close it
-         if (this.worker) {
-            this.worker.terminate();
-            this.worker = undefined;
-         }
-
-         this.worker = new LoaderWorker();
-         let tStart = Date.now();
-         this.worker.onmessage = ({ data }: { data: any }) => {
-
-            if (typeof data === 'string') {
-               // avoid flashing messages for things that happen very quickly.
-               if (Date.now() - tStart > 500) {
-                  this.overlay.innerText = data;
-               }
-            }
-            else {
-               let tObj = TriangleObj.fromData(data);
-
-               this.overlay.innerText = '';
-
-               this.worker.terminate();
-               this.worker = undefined;
-
-               resolve(tObj);
-            }
-         };
-
-         this.worker.postMessage(file);
-      });
-
-   }
-
-   public orient(tObj: TriangleObj, query: string) {
-
-      // orient each file so that it is facing forward
-      let file = query.toLowerCase();
-      file = file.split('.')[0];
-      switch (file) {
-         case 'skull1':
-            this.renderer.rotX(toRad(90));
-            this.renderer.rotY(toRad(180));
-            break;
-
-         case 'pelvis':
-            this.renderer.rotX(toRad(11));
-            this.renderer.rotZ(toRad(-87));
-            break;
-
-         case 'wolf':
-            this.renderer.rotY(toRad(-140));
-            this.renderer.rotX(toRad(5));
-            break;
-
-         case 'sheephead':
-            this.renderer.rotY(toRad(-160));
-            break;
-
-         case 'pose1':
-            break;
-
-         case 'teapot':
-            this.renderer.rotY(toRad(90));
-            break;
-
-         default:
-            this.renderer.rotY(toRad(180));
-            break;
       }
    }
 

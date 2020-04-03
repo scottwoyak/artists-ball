@@ -56,7 +56,7 @@ export class PlanesRenderer {
 
    private ball: glObject;
    private arrow: glObject;
-   private obj: glObject;
+   public obj: glObject;
 
    private shadowFrameBuffer: glTextureFrameBuffer;
    private textureFrameBuffer: glTextureFrameBuffer;

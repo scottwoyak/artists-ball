@@ -1,3 +1,5 @@
+export type StatusFunction = (status: string) => void;
+
 export let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 export function clamp(value: number, min: number, max: number): number {

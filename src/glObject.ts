@@ -13,6 +13,10 @@ export class glObject {
    private normalBuffer: glBuffer;
    private model = new glMat4();
 
+   public get name(): string {
+      return this.tObj.name;
+   }
+
    public constructor(
       glCtx: WebGLRenderingContext | WebGL2RenderingContext,
       tObj: TriangleObj,

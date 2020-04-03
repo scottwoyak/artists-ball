@@ -502,7 +502,7 @@ export class TriangleObj {
       let data = new TriangleObjData();
       let bFile = await BlobFile.extract(blob);
 
-      data.name = bFile.info.name;
+      data.name = bFile.info.Name;
       data.vertices = new Float32Array(await bFile.parts[0].arrayBuffer());
       data.normals = new Float32Array(await bFile.parts[1].arrayBuffer());
       data.vIndices = new Int32Array(await bFile.parts[2].arrayBuffer());

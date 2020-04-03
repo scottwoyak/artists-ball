@@ -2,29 +2,23 @@ import { glVec3 } from "./glVec";
 import { IndexedTriangle } from "./IndexedTriangle";
 import { TriangleObj, NormalType } from "./TriangleObj";
 import { Profiler } from "./Profiler";
-
-export type StatusFunction = (status: string) => void;
+import { StatusFunction } from "./Globals";
 
 /**
  * Class that loads a .obj file and creates triangles for it
  */
 export class TriangleObjFile extends TriangleObj {
 
-   private updateStatus: StatusFunction;
-
-   public constructor(name: string, src: string, statusFunction?: StatusFunction) {
+   public constructor(name: string, src: string, updateStatus?: StatusFunction) {
 
       super(name);
 
       // record the status function. If one is not supplied, create one that does nothing
-      if (statusFunction) {
-         this.updateStatus = statusFunction;
-      }
-      else {
-         this.updateStatus = (status) => { };
+      if (!updateStatus) {
+         updateStatus = (status) => { };
       }
 
-      this.parse(src);
+      this.parse(src, updateStatus);
    }
 
    private parseFace(line: string): { iV: number[], iN: number[] } {
@@ -42,9 +36,9 @@ export class TriangleObjFile extends TriangleObj {
       return ret;
    }
 
-   private parse(src: string) {
+   private parse(src: string, updateStatus: StatusFunction) {
 
-      this.updateStatus('Processing');
+      updateStatus('Processing');
       let t = Date.now();
 
       let p = new Profiler();
@@ -54,7 +48,7 @@ export class TriangleObjFile extends TriangleObj {
       for (let i = 0; i < lines.length; i++) {
          // report progress every 50 ms
          if (Date.now() - t > 50) {
-            this.updateStatus('Processing: ' + (100 * i / lines.length).toFixed() + '%');
+            updateStatus('Processing: ' + (100 * i / lines.length).toFixed() + '%');
             t = Date.now();
          }
          let line = lines[i];
@@ -82,7 +76,7 @@ export class TriangleObjFile extends TriangleObj {
       if (this.normals.length === 0) {
          this.computeNormals(NormalType.Smooth);
       }
-      this.updateStatus('Processing: 100%');
+      updateStatus('Processing: 100%');
 
       console.log('Vertices: ' + this.vertices.length);
       console.log('Normals: ' + this.normals.length);
