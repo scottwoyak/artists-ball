@@ -14,6 +14,7 @@ import { TextureRenderer } from './TextureRenderer';
 import { glTextureFrameBuffer, FrameBufferStyle } from './glTextureFrameBuffer';
 import { textureSize } from './ThresholdCtrl';
 import { htmlColor } from './htmlColor';
+import { glClipSpace } from './glClipSpace';
 
 export class BallImageData {
    public image: ImageData;
@@ -24,20 +25,9 @@ export class BallImageData {
 export let DEFAULT_THRESHOLD1 = 40;
 export let DEFAULT_THRESHOLD2 = 70;
 
-interface ViewSize {
-   minX: number;
-   minY: number;
-   minZ: number;
-
-   maxX: number;
-   maxY: number;
-   maxZ: number;
-}
-
 const HIGHLIGHT_DIFF = 0.1;
 const BALL_RADIUS = 0.5;
 const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, 1.5];
-
 
 /**
  * Class that renders triangles and a light source
@@ -104,42 +94,28 @@ export class PlanesRenderer {
       this.resize();
    }
 
-   private getViewSize(): ViewSize {
+   public getClipSpace(): glClipSpace {
 
       let gl = this.gl;
       let ar = gl.canvas.width / gl.canvas.height;
 
       if (ar > 1) {
-         return {
-            minX: -ar,
-            maxX: ar,
-            minY: -1,
-            maxY: 1,
-            minZ: -100,
-            maxZ: 100
-         }
+         return new glClipSpace(new glVec3([-ar, -1, -100]), new glVec3([ar, 1, 100]));
       }
       else {
-         return {
-            minX: -1,
-            maxX: 1,
-            minY: -1 / ar,
-            maxY: 1 / ar,
-            minZ: -100,
-            maxZ: 100
-         }
+         return new glClipSpace(new glVec3([-1, -1 / ar, -100]), new glVec3([1, 1 / ar, 100]));
       }
    }
 
    public resize() {
-      let viewSize = this.getViewSize();
+      let clipSpace = this.getClipSpace();
       this.projection = glMat4.makeOrtho(
-         viewSize.minX,
-         viewSize.maxX,
-         viewSize.minY,
-         viewSize.maxY,
-         viewSize.minZ,
-         viewSize.maxZ
+         clipSpace.left,
+         clipSpace.right,
+         clipSpace.bottom,
+         clipSpace.top,
+         clipSpace.near,
+         clipSpace.far
       );
 
       if (this.shadowFrameBuffer) {
@@ -443,8 +419,8 @@ export class PlanesRenderer {
             gl.clear(gl.DEPTH_BUFFER_BIT);
             this.view = new glMat4();
             this.view.scale(this.miniSize);
-            let viewSize = this.getViewSize();
-            this.view.translate(new glVec3([viewSize.maxX - this.miniSize, viewSize.maxY - this.miniSize, 0]));
+            let clipSpace = this.getClipSpace();
+            this.view.translate(new glVec3([clipSpace.max.x - this.miniSize, clipSpace.max.x - this.miniSize, 0]));
             uni.set('view', this.view.transpose());
             uni.set('uUseThresholds', this.uUseThresholds ? 0 : 1, true);
             this.obj.draw();
@@ -466,8 +442,8 @@ export class PlanesRenderer {
 
       this.view = new glMat4();
       this.view.scale(this.miniSize);
-      let viewSize = this.getViewSize();
-      this.view.translate(new glVec3([viewSize.minX + this.miniSize, viewSize.maxY - this.miniSize, 0]));
+      let clipSpace = this.getClipSpace();
+      this.view.translate(new glVec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
       uni.set('view', this.view.transpose());
       uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
       uni.set('uWhiteColor', this.ballColor);

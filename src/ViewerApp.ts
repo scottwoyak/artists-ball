@@ -356,14 +356,16 @@ export class ViewerApp {
 
    private onTranslate(delta: glVec2) {
 
+      // TODO how can this scaling be detected from javascript?
       let factor = 1;
       if (isMobile) {
          factor = 2;
       }
 
+      let clipSpace = this.renderer.getClipSpace();
       this.renderer.translateView(new glVec2([
-         factor * 2 * delta.x / this.gl.canvas.width,
-         factor * 2 * delta.y / this.gl.canvas.height
+         factor * clipSpace.width * delta.x / this.gl.canvas.width,
+         factor * clipSpace.height * delta.y / this.gl.canvas.height
       ]));
       this.dirty = true;
    }
