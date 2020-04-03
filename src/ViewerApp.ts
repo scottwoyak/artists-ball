@@ -48,7 +48,6 @@ export class ViewerApp {
       viewContainer.className = 'container';
       div.appendChild(viewContainer);
       this.createViewElements(viewContainer);
-      div.style.width = this.gl.canvas.width + 'px';
 
       const ctrlsContainer = document.createElement('div');
       ctrlsContainer.className = 'container';
@@ -128,14 +127,13 @@ export class ViewerApp {
       let gl = this.gl;
 
       let width = window.innerWidth;
-      let height = window.innerHeight - 10;
+      let height = window.innerHeight;
 
       gl.canvas.width = width;
       gl.canvas.height = height;
+      this.overlay.style.width = width + 'px';
+      this.overlay.style.height = height + 'px';
       this.overlay.style.lineHeight = height + 'px'; // vertically center text
-
-      // why do we have to manually set this height? If we don't it is 515.2 px high
-      //parent.style.height = height + 'px';
    }
 
    private createCtrlsElements(parent: HTMLElement) {
