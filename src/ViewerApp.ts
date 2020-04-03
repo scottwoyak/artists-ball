@@ -91,6 +91,13 @@ export class ViewerApp {
 
       document.onkeypress = (event: KeyboardEvent) => {
          switch (event.key) {
+            case 'i':
+               alert(
+                  this.renderer.tObj.name + '\n' +
+                  'Num Triangles: ' + this.renderer.tObj.triangles.length.toLocaleString() + '\n' +
+                  'Num Vertices: ' + this.renderer.tObj.vertices.length.toLocaleString() + '\n' +
+                  'Num Normals: ' + this.renderer.tObj.normals.length.toLocaleString() + '\n'
+               );
             case 'o':
                this.renderer.optimize(NormalType.Smooth);
                break;
