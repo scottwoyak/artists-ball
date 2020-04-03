@@ -24,6 +24,16 @@ export class BallImageData {
 export let DEFAULT_THRESHOLD1 = 40;
 export let DEFAULT_THRESHOLD2 = 70;
 
+interface ViewSize {
+   minX: number;
+   minY: number;
+   minZ: number;
+
+   maxX: number;
+   maxY: number;
+   maxZ: number;
+}
+
 const HIGHLIGHT_DIFF = 0.1;
 const BALL_RADIUS = 0.5;
 const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, 1.5];
@@ -71,11 +81,12 @@ export class PlanesRenderer {
    private zoomFactor: number = 1;
    private translation = new glVec2([0, 0]);
    public showShadowMap = false;
+   public showMiniView = true;
 
    public constructor(glCtx: WebGLRenderingContext) {
 
       this.gl = glCtx;
-      let gl = glCtx;
+      let gl = this.gl;
 
       this.computeColors();
 
@@ -90,7 +101,51 @@ export class PlanesRenderer {
       let tArrow = new TriangleArrow();
       this.arrow = new glObject(gl, tArrow, this.program);
 
-      this.projection = glMat4.makeOrtho(-1, 1, -1, 1, -100, 100);
+      this.resize();
+   }
+
+   private getViewSize(): ViewSize {
+
+      let gl = this.gl;
+      let ar = gl.canvas.width / gl.canvas.height;
+
+      if (ar > 1) {
+         return {
+            minX: -ar,
+            maxX: ar,
+            minY: -1,
+            maxY: 1,
+            minZ: -100,
+            maxZ: 100
+         }
+      }
+      else {
+         return {
+            minX: -1,
+            maxX: 1,
+            minY: -1 / ar,
+            maxY: 1 / ar,
+            minZ: -100,
+            maxZ: 100
+         }
+      }
+   }
+
+   public resize() {
+      let viewSize = this.getViewSize();
+      this.projection = glMat4.makeOrtho(
+         viewSize.minX,
+         viewSize.maxX,
+         viewSize.minY,
+         viewSize.maxY,
+         viewSize.minZ,
+         viewSize.maxZ
+      );
+
+      if (this.shadowFrameBuffer) {
+         this.shadowFrameBuffer.delete();
+         this.shadowFrameBuffer = null;
+      }
    }
 
    //
@@ -211,6 +266,8 @@ export class PlanesRenderer {
 
       let gl = this.gl;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+      this.setStdUniforms();
       this.renderToShadowMap();
       this.renderToScreen();
    }
@@ -381,14 +438,17 @@ export class PlanesRenderer {
          let uni = this.setStdUniforms();
          this.obj.draw();
 
-         // draw the object in the upper right at a reduced size and opposite banding
-         gl.clear(gl.DEPTH_BUFFER_BIT);
-         this.view = new glMat4();
-         this.view.scale(this.miniSize);
-         this.view.translate(new glVec3([1 - this.miniSize, 1 - this.miniSize, 0]));
-         uni.set('view', this.view.transpose());
-         uni.set('uUseThresholds', this.uUseThresholds ? 0 : 1, true);
-         this.obj.draw();
+         if (this.showMiniView) {
+            // draw the object in the upper right at a reduced size and opposite banding
+            gl.clear(gl.DEPTH_BUFFER_BIT);
+            this.view = new glMat4();
+            this.view.scale(this.miniSize);
+            let viewSize = this.getViewSize();
+            this.view.translate(new glVec3([viewSize.maxX - this.miniSize, viewSize.maxY - this.miniSize, 0]));
+            uni.set('view', this.view.transpose());
+            uni.set('uUseThresholds', this.uUseThresholds ? 0 : 1, true);
+            this.obj.draw();
+         }
 
          // draw the ball
          this.drawBall();
@@ -406,7 +466,8 @@ export class PlanesRenderer {
 
       this.view = new glMat4();
       this.view.scale(this.miniSize);
-      this.view.translate(new glVec3([-(1 - this.miniSize), 1 - this.miniSize, 0]));
+      let viewSize = this.getViewSize();
+      this.view.translate(new glVec3([viewSize.minX + this.miniSize, viewSize.maxY - this.miniSize, 0]));
       uni.set('view', this.view.transpose());
       uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
       uni.set('uWhiteColor', this.ballColor);
@@ -452,10 +513,13 @@ export class PlanesRenderer {
     */
    public click(x: number, y: number): boolean {
 
-      if (x > (1 - this.miniSize) && y > (1 - this.miniSize)) {
-         this.uUseThresholds = !this.uUseThresholds;
-         this.render();
-         return true;
+      // TODO adjust for aspect ratio
+      if (this.showMiniView) {
+         if (x > (1 - this.miniSize) && y > (1 - this.miniSize)) {
+            this.uUseThresholds = !this.uUseThresholds;
+            this.render();
+            return true;
+         }
       }
 
       return false;

@@ -29,7 +29,6 @@ export class glTextureFrameBuffer {
    ) {
 
       this.gl = glCtx;
-      let gl = this.gl;
 
       switch (style) {
          case FrameBufferStyle.Normal:
@@ -43,6 +42,23 @@ export class glTextureFrameBuffer {
          case FrameBufferStyle.Float:
             this.createFloat(width, height);
             break;
+      }
+   }
+
+   public delete() {
+      let gl = this.gl;
+
+      if (this.depthTexture) {
+         gl.deleteTexture(this.depthTexture);
+         this.depthTexture = null;
+      }
+      if (this.colorTexture) {
+         gl.deleteTexture(this.colorTexture);
+         this.colorTexture = null;
+      }
+      if (this.frameBuffer) {
+         gl.deleteFramebuffer(this.frameBuffer);
+         this.frameBuffer = null;
       }
    }
 

@@ -55,7 +55,7 @@ export class TextureRenderer {
       //gl.canvas.height = 128;
 
       let size = 512;
-      gl.viewport(0, 0, size, size);
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       gl.useProgram(this.program);
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);

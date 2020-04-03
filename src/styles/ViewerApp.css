@@ -1,0 +1,20 @@
+.ViewerApp #MainCanvas {
+  background-color: rgb(114, 117, 134);
+}
+
+.ViewerApp #Overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  font-size: 40px;
+  text-align: center;
+  color: white;
+  background-color: transparent;
+  user-select: none;
+  pointer-events: none;
+}
+
+@media only screen and (max-device-width: 800px) {
+}

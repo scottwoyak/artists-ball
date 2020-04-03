@@ -1,8 +1,8 @@
-#MainCanvas {
+.PlanesApp #MainCanvas {
   background-color: rgb(128, 128, 150);
 }
 
-#Overlay {
+.PlanesApp #Overlay {
   position: absolute;
   left: 0;
   top: 0;
@@ -16,7 +16,7 @@
   pointer-events: none;
 }
 
-#CtrlsContainer {
+.PlanesApp #CtrlsContainer {
   margin-top: 5px;
 }
 

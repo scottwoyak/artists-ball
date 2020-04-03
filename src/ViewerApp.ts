@@ -2,7 +2,7 @@ import { htmlColor } from "./htmlColor";
 import { toRad, isMobile } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
 import { glMat4 } from "./glMat";
-import { glVec4, glVec3, glVec2 } from "./glVec";
+import { glVec4, glVec2 } from "./glVec";
 import { NormalType, TriangleObj } from "./TriangleObj";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { saveAs } from 'file-saver';
@@ -10,7 +10,6 @@ import { saveAs } from 'file-saver';
 // specify loader and options here. This value must match the
 // contents of worker.d.ts
 import LoaderWorker from 'worker-loader?name=LoaderWorker.worker.js!./LoaderWorker';
-import { DropDownMenu, SubMenu } from "./DropDownMenu";
 import { createModelsDropDownMenu } from "./ModelsDropDownMenu";
 
 enum PointerMode {
@@ -42,7 +41,7 @@ export class ViewerApp {
 
    public component(): HTMLElement {
       const div = document.createElement('div');
-      div.className = 'PlanesApp';
+      div.className = 'ViewerApp';
 
       const viewContainer = document.createElement('div');
       viewContainer.id = 'ViewContainer';
@@ -72,18 +71,6 @@ export class ViewerApp {
       this.overlay.id = 'Overlay';
       parent.appendChild(this.overlay);
 
-      let size = 512;
-      if (isMobile) {
-         size = document.body.clientWidth;
-      }
-      canvas.width = size;
-      canvas.height = size;
-      this.overlay.style.lineHeight = size + 'px'; // vertically center text
-
-      // why do we have to manually set this height? If we don't it is 515.2 px high
-      parent.style.height = size + 'px';
-
-
       let context = canvas.getContext('webgl') as WebGLRenderingContext;
 
       if (!context) {
@@ -92,9 +79,12 @@ export class ViewerApp {
       }
       this.gl = context;
 
+      this.updateSize();
+
       this.renderer = new PlanesRenderer(this.gl);
       this.renderer.whiteColor = WHITE_COLOR;
       this.renderer.blackColor = BLACK_COLOR;
+      this.renderer.showMiniView = false;
 
       this.handler = new PointerEventHandler(canvas);
       this.handler.onDrag = (pos: glVec2, delta: glVec2) => this.onDrag(pos, delta);
@@ -125,6 +115,27 @@ export class ViewerApp {
       }
 
       createModelsDropDownMenu(parent, (file) => this.loadModel(file));
+
+      window.onresize = () => {
+
+         this.updateSize();
+         this.renderer.resize();
+         this.dirty = true;
+      }
+   }
+
+   private updateSize() {
+      let gl = this.gl;
+
+      let width = window.innerWidth;
+      let height = window.innerHeight - 10;
+
+      gl.canvas.width = width;
+      gl.canvas.height = height;
+      this.overlay.style.lineHeight = height + 'px'; // vertically center text
+
+      // why do we have to manually set this height? If we don't it is 515.2 px high
+      //parent.style.height = height + 'px';
    }
 
    private createCtrlsElements(parent: HTMLElement) {

@@ -4,6 +4,7 @@
 
 body {
   margin: 0px;
+  overflow: hidden;
 }
 
 .container {
@@ -80,7 +81,7 @@ body {
     font-weight: darker;
   }
 
-  modeButton {
+  #modeButton {
     font-size: 20pt;
     font-weight: darker;
   }
@@ -92,3 +93,4 @@ body {
 }
 
 @import "PlanesApp.css";
+@import "ViewerApp.css";
