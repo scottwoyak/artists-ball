@@ -134,4 +134,20 @@ export class TriangleObjBuilder extends TriangleObj {
       this.pushQuad(v1, v3, v5, v7);
       this.pushQuad(v2, v6, v4, v8);
    }
+
+   addDisk(numSteps: number, radius: number, center: Vec3) {
+
+      for (let i = 0; i <= numSteps; i++) {
+         let x1 = center.x + radius * Math.sin((i / numSteps) * 2 * Math.PI);
+         let y1 = center.y;
+         let z1 = center.z + radius * Math.cos((i / numSteps) * 2 * Math.PI);
+         let x2 = center.x + radius * Math.sin(((i + 1) / numSteps) * 2 * Math.PI);
+         let y2 = center.y;
+         let z2 = center.z + radius * Math.cos(((i + 1) / numSteps) * 2 * Math.PI);
+
+         let p1 = new Vec3([x1, y1, z1]);
+         let p2 = new Vec3([x2, y2, z2]);
+         this.pushTriangle(center, p1, p2);
+      }
+   }
 }
