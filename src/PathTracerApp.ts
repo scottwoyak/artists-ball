@@ -1,6 +1,6 @@
-import { glVec3 } from "./glVec";
+import { Vec3 } from "./Vec";
 import { PathTracerRenderer, RenderMode } from "./PathTracerRenderer";
-import { glMat4 } from "./glMat";
+import { Mat4 } from "./Mat";
 import { Uniforms } from "./Uniforms";
 import { SphericalCoord } from "./SphericalCoord";
 import { Slider } from "./Slider";
@@ -32,9 +32,9 @@ enum PointerMode {
 export class PathTracerApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    public renderer: PathTracerRenderer;
-   private modelview: glMat4;
-   private projection: glMat4;
-   private modelviewProjection: glMat4;
+   private modelview: Mat4;
+   private projection: Mat4;
+   private modelviewProjection: Mat4;
    private pointerMode: PointerMode = PointerMode.View;
    private pointerModeSpecial = false;
    private pos: SphericalCoord;
@@ -235,7 +235,7 @@ export class PathTracerApp {
       if (query && query.toLowerCase() === 'trianglesphere') {
          Uniforms.uBallRadius = 0;
          let radius = 0.5;
-         let center = new glVec3([0, radius, 0]);
+         let center = new Vec3([0, radius, 0]);
          let tObj = new TriangleSphere(8, radius, center);
          tObj.breakIntoVolumes();
          return Promise.resolve(tObj);
@@ -243,7 +243,7 @@ export class PathTracerApp {
       else if (query && query.toLowerCase() === 'trianglecube') {
          Uniforms.uBallRadius = 0;
          let size = 0.8;
-         let center = new glVec3([0, size / 2.0, 0]);
+         let center = new Vec3([0, size / 2.0, 0]);
          let tObj = new TriangleCube(size, center);
          return Promise.resolve(tObj);
       }
@@ -255,7 +255,7 @@ export class PathTracerApp {
                let tObj = new TriangleObjFile(query, res);
                let size = 1.5;
                tObj.autoCenter(size);
-               tObj.translate(new glVec3([0, tObj.height / 2, 0]));
+               tObj.translate(new Vec3([0, tObj.height / 2, 0]));
                tObj.breakIntoVolumes();
                return tObj;
             });
@@ -390,13 +390,13 @@ export class PathTracerApp {
    }
 
    private updateTexture() {
-      this.modelview = glMat4.makeLookAt(
+      this.modelview = Mat4.makeLookAt(
          Uniforms.uEye,
-         new glVec3([0, 1, 0]),  // center point
-         new glVec3([0, 1, 0])   // up vector
+         new Vec3([0, 1, 0]),  // center point
+         new Vec3([0, 1, 0])   // up vector
       );
 
-      this.projection = glMat4.makePerspective(55, 1, 0.1, 100);
+      this.projection = Mat4.makePerspective(55, 1, 0.1, 100);
       this.modelviewProjection = this.projection.multM(this.modelview);
       this.renderer.updateTexture(this.modelviewProjection);
    };

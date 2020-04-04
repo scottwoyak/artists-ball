@@ -1,11 +1,11 @@
-import { glVec3 } from "./glVec";
+import { Vec3 } from "./Vec";
 
 /**
  * Utility for holding a clip space. Default is values from -1 to 1.
  */
 export class glClipSpace {
-   public min: glVec3;
-   public max: glVec3;
+   public min: Vec3;
+   public max: Vec3;
 
    public get left(): number {
       return this.min.x;
@@ -40,7 +40,7 @@ export class glClipSpace {
       return (this.max.z - this.min.z);
    }
 
-   public constructor(min: glVec3, max: glVec3) {
+   public constructor(min: Vec3, max: Vec3) {
       this.min = min;
       this.max = max;
    }

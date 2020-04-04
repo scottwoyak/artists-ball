@@ -1,4 +1,4 @@
-import { glVec3 } from "./glVec";
+import { Vec3 } from "./Vec";
 import { IndexedTriangle } from "./IndexedTriangle";
 import { TriangleObj, NormalType } from "./TriangleObj";
 import { Profiler } from "./Profiler";
@@ -31,7 +31,9 @@ export class TriangleObjFile extends TriangleObj {
       for (let i = 0; i < numVals; i++) {
          let vals = tokens[i + 1].split('/');
          ret.iV.push(parseInt(vals[0]) - 1);
-         ret.iN.push(vals.length === 3 ? parseInt(vals[2]) - 1 : -1);
+         if (vals.length === 3) {
+            ret.iN.push(parseInt(vals[2]) - 1);
+         }
       }
       return ret;
    }
@@ -41,9 +43,17 @@ export class TriangleObjFile extends TriangleObj {
       updateStatus('Processing');
       let t = Date.now();
 
+      let p2 = new Profiler();
       let p = new Profiler();
       let lines = src.split('\n');
       p.log('split');
+
+      let vertices: number[] = [];
+      let normals: number[] = [];
+      let vIndices: number[] = [];
+      let nIndices: number[] = [];
+      let match = true;
+      let containsNormals = true;
 
       for (let i = 0; i < lines.length; i++) {
          // report progress every 50 ms
@@ -54,33 +64,93 @@ export class TriangleObjFile extends TriangleObj {
          let line = lines[i];
          if (line.startsWith('v ')) {
             let tokens = line.match(/\S+/g);
-            let vec = new glVec3([parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3])])
-            this.vertices.push(vec);
+            vertices.push(parseFloat(tokens[1]));
+            vertices.push(parseFloat(tokens[2]));
+            vertices.push(parseFloat(tokens[3]));
          }
          else if (line.startsWith('vn ')) {
             let tokens = line.match(/\S+/g);
-            let vec = new glVec3([parseFloat(tokens[1]), parseFloat(tokens[2]), parseFloat(tokens[3])])
-            this.normals.push(vec);
+            normals.push(parseFloat(tokens[1]));
+            normals.push(parseFloat(tokens[2]));
+            normals.push(parseFloat(tokens[3]));
          }
          else if (line.startsWith('f ')) {
             let ret = this.parseFace(line);
+
+            if (containsNormals) {
+               if (ret.iV.length !== ret.iN.length) {
+                  containsNormals = false;
+                  console.warn('Normals not specified in file. Flat normals will be computed.');
+               }
+               else if (match) {
+                  for (let i = 0; i < ret.iV.length; i++) {
+                     if (ret.iV[i] != ret.iN[i]) {
+                        console.warn('Vertices and normals don\'t match. Content will be re-indexed');
+                        match = false;
+                        break;
+                     }
+                  }
+               }
+            }
+
             if (ret.iN.length === 4) {
-               this.push(new IndexedTriangle(this.vertices, ret.iV[0], ret.iV[1], ret.iV[2], this.normals, ret.iN[0], ret.iN[1], ret.iN[2]));
-               this.push(new IndexedTriangle(this.vertices, ret.iV[0], ret.iV[2], ret.iV[3], this.normals, ret.iN[0], ret.iN[2], ret.iN[3]));
+
+               vIndices.push(ret.iV[0], ret.iV[1], ret.iV[2]);
+               vIndices.push(ret.iV[0], ret.iV[2], ret.iV[3]);
+               if (containsNormals) {
+                  nIndices.push(ret.iN[0], ret.iN[1], ret.iN[2]);
+                  nIndices.push(ret.iN[0], ret.iN[2], ret.iN[3]);
+               }
             }
             else {
-               this.push(new IndexedTriangle(this.vertices, ret.iV[0], ret.iV[1], ret.iV[2], this.normals, ret.iN[0], ret.iN[1], ret.iN[2]));
+               vIndices.push(ret.iV[0], ret.iV[1], ret.iV[2]);
+               if (containsNormals) {
+                  nIndices.push(ret.iN[0], ret.iN[1], ret.iN[2]);
+               }
             }
          }
       }
-      if (this.normals.length === 0) {
-         this.computeNormals(NormalType.Smooth);
+
+      p.log('parse');
+
+      if (match) {
+         this.vertices = vertices;
+         this.indices = vIndices;
+
+         if (containsNormals) {
+            this.normals = normals;
+         }
       }
+      else {
+         this.vertices = [];
+         this.normals = [];
+         this.indices = [];
+
+         for (let i = 0; i < vIndices.length; i++) {
+            this.vertices.push(vertices[3 * vIndices[i] + 0]);
+            this.vertices.push(vertices[3 * vIndices[i] + 1]);
+            this.vertices.push(vertices[3 * vIndices[i] + 2]);
+            this.normals.push(normals[3 * nIndices[i] + 0]);
+            this.normals.push(normals[3 * nIndices[i] + 1]);
+            this.normals.push(normals[3 * nIndices[i] + 2]);
+            this.indices.push(i);
+         }
+         p.log('reindex');
+      }
+
+      if (containsNormals === false) {
+         this.computeNormals(NormalType.Flat);
+         p.log('compute normals');
+      }
+
+      this.findBounds();
+      p.log('findBounds');
+      p2.log('Total');
+
       updateStatus('Processing: 100%');
 
       console.log('Vertices: ' + this.vertices.length);
       console.log('Normals: ' + this.normals.length);
-      console.log('Triangles: ' + this.triangles.length);
-      p.log('parse');
+      console.log('Triangles: ' + this.numTriangles);
    }
 }

@@ -2,8 +2,8 @@ import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { toRad, isMobile } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
-import { glMat4 } from "./glMat";
-import { glVec4, glVec2 } from "./glVec";
+import { Mat4 } from "./Mat";
+import { Vec4, Vec2 } from "./Vec";
 import { NormalType, TriangleObj } from "./TriangleObj";
 import { ThresholdCtrl } from "./ThresholdCtrl";
 import { PointerEventHandler } from "./PointerEventHandler";
@@ -101,36 +101,11 @@ export class PlanesApp {
       this.renderer.blackColor = BLACK_COLOR;
 
       this.handler = new PointerEventHandler(canvas);
-      this.handler.onDrag = (pos: glVec2, delta: glVec2) => this.onDrag(pos, delta);
-      this.handler.onClick = (pos: glVec2) => this.onClick(pos);
+      this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
+      this.handler.onClick = (pos: Vec2) => this.onClick(pos);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
       this.handler.onRotate = (angle: number, delta: number) => this.onRotate(angle, delta);
-      this.handler.onTranslate = (delta: glVec2) => this.onTranslate(delta);
-
-      document.onkeypress = (event: KeyboardEvent) => {
-         switch (event.key) {
-            case 'o':
-               this.renderer.optimize(NormalType.Smooth);
-               break;
-
-            case 'p':
-               this.renderer.optimize(NormalType.Flat);
-               break;
-
-            case 's':
-               this.save();
-               break;
-
-            case 't':
-               this.test();
-               break;
-
-            case 'd':
-               this.renderer.showShadowMap = !this.renderer.showShadowMap;
-               this.dirty = true;
-               break;
-         }
-      }
+      this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
 
       createModelsDropDownMenu(parent, (file) => this.loadModel(file));
    }
@@ -268,7 +243,7 @@ export class PlanesApp {
       this.dirty = true;
    }
 
-   private onDrag(pos: glVec2, delta: glVec2) {
+   private onDrag(pos: Vec2, delta: Vec2) {
       this.dirty = true;
 
       if (this.pointerMode === PointerMode.View) {
@@ -278,9 +253,9 @@ export class PlanesApp {
       }
       else if (this.pointerMode === PointerMode.Light) {
 
-         let matY = glMat4.fromRotY(toRad(delta.x));
-         let matX = glMat4.fromRotX(toRad(delta.y));
-         let vec = new glVec4([
+         let matY = Mat4.fromRotY(toRad(delta.x));
+         let matX = Mat4.fromRotX(toRad(delta.y));
+         let vec = new Vec4([
             this.renderer.uLightDirection.x,
             this.renderer.uLightDirection.y,
             this.renderer.uLightDirection.z,
@@ -303,7 +278,7 @@ export class PlanesApp {
     * @param y The y coordinate.
     * @returns true if a hit on one of the views occurs.
     */
-   private onClick(pos: glVec2): boolean {
+   private onClick(pos: Vec2): boolean {
 
       let size = this.gl.canvas.width;
 
@@ -326,14 +301,14 @@ export class PlanesApp {
       this.dirty = true;
    }
 
-   private onTranslate(delta: glVec2) {
+   private onTranslate(delta: Vec2) {
 
       let factor = 1;
       if (isMobile) {
          factor = 2;
       }
 
-      this.renderer.translateView(new glVec2([
+      this.renderer.translateView(new Vec2([
          factor * 2 * delta.x / this.gl.canvas.width,
          factor * 2 * delta.y / this.gl.canvas.height
       ]));
@@ -350,19 +325,5 @@ export class PlanesApp {
       }
 
       requestAnimationFrame(() => this.tick());
-   }
-
-   private save() {
-      let tObj = this.renderer.tObj;
-
-      let name = tObj.name.split('.')[0] + '.blob';
-      saveAs(tObj.toBlob(), name);
-   }
-
-   private async test() {
-      // uncomment to test Blobs
-      let blob = this.renderer.tObj.toBlob();
-      let tObj = await TriangleObj.fromBlob(blob);
-      console.log(tObj.name);
    }
 }

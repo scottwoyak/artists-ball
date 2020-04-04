@@ -1,9 +1,11 @@
-import { glVec3 } from "./glVec";
+import { Vec3 } from "./Vec";
 import { IndexedTriangle } from "./IndexedTriangle";
 import { Volume } from "./Volume";
 import { Profiler } from "./Profiler";
 import { clamp } from "./Globals";
 import { BlobFile } from "./BlobFile";
+import { IndexedVec3 } from "./IndexedVec3";
+import { IVec3 } from "./IVec3";
 
 export enum NormalType {
    Smooth,
@@ -14,32 +16,31 @@ export class TriangleObjData {
    name: string;
    vertices: Float32Array;
    normals: Float32Array;
-   nIndices: Int32Array;
-   vIndices: Int32Array;
-   boxMin: glVec3;
-   boxMax: glVec3;
+   indices: Int32Array;
+   boxMin: Vec3;
+   boxMax: Vec3;
 }
 
 /**
  * Class used to compute normals for vertices that join multiple faces
  */
 class MultiNormVertex {
-   private normals: glVec3[] = [];
+   private normals: Vec3[] = [];
 
    /**
     * Stores a normal for this vertex
     * 
     * @param normal Stores a normal for the vertex
     */
-   public push(normal: glVec3) {
+   public push(normal: Vec3) {
       this.normals.push(normal);
    }
 
    /**
     * Computes the normal by averaging all the individual normals associated with the vertex
     */
-   public get normal(): glVec3 {
-      let n = new glVec3();
+   public get normal(): Vec3 {
+      let n = new Vec3();
       for (let i = 0; i < this.normals.length; i++) {
          n.x += this.normals[i].x;
          n.y += this.normals[i].y;
@@ -52,19 +53,28 @@ class MultiNormVertex {
       return n;
    }
 }
+
 /**
  * Base class for representing an object from a bunch of triangles. The class
  * efficiently manages the triangles by storing them in volumes and by
  * passing them to WebGL using Uniform Buffers
  */
 export class TriangleObj {
-   public vertices: glVec3[] = [];
-   public normals: glVec3[] = [];
-   public triangles: IndexedTriangle[] = [];
-   public boxMin = new glVec3([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]);
-   public boxMax = new glVec3([-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE]);
+   public vertices: number[] = [];
+   public normals: number[] = [];
+   public indices: number[] = [];
+   public boxMin = new Vec3([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]);
+   public boxMax = new Vec3([-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE]);
    public volumes: Volume[] = [];
    public name: string;
+
+   public get numVertices() {
+      return this.vertices.length / 3;
+   }
+
+   public get numTriangles() {
+      return this.indices.length / 3;
+   }
 
    public get width(): number {
       return this.boxMax.x - this.boxMin.x;
@@ -78,8 +88,8 @@ export class TriangleObj {
       return this.boxMax.z - this.boxMin.z;
    }
 
-   public get center(): glVec3 {
-      return new glVec3([
+   public get center(): Vec3 {
+      return new Vec3([
          (this.boxMin.x + this.boxMax.x) / 2,
          (this.boxMin.y + this.boxMax.y) / 2,
          (this.boxMin.z + this.boxMax.z) / 2,
@@ -90,14 +100,11 @@ export class TriangleObj {
       this.name = name;
    }
 
-   protected push(tri: IndexedTriangle) {
-      this.triangles.push(tri);
-      this.boxMin.x = Math.min(this.boxMin.x, tri.minX);
-      this.boxMin.y = Math.min(this.boxMin.y, tri.minY);
-      this.boxMin.z = Math.min(this.boxMin.z, tri.minZ);
-      this.boxMax.x = Math.max(this.boxMax.x, tri.maxX);
-      this.boxMax.y = Math.max(this.boxMax.y, tri.maxY);
-      this.boxMax.z = Math.max(this.boxMax.z, tri.maxZ);
+   public getTriangle(index: number): IndexedTriangle {
+      let i1 = this.indices[3 * index + 0];
+      let i2 = this.indices[3 * index + 1];
+      let i3 = this.indices[3 * index + 2];
+      return new IndexedTriangle(this.vertices, this.normals, i1, i2, i3);
    }
 
    /**
@@ -108,7 +115,7 @@ export class TriangleObj {
    public autoCenter(size: number) {
       let p = new Profiler();
 
-      let trans = new glVec3([
+      let trans = new Vec3([
          -(this.boxMax.x + this.boxMin.x) / 2,
          -(this.boxMax.y + this.boxMin.y) / 2,
          -(this.boxMax.z + this.boxMin.z) / 2,
@@ -116,8 +123,8 @@ export class TriangleObj {
 
       let scale = size / Math.max(this.width, this.height, this.depth);
 
-      for (let i = 0; i < this.vertices.length; i++) {
-         let v = this.vertices[i];
+      for (let i = 0; i < this.numVertices; i++) {
+         let v = new IndexedVec3(this.vertices, i);
 
          v.x = (v.x + trans.x) * scale;
          v.y = (v.y + trans.y) * scale;
@@ -149,10 +156,10 @@ export class TriangleObj {
     * 
     * @param offset The amount to shift
     */
-   public translate(offset: glVec3) {
+   public translate(offset: Vec3) {
 
-      for (let i = 0; i < this.vertices.length; i++) {
-         let v = this.vertices[i];
+      for (let i = 0; i < this.numVertices; i++) {
+         let v = new IndexedVec3(this.vertices, i);
 
          v.x += offset.x;
          v.y += offset.y;
@@ -183,9 +190,9 @@ export class TriangleObj {
     */
    public breakIntoVolumes() {
       let numSteps;
-      if (this.triangles.length < 40) {
+      if (this.numTriangles < 40) {
          numSteps = 1;
-      } else if (this.triangles.length < 1500) {
+      } else if (this.numTriangles < 1500) {
          numSteps = 2;
       }
       else {
@@ -196,8 +203,8 @@ export class TriangleObj {
          this.volumes.push(new Volume());
       }
 
-      for (let i = 0; i < this.triangles.length; i++) {
-         let t = this.triangles[i];
+      for (let i = 0; i < this.numTriangles; i++) {
+         let t = this.getTriangle(i);
          let x = Math.floor(numSteps * (t.minX - this.boxMin.x) / (this.boxMax.x - this.boxMin.x));
          let y = Math.floor(numSteps * (t.minY - this.boxMin.y) / (this.boxMax.y - this.boxMin.y));
          let z = Math.floor(numSteps * (t.minZ - this.boxMin.z) / (this.boxMax.z - this.boxMin.z));
@@ -209,54 +216,105 @@ export class TriangleObj {
       }
    }
 
+   private updateBounds(v: IVec3) {
+      this.boxMin.x = Math.min(this.boxMin.x, v.x);
+      this.boxMin.y = Math.min(this.boxMin.y, v.y);
+      this.boxMin.z = Math.min(this.boxMin.z, v.z);
+      this.boxMax.x = Math.max(this.boxMax.x, v.x);
+      this.boxMax.y = Math.max(this.boxMax.y, v.y);
+      this.boxMax.z = Math.max(this.boxMax.z, v.z);
+   }
+
+   public pushTriangle(v1: IVec3, v2: IVec3, v3: IVec3) {
+
+      // add indices
+      let i1 = this.vertices.length / 3;
+      let i2 = i1 + 1;
+      let i3 = i1 + 2;
+      this.indices.push(i1, i2, i3);
+
+      // add vertices
+      this.vertices.push(v1.x, v1.y, v1.z, v2.x, v2.y, v2.z, v3.x, v3.y, v3.z);
+      this.updateBounds(v1);
+      this.updateBounds(v2);
+      this.updateBounds(v3);
+
+      // add normals
+      let tri = new IndexedTriangle(this.vertices, this.normals, i1, i2, i3);
+      let normal = tri.computeNormal();
+      this.normals.push(...normal.values);
+      this.normals.push(...normal.values);
+      this.normals.push(...normal.values);
+   }
+
    public computeNormals(type: NormalType) {
+
       let p = new Profiler();
 
-      let normals: glVec3[] = [];
-      let multiNormVertices: MultiNormVertex[] = [];
       if (type === NormalType.Smooth) {
-         for (let i = 0; i < this.vertices.length; i++) {
+         let multiNormVertices: MultiNormVertex[] = [];
+         for (let i = 0; i < this.numVertices; i++) {
             multiNormVertices.push(new MultiNormVertex());
          }
 
          // store the normals with each vertex - we'll later average these
-         for (let i = 0; i < this.triangles.length; i++) {
-            let tri = this.triangles[i];
+         for (let i = 0; i < this.numTriangles; i++) {
+            let tri = this.getTriangle(i);
             let n = tri.computeNormal();
-            multiNormVertices[tri.iV0].push(n);
-            multiNormVertices[tri.iV1].push(n);
-            multiNormVertices[tri.iV2].push(n);
+            multiNormVertices[tri.i1].push(n);
+            multiNormVertices[tri.i2].push(n);
+            multiNormVertices[tri.i3].push(n);
          }
 
-         // create a new normals array
+         // populate the normals array
+         this.normals = [];
          for (let i = 0; i < multiNormVertices.length; i++) {
-            normals.push(multiNormVertices[i].normal);
-         }
-
-         // update the triangles
-         for (let i = 0; i < this.triangles.length; i++) {
-            let tri = this.triangles[i];
-            tri.normals = normals;
-            tri.iN0 = tri.iV0;
-            tri.iN1 = tri.iV1;
-            tri.iN2 = tri.iV2;
+            this.normals.push(...multiNormVertices[i].normal.values);
          }
       }
       else {
-         for (let i = 0; i < this.triangles.length; i++) {
-            let tri = this.triangles[i];
-            normals.push(tri.computeNormal());
-            let index = normals.length - 1;
+         // to go this way we need to have a unique vector and normal for each triangle
+         // corner. Blow away the old stuff and rebuild
+         let oldIndices = this.indices;
+         let oldVertices = this.vertices;
 
-            tri.normals = normals;
-            tri.iN0 = index;
-            tri.iN1 = index;
-            tri.iN2 = index;
+         // reset everything
+         this.vertices = [];
+         this.normals = [];
+         this.indices = [];
+
+         // rebuild
+         for (let i = 0; i < oldIndices.length / 3; i++) {
+            let v1 = new IndexedVec3(oldVertices, oldIndices[3 * i + 0]);
+            let v2 = new IndexedVec3(oldVertices, oldIndices[3 * i + 1]);
+            let v3 = new IndexedVec3(oldVertices, oldIndices[3 * i + 2]);
+            this.pushTriangle(v1, v2, v3);
          }
       }
-      this.normals = normals;
 
       p.log('computeNormals');
+   }
+
+   private x(i: number): number {
+      return this.vertices[3 * i + 0];
+   }
+   private y(i: number): number {
+      return this.vertices[3 * i + 1];
+   }
+   private z(i: number): number {
+      return this.vertices[3 * i + 2];
+   }
+
+   protected findBounds() {
+      for (let i = 0; i < this.numVertices; i++) {
+         this.boxMin.x = Math.min(this.boxMin.x, this.x(i));
+         this.boxMin.y = Math.min(this.boxMin.y, this.y(i));
+         this.boxMin.z = Math.min(this.boxMin.z, this.z(i));
+
+         this.boxMax.x = Math.max(this.boxMax.x, this.x(i));
+         this.boxMax.y = Math.max(this.boxMax.y, this.y(i));
+         this.boxMax.z = Math.max(this.boxMax.z, this.z(i));
+      }
    }
 
    /**
@@ -268,24 +326,23 @@ export class TriangleObj {
 
       let str = '';
       str += '# Vertices: ' + this.vertices.length + '\n';
-      str += '# Normals: ' + this.normals.length + '\n';
-      str += '# Triangles: ' + this.triangles.length + '\n';
+      str += '# Triangles: ' + this.numTriangles + '\n';
       str += '\n';
 
-      for (let i = 0; i < this.vertices.length; i++) {
-         let v = this.vertices[i];
-         str += 'v ' + v.x.toPrecision(digits) + ' ' + v.y.toPrecision(digits) + ' ' + v.z.toPrecision(digits) + '\n';
+      for (let i = 0; i < this.numVertices; i++) {
+         let v = this.vertices;
+         str += 'v ' + v[3 * i + 0].toPrecision(digits) + ' ' + v[3 * i + 1].toPrecision(digits) + ' ' + v[3 * i + 2].toPrecision(digits) + '\n';
       }
-      for (let i = 0; i < this.normals.length; i++) {
-         let n = this.normals[i];
-         str += 'vn ' + n.x.toPrecision(digits) + ' ' + n.y.toPrecision(digits) + ' ' + n.z.toPrecision(digits) + '\n';
+      for (let i = 0; i < this.numVertices; i++) {
+         let n = this.normals;
+         str += 'vn ' + n[3 * i + 0].toPrecision(digits) + ' ' + n[3 * i + 1].toPrecision(digits) + ' ' + n[3 * i + 2].toPrecision(digits) + '\n';
       }
-      for (let i = 0; i < this.triangles.length; i++) {
-         let t = this.triangles[i];
+      for (let i = 0; i < this.numTriangles; i++) {
+         let t = this.getTriangle(i);
          str += 'f ' +
-            (t.iV0 + 1) + '//' + (t.iN0 + 1) + ' ' +
-            (t.iV1 + 1) + '//' + (t.iN1 + 1) + ' ' +
-            (t.iV2 + 1) + '//' + (t.iN2 + 1) + '\n';
+            (t.i1 + 1) + '//' + (t.i1 + 1) + ' ' +
+            (t.i2 + 1) + '//' + (t.i2 + 1) + ' ' +
+            (t.i3 + 1) + '//' + (t.i3 + 1) + '\n';
       }
 
       return str;
@@ -293,176 +350,99 @@ export class TriangleObj {
 
    public optimize(normalType: NormalType) {
 
-      let msg = 'Optimized .OBJ content copied to clipboard\n\n';
-      msg += 'Num Triangles: ' + this.triangles.length + '\n';
+      if (normalType === NormalType.Smooth) {
 
-      let vertexToIndexMap = new Map<string, number>();
-      let indexToIndexMap = new Map<number, number>();
+         let vertexToIndexMap = new Map<string, number>();
+         let indexToIndexMap = new Map<number, number>();
 
-      // first generate a unique set of vertices
-      let uniqueVertices: glVec3[] = [];
-      for (let i = 0; i < this.vertices.length; i++) {
+         // first generate a unique set of vertices
+         let uniqueVertices: IndexedVec3[] = [];
+         for (let i = 0; i < this.numVertices; i++) {
 
-         let oldVertex = this.vertices[i];
-         let key = this.vertices[i].toString(4, ' ');
-         let oldIndex = i + 1;
-         let newIndex;
-         if (vertexToIndexMap.has(key)) {
-            // just map the old index to the existing entry
-            newIndex = vertexToIndexMap.get(key);
+            let oldVertex = new IndexedVec3(this.vertices, i);
+            let key = this.vertices[3 * i + 0].toFixed(4) + ' ' + this.vertices[3 * i + 1].toFixed(4) + ' ' + this.vertices[3 * i + 2].toFixed(4);
+            let oldIndex = i + 1;
+            let newIndex;
+            if (vertexToIndexMap.has(key)) {
+               // just map the old index to the existing entry
+               newIndex = vertexToIndexMap.get(key);
+            }
+            else {
+               // create a new entry
+               newIndex = uniqueVertices.length + 1;
+               vertexToIndexMap.set(key, newIndex);
+               uniqueVertices.push(oldVertex);
+            }
+            // store the translation
+            indexToIndexMap.set(oldIndex, newIndex);
          }
-         else {
-            // create a new entry
-            newIndex = uniqueVertices.length + 1;
-            vertexToIndexMap.set(key, newIndex);
-            uniqueVertices.push(oldVertex);
+
+         // reset all the vertices
+         this.vertices = [];
+         for (let i = 0; i < uniqueVertices.length; i++) {
+            this.vertices.push(uniqueVertices[i].x);
+            this.vertices.push(uniqueVertices[i].y);
+            this.vertices.push(uniqueVertices[i].z);
          }
-         // store the translation
-         indexToIndexMap.set(oldIndex, newIndex);
+
+         // remap all indices
+         for (let i = 0; i < this.indices.length; i++) {
+            let oldIndex = this.indices[i];
+            this.indices[i] = indexToIndexMap.get(oldIndex + 1) - 1;
+         }
+      }
+      else {
+         // nothing to do for flat normals. New vertices and normals are created in 
+         // computeNormals() below if needed
       }
 
-      let oldSize = this.vertices.length;
-      let newSize = uniqueVertices.length;
-      msg += 'Num Vertices: ' + oldSize + ' to ' + newSize + ', ' + (100 * newSize / oldSize).toFixed() + ' %\n';
-
-      // reset all the vertices
-      this.vertices = uniqueVertices;
-      for (let i = 0; i < this.triangles.length; i++) {
-         let tri = this.triangles[i];
-         tri.vertices = uniqueVertices;
-         tri.iV0 = indexToIndexMap.get(tri.iV0 + 1) - 1;
-         tri.iV1 = indexToIndexMap.get(tri.iV1 + 1) - 1;
-         tri.iV2 = indexToIndexMap.get(tri.iV2 + 1) - 1;
-      }
-
-      oldSize = this.normals.length;
       this.computeNormals(normalType);
-      newSize = this.normals.length;
-      msg += 'Num Normals: ' + oldSize + ' to ' + newSize + ', ' + (100 * newSize / oldSize).toFixed() + ' %';
-
-      let str = this.toObjString(6);
-      navigator.clipboard.writeText(str).then(() => { alert(msg) });
-   }
-
-   private pushVec(array: number[], vec: glVec3) {
-      array.push(vec.x);
-      array.push(vec.y);
-      array.push(vec.z);
    }
 
    public combine(tObj: TriangleObj) {
-      let startVIndex = this.vertices.length;
-      let startNIndex = this.normals.length;
 
-      for (let i = 0; i < tObj.vertices.length; i++) {
-         this.vertices.push(tObj.vertices[i].clone());
+      // save the value for the first index of the combined objects
+      let startIndex = this.vertices.length;
+
+      // add the other vertices and normals to ours
+      this.vertices.push(...tObj.vertices);
+      this.normals.push(...tObj.normals);
+
+      // add the other indices, but offset them properly
+      for (let i = 0; i < tObj.indices.length; i++) {
+         this.indices.push(startIndex + tObj.indices[i]);
       }
 
-      for (let i = 0; i < tObj.normals.length; i++) {
-         this.normals.push(tObj.normals[i].clone());
-      }
-
-      for (let i = 0; i < tObj.triangles.length; i++) {
-         let tri = tObj.triangles[i];
-         this.push(new IndexedTriangle(
-            this.vertices,
-            tri.iV0 + startVIndex,
-            tri.iV1 + startVIndex,
-            tri.iV2 + startVIndex,
-            this.normals,
-            tri.iN0 + startNIndex,
-            tri.iN1 + startNIndex,
-            tri.iN2 + startNIndex
-         ));
-      }
+      // merge the bounding boxes
+      this.boxMin.x = Math.min(this.boxMin.x, tObj.boxMin.x);
+      this.boxMin.y = Math.min(this.boxMin.y, tObj.boxMin.y);
+      this.boxMin.z = Math.min(this.boxMin.z, tObj.boxMin.z);
+      this.boxMax.x = Math.max(this.boxMax.x, tObj.boxMax.x);
+      this.boxMax.y = Math.max(this.boxMax.y, tObj.boxMax.y);
+      this.boxMax.z = Math.max(this.boxMax.z, tObj.boxMax.z);
    }
 
    public toData(): TriangleObjData {
 
       let data = new TriangleObjData;
       data.name = this.name;
-
-      // convert the triangles into arrays that can be uploaded
-      let vertices: number[] = [];
-      for (let i = 0; i < this.vertices.length; i++) {
-         this.pushVec(vertices, this.vertices[i]);
-      }
-
-      let normals: number[] = [];
-      for (let i = 0; i < this.normals.length; i++) {
-         this.pushVec(normals, this.normals[i]);
-      }
-
-      let vIndices: number[] = [];
-      let nIndices: number[] = [];
-      for (let i = 0; i < this.triangles.length; i++) {
-         let tri = this.triangles[i];
-
-         vIndices.push(tri.iV0);
-         vIndices.push(tri.iV1);
-         vIndices.push(tri.iV2);
-
-         nIndices.push(tri.iN0);
-         nIndices.push(tri.iN1);
-         nIndices.push(tri.iN2);
-      }
-
-      data.vertices = new Float32Array(vertices);
-      data.normals = new Float32Array(normals);
-      data.vIndices = new Int32Array(vIndices);
-      data.nIndices = new Int32Array(nIndices);
+      data.vertices = new Float32Array(this.vertices);
+      data.normals = new Float32Array(this.normals);
+      data.indices = new Int32Array(this.indices);
       data.boxMin = this.boxMin.clone();
       data.boxMax = this.boxMax.clone();
-
       return data;
    }
 
-
-   private static data2vertex(data: TriangleObjData, index: number): glVec3 {
-      return new glVec3([
-         data.vertices[3 * index + 0],
-         data.vertices[3 * index + 1],
-         data.vertices[3 * index + 2]
-      ]);
-   }
-
-   public static data2normal(data: TriangleObjData, index: number): glVec3 {
-      return new glVec3([
-         data.normals[3 * index + 0],
-         data.normals[3 * index + 1],
-         data.normals[3 * index + 2]
-      ]);
-   }
-
    public static fromData(data: TriangleObjData): TriangleObj {
+
       let tObj = new TriangleObj();
       tObj.name = data.name;
-
-      // restore vertices
-      for (let i = 0; i < data.vertices.length / 3; i++) {
-         tObj.vertices.push(TriangleObj.data2vertex(data, i));
-      }
-
-      // restore normals
-      for (let i = 0; i < data.normals.length / 3; i++) {
-         tObj.normals.push(TriangleObj.data2normal(data, i));
-      }
-
-      // restore triangles
-      for (let i = 0; i < data.vIndices.length / 3; i++) {
-         let iV0 = data.vIndices[3 * i + 0];
-         let iV1 = data.vIndices[3 * i + 1];
-         let iV2 = data.vIndices[3 * i + 2];
-         let iN0 = data.nIndices[3 * i + 0];
-         let iN1 = data.nIndices[3 * i + 1];
-         let iN2 = data.nIndices[3 * i + 2];
-         let t = new IndexedTriangle(tObj.vertices, iV0, iV1, iV2, tObj.normals, iN0, iN1, iN2);
-         tObj.triangles.push(t);
-      }
-
-      tObj.boxMin = new glVec3(data.boxMin.values);
-      tObj.boxMax = new glVec3(data.boxMax.values);
-
+      tObj.vertices = Array.from(data.vertices);
+      tObj.normals = Array.from(data.normals);
+      tObj.indices = Array.from(data.indices);
+      tObj.boxMin = new Vec3(data.boxMin.values);
+      tObj.boxMax = new Vec3(data.boxMax.values);
       return tObj;
    }
 
@@ -482,8 +462,7 @@ export class TriangleObj {
       let parts: BlobPart[] = [];
       parts.push(data.vertices);
       parts.push(data.normals);
-      parts.push(data.vIndices);
-      parts.push(data.nIndices);
+      parts.push(data.indices);
       parts.push(new Float32Array(data.boxMin.values));
       parts.push(new Float32Array(data.boxMax.values));
 
@@ -505,10 +484,9 @@ export class TriangleObj {
       data.name = bFile.info.Name;
       data.vertices = new Float32Array(await bFile.parts[0].arrayBuffer());
       data.normals = new Float32Array(await bFile.parts[1].arrayBuffer());
-      data.vIndices = new Int32Array(await bFile.parts[2].arrayBuffer());
-      data.nIndices = new Int32Array(await bFile.parts[3].arrayBuffer());
-      data.boxMin = new glVec3(Array.from(new Float32Array(await bFile.parts[4].arrayBuffer())));
-      data.boxMax = new glVec3(Array.from(new Float32Array(await bFile.parts[5].arrayBuffer())));
+      data.indices = new Int32Array(await bFile.parts[2].arrayBuffer());
+      data.boxMin = new Vec3(Array.from(new Float32Array(await bFile.parts[3].arrayBuffer())));
+      data.boxMax = new Vec3(Array.from(new Float32Array(await bFile.parts[4].arrayBuffer())));
 
       return data;
    }

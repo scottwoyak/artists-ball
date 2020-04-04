@@ -1,5 +1,5 @@
-import { glMat4 } from './glMat';
-import { glVec3, glVec4 } from './glVec';
+import { Mat4 } from './Mat';
+import { Vec3, Vec4 } from './Vec';
 import toScreenVertexSource from './shaders/PathTracerToScreenVertex.glsl';
 import toScreenFragmentSource from './shaders/PathTracerToScreenFragment.glsl';
 import toTextureVertexSource from './shaders/PathTracerToTextureVertex.glsl';
@@ -148,7 +148,7 @@ export class PathTracerRenderer {
 
       let p = new Profiler();
       // create the toTexture shader
-      if (tObj && tObj.triangles.length > 0) {
+      if (tObj && tObj.numTriangles > 0) {
          this.toTextureProgram = glCompiler.compile(
             gl,
             toTextureVertexSource
@@ -159,7 +159,7 @@ export class PathTracerRenderer {
                .replace('NOTHING', 'USE_TRIANGLES')
                .replace('<NUM_VERTICES>', tObj.vertices.length.toString())
                .replace('<NUM_VOLUMES>', tObj.volumes.length.toString())
-               .replace('<NUM_TRIANGLES>', tObj.triangles.length.toString())
+               .replace('<NUM_TRIANGLES>', tObj.numTriangles.toString())
          );
 
          // upload triangles to the GPU
@@ -193,12 +193,11 @@ export class PathTracerRenderer {
       let vBlock = new glUniformBlock(gl, this.toTextureProgram, 'MyVerticesBlock', blockBinding);
 
       // put the data into a Float32Array for uploading
-      let vData = new Float32Array(tObj.vertices.length * 4);
-      for (let i = 0; i < tObj.vertices.length; i++) {
-         let v = tObj.vertices[i];
-         vData[4 * i + 0] = v.x;
-         vData[4 * i + 1] = v.y;
-         vData[4 * i + 2] = v.z;
+      let vData = new Float32Array(tObj.vertices.length / 3 * 4);
+      for (let i = 0; i < tObj.vertices.length / 3; i++) {
+         vData[4 * i + 0] = tObj.vertices[3 * i + 0];
+         vData[4 * i + 1] = tObj.vertices[3 * i + 1];
+         vData[4 * i + 2] = tObj.vertices[3 * i + 2];
          vData[4 * i + 3] = 0;
       }
       vBlock.upload(vData);
@@ -207,15 +206,15 @@ export class PathTracerRenderer {
       let tBlock = new glUniformBlock(gl, this.toTextureProgram, 'MyTrianglesBlock', blockBinding);
 
       // put the data into a Float32Array for uploading
-      let tData = new Int32Array(tObj.triangles.length * 4);
+      let tData = new Int32Array(tObj.numTriangles * 4);
       let index = 0;
       for (let v = 0; v < tObj.volumes.length; v++) {
          let vol = tObj.volumes[v];
          for (let i = 0; i < vol.triangles.length; i++) {
             let t = vol.triangles[i];
-            tData[index++] = t.iV0;
-            tData[index++] = t.iV1;
-            tData[index++] = t.iV2;
+            tData[index++] = t.i1;
+            tData[index++] = t.i2;
+            tData[index++] = t.i3;
             tData[index++] = 0;
          }
       }
@@ -244,12 +243,12 @@ export class PathTracerRenderer {
       Uniforms.uSample = 0;
    }
 
-   private getEyeRay(matrix: glMat4, x: number, y: number): glVec3 {
-      let vec = new glVec4([x, y, 0, 1]);
+   private getEyeRay(matrix: Mat4, x: number, y: number): Vec3 {
+      let vec = new Vec4([x, y, 0, 1]);
       return matrix.multV(vec).divideByW().subtract(Uniforms.uEye);
    }
 
-   public updateTexture(modelviewProjection: glMat4): void {
+   public updateTexture(modelviewProjection: Mat4): void {
 
       let gl = this.gl;
 
@@ -258,8 +257,8 @@ export class PathTracerRenderer {
       let y = (Math.random() * 2 - 1) / Uniforms.uTextureSize;
       let z = 0;
 
-      let v = new glVec3([x, y, z]);
-      let jitter = glMat4.fromTranslation(v);
+      let v = new Vec3([x, y, z]);
+      let jitter = Mat4.fromTranslation(v);
       let matrix = jitter.multM(modelviewProjection).inverse();
 
       Uniforms.uRay00 = this.getEyeRay(matrix, -1, -1);

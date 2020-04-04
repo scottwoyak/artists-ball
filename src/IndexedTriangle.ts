@@ -1,103 +1,65 @@
-import { glVec3 } from "./glVec";
+import { Vec3 } from "./Vec";
+import { IndexedVec3 } from "./IndexedVec3";
 
 /**
- * Class for holding information about a triangle
+ * Minimalist wrapper around a WebGL triangle element
  */
 export class IndexedTriangle {
-   vertices: glVec3[];
-   public iV0: number;
-   public iV1: number;
-   public iV2: number;
-
-   normals: glVec3[];
-   public iN0: number;
-   public iN1: number;
-   public iN2: number;
+   public v1: IndexedVec3;
+   public v2: IndexedVec3;
+   public v3: IndexedVec3;
+   public n1: IndexedVec3;
+   public n2: IndexedVec3;
+   public n3: IndexedVec3;
+   public i1: number;
+   public i2: number;
+   public i3: number;
 
    constructor(
-      vertices: glVec3[], iV0: number, iV1: number, iV2: number,
-      normals: glVec3[], iN0?: number, iN1?: number, iN2?: number,
+      vertices: number[],
+      normals: number[],
+      i1: number,
+      i2: number,
+      i3: number,
    ) {
-      this.vertices = vertices;
-      this.iV0 = iV0;
-      this.iV1 = iV1;
-      this.iV2 = iV2;
-
-      this.normals = normals;
-      if (iN0 === undefined || iN0 === -1) {
-         let normal = this.computeNormal();
-         this.normals.push(normal);
-         let index = this.normals.length - 1;
-         this.iN0 = index;
-         this.iN1 = index;
-         this.iN2 = index;
-      }
-      else {
-         this.normals = normals;
-         this.iN0 = iN0;
-         this.iN1 = iN1;
-         this.iN2 = iN2;
-
-         /*
-         let n = this.computeNormal();
-         let n0 = this.n0;
-         let n1 = this.n1;
-         let n2 = this.n2;
-         console.log(n.toString(2));
-         console.log(n0.toString(2));
-         console.log(n1.toString(2));
-         console.log(n2.toString(2));
-         */
-      }
-   }
-
-   get v0(): glVec3 {
-      return this.vertices[this.iV0];
-   }
-   get v1(): glVec3 {
-      return this.vertices[this.iV1];
-   }
-   get v2(): glVec3 {
-      return this.vertices[this.iV2];
-   }
-
-   get n0(): glVec3 {
-      return this.normals[this.iN0];
-   }
-   get n1(): glVec3 {
-      return this.normals[this.iN1];
-   }
-   get n2(): glVec3 {
-      return this.normals[this.iN2];
+      this.v1 = new IndexedVec3(vertices, i1);
+      this.v2 = new IndexedVec3(vertices, i2);
+      this.v3 = new IndexedVec3(vertices, i3);
+      this.n1 = new IndexedVec3(normals, i1);
+      this.n2 = new IndexedVec3(normals, i2);
+      this.n3 = new IndexedVec3(normals, i3);
+      this.i1 = i1;
+      this.i2 = i2;
+      this.i3 = i3;
    }
 
    get minX(): number {
-      return Math.min(this.v0.x, Math.min(this.v1.x, this.v2.x));
+      return Math.min(this.v1.x, this.v2.x, this.v3.x);
    }
-
    get minY(): number {
-      return Math.min(this.v0.y, Math.min(this.v1.y, this.v2.y));
+      return Math.min(this.v1.y, this.v2.y, this.v3.y);
    }
-
    get minZ(): number {
-      return Math.min(this.v0.z, Math.min(this.v1.z, this.v2.z));
+      return Math.min(this.v1.z, this.v2.z, this.v3.z);
    }
 
    get maxX(): number {
-      return Math.max(this.v0.x, Math.max(this.v1.x, this.v2.x));
+      return Math.max(this.v1.x, this.v2.x, this.v3.x);
    }
-
    get maxY(): number {
-      return Math.max(this.v0.y, Math.max(this.v1.y, this.v2.y));
+      return Math.max(this.v1.y, this.v2.y, this.v3.y);
    }
-
    get maxZ(): number {
-      return Math.max(this.v0.z, Math.max(this.v1.z, this.v2.z));
+      return Math.max(this.v1.z, this.v2.z, this.v3.z);
    }
 
-   public computeNormal(): glVec3 {
-      let a = this.v1.subtract(this.v0);
-      let b = this.v2.subtract(this.v1);
+   public computeNormal(): Vec3 {
+      let v1 = this.v1.toVec3();
+      let v2 = this.v2.toVec3();
+      let v3 = this.v3.toVec3();
+
+      let a = v2.subtract(v1);
+      let b = v3.subtract(v2);
       return a.cross(b).normalize();
    }
 }

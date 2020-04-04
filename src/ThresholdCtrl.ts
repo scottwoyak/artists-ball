@@ -1,6 +1,6 @@
 import { PlanesApp } from "./PlanesApp";
 import { toRad, toDeg, clamp, isMobile } from "./Globals";
-import { glVec2 } from "./glVec";
+import { Vec2 } from "./Vec";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { Profiler } from "./Profiler";
 
@@ -19,13 +19,13 @@ export class ThresholdCtrl {
    private canvas: HTMLCanvasElement;
    private hiddenCanvas: HTMLCanvasElement;
    private app: PlanesApp;
-   private mouseOffset = new glVec2();
+   private mouseOffset = new Vec2();
    private hit = 0;
    private handler: PointerEventHandler;
 
-   private ballCenter: glVec2;
-   private p1: glVec2;
-   private p2: glVec2;
+   private ballCenter: Vec2;
+   private p1: Vec2;
+   private p2: Vec2;
 
    private onThreshold1Change: ThresholdChangeFunction;
    private onThreshold2Change: ThresholdChangeFunction;
@@ -59,35 +59,35 @@ export class ThresholdCtrl {
       parent.appendChild(this.hiddenCanvas);
 
       this.handler = new PointerEventHandler(this.canvas);
-      this.handler.onDown = (pos: glVec2) => this.onDown(pos);
-      this.handler.onDrag = (pos: glVec2, delta: glVec2) => this.onDrag(pos, delta);
+      this.handler.onDown = (pos: Vec2) => this.onDown(pos);
+      this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
    }
-   private onDown(pos: glVec2) {
+   private onDown(pos: Vec2) {
 
       this.hitTest(pos);
    }
 
-   private hitTest(pos: glVec2) {
+   private hitTest(pos: Vec2) {
       let d1 = this.p1.distance(pos);
       let d2 = this.p2.distance(pos);
 
       const HIT_RADIUS = NOMINAL_KNOB_RADIUS * (displaySize / NOMINAL_DISPLAY_SIZE);
       if (d1 < HIT_RADIUS && d1 <= d2) {
          this.hit = 1;
-         this.mouseOffset = new glVec2([this.p1.x - pos.x, this.p1.y - pos.y]);
+         this.mouseOffset = new Vec2([this.p1.x - pos.x, this.p1.y - pos.y]);
       }
       else if (d2 < HIT_RADIUS && d2 <= d1) {
          this.hit = 2;
-         this.mouseOffset = new glVec2([this.p2.x - pos.x, this.p2.y - pos.y]);
+         this.mouseOffset = new Vec2([this.p2.x - pos.x, this.p2.y - pos.y]);
       }
       else {
          this.hit = 0;
       }
    }
 
-   private onDrag(pos: glVec2, delta: glVec2) {
+   private onDrag(pos: Vec2, delta: Vec2) {
       if (this.hit > 0) {
-         let hitPt = new glVec2([pos.x + this.mouseOffset.x, pos.y + this.mouseOffset.y]);
+         let hitPt = new Vec2([pos.x + this.mouseOffset.x, pos.y + this.mouseOffset.y]);
          hitPt.x = Math.max(hitPt.x, this.ballCenter.x);
          hitPt.y = Math.min(hitPt.y, this.ballCenter.y);
          let radius = this.ballCenter.distance(hitPt);
@@ -114,7 +114,7 @@ export class ThresholdCtrl {
       ctx.drawImage(this.hiddenCanvas, 0, -textureSize / 2);
 
       ctx.resetTransform();
-      this.ballCenter = new glVec2([
+      this.ballCenter = new Vec2([
          displaySize * ballImageData.ballCenter.x,
          displaySize * (1 - ballImageData.ballCenter.y)
       ]);
@@ -152,11 +152,11 @@ export class ThresholdCtrl {
       ctx.stroke();
    }
 
-   private getPt(center: glVec2, threshold: number, radius: number): glVec2 {
+   private getPt(center: Vec2, threshold: number, radius: number): Vec2 {
 
       let oy = radius * Math.sin(toRad(90 - threshold));
       let ox = radius * Math.cos(toRad(90 - threshold));
 
-      return new glVec2([center.x + ox, center.y - oy]);
+      return new Vec2([center.x + ox, center.y - oy]);
    }
 }

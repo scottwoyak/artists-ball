@@ -1,6 +1,6 @@
 import { RenderMode } from "./PathTracerRenderer";
 import { glColor } from "./glColor";
-import { glVec3 } from "./glVec";
+import { Vec3 } from "./Vec";
 import { SphericalCoord } from "./SphericalCoord";
 
 /**
@@ -27,17 +27,17 @@ export interface IUniforms {
 
    uLightIntensity: number,
    uLightColor: glColor,
-   uLightPos: glVec3,
+   uLightPos: Vec3,
    uAmbientLightIntensity: number,
    uObjColor: glColor,
    uBallRadius: number,
-   uEye: glVec3,
+   uEye: Vec3,
    uTextureSize: number,
    uRandom: number,
-   uRay00: glVec3,
-   uRay01: glVec3,
-   uRay10: glVec3,
-   uRay11: glVec3,
+   uRay00: Vec3,
+   uRay01: Vec3,
+   uRay10: Vec3,
+   uRay11: Vec3,
    uSample: number,
 }
 
@@ -65,16 +65,16 @@ export let Uniforms: IUniforms = {
 
    uLightIntensity: 0.7,
    uLightColor: new glColor([1.0, 1.0, 1.0]),
-   uLightPos: new glVec3(new SphericalCoord(2, 60, 110).toXYZ()),
+   uLightPos: new Vec3(new SphericalCoord(2, 60, 110).toXYZ()),
    uAmbientLightIntensity: 0.3,
    uObjColor: new glColor([0.5, 0.5, 0.8]),
    uBallRadius: 0.5,
-   uEye: new glVec3([0, 0, 0]),
+   uEye: new Vec3([0, 0, 0]),
    uTextureSize: 256,
    uRandom: Math.random(),
-   uRay00: new glVec3([0, 0, 0]),
-   uRay01: new glVec3([0, 0, 0]),
-   uRay10: new glVec3([0, 0, 0]),
-   uRay11: new glVec3([0, 0, 0]),
+   uRay00: new Vec3([0, 0, 0]),
+   uRay01: new Vec3([0, 0, 0]),
+   uRay10: new Vec3([0, 0, 0]),
+   uRay11: new Vec3([0, 0, 0]),
    uSample: 0.0,
 }

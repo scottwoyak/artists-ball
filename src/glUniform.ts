@@ -1,6 +1,6 @@
-import { glVec3 } from "./glVec";
+import { Vec3 } from "./Vec";
 import { glColor } from "./glColor";
-import { glMat4 } from "./glMat";
+import { Mat4 } from "./Mat";
 
 /**
  * Utility class for setting uniform values in a shader
@@ -36,19 +36,19 @@ export class glUniform {
     * @param value The value
     * @param int If true and the value is a number, it is treated as an integer
     */
-   public set(name: string, value: number | glVec3 | glColor | glMat4, int: boolean = false) {
+   public set(name: string, value: number | Vec3 | glColor | Mat4, int: boolean = false) {
 
       let gl = this.gl;
 
       let loc = gl.getUniformLocation(this.program, name);
       if (loc) {
-         if (value instanceof glVec3) {
+         if (value instanceof Vec3) {
             gl.uniform3fv(loc, new Float32Array(value.values));
          }
          else if (value instanceof glColor) {
             gl.uniform3fv(loc, new Float32Array([value.r, value.g, value.b]));
          }
-         else if (value instanceof glMat4) {
+         else if (value instanceof Mat4) {
             gl.uniformMatrix4fv(loc, false, new Float32Array(value.values));
          }
          else if (name === "uMode") {

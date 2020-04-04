@@ -1,5 +1,5 @@
 import { IndexedTriangle } from "./IndexedTriangle";
-import { glVec3 } from "./glVec";
+import { Vec3 } from "./Vec";
 
 const MAX = 1000; // INFINITY in our rendering world
 
@@ -15,12 +15,12 @@ export class Volume {
    /**
     * Bounding box minimum
     */
-   public boxMin = new glVec3([MAX, MAX, MAX]);
+   public boxMin = new Vec3([MAX, MAX, MAX]);
 
    /**
     * Bounding box maximum
     */
-   public boxMax = new glVec3([-MAX, -MAX, -MAX]);
+   public boxMax = new Vec3([-MAX, -MAX, -MAX]);
 
    /**
     * Stores a triangle and updates the bounding box

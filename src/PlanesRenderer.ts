@@ -1,5 +1,5 @@
-import { glMat4 } from './glMat';
-import { glVec3, glVec2 } from './glVec';
+import { Mat4 } from './Mat';
+import { Vec3, Vec2 } from './Vec';
 import vertexSource from './shaders/PlanesVertex.glsl';
 import fragmentSource from './shaders/PlanesFragment.glsl';
 import { clamp, mix, toRad, toDeg } from './Globals';
@@ -18,7 +18,7 @@ import { glClipSpace } from './glClipSpace';
 
 export class BallImageData {
    public image: ImageData;
-   public ballCenter: glVec2;
+   public ballCenter: Vec2;
    public ballRadius: number;
 }
 
@@ -36,9 +36,9 @@ export class PlanesRenderer {
 
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private program: WebGLProgram;
-   private view = new glMat4();
-   private lightView = new glMat4();
-   private projection = new glMat4();
+   private view = new Mat4();
+   private lightView = new Mat4();
+   private projection = new Mat4();
 
    private uThreshold1 = DEFAULT_THRESHOLD1;
    private uThreshold2 = DEFAULT_THRESHOLD2;
@@ -61,7 +61,7 @@ export class PlanesRenderer {
    private shadowFrameBuffer: glTextureFrameBuffer;
    private textureFrameBuffer: glTextureFrameBuffer;
 
-   public uLightDirection = new glVec3(INITIAL_LIGHT_DIRECTION);
+   public uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
 
    public ballColor = new glColor([1, 1, 1]);
    public readonly yellow = new glColor([1.0, 0.9, 0.7]);
@@ -69,7 +69,7 @@ export class PlanesRenderer {
    public blackColor = new htmlColor([0, 0, 0]);
 
    private zoomFactor: number = 1;
-   private translation = new glVec2([0, 0]);
+   private translation = new Vec2([0, 0]);
    public showShadowMap = false;
    public showMiniView = true;
 
@@ -84,8 +84,8 @@ export class PlanesRenderer {
 
       this.program = glCompiler.compile(gl, vertexSource, fragmentSource);
 
-      let tBall = new TriangleSphere(100, BALL_RADIUS, new glVec3([0, 0, 0]));
-      tBall.computeNormals(NormalType.Smooth);
+      let tBall = new TriangleSphere(50, BALL_RADIUS, new Vec3([0, 0, 0]));
+      tBall.optimize(NormalType.Smooth);
       this.ball = new glObject(gl, tBall, this.program);
 
       let tArrow = new TriangleArrow();
@@ -100,16 +100,16 @@ export class PlanesRenderer {
       let ar = gl.canvas.width / gl.canvas.height;
 
       if (ar > 1) {
-         return new glClipSpace(new glVec3([-ar, -1, -100]), new glVec3([ar, 1, 100]));
+         return new glClipSpace(new Vec3([-ar, -1, -100]), new Vec3([ar, 1, 100]));
       }
       else {
-         return new glClipSpace(new glVec3([-1, -1 / ar, -100]), new glVec3([1, 1 / ar, 100]));
+         return new glClipSpace(new Vec3([-1, -1 / ar, -100]), new Vec3([1, 1 / ar, 100]));
       }
    }
 
    public resize() {
       let clipSpace = this.getClipSpace();
-      this.projection = glMat4.makeOrtho(
+      this.projection = Mat4.makeOrtho(
          clipSpace.left,
          clipSpace.right,
          clipSpace.bottom,
@@ -131,7 +131,7 @@ export class PlanesRenderer {
       this.zoomFactor *= zoom;
    }
 
-   public translateView(delta: glVec2) {
+   public translateView(delta: Vec2) {
       this.translation.x += delta.x;
       this.translation.y += delta.y;
    }
@@ -209,14 +209,14 @@ export class PlanesRenderer {
       this.obj = new glObject(this.gl, tObj, this.program);
 
       let center = tObj.center;
-      this.obj.translate(new glVec3([-center.x, -center.y, -center.z]));
+      this.obj.translate(new Vec3([-center.x, -center.y, -center.z]));
       this.obj.scale(2.0 / Math.sqrt(tObj.width * tObj.width + tObj.height * tObj.height + tObj.depth * tObj.depth));
 
       // reset the view and the light
-      this.view = glMat4.identity();
+      this.view = Mat4.identity();
       this.zoomFactor = 1;
-      this.translation = new glVec2([0, 0]);
-      this.uLightDirection = new glVec3([1.0, -1.0, 1.5]);
+      this.translation = new Vec2([0, 0]);
+      this.uLightDirection = new Vec3([1.0, -1.0, 1.5]);
    }
 
    public render(): void {
@@ -285,16 +285,16 @@ export class PlanesRenderer {
       uni.seti('uUseThresholds', 1);
 
       // shoot the light straight down
-      uni.set('uLightDirection', new glVec3([0, -1, 0]));
+      uni.set('uLightDirection', new Vec3([0, -1, 0]));
 
       // don't cast shadows
       uni.seti('uUseShadows', 0);
 
-      uni.set('view', new glMat4());
+      uni.set('view', new Mat4());
 
       // move the ball to the lower left and partially offscreen
       const scale = 1.75;
-      const offset = new glVec3([-0.6, -0.6, 0]);
+      const offset = new Vec3([-0.6, -0.6, 0]);
       this.ball.clearTransforms();
       this.ball.scale(scale);
       this.ball.translate(offset);
@@ -304,13 +304,13 @@ export class PlanesRenderer {
       this.ball.clearTransforms();
 
       // draw the arrow
-      uni.set('uLightDirection', new glVec3([1, -0.5, 0.5]));
+      uni.set('uLightDirection', new Vec3([1, -0.5, 0.5]));
       uni.set('uUseThresholds', 0, true);
 
       // first reset things so that we're looking down the z-axis
       this.arrow.clearTransforms();
       this.arrow.scale(1.25)
-      this.arrow.translate(new glVec3([offset.x, offset.y + scale * BALL_RADIUS + 0.1, 0.0]));
+      this.arrow.translate(new Vec3([offset.x, offset.y + scale * BALL_RADIUS + 0.1, 0.0]));
 
       uni.set('uWhiteColor', new glColor([1.0, 1.0, 0.5]));
       uni.set('uBlackColor', htmlColor.black.toGlColor());
@@ -326,7 +326,7 @@ export class PlanesRenderer {
 
       // convert from [-1,1] drawing space to [0,1]
       data.ballRadius = scale * BALL_RADIUS;
-      data.ballCenter = new glVec2([offset.x, offset.y]);
+      data.ballCenter = new Vec2([offset.x, offset.y]);
       data.ballRadius /= 2;
       data.ballCenter.x = 0.5 * (data.ballCenter.x + 1);
       data.ballCenter.y = 0.5 * (data.ballCenter.y + 1);
@@ -347,9 +347,9 @@ export class PlanesRenderer {
 
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
-      let center = new glVec3([0, 0, 0]);
-      let up = new glVec3([0, 1, 0]);
-      let mat = glMat4.makeLookAt(this.uLightDirection, center, up);
+      let center = new Vec3([0, 0, 0]);
+      let up = new Vec3([0, 1, 0]);
+      let mat = Mat4.makeLookAt(this.uLightDirection, center, up);
       mat.set(0, 3, 0);
       mat.set(1, 3, 0);
       mat.set(2, 3, 0);
@@ -359,7 +359,7 @@ export class PlanesRenderer {
 
       // change the view matrix so that our view is from the light
       uni.set('view', this.lightView.transpose());
-      uni.set('projection', glMat4.identity());
+      uni.set('projection', Mat4.identity());
 
       // don't try to use the shadow texture while we're creating it
       uni.seti('uUseShadows', 0);
@@ -387,21 +387,21 @@ export class PlanesRenderer {
          gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
          // reset the view matrix
-         this.view = new glMat4();
+         this.view = new Mat4();
          this.view.scale(this.zoomFactor);
-         this.view.translate(new glVec3([this.translation.x, this.translation.y, 0]));
+         this.view.translate(new Vec3([this.translation.x, this.translation.y, 0]));
 
          // draw the main object
          let uni = this.setStdUniforms();
          this.obj.draw();
 
+         gl.clear(gl.DEPTH_BUFFER_BIT);
          if (this.showMiniView) {
             // draw the object in the upper right at a reduced size and opposite banding
-            gl.clear(gl.DEPTH_BUFFER_BIT);
-            this.view = new glMat4();
+            this.view = new Mat4();
             this.view.scale(this.miniSize);
             let clipSpace = this.getClipSpace();
-            this.view.translate(new glVec3([clipSpace.max.x - this.miniSize, clipSpace.max.x - this.miniSize, 0]));
+            this.view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.x - this.miniSize, 0]));
             uni.set('view', this.view.transpose());
             uni.set('uUseThresholds', this.uUseThresholds ? 0 : 1, true);
             this.obj.draw();
@@ -421,17 +421,17 @@ export class PlanesRenderer {
       // stop using the shadowmap
       uni.seti('uUseShadows', 0);
 
-      this.view = new glMat4();
+      this.view = new Mat4();
       this.view.scale(this.miniSize);
       let clipSpace = this.getClipSpace();
-      this.view.translate(new glVec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
+      this.view.translate(new Vec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
       uni.set('view', this.view.transpose());
       uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
       uni.set('uWhiteColor', this.ballColor);
       uni.set('uBlackColor', htmlColor.black.toGlColor());
       this.ball.draw();
 
-      uni.set('uLightDirection', new glVec3([1, -0.5, 0.5]));
+      uni.set('uLightDirection', new Vec3([1, -0.5, 0.5]));
       uni.set('uUseThresholds', 0, true);
 
       // back out angles as if looking down the z-axis
@@ -446,7 +446,7 @@ export class PlanesRenderer {
 
       // first reset things so that we're looking down the z-axis
       this.arrow.clearTransforms();
-      this.arrow.translate(new glVec3([0.0, 0.55, 0.0]));
+      this.arrow.translate(new Vec3([0.0, 0.55, 0.0]));
       this.arrow.rotX(toRad(90));
 
       // rotate to match the light source
@@ -480,10 +480,5 @@ export class PlanesRenderer {
       }
 
       return false;
-   }
-
-   public optimize(normalType: NormalType) {
-      this.obj.optimize(normalType);
-      this.render();
    }
 }

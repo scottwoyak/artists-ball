@@ -1,8 +1,8 @@
 import { htmlColor } from "./htmlColor";
 import { toRad, isMobile } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
-import { glMat4 } from "./glMat";
-import { glVec4, glVec2 } from "./glVec";
+import { Mat4 } from "./Mat";
+import { Vec4, Vec2 } from "./Vec";
 import { NormalType } from "./TriangleObj";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { saveAs } from 'file-saver';
@@ -83,27 +83,26 @@ export class ViewerApp {
       this.renderer.showMiniView = false;
 
       this.handler = new PointerEventHandler(canvas);
-      this.handler.onDrag = (pos: glVec2, delta: glVec2) => this.onDrag(pos, delta);
-      this.handler.onClick = (pos: glVec2) => this.onClick(pos);
+      this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
+      this.handler.onClick = (pos: Vec2) => this.onClick(pos);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
       this.handler.onRotate = (angle: number, delta: number) => this.onRotate(angle, delta);
-      this.handler.onTranslate = (delta: glVec2) => this.onTranslate(delta);
+      this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
 
       document.onkeypress = (event: KeyboardEvent) => {
          switch (event.key) {
             case 'i':
                alert(
                   this.renderer.tObj.name + '\n' +
-                  'Num Triangles: ' + this.renderer.tObj.triangles.length.toLocaleString() + '\n' +
-                  'Num Vertices: ' + this.renderer.tObj.vertices.length.toLocaleString() + '\n' +
-                  'Num Normals: ' + this.renderer.tObj.normals.length.toLocaleString() + '\n'
+                  'Num Triangles: ' + this.renderer.tObj.numTriangles.toLocaleString() + '\n' +
+                  'Num Vertices: ' + this.renderer.tObj.numVertices.toLocaleString() + '\n'
                );
             case 'o':
-               this.renderer.optimize(NormalType.Smooth);
+               this.optimize(NormalType.Smooth);
                break;
 
             case 'p':
-               this.renderer.optimize(NormalType.Flat);
+               this.optimize(NormalType.Flat);
                break;
 
             case 's':
@@ -125,6 +124,25 @@ export class ViewerApp {
          this.renderer.resize();
          this.dirty = true;
       }
+   }
+
+   private optimize(normalType: NormalType) {
+
+      let obj = this.renderer.obj;
+      let oldNumVertices = obj.tObj.numVertices;
+
+      this.renderer.obj.optimize(normalType);
+
+      let newNumVertices = obj.tObj.numVertices;
+
+      let msg = 'Optimized .OBJ content copied to clipboard\n\n';
+      msg += 'Num Triangles: ' + obj.tObj.numTriangles + '\n';
+      msg += 'Num Vertices: ' + oldNumVertices + ' to ' + newNumVertices + ', ' + (100 * newNumVertices / oldNumVertices).toFixed() + ' %\n';
+
+      let str = obj.tObj.toObjString(6);
+      navigator.clipboard.writeText(str).then(() => { alert(msg) });
+
+      this.dirty = true;
    }
 
    private updateSize() {
@@ -220,7 +238,7 @@ export class ViewerApp {
       this.dirty = true;
    }
 
-   private onDrag(pos: glVec2, delta: glVec2) {
+   private onDrag(pos: Vec2, delta: Vec2) {
       this.dirty = true;
 
       if (this.pointerMode === PointerMode.View) {
@@ -229,9 +247,9 @@ export class ViewerApp {
       }
       else if (this.pointerMode === PointerMode.Light) {
 
-         let matY = glMat4.fromRotY(toRad(delta.x));
-         let matX = glMat4.fromRotX(toRad(delta.y));
-         let vec = new glVec4([
+         let matY = Mat4.fromRotY(toRad(delta.x));
+         let matX = Mat4.fromRotX(toRad(delta.y));
+         let vec = new Vec4([
             this.renderer.uLightDirection.x,
             this.renderer.uLightDirection.y,
             this.renderer.uLightDirection.z,
@@ -254,7 +272,7 @@ export class ViewerApp {
     * @param y The y coordinate.
     * @returns true if a hit on one of the views occurs.
     */
-   private onClick(pos: glVec2): boolean {
+   private onClick(pos: Vec2): boolean {
 
       let size = this.gl.canvas.width;
 
@@ -277,7 +295,7 @@ export class ViewerApp {
       this.dirty = true;
    }
 
-   private onTranslate(delta: glVec2) {
+   private onTranslate(delta: Vec2) {
 
       // TODO how can this scaling be detected from javascript?
       let factor = 1;
@@ -286,7 +304,7 @@ export class ViewerApp {
       }
 
       let clipSpace = this.renderer.getClipSpace();
-      this.renderer.translateView(new glVec2([
+      this.renderer.translateView(new Vec2([
          factor * clipSpace.width * delta.x / this.gl.canvas.width,
          factor * clipSpace.height * delta.y / this.gl.canvas.height
       ]));

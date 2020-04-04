@@ -45,8 +45,7 @@ async function loadFile(file: string) {
       worker.postMessage(data, [
          data.vertices.buffer,
          data.normals.buffer,
-         data.vIndices.buffer,
-         data.nIndices.buffer
+         data.indices.buffer,
       ]);
    }
    catch (err) {

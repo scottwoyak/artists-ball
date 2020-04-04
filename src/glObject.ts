@@ -1,17 +1,19 @@
 import { TriangleObj, NormalType } from "./TriangleObj";
-import { glBuffer } from "./glBuffer";
-import { glMat4 } from "./glMat";
-import { glVec3 } from "./glVec";
+import { glAttributeBuffer } from "./glAttributeBuffer";
+import { Mat4 } from "./Mat";
+import { Vec3 } from "./Vec";
 import { glUniform } from "./glUniform";
 import { Profiler } from "./Profiler";
+import { glIndexBuffer } from "./glIndexBuffer";
 
 export class glObject {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    public readonly tObj: TriangleObj;
    private program: WebGLProgram;
-   private vertexBuffer: glBuffer;
-   private normalBuffer: glBuffer;
-   private model = new glMat4();
+   private vertexBuffer: glAttributeBuffer;
+   private normalBuffer: glAttributeBuffer;
+   private indexBuffer: glIndexBuffer;
+   private model = new Mat4();
 
    public get name(): string {
       return this.tObj.name;
@@ -26,12 +28,15 @@ export class glObject {
       this.gl = glCtx;
       let gl = this.gl;
 
+      var ext = gl.getExtension('OES_element_index_uint');
+
       this.tObj = tObj;
       this.program = program;
 
       // create buffers (and associated attributes)
-      this.vertexBuffer = new glBuffer(gl, program, 'aVertex');
-      this.normalBuffer = new glBuffer(gl, program, 'aNormal');
+      this.vertexBuffer = new glAttributeBuffer(gl, program, 'aVertex');
+      this.normalBuffer = new glAttributeBuffer(gl, program, 'aNormal');
+      this.indexBuffer = new glIndexBuffer(gl);
 
       this.uploadTriangles();
    }
@@ -39,6 +44,7 @@ export class glObject {
    public delete() {
       this.vertexBuffer.delete();
       this.normalBuffer.delete();
+      this.indexBuffer.delete();
    }
 
    public rotX(angle: number) {
@@ -53,40 +59,18 @@ export class glObject {
    public scale(scale: number) {
       this.model.scale(scale);
    }
-   public translate(offset: glVec3) {
+   public translate(offset: Vec3) {
       this.model.translate(offset);
    }
    public clearTransforms() {
-      this.model = new glMat4();
-   }
-
-   private pushVec(array: number[], vec: glVec3) {
-      array.push(vec.x);
-      array.push(vec.y);
-      array.push(vec.z);
+      this.model = new Mat4();
    }
 
    public uploadTriangles() {
 
-      let p = new Profiler();
-      // convert the triangles into arrays that can be uploaded
-      let vertices: number[] = [];
-      let normals: number[] = [];
-      for (let i = 0; i < this.tObj.triangles.length; i++) {
-         let tri = this.tObj.triangles[i];
-         this.pushVec(vertices, tri.v0);
-         this.pushVec(vertices, tri.v1);
-         this.pushVec(vertices, tri.v2);
-
-         this.pushVec(normals, tri.n0);
-         this.pushVec(normals, tri.n1);
-         this.pushVec(normals, tri.n2);
-      }
-      p.log('to glVec[]');
-
-      this.vertexBuffer.upload(vertices);
-      this.normalBuffer.upload(normals);
-      p.log('upload');
+      this.vertexBuffer.upload(this.tObj.vertices);
+      this.normalBuffer.upload(this.tObj.normals);
+      this.indexBuffer.upload(this.tObj.indices);
    }
 
    public draw() {
@@ -96,8 +80,10 @@ export class glObject {
       uni.set('model', this.model.transpose());
 
       this.vertexBuffer.bind();
+      this.indexBuffer.bind();
       this.normalBuffer.bind();
-      gl.drawArrays(gl.TRIANGLES, 0, this.tObj.triangles.length * 3);
+
+      gl.drawElements(gl.TRIANGLES, 3 * this.tObj.numTriangles, gl.UNSIGNED_INT, 0);
    }
 
    public optimize(normalType: NormalType) {
