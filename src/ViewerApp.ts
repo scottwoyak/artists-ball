@@ -274,15 +274,24 @@ export class ViewerApp {
     */
    private onClick(pos: Vec2): boolean {
 
-      let size = this.gl.canvas.width;
+      let canvasWidth = this.gl.canvas.width;
+      let canvasHeight = this.gl.canvas.height;
+      let clipSpace = this.renderer.getClipSpace();
+      let miniWidth = this.renderer.miniSize * (2 / clipSpace.width) * canvasWidth;
+      let miniHeight = this.renderer.miniSize * (2 / clipSpace.height) * canvasHeight;
 
-      // TODO get the size of the area from the renderer
-      if (pos.x < size / 5 && pos.y < size / 5) {
+      if (pos.x < miniWidth && pos.y < miniHeight) {
          this.toggleMode();
          return true;
       }
+      else if (pos.x > canvasWidth - miniWidth && pos.y < miniWidth) {
+         this.renderer.resetView();
+         this.dirty = true;
+         return true;
+      }
 
-      return this.renderer.click(pos.x / size, 1 - (pos.y / size));
+      // not handled
+      return false;
    }
 
    private onScale(scale: number, change: number) {

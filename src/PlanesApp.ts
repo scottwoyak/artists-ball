@@ -4,10 +4,8 @@ import { toRad, isMobile } from "./Globals";
 import { PlanesRenderer } from "./PlanesRenderer";
 import { Mat4 } from "./Mat";
 import { Vec4, Vec2 } from "./Vec";
-import { NormalType, TriangleObj } from "./TriangleObj";
 import { ThresholdCtrl } from "./ThresholdCtrl";
 import { PointerEventHandler } from "./PointerEventHandler";
-import { saveAs } from 'file-saver';
 import { createModelsDropDownMenu } from "./ModelsDropDownMenu";
 import { ModelLoader } from "./ModelLoader";
 
@@ -99,6 +97,8 @@ export class PlanesApp {
       this.renderer = new PlanesRenderer(this.gl);
       this.renderer.whiteColor = WHITE_COLOR;
       this.renderer.blackColor = BLACK_COLOR;
+      this.renderer.useThresholds = false;
+      this.renderer.miniViewUseThresholds = true;
 
       this.handler = new PointerEventHandler(canvas);
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
@@ -280,15 +280,25 @@ export class PlanesApp {
     */
    private onClick(pos: Vec2): boolean {
 
-      let size = this.gl.canvas.width;
+      let canvasWidth = this.gl.canvas.width;
+      let canvasHeight = this.gl.canvas.height;
+      let clipSpace = this.renderer.getClipSpace();
+      let miniWidth = this.renderer.miniSize * (2 / clipSpace.width) * canvasWidth;
+      let miniHeight = this.renderer.miniSize * (2 / clipSpace.height) * canvasHeight;
 
-      // TODO get the size of the area from the renderer
-      if (pos.x < size / 5 && pos.y < size / 5) {
+      if (pos.x < miniWidth && pos.y < miniHeight) {
          this.toggleMode();
          return true;
       }
+      else if (pos.x > canvasWidth - miniWidth && pos.y < miniWidth) {
+         this.renderer.useThresholds = !this.renderer.useThresholds;
+         this.renderer.miniViewUseThresholds = !this.renderer.miniViewUseThresholds;
+         this.dirty = true;
+         return true;
+      }
 
-      return this.renderer.click(pos.x / size, 1 - (pos.y / size));
+      // not handled
+      return false;
    }
 
    private onScale(scale: number, change: number) {

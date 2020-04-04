@@ -50,9 +50,10 @@ export class PlanesRenderer {
    private uShadow: number = 0.2;
 
    // size of the smaller view
-   private readonly miniSize = 0.2;
+   public readonly miniSize = 0.2;
 
-   private uUseThresholds = false;
+   public useThresholds = false;
+   public miniViewUseThresholds = true;
 
    private ball: glObject;
    private arrow: glObject;
@@ -213,10 +214,14 @@ export class PlanesRenderer {
       this.obj.scale(2.0 / Math.sqrt(tObj.width * tObj.width + tObj.height * tObj.height + tObj.depth * tObj.depth));
 
       // reset the view and the light
+      this.resetView();
+      this.uLightDirection = new Vec3([1.0, -1.0, 1.5]);
+   }
+
+   public resetView() {
       this.view = Mat4.identity();
       this.zoomFactor = 1;
       this.translation = new Vec2([0, 0]);
-      this.uLightDirection = new Vec3([1.0, -1.0, 1.5]);
    }
 
    public render(): void {
@@ -238,7 +243,7 @@ export class PlanesRenderer {
       uni.set('uLightDirection', this.uLightDirection);
       uni.seti('uUseShadows', 1);
 
-      uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
+      uni.set('uUseThresholds', this.useThresholds ? 1 : 0, true);
       uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
       uni.set('uThreshold2', 1 - Math.sin(toRad(this.threshold2 + 90)));
 
@@ -305,7 +310,7 @@ export class PlanesRenderer {
 
       // draw the arrow
       uni.set('uLightDirection', new Vec3([1, -0.5, 0.5]));
-      uni.set('uUseThresholds', 0, true);
+      uni.seti('uUseThresholds', 0);
 
       // first reset things so that we're looking down the z-axis
       this.arrow.clearTransforms();
@@ -396,22 +401,26 @@ export class PlanesRenderer {
          this.obj.draw();
 
          gl.clear(gl.DEPTH_BUFFER_BIT);
-         if (this.showMiniView) {
-            // draw the object in the upper right at a reduced size and opposite banding
-            this.view = new Mat4();
-            this.view.scale(this.miniSize);
-            let clipSpace = this.getClipSpace();
-            this.view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.x - this.miniSize, 0]));
-            uni.set('view', this.view.transpose());
-            uni.set('uUseThresholds', this.uUseThresholds ? 0 : 1, true);
-            this.obj.draw();
-         }
 
-         // draw the ball
+         this.drawMiniView();
          this.drawBall();
 
          gl.bindTexture(gl.TEXTURE_2D, null);
       }
+   }
+
+   private drawMiniView() {
+
+      let uni = this.setStdUniforms();
+
+      // draw the object in the upper right at a reduced size
+      this.view = new Mat4();
+      this.view.scale(this.miniSize);
+      let clipSpace = this.getClipSpace();
+      this.view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.y - this.miniSize, 0]));
+      uni.set('view', this.view.transpose());
+      uni.set('uUseThresholds', this.miniViewUseThresholds ? 0 : 1, true);
+      this.obj.draw();
    }
 
    private drawBall() {
@@ -426,7 +435,7 @@ export class PlanesRenderer {
       let clipSpace = this.getClipSpace();
       this.view.translate(new Vec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
       uni.set('view', this.view.transpose());
-      uni.set('uUseThresholds', this.uUseThresholds ? 1 : 0, true);
+      uni.set('uUseThresholds', this.useThresholds ? 1 : 0, true);
       uni.set('uWhiteColor', this.ballColor);
       uni.set('uBlackColor', htmlColor.black.toGlColor());
       this.ball.draw();
@@ -473,7 +482,7 @@ export class PlanesRenderer {
       // TODO adjust for aspect ratio
       if (this.showMiniView) {
          if (x > (1 - this.miniSize) && y > (1 - this.miniSize)) {
-            this.uUseThresholds = !this.uUseThresholds;
+            this.useThresholds = !this.useThresholds;
             this.render();
             return true;
          }
