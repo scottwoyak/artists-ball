@@ -247,20 +247,25 @@ export class Mat4 {
       ]);
    }
 
-   public rotX(angle: number) {
+   public rotX(angle: number): Mat4 {
       this.values = Mat4.fromRotX(angle).multM(this).values;
+      return this;
    }
-   public rotY(angle: number) {
+   public rotY(angle: number): Mat4 {
       this.values = Mat4.fromRotY(angle).multM(this).values;
+      return this;
    }
-   public rotZ(angle: number) {
+   public rotZ(angle: number): Mat4 {
       this.values = Mat4.fromRotZ(angle).multM(this).values;
+      return this;
    }
-   public translate(offset: Vec3) {
+   public translate(offset: Vec3): Mat4 {
       this.values = Mat4.fromTranslation(offset).multM(this).values;
+      return this;
    }
-   public scale(scale: number) {
+   public scale(scale: number): Mat4 {
       this.values = Mat4.fromScale(scale).multM(this).values;
+      return this;
    }
 
    /**
