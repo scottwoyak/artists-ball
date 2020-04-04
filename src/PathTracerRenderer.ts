@@ -157,7 +157,7 @@ export class PathTracerRenderer {
             toTextureFragmentSource
                .replace('<VERSION>', '#version 300 es')
                .replace('NOTHING', 'USE_TRIANGLES')
-               .replace('<NUM_VERTICES>', tObj.vertices.length.toString())
+               .replace('<NUM_VERTICES>', tObj.numVertices.toString())
                .replace('<NUM_VOLUMES>', tObj.volumes.length.toString())
                .replace('<NUM_TRIANGLES>', tObj.numTriangles.toString())
          );
@@ -174,6 +174,7 @@ export class PathTracerRenderer {
                .replace('<VERSION>', '')
          );
       }
+
       this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
       gl.enableVertexAttribArray(this.toTextureVertexAttribute);
       p.log('compile');
@@ -193,8 +194,8 @@ export class PathTracerRenderer {
       let vBlock = new glUniformBlock(gl, this.toTextureProgram, 'MyVerticesBlock', blockBinding);
 
       // put the data into a Float32Array for uploading
-      let vData = new Float32Array(tObj.vertices.length / 3 * 4);
-      for (let i = 0; i < tObj.vertices.length / 3; i++) {
+      let vData = new Float32Array(tObj.numVertices * 4);
+      for (let i = 0; i < tObj.numVertices; i++) {
          vData[4 * i + 0] = tObj.vertices[3 * i + 0];
          vData[4 * i + 1] = tObj.vertices[3 * i + 1];
          vData[4 * i + 2] = tObj.vertices[3 * i + 2];

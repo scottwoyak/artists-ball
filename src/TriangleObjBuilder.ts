@@ -2,11 +2,12 @@ import { TriangleObj } from "./TriangleObj";
 import { Vec3 } from "./Vec";
 
 export class TriangleObjBuilder extends TriangleObj {
-   constructor(name: string) {
+   constructor(name?: string) {
       super(name);
    }
 
-   protected addArrow() {
+   // TODO pass in args for construction
+   public addArrow() {
       const NUM_STEPS = 30;
       const TOTAL_LENGTH = 0.4;
       const ARROW_RADIUS = 0.15;
@@ -48,7 +49,7 @@ export class TriangleObjBuilder extends TriangleObj {
       }
    }
 
-   protected addSphere(numSteps: number, radius: number, center: Vec3) {
+   public addSphere(numSteps: number, radius: number, center: Vec3) {
 
       // create an array of vertices
       let vertices: Vec3[] = [];
@@ -111,5 +112,45 @@ export class TriangleObjBuilder extends TriangleObj {
             }
          }
       }
+   }
+
+   createFace(vertices: Vec3[], i1: number, i2: number, i3: number, i4: number) {
+
+      let v1 = vertices[i1];
+      let v2 = vertices[i2];
+      let v3 = vertices[i3];
+      let v4 = vertices[i4];
+
+      this.pushTriangle(v1, v2, v3);
+      this.pushTriangle(v2, v4, v3);
+   }
+
+   addCube(size: number, center: Vec3) {
+
+      let vertices: Vec3[] = [];
+      vertices.push(new Vec3([center.x - size / 2, center.y - size / 2, center.z - size / 2]));
+      vertices.push(new Vec3([center.x - size / 2, center.y - size / 2, center.z + size / 2]));
+      vertices.push(new Vec3([center.x - size / 2, center.y + size / 2, center.z - size / 2]));
+      vertices.push(new Vec3([center.x - size / 2, center.y + size / 2, center.z + size / 2]));
+      vertices.push(new Vec3([center.x + size / 2, center.y - size / 2, center.z - size / 2]));
+      vertices.push(new Vec3([center.x + size / 2, center.y - size / 2, center.z + size / 2]));
+      vertices.push(new Vec3([center.x + size / 2, center.y + size / 2, center.z - size / 2]));
+      vertices.push(new Vec3([center.x + size / 2, center.y + size / 2, center.z + size / 2]));
+
+      this.createFace(vertices, 0, 1, 2, 3);
+      this.createFace(vertices, 4, 6, 5, 7);
+
+      this.createFace(vertices, 0, 4, 1, 5);
+      this.createFace(vertices, 2, 3, 6, 7);
+
+      this.createFace(vertices, 0, 2, 4, 6);
+      this.createFace(vertices, 1, 5, 3, 7);
+
+      /*
+      this.volumes.push(new Volume());
+      this.volumes[0].boxMin = this.boxMin.clone();
+      this.volumes[0].boxMax = this.boxMax.clone();
+      this.volumes[0].triangles = this.triangles;
+      */
    }
 }

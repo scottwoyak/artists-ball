@@ -26,14 +26,5 @@ export class glUniformBlock {
       gl2.bindBuffer(gl2.UNIFORM_BUFFER, this.blockBuffer);
       gl2.bufferData(gl2.UNIFORM_BUFFER, data, gl2.STATIC_DRAW);
       gl2.bindBuffer(gl2.UNIFORM_BUFFER, null);
-
-      /*
-      var uniformBlockBuffer = gl2.createBuffer();
-      gl2.bindBuffer(gl2.UNIFORM_BUFFER, uniformBlockBuffer);
-      gl2.bufferData(gl2.UNIFORM_BUFFER, triangleData, gl2.STATIC_DRAW);
-      gl2.bindBuffer(gl2.UNIFORM_BUFFER, null);
-      gl2.bindBufferBase(gl2.UNIFORM_BUFFER, 2, uniformBlockBuffer);
-      */
-
    }
 }

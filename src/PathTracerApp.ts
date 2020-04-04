@@ -8,9 +8,8 @@ import { htmlColor } from "./htmlColor";
 import { glColorWithTemperature } from "./glColorWithTemperature";
 import { clamp } from "./Globals";
 import { TriangleObj } from "./TriangleObj";
-import { TriangleSphere } from "./TriangleSphere";
-import { TriangleCube } from "./TriangleCube";
 import { TriangleObjFile } from "./TriangleObjFile";
+import { TriangleObjBuilder } from "./TriangleObjBuilder";
 
 let skinTones = [
    new htmlColor([240, 223, 214]),
@@ -124,7 +123,6 @@ export class PathTracerApp {
 
       this.loadModel(this.query).then((tObj: TriangleObj) => {
          this.renderer = new PathTracerRenderer(this.gl, tObj);
-         //this.renderer.setModel(tObj);
          requestAnimationFrame(() => this.tick());
       })
 
@@ -232,19 +230,22 @@ export class PathTracerApp {
    }
 
    private loadModel(query: string): Promise<TriangleObj> {
-      if (query && query.toLowerCase() === 'trianglesphere') {
+      if (query && query.toLowerCase() === 'sphere') {
          Uniforms.uBallRadius = 0;
          let radius = 0.5;
          let center = new Vec3([0, radius, 0]);
-         let tObj = new TriangleSphere(8, radius, center);
+         let tObj = new TriangleObjBuilder();
+         tObj.addSphere(8, radius, center);
          tObj.breakIntoVolumes();
          return Promise.resolve(tObj);
       }
-      else if (query && query.toLowerCase() === 'trianglecube') {
+      else if (query && query.toLowerCase() === 'cube') {
          Uniforms.uBallRadius = 0;
          let size = 0.8;
          let center = new Vec3([0, size / 2.0, 0]);
-         let tObj = new TriangleCube(size, center);
+         let tObj = new TriangleObjBuilder();
+         tObj.addCube(size, center);
+         tObj.breakIntoVolumes();
          return Promise.resolve(tObj);
       }
       else if (query && query.toLowerCase().endsWith('.obj')) {

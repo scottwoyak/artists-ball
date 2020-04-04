@@ -3,18 +3,17 @@ import { Vec3, Vec2 } from './Vec';
 import vertexSource from './shaders/PlanesVertex.glsl';
 import fragmentSource from './shaders/PlanesFragment.glsl';
 import { clamp, mix, toRad, toDeg } from './Globals';
-import { TriangleSphere } from './TriangleSphere';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
 import { TriangleObj, NormalType } from './TriangleObj';
 import { glObject } from './glObject';
-import { TriangleArrow } from './TriangleArrow';
 import { glColor } from './glColor';
 import { TextureRenderer } from './TextureRenderer';
 import { glTextureFrameBuffer, FrameBufferStyle } from './glTextureFrameBuffer';
 import { textureSize } from './ThresholdCtrl';
 import { htmlColor } from './htmlColor';
 import { glClipSpace } from './glClipSpace';
+import { TriangleObjBuilder } from './TriangleObjBuilder';
 
 export class BallImageData {
    public image: ImageData;
@@ -85,11 +84,13 @@ export class PlanesRenderer {
 
       this.program = glCompiler.compile(gl, vertexSource, fragmentSource);
 
-      let tBall = new TriangleSphere(50, BALL_RADIUS, new Vec3([0, 0, 0]));
+      let tBall = new TriangleObjBuilder();
+      tBall.addSphere(50, BALL_RADIUS, new Vec3([0, 0, 0]));
       tBall.optimize(NormalType.Smooth);
       this.ball = new glObject(gl, tBall, this.program);
 
-      let tArrow = new TriangleArrow();
+      let tArrow = new TriangleObjBuilder();
+      tArrow.addArrow();
       this.arrow = new glObject(gl, tArrow, this.program);
 
       this.resize();

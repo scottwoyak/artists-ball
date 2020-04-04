@@ -30,7 +30,7 @@ window.onload = function () {
       let app = new ViewerApp(query);
       document.body.appendChild(app.component());
    }
-   else {
+   else { // type === 'ball'
       let app = new PathTracerApp(query);
       document.body.appendChild(app.component());
    }
