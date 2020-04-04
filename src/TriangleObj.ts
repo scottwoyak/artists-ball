@@ -225,7 +225,7 @@ export class TriangleObj {
       this.boxMax.z = Math.max(this.boxMax.z, v.z);
    }
 
-   pushQuad(v1: IVec3, v2: IVec3, v3: IVec3, v4: IVec3) {
+   public pushQuad(v1: IVec3, v2: IVec3, v3: IVec3, v4: IVec3) {
 
       this.pushTriangle(v1, v2, v3);
       this.pushTriangle(v2, v4, v3);
@@ -234,7 +234,7 @@ export class TriangleObj {
    public pushTriangle(v1: IVec3, v2: IVec3, v3: IVec3) {
 
       // add indices
-      let i1 = this.vertices.length / 3;
+      let i1 = this.numVertices;
       let i2 = i1 + 1;
       let i3 = i1 + 2;
       this.indices.push(i1, i2, i3);
@@ -408,7 +408,7 @@ export class TriangleObj {
    public combine(tObj: TriangleObj) {
 
       // save the value for the first index of the combined objects
-      let startIndex = this.vertices.length;
+      let startIndex = this.numVertices;
 
       // add the other vertices and normals to ours
       this.vertices.push(...tObj.vertices);
