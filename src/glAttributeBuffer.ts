@@ -29,11 +29,13 @@ export class glAttributeBuffer {
       let gl = this.gl;
       this.bind();
 
-      if (values instanceof Float32Array === false) {
-         values = new Float32Array(values);
+      if (values instanceof Float32Array) {
+         gl.bufferData(gl.ARRAY_BUFFER, values, gl.STATIC_DRAW);
+      }
+      else {
+         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(values), gl.STATIC_DRAW);
       }
 
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(values), gl.STATIC_DRAW);
    }
 
    public bind() {

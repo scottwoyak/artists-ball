@@ -22,11 +22,13 @@ export class glIndexBuffer {
       let gl = this.gl;
       this.bind();
 
-      if (values instanceof Int32Array === false) {
-         values = new Int32Array(values);
+      if (values instanceof Int32Array) {
+         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, values, gl.STATIC_DRAW);
+      }
+      else {
+         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int32Array(values), gl.STATIC_DRAW);
       }
 
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int32Array(values), gl.STATIC_DRAW);
    }
 
    public bind() {
