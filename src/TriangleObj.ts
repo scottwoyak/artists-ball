@@ -225,6 +225,12 @@ export class TriangleObj {
       this.boxMax.z = Math.max(this.boxMax.z, v.z);
    }
 
+   pushQuad(v1: IVec3, v2: IVec3, v3: IVec3, v4: IVec3) {
+
+      this.pushTriangle(v1, v2, v3);
+      this.pushTriangle(v2, v4, v3);
+   }
+
    public pushTriangle(v1: IVec3, v2: IVec3, v3: IVec3) {
 
       // add indices

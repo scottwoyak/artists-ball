@@ -114,43 +114,24 @@ export class TriangleObjBuilder extends TriangleObj {
       }
    }
 
-   createFace(vertices: Vec3[], i1: number, i2: number, i3: number, i4: number) {
-
-      let v1 = vertices[i1];
-      let v2 = vertices[i2];
-      let v3 = vertices[i3];
-      let v4 = vertices[i4];
-
-      this.pushTriangle(v1, v2, v3);
-      this.pushTriangle(v2, v4, v3);
-   }
-
    addCube(size: number, center: Vec3) {
 
-      let vertices: Vec3[] = [];
-      vertices.push(new Vec3([center.x - size / 2, center.y - size / 2, center.z - size / 2]));
-      vertices.push(new Vec3([center.x - size / 2, center.y - size / 2, center.z + size / 2]));
-      vertices.push(new Vec3([center.x - size / 2, center.y + size / 2, center.z - size / 2]));
-      vertices.push(new Vec3([center.x - size / 2, center.y + size / 2, center.z + size / 2]));
-      vertices.push(new Vec3([center.x + size / 2, center.y - size / 2, center.z - size / 2]));
-      vertices.push(new Vec3([center.x + size / 2, center.y - size / 2, center.z + size / 2]));
-      vertices.push(new Vec3([center.x + size / 2, center.y + size / 2, center.z - size / 2]));
-      vertices.push(new Vec3([center.x + size / 2, center.y + size / 2, center.z + size / 2]));
+      let v1 = new Vec3([center.x - size / 2, center.y - size / 2, center.z - size / 2]);
+      let v2 = new Vec3([center.x - size / 2, center.y - size / 2, center.z + size / 2]);
+      let v3 = new Vec3([center.x - size / 2, center.y + size / 2, center.z - size / 2]);
+      let v4 = new Vec3([center.x - size / 2, center.y + size / 2, center.z + size / 2]);
+      let v5 = new Vec3([center.x + size / 2, center.y - size / 2, center.z - size / 2]);
+      let v6 = new Vec3([center.x + size / 2, center.y - size / 2, center.z + size / 2]);
+      let v7 = new Vec3([center.x + size / 2, center.y + size / 2, center.z - size / 2]);
+      let v8 = new Vec3([center.x + size / 2, center.y + size / 2, center.z + size / 2]);
 
-      this.createFace(vertices, 0, 1, 2, 3);
-      this.createFace(vertices, 4, 6, 5, 7);
+      this.pushQuad(v1, v2, v3, v4);
+      this.pushQuad(v5, v7, v6, v8);
 
-      this.createFace(vertices, 0, 4, 1, 5);
-      this.createFace(vertices, 2, 3, 6, 7);
+      this.pushQuad(v1, v5, v2, v6);
+      this.pushQuad(v3, v4, v7, v8);
 
-      this.createFace(vertices, 0, 2, 4, 6);
-      this.createFace(vertices, 1, 5, 3, 7);
-
-      /*
-      this.volumes.push(new Volume());
-      this.volumes[0].boxMin = this.boxMin.clone();
-      this.volumes[0].boxMax = this.boxMax.clone();
-      this.volumes[0].triangles = this.triangles;
-      */
+      this.pushQuad(v1, v3, v5, v7);
+      this.pushQuad(v2, v6, v4, v8);
    }
 }
