@@ -1,10 +1,9 @@
 import { TriangleObj, NormalType } from "./TriangleObj";
 import { glAttributeBuffer } from "./glAttributeBuffer";
-import { Mat4 } from "./Mat";
 import { Vec3 } from "./Vec";
 import { glUniform } from "./glUniform";
-import { Profiler } from "./Profiler";
 import { glIndexBuffer } from "./glIndexBuffer";
+import { XForm } from "./XForm";
 
 export class glObject {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -13,7 +12,7 @@ export class glObject {
    private vertexBuffer: glAttributeBuffer;
    private normalBuffer: glAttributeBuffer;
    private indexBuffer: glIndexBuffer;
-   private model = new Mat4();
+   public xForm = new XForm();
 
    public get name(): string {
       return this.tObj.name;
@@ -47,23 +46,27 @@ export class glObject {
       this.indexBuffer.delete();
    }
 
+   public snap() {
+      this.xForm.snap();
+   }
+
    public rotX(angle: number) {
-      this.model.rotX(angle);
+      this.xForm.rotX(angle);
    }
    public rotY(angle: number) {
-      this.model.rotY(angle);
+      this.xForm.rotY(angle);
    }
    public rotZ(angle: number) {
-      this.model.rotZ(angle);
+      this.xForm.rotZ(angle);
    }
    public scale(scale: number) {
-      this.model.scale(scale);
+      this.xForm.scale(scale);
    }
    public translate(offset: Vec3) {
-      this.model.translate(offset);
+      this.xForm.translate(offset);
    }
    public clearTransforms() {
-      this.model = new Mat4();
+      this.xForm.reset();
    }
 
    public uploadTriangles() {
@@ -77,7 +80,7 @@ export class glObject {
 
       let gl = this.gl;
       let uni = new glUniform(gl, this.program);
-      uni.set('model', this.model.transpose());
+      uni.set('model', this.xForm.get().transpose());
 
       this.vertexBuffer.bind();
       this.indexBuffer.bind();

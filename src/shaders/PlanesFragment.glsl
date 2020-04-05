@@ -97,16 +97,17 @@ void main()
       {
          gl_FragColor = getColor(uShadow);
       }
+      // useful for debugging - turn shadows red
+      // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
       return;
    }
 
-   vec3 eye = vec3(0.0, 0.0, -10.0);
    vec3 toLight = normalize(-uLightDirection);
-   vec3 toEye = normalize(eye - vVertex);
-   vec3 normal = normalize(vNormal); // vNormal is interpolated and no long normal
+   vec3 toEye = vec3(0.0, 0.0, -1.0);
+   vec3 normal = normalize(vNormal); // vNormal is interpolated and nolonger normal
 
    // swap normals for back facing triangles
-   if (dot(normal, toEye) < 0.0)
+   if (dot(normal, toEye) < -0.0)
    {
       normal = -normal;
    }

@@ -13,6 +13,9 @@ export class glTextureFrameBuffer {
    public frameBuffer: WebGLFramebuffer;
    public colorTexture: WebGLTexture;
    public depthTexture: WebGLTexture;
+   public readonly width: number;
+   public readonly height: number;
+
 
    /**
     * Create a frame buffer for rendering into texture objects.
@@ -29,6 +32,8 @@ export class glTextureFrameBuffer {
    ) {
 
       this.gl = glCtx;
+      this.width = width;
+      this.height = height;
 
       switch (style) {
          case FrameBufferStyle.Normal:
@@ -72,8 +77,17 @@ export class glTextureFrameBuffer {
       // Step 2: Create and initialize a texture buffer to hold the colors.
       this.colorTexture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, this.colorTexture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0,
-         gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texImage2D(
+         gl.TEXTURE_2D,
+         0,
+         gl.RGBA,
+         width,
+         height,
+         0,
+         gl.RGBA,
+         gl.UNSIGNED_BYTE,
+         null
+      );
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -81,7 +95,13 @@ export class glTextureFrameBuffer {
 
       // Step 4: Attach the specific buffers to the frame buffer.
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.colorTexture, 0);
+      gl.framebufferTexture2D(
+         gl.FRAMEBUFFER,
+         gl.COLOR_ATTACHMENT0,
+         gl.TEXTURE_2D,
+         this.colorTexture,
+         0
+      );
 
       // Step 5: Verify that the frame buffer is valid.
       let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
@@ -112,8 +132,17 @@ export class glTextureFrameBuffer {
       // Step 2: Create and initialize a texture buffer to hold the colors.
       this.colorTexture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, this.colorTexture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0,
-         gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texImage2D(
+         gl.TEXTURE_2D,
+         0,
+         gl.RGBA,
+         width,
+         height,
+         0,
+         gl.RGBA,
+         gl.UNSIGNED_BYTE,
+         null
+      );
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);

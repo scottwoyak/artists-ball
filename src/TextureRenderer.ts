@@ -1,6 +1,5 @@
 import vertexSource from './shaders/TextureRendererVertex.glsl';
 import fragmentSource from './shaders/TextureRendererFragment.glsl';
-import { isMobile } from './Globals';
 import { glCompiler } from './glCompiler';
 
 /**
@@ -36,26 +35,17 @@ export class TextureRenderer {
       gl.enableVertexAttribArray(this.vertexAttribute);
    }
 
-   public render(texture: WebGLTexture): void {
+   public render(texture: WebGLTexture, width: number, height: number): void {
 
       let gl = this.gl;
-      /*
-      // size of the actual canvas. The texture we create is drawn to this item
-      let size = document.body.clientWidth;
 
-      if (isMobile === false) {
-         // not sure why, but this basically becomes full width on my phone
-         size = 512;
-      }
+      gl.viewport(
+         (gl.canvas.width - width) / 2,
+         (gl.canvas.height - height) / 2,
+         width,
+         height
+      );
 
-      gl.canvas.width = size;
-      gl.canvas.height = size;
-      */
-      //gl.canvas.width = 128;
-      //gl.canvas.height = 128;
-
-      let size = 512;
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       gl.useProgram(this.program);
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);

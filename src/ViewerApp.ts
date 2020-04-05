@@ -105,6 +105,9 @@ export class ViewerApp {
                this.optimize(NormalType.Flat);
                break;
 
+            case 't':
+               break;
+
             case 's':
                this.save();
                break;
@@ -131,7 +134,7 @@ export class ViewerApp {
       let obj = this.renderer.obj;
       let oldNumVertices = obj.tObj.numVertices;
 
-      this.renderer.obj.optimize(normalType);
+      obj.optimize(normalType);
 
       let newNumVertices = obj.tObj.numVertices;
 
@@ -197,6 +200,10 @@ export class ViewerApp {
 
                this.renderer.setModel(tObj);
                this.loader.orient(this.renderer.obj);
+
+               if (query.startsWith('Pose')) {
+                  this.renderer.showBase = true;
+               }
 
                this.dirty = true;
                requestAnimationFrame(() => this.tick());

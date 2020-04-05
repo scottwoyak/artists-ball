@@ -27,6 +27,7 @@ export let DEFAULT_THRESHOLD2 = 70;
 const HIGHLIGHT_DIFF = 0.1;
 const BALL_RADIUS = 0.5;
 const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, 1.5];
+const INITIAL_VIEW = Mat4.identity();
 
 /**
  * Class that renders triangles and a light source
@@ -35,7 +36,7 @@ export class PlanesRenderer {
 
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private program: WebGLProgram;
-   private view = new Mat4();
+   private view = INITIAL_VIEW;
    private lightView = new Mat4();
    private projection = new Mat4();
 
@@ -56,6 +57,7 @@ export class PlanesRenderer {
 
    private ball: glObject;
    private arrow: glObject;
+   private base: glObject;
    public obj: glObject;
 
    private shadowFrameBuffer: glTextureFrameBuffer;
@@ -68,10 +70,9 @@ export class PlanesRenderer {
    public whiteColor = new htmlColor([255, 255, 255]);
    public blackColor = new htmlColor([0, 0, 0]);
 
-   private zoomFactor: number = 1;
-   private translation = new Vec2([0, 0]);
    public showShadowMap = false;
    public showMiniView = true;
+   public showBase = false;
 
    public constructor(glCtx: WebGLRenderingContext) {
 
@@ -84,12 +85,12 @@ export class PlanesRenderer {
 
       this.program = glCompiler.compile(gl, vertexSource, fragmentSource);
 
-      let tBall = new TriangleObjBuilder();
+      let tBall = new TriangleObjBuilder('Ball');
       tBall.addSphere(50, BALL_RADIUS, new Vec3([0, 0, 0]));
       tBall.optimize(NormalType.Smooth);
       this.ball = new glObject(gl, tBall, this.program);
 
-      let tArrow = new TriangleObjBuilder();
+      let tArrow = new TriangleObjBuilder('Light Arrow');
       tArrow.addArrow();
       this.arrow = new glObject(gl, tArrow, this.program);
 
@@ -119,23 +120,17 @@ export class PlanesRenderer {
          clipSpace.near,
          clipSpace.far
       );
-
-      if (this.shadowFrameBuffer) {
-         this.shadowFrameBuffer.delete();
-         this.shadowFrameBuffer = null;
-      }
    }
 
    //
    // The functions below change our view of the model
    //
    public zoom(zoom: number) {
-      this.zoomFactor *= zoom;
+      this.view.scale(zoom);
    }
 
    public translateView(delta: Vec2) {
-      this.translation.x += delta.x;
-      this.translation.y += delta.y;
+      this.view.translate(new Vec3([delta.x, delta.y, 0]));
    }
 
    public get highlight(): number {
@@ -212,7 +207,20 @@ export class PlanesRenderer {
 
       let center = tObj.center;
       this.obj.translate(new Vec3([-center.x, -center.y, -center.z]));
-      this.obj.scale(2.0 / Math.sqrt(tObj.width * tObj.width + tObj.height * tObj.height + tObj.depth * tObj.depth));
+      let scale = 2.0 / Math.sqrt(tObj.width * tObj.width + tObj.height * tObj.height + tObj.depth * tObj.depth);
+      this.obj.scale(scale);
+      this.obj.xForm.snap();
+
+      if (this.base) {
+         this.base.delete;
+      }
+      let tBase = new TriangleObjBuilder('Base');
+
+      // make the base size slightly larger than the object, centered at the bottom
+      let radius = 0.25 + scale * Math.sqrt(tObj.width * tObj.width + tObj.depth * tObj.depth) / 2;
+      let pos = new Vec3([0, -scale * tObj.height / 2, 0]);
+      tBase.addDisk(50, radius, pos);
+      this.base = new glObject(this.gl, tBase, this.program);
 
       // reset the view and the light
       this.resetView();
@@ -220,15 +228,10 @@ export class PlanesRenderer {
    }
 
    public resetView() {
-      this.view = Mat4.identity();
-      this.zoomFactor = 1;
-      this.translation = new Vec2([0, 0]);
+      this.view = INITIAL_VIEW.clone();
    }
 
    public render(): void {
-
-      let gl = this.gl;
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
       this.setStdUniforms();
       this.renderToShadowMap();
@@ -344,9 +347,12 @@ export class PlanesRenderer {
 
       let gl = this.gl;
       if (!this.shadowFrameBuffer) {
-         this.shadowFrameBuffer = new glTextureFrameBuffer(gl, gl.canvas.width, gl.canvas.height, FrameBufferStyle.Depth);
+         // TODO use a float depth texture so we don't get stair step shadows
+         let size = 1024;
+         this.shadowFrameBuffer = new glTextureFrameBuffer(gl, size, size, FrameBufferStyle.Depth);
       }
 
+      gl.viewport(0, 0, this.shadowFrameBuffer.width, this.shadowFrameBuffer.height);
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowFrameBuffer.frameBuffer);
 
       gl.useProgram(this.program);
@@ -359,6 +365,10 @@ export class PlanesRenderer {
       mat.set(0, 3, 0);
       mat.set(1, 3, 0);
       mat.set(2, 3, 0);
+      // to avoid clipping, expand the z range to the max distance from
+      // the origin for a 1-1-1 cube
+      let maxSize = Math.sqrt(3);
+      mat = Mat4.makeOrtho(-1, 1, -1, 1, -maxSize, maxSize).multM(mat);
       this.lightView = mat;
 
       let uni = this.setStdUniforms();
@@ -380,10 +390,16 @@ export class PlanesRenderer {
 
       let gl = this.gl;
 
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
       // display the depth buffer for testing purposes
       if (this.showShadowMap) {
          let tr = new TextureRenderer(gl);
-         tr.render(this.shadowFrameBuffer.depthTexture);
+         tr.render(
+            this.shadowFrameBuffer.depthTexture,
+            this.shadowFrameBuffer.width,
+            this.shadowFrameBuffer.height
+         );
       }
       else {
          gl.useProgram(this.program);
@@ -392,14 +408,19 @@ export class PlanesRenderer {
 
          gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
-         // reset the view matrix
-         this.view = new Mat4();
-         this.view.scale(this.zoomFactor);
-         this.view.translate(new Vec3([this.translation.x, this.translation.y, 0]));
-
          // draw the main object
-         let uni = this.setStdUniforms();
+         this.setStdUniforms();
          this.obj.draw();
+
+         if (this.showBase) {
+            this.base.xForm.mat = this.obj.xForm.mat.clone();
+
+            // cull polygons so we don't see the base from below
+            gl.enable(gl.CULL_FACE)
+            gl.cullFace(gl.FRONT);
+            this.base.draw();
+            gl.disable(gl.CULL_FACE)
+         }
 
          gl.clear(gl.DEPTH_BUFFER_BIT);
 
@@ -415,11 +436,11 @@ export class PlanesRenderer {
       let uni = this.setStdUniforms();
 
       // draw the object in the upper right at a reduced size
-      this.view = new Mat4();
-      this.view.scale(this.miniSize);
+      let view = Mat4.identity();
+      view.scale(this.miniSize);
       let clipSpace = this.getClipSpace();
-      this.view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.y - this.miniSize, 0]));
-      uni.set('view', this.view.transpose());
+      view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.y - this.miniSize, 0]));
+      uni.set('view', view.transpose());
       uni.set('uUseThresholds', this.miniViewUseThresholds ? 0 : 1, true);
       this.obj.draw();
    }
@@ -431,11 +452,11 @@ export class PlanesRenderer {
       // stop using the shadowmap
       uni.seti('uUseShadows', 0);
 
-      this.view = new Mat4();
-      this.view.scale(this.miniSize);
+      let view = Mat4.identity();
+      view.scale(this.miniSize);
       let clipSpace = this.getClipSpace();
-      this.view.translate(new Vec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
-      uni.set('view', this.view.transpose());
+      view.translate(new Vec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
+      uni.set('view', view.transpose());
       uni.set('uUseThresholds', this.useThresholds ? 1 : 0, true);
       uni.set('uWhiteColor', this.ballColor);
       uni.set('uBlackColor', htmlColor.black.toGlColor());
