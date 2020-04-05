@@ -1,7 +1,7 @@
 import { Mat4 } from './Mat';
 import { Vec3, Vec2 } from './Vec';
-import vertexSource from './shaders/PlanesVertex.glsl';
-import fragmentSource from './shaders/PlanesFragment.glsl';
+import vertexSource from './shaders/ViewerVertex.glsl';
+import fragmentSource from './shaders/ViewerFragment.glsl';
 import { clamp, mix, toRad, toDeg } from './Globals';
 import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
@@ -33,7 +33,7 @@ const INITIAL_VIEW = Mat4.identity();
 /**
  * Class that renders triangles and a light source
  */
-export class PlanesRenderer {
+export class Renderer {
 
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private program: WebGLProgram;

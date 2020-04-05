@@ -1,6 +1,6 @@
 import { htmlColor } from "./htmlColor";
 import { toRad, isMobile } from "./Globals";
-import { PlanesRenderer } from "./PlanesRenderer";
+import { Renderer } from "./Renderer";
 import { Mat4 } from "./Mat";
 import { Vec4, Vec2 } from "./Vec";
 import { NormalType } from "./TriangleObj";
@@ -21,7 +21,7 @@ const BLACK_COLOR = new htmlColor([0, 0, 0]);
 
 export class ViewerApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
-   public renderer: PlanesRenderer;
+   public renderer: Renderer;
    private pointerMode: PointerMode = PointerMode.View;
    private overlay: HTMLSpanElement;
    private handler: PointerEventHandler;
@@ -77,7 +77,7 @@ export class ViewerApp {
 
       this.updateSize();
 
-      this.renderer = new PlanesRenderer(this.gl);
+      this.renderer = new Renderer(this.gl);
       this.renderer.whiteColor = WHITE_COLOR;
       this.renderer.blackColor = BLACK_COLOR;
       this.renderer.showMiniView = false;
