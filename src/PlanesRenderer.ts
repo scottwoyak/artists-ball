@@ -9,11 +9,12 @@ import { TriangleObj, NormalType } from './TriangleObj';
 import { glObject } from './glObject';
 import { glColor } from './glColor';
 import { TextureRenderer } from './TextureRenderer';
-import { glTextureFrameBuffer, FrameBufferStyle } from './glTextureFrameBuffer';
 import { textureSize } from './ThresholdCtrl';
 import { htmlColor } from './htmlColor';
 import { glClipSpace } from './glClipSpace';
 import { TriangleObjBuilder } from './TriangleObjBuilder';
+import { glTexture, glTextureStyle } from './glTexture';
+import { glFrameBuffer } from './glFrameBuffer';
 
 export class BallImageData {
    public image: ImageData;
@@ -60,8 +61,13 @@ export class PlanesRenderer {
    private base: glObject;
    public obj: glObject;
 
-   private shadowFrameBuffer: glTextureFrameBuffer;
-   private textureFrameBuffer: glTextureFrameBuffer;
+   private shadowFrameBuffer: glFrameBuffer;
+   private shadowColorTexture: glTexture;
+   private shadowDepthTexture: glTexture;
+
+   private tCtrlFrameBuffer: glFrameBuffer;
+   private tCtrlColorTexture: glTexture;
+   private tCtrlDepthTexture: glTexture;
 
    public uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
 
@@ -269,19 +275,30 @@ export class PlanesRenderer {
 
       let gl = this.gl;
 
-      if (!this.textureFrameBuffer) {
-         this.textureFrameBuffer = new glTextureFrameBuffer(gl, textureSize, textureSize, FrameBufferStyle.Depth);
+      if (!this.tCtrlFrameBuffer) {
+         this.tCtrlFrameBuffer = new glFrameBuffer(gl, textureSize, textureSize);
+         this.tCtrlColorTexture = this.tCtrlFrameBuffer.createTexture(glTextureStyle.Color);
+         this.tCtrlDepthTexture = this.tCtrlFrameBuffer.createTexture(glTextureStyle.Depth);
+
+         this.tCtrlFrameBuffer.attachTexture(gl.COLOR_ATTACHMENT0, this.tCtrlColorTexture);
+         this.tCtrlFrameBuffer.attachTexture(gl.DEPTH_ATTACHMENT, this.tCtrlDepthTexture);
+
+         this.tCtrlFrameBuffer.check();
+
+         // Unbind these new objects, which makes the default frame buffer the
+         // target for rendering.
+         gl.bindTexture(gl.TEXTURE_2D, null);
+         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       }
 
       gl.viewport(0, 0, textureSize, textureSize);
 
-      gl.bindTexture(gl.TEXTURE_2D, this.textureFrameBuffer.colorTexture);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.textureFrameBuffer.frameBuffer);
-      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.textureFrameBuffer.colorTexture, 0);
+      this.tCtrlColorTexture.bind();
+      this.tCtrlFrameBuffer.bind();
+      this.tCtrlFrameBuffer.attachTexture(gl.COLOR_ATTACHMENT0, this.tCtrlColorTexture);
       gl.bindTexture(gl.TEXTURE_2D, null);
 
       gl.useProgram(this.program);
-
 
       let style = getComputedStyle(<Element>gl.canvas);
       let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
@@ -349,11 +366,18 @@ export class PlanesRenderer {
       if (!this.shadowFrameBuffer) {
          // TODO use a float depth texture so we don't get stair step shadows
          let size = 1024;
-         this.shadowFrameBuffer = new glTextureFrameBuffer(gl, size, size, FrameBufferStyle.Depth);
+         this.shadowFrameBuffer = new glFrameBuffer(gl, size, size);
+         this.shadowColorTexture = this.shadowFrameBuffer.createTexture(glTextureStyle.Color);
+         this.shadowDepthTexture = this.shadowFrameBuffer.createTexture(glTextureStyle.Depth);
+
+         this.shadowFrameBuffer.attachTexture(gl.COLOR_ATTACHMENT0, this.shadowColorTexture);
+         this.shadowFrameBuffer.attachTexture(gl.DEPTH_ATTACHMENT, this.shadowDepthTexture);
+
+         this.shadowFrameBuffer.check();
       }
 
       gl.viewport(0, 0, this.shadowFrameBuffer.width, this.shadowFrameBuffer.height);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowFrameBuffer.frameBuffer);
+      this.shadowFrameBuffer.bind();
 
       gl.useProgram(this.program);
 
@@ -396,7 +420,7 @@ export class PlanesRenderer {
       if (this.showShadowMap) {
          let tr = new TextureRenderer(gl);
          tr.render(
-            this.shadowFrameBuffer.depthTexture,
+            this.shadowDepthTexture.get(),
             this.shadowFrameBuffer.width,
             this.shadowFrameBuffer.height
          );
@@ -404,7 +428,7 @@ export class PlanesRenderer {
       else {
          gl.useProgram(this.program);
 
-         gl.bindTexture(gl.TEXTURE_2D, this.shadowFrameBuffer.depthTexture)
+         this.shadowDepthTexture.bind();
 
          gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 

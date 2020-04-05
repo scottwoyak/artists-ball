@@ -13,6 +13,8 @@ import { glCompiler } from './glCompiler';
 import { ColorAnalyzer } from './ColorAnalyzer';
 import { TriangleObj } from './TriangleObj';
 import { glUniformBlock } from './glUniformBlock';
+import { glTexture, glTextureStyle } from './glTexture';
+import { glFrameBuffer } from './glFrameBuffer';
 
 /**
  * Rendering mode for displaying the texture
@@ -31,8 +33,9 @@ export class PathTracerRenderer {
 
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private vertexBuffer: WebGLBuffer;
-   private frameBuffer: WebGLFramebuffer;
-   private textures: WebGLTexture[];
+   private frameBuffer: glFrameBuffer;
+   private renderTexture: glTexture;
+   private textures: glTexture[];
    private toScreenProgram: WebGLProgram;
    private toScreenVertexAttribute: number;
    private toTextureProgram: WebGLProgram;
@@ -77,63 +80,20 @@ export class PathTracerRenderer {
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
 
       // create framebuffer
-      this.frameBuffer = gl.createFramebuffer();
+      this.frameBuffer = new glFrameBuffer(
+         gl,
+         Uniforms.uTextureSize,
+         Uniforms.uTextureSize,
+      );
 
-      let internalFormat: number;
-      let format: number;
-      let type: number;
-
-      // create textures
-      if (gl instanceof WebGLRenderingContext) {
-         let ext = gl.getExtension('OES_texture_half_float');
-         if (ext) {
-            // Thanks Apple. Always got to do things a little differently
-            internalFormat = gl.RGBA;
-            format = gl.RGBA;
-            type = ext.HALF_FLOAT_OES;
-         }
-         else {
-            // No floating point textures? really fall back to unsigned bytes
-            internalFormat = gl.RGBA;
-            format = gl.RGBA;
-            type = gl.UNSIGNED_BYTE;
-         }
-      }
-
-      // Typescript doesn't let you do an 'else if' here and when WebGL2 is
-      // not supported, we get an exception, so thus the try-catch
-      // see: https://stackoverflow.com/questions/45381122/typescript-type-narrowed-to-never-with-instanceof-in-an-if-else-statement
-      try {
-         if (gl instanceof WebGL2RenderingContext) {
-            gl.getExtension('EXT_color_buffer_float');
-            internalFormat = gl.RGBA32F;
-            format = gl.RGBA;
-            type = gl.FLOAT
-         }
-      }
-      catch (error) {
-      }
+      this.renderTexture = this.frameBuffer.createTexture(glTextureStyle.Float);
 
       // create two textures. One we display and one we draw to
       this.textures = [];
       for (var i = 0; i < 2; i++) {
-         this.textures.push(gl.createTexture());
-         gl.bindTexture(gl.TEXTURE_2D, this.textures[i]);
-         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-         gl.texImage2D(
-            gl.TEXTURE_2D,          // target
-            0,                      // level
-            internalFormat,         // internal format
-            Uniforms.uTextureSize,  // width
-            Uniforms.uTextureSize,  // height
-            0,                      // border
-            format,                 // format
-            type,                   // type
-            null                    // pixels
-         );
+         this.textures.push(this.frameBuffer.createTexture(glTextureStyle.Color));
       }
-      gl.bindTexture(gl.TEXTURE_2D, null);
+
 
       // create toScreen shader
       this.toScreenProgram = glCompiler.compile(gl, toScreenVertexSource, toScreenFragmentSource);
@@ -272,10 +232,10 @@ export class PathTracerRenderer {
 
       // render to texture
       gl.viewport(0, 0, Uniforms.uTextureSize, Uniforms.uTextureSize);
-      gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
+      this.textures[0].bind();
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.textures[1], 0);
+      this.frameBuffer.bind();
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.textures[1].get(), 0);
 
       gl.vertexAttribPointer(this.toTextureVertexAttribute, 2, gl.FLOAT, false, 0, 0);
 
@@ -321,7 +281,7 @@ export class PathTracerRenderer {
       gl.canvas.height = size;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       gl.useProgram(this.toScreenProgram);
-      gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
+      this.textures[0].bind();
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
       gl.vertexAttribPointer(this.toScreenVertexAttribute, 2, gl.FLOAT, false, 0, 0);
 
