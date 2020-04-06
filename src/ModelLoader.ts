@@ -66,24 +66,27 @@ export class ModelLoader {
       switch (name) {
          case 'skull1':
             model.rotX(toRad(90));
-            model.rotY(toRad(180));
+            //model.rotY(toRad(180));
             break;
 
          case 'pelvis':
             model.rotX(toRad(11));
             model.rotZ(toRad(-87));
+            model.rotY(toRad(180));
             break;
 
          case 'wolf':
             model.rotY(toRad(-140));
             model.rotX(toRad(5));
+            model.rotY(toRad(180));
             break;
 
          case 'sheephead':
-            model.rotY(toRad(-160));
+            model.rotY(toRad(20));
             break;
 
          case 'pose1':
+            model.rotY(toRad(180));
             break;
 
          case 'teapot':
@@ -91,7 +94,6 @@ export class ModelLoader {
             break;
 
          default:
-            model.rotY(toRad(180));
             break;
       }
    }

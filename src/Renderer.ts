@@ -27,7 +27,7 @@ export let DEFAULT_THRESHOLD2 = 70;
 
 const HIGHLIGHT_DIFF = 0.1;
 const BALL_RADIUS = 0.5;
-const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, 1.5];
+const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, -1.5];
 const INITIAL_VIEW = Mat4.identity();
 
 /**
@@ -39,7 +39,6 @@ export class Renderer {
    private program: WebGLProgram;
    private view = INITIAL_VIEW;
    private lightView = new Mat4();
-   //   private projection = new Mat4();
    private projection = new Mat4();
 
    private uThreshold1 = DEFAULT_THRESHOLD1;
@@ -115,10 +114,10 @@ export class Renderer {
       let ar = gl.canvas.width / gl.canvas.height;
 
       if (ar > 1) {
-         return new glClipSpace(new Vec3([-ar, -1, -100]), new Vec3([ar, 1, 100]));
+         return new glClipSpace(new Vec3([-ar, -1, 100]), new Vec3([ar, 1, -100]));
       }
       else {
-         return new glClipSpace(new Vec3([-1, -1 / ar, -100]), new Vec3([1, 1 / ar, 100]));
+         return new glClipSpace(new Vec3([-1, -1 / ar, 100]), new Vec3([1, 1 / ar, -100]));
       }
    }
 
@@ -235,7 +234,7 @@ export class Renderer {
 
       // reset the view and the light
       this.resetView();
-      this.uLightDirection = new Vec3([1.0, -1.0, 1.5]);
+      this.uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
    }
 
    public resetView() {
@@ -340,7 +339,7 @@ export class Renderer {
       this.ball.clearTransforms();
 
       // draw the arrow
-      uni.set('uLightDirection', new Vec3([1, -0.5, 0.5]));
+      uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
       uni.seti('uUseThresholds', 0);
 
       // first reset things so that we're looking down the z-axis
@@ -395,14 +394,15 @@ export class Renderer {
 
       let center = new Vec3([0, 0, 0]);
       let up = new Vec3([0, 1, 0]);
-      let mat = Mat4.makeLookAt(this.uLightDirection, center, up);
+      let eye = new Vec3([-this.uLightDirection.x, -this.uLightDirection.y, -this.uLightDirection.z]);
+      let mat = Mat4.makeLookAt(eye, center, up);
       mat.set(0, 3, 0);
       mat.set(1, 3, 0);
       mat.set(2, 3, 0);
-      // to avoid clipping, expand the z range to allow full rotation of
+      // to avoid clipping, expand the z range to allow full projation of
       // anything in a 3-3-3 cube.
       let maxSize = Math.sqrt(27);
-      mat = Mat4.makeOrtho(-1, 1, -1, 1, -maxSize, maxSize).multM(mat);
+      mat = Mat4.makeOrtho(-1, 1, -1, 1, maxSize, -maxSize).multM(mat);
       this.lightView = mat;
 
       let uni = this.setStdUniforms();
@@ -453,7 +453,7 @@ export class Renderer {
 
             // cull polygons so we don't see the floor from below
             gl.enable(gl.CULL_FACE)
-            gl.cullFace(gl.FRONT);
+            gl.cullFace(gl.BACK);
             this.floor.draw();
             gl.disable(gl.CULL_FACE)
 
@@ -501,7 +501,7 @@ export class Renderer {
       uni.set('uBlackColor', htmlColor.black.toGlColor());
       this.ball.draw();
 
-      uni.set('uLightDirection', new Vec3([1, -0.5, 0.5]));
+      uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
       uni.set('uUseThresholds', 0, true);
 
       // back out angles as if looking down the z-axis

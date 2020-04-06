@@ -248,13 +248,13 @@ export class PlanesApp {
 
       if (this.pointerMode === PointerMode.View) {
          // TODO replace 0.01 with some kind of physical measurement
-         this.renderer.obj.rotX(delta.y * 0.01);
-         this.renderer.obj.rotY(delta.x * 0.01);
+         this.renderer.obj.rotX(-delta.y * 0.01);
+         this.renderer.obj.rotY(-delta.x * 0.01);
       }
       else if (this.pointerMode === PointerMode.Light) {
 
-         let matY = Mat4.fromRotY(toRad(delta.x));
-         let matX = Mat4.fromRotX(toRad(delta.y));
+         let matY = Mat4.fromRotY(toRad(-delta.x));
+         let matX = Mat4.fromRotX(toRad(-delta.y));
          let vec = new Vec4([
             this.renderer.uLightDirection.x,
             this.renderer.uLightDirection.y,
