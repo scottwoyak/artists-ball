@@ -1,5 +1,5 @@
 import { htmlColor } from "./htmlColor";
-import { glColor } from "./glColor";
+import { glColor3 } from "./glColor";
 
 /**
  * Class for representing color values. Values are on a 0-1 scale.
@@ -52,7 +52,7 @@ export class hsvColor {
     * @param color The glColor object.
     * @returns The hsvColor object.
     */
-   public static fromGlColor(color: glColor): hsvColor {
+   public static fromGlColor(color: glColor3): hsvColor {
       return hsvColor.fromHtmlColor(color.toHtmlColor());
    }
 
@@ -61,7 +61,7 @@ export class hsvColor {
     * 
     * @returns The glColor object.
     */
-   public toGlColor(): glColor {
+   public toGlColor(): glColor3 {
 
       var r, g, b, i, f, p, q, t;
       i = Math.floor(this.h * 6);
@@ -78,7 +78,7 @@ export class hsvColor {
          case 5: r = this.v, g = p, b = q; break;
       }
 
-      return new glColor([r, g, b]);
+      return new glColor3([r, g, b]);
    }
 
    /**

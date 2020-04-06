@@ -7,7 +7,7 @@ import { glUniform } from './glUniform';
 import { glCompiler } from './glCompiler';
 import { TriangleObj, NormalType } from './TriangleObj';
 import { glObject } from './glObject';
-import { glColor } from './glColor';
+import { glColor3 } from './glColor';
 import { TextureRenderer } from './TextureRenderer';
 import { textureSize } from './ThresholdCtrl';
 import { htmlColor } from './htmlColor';
@@ -39,6 +39,7 @@ export class Renderer {
    private program: WebGLProgram;
    private view = INITIAL_VIEW;
    private lightView = new Mat4();
+   //   private projection = new Mat4();
    private projection = new Mat4();
 
    private uThreshold1 = DEFAULT_THRESHOLD1;
@@ -58,7 +59,7 @@ export class Renderer {
 
    private ball: glObject;
    private arrow: glObject;
-   private base: glObject;
+   private floor: glObject;
    public obj: glObject;
 
    private shadowFrameBuffer: glFrameBuffer;
@@ -71,14 +72,14 @@ export class Renderer {
 
    public uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
 
-   public ballColor = new glColor([1, 1, 1]);
-   public readonly yellow = new glColor([1.0, 0.9, 0.7]);
+   public ballColor = new glColor3([1, 1, 1]);
+   public readonly yellow = new glColor3([1.0, 0.9, 0.7]);
    public whiteColor = new htmlColor([255, 255, 255]);
    public blackColor = new htmlColor([0, 0, 0]);
 
    public showShadowMap = false;
    public showMiniView = true;
-   public showBase = false;
+   public showFloor = false;
 
    public constructor(glCtx: WebGLRenderingContext) {
 
@@ -87,7 +88,12 @@ export class Renderer {
 
       this.computeColors();
 
+      // enable z-buffer
       gl.enable(gl.DEPTH_TEST);
+
+      // enable alpha values
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
       this.program = glCompiler.compile(gl, vertexSource, fragmentSource);
 
@@ -194,11 +200,6 @@ export class Renderer {
       return mix(this.uShadow, this.uHighlight - HIGHLIGHT_DIFF, Math.cos(toRad(deg)));
    }
 
-   private thresholdAt(color: number): number {
-      let acos = (color - this.uShadow) / (this.uHighlight - HIGHLIGHT_DIFF - this.uShadow);
-      return toDeg(Math.acos(acos));
-   }
-
    public computeColors() {
       this.uLightLight = this.colorAt(0.5 * this.threshold1);
       this.uMidLight = this.colorAt(mix(this.threshold1, this.threshold2, 0.5));
@@ -217,16 +218,20 @@ export class Renderer {
       this.obj.scale(scale);
       this.obj.xForm.snap();
 
-      if (this.base) {
-         this.base.delete;
+      if (this.floor) {
+         this.floor.delete;
       }
-      let tBase = new TriangleObjBuilder('Base');
+      let tFloor = new TriangleObjBuilder('Floor');
 
-      // make the base size slightly larger than the object, centered at the bottom
-      let radius = 0.25 + scale * Math.sqrt(tObj.width * tObj.width + tObj.depth * tObj.depth) / 2;
+      // make the floor size slightly larger than the object, centered at the bottom
+      let radius = 4;
       let pos = new Vec3([0, -scale * tObj.height / 2, 0]);
-      tBase.addDisk(50, radius, pos);
-      this.base = new glObject(this.gl, tBase, this.program);
+      tFloor.addDisk(50, radius, pos);
+      this.floor = new glObject(this.gl, tFloor, this.program);
+
+      let uni = new glUniform(this.gl, this.program);
+      uni.set('uFloorCenter', tFloor.center);
+      uni.set('uFloorRadius', radius);
 
       // reset the view and the light
       this.resetView();
@@ -238,6 +243,11 @@ export class Renderer {
    }
 
    public render(): void {
+
+      let gl = this.gl;
+      let style = getComputedStyle(<Element>gl.canvas);
+      let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
+      gl.clearColor(color.r, color.g, color.b, 1);
 
       this.setStdUniforms();
       this.renderToShadowMap();
@@ -338,7 +348,7 @@ export class Renderer {
       this.arrow.scale(1.25)
       this.arrow.translate(new Vec3([offset.x, offset.y + scale * BALL_RADIUS + 0.1, 0.0]));
 
-      uni.set('uWhiteColor', new glColor([1.0, 1.0, 0.5]));
+      uni.set('uWhiteColor', new glColor3([1.0, 1.0, 0.5]));
       uni.set('uBlackColor', htmlColor.black.toGlColor());
       uni.set('uAmbientIntensity', 0.4);
       this.arrow.draw();
@@ -364,7 +374,6 @@ export class Renderer {
 
       let gl = this.gl;
       if (!this.shadowFrameBuffer) {
-         // TODO use a float depth texture so we don't get stair step shadows
          let size = 1024;
          this.shadowFrameBuffer = new glFrameBuffer(gl, size, size);
          this.shadowColorTexture = this.shadowFrameBuffer.createTexture(glTextureStyle.Color);
@@ -374,6 +383,7 @@ export class Renderer {
          this.shadowFrameBuffer.attachTexture(gl.DEPTH_ATTACHMENT, this.shadowDepthTexture);
 
          this.shadowFrameBuffer.check();
+         gl.bindTexture(gl.TEXTURE_2D, null);
       }
 
       gl.viewport(0, 0, this.shadowFrameBuffer.width, this.shadowFrameBuffer.height);
@@ -389,9 +399,9 @@ export class Renderer {
       mat.set(0, 3, 0);
       mat.set(1, 3, 0);
       mat.set(2, 3, 0);
-      // to avoid clipping, expand the z range to the max distance from
-      // the origin for a 1-1-1 cube
-      let maxSize = Math.sqrt(3);
+      // to avoid clipping, expand the z range to allow full rotation of
+      // anything in a 3-3-3 cube.
+      let maxSize = Math.sqrt(27);
       mat = Mat4.makeOrtho(-1, 1, -1, 1, -maxSize, maxSize).multM(mat);
       this.lightView = mat;
 
@@ -433,17 +443,21 @@ export class Renderer {
          gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
          // draw the main object
-         this.setStdUniforms();
+         let uni = this.setStdUniforms();
          this.obj.draw();
 
-         if (this.showBase) {
-            this.base.xForm.mat = this.obj.xForm.mat.clone();
+         if (this.showFloor) {
+            uni.seti('uShowFloor', 1);
 
-            // cull polygons so we don't see the base from below
+            this.floor.xForm.mat = this.obj.xForm.mat.clone();
+
+            // cull polygons so we don't see the floor from below
             gl.enable(gl.CULL_FACE)
             gl.cullFace(gl.FRONT);
-            this.base.draw();
+            this.floor.draw();
             gl.disable(gl.CULL_FACE)
+
+            uni.seti('uShowFloor', 0);
          }
 
          gl.clear(gl.DEPTH_BUFFER_BIT);
@@ -452,6 +466,7 @@ export class Renderer {
          this.drawBall();
 
          gl.bindTexture(gl.TEXTURE_2D, null);
+         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       }
    }
 

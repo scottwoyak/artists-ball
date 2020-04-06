@@ -1,5 +1,5 @@
 import { Color } from "./Color";
-import { glColor } from "./glColor";
+import { glColor3 } from "./glColor";
 import { toCss } from "./Globals";
 
 /**
@@ -144,7 +144,7 @@ export class htmlColor extends Color {
     * 
     * @returns A glColor object.
     */
-   public toGlColor(): glColor {
-      return new glColor([this.r / 255, this.g / 255, this.b / 255]);
+   public toGlColor(): glColor3 {
+      return new glColor3([this.r / 255, this.g / 255, this.b / 255]);
    }
 }

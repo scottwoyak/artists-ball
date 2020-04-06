@@ -1,18 +1,18 @@
-import { glColor } from "./glColor";
+import { glColor3 } from "./glColor";
 
 /**
  * The items returned from examining the current view
  */
 export interface IColorData {
    maxChroma: number,
-   highlightColor: glColor,
-   avgLightColor: glColor,
-   lightestLightColor: glColor,
-   darkestLightColor: glColor,
-   avgShadowColor: glColor,
-   lightestShadowColor: glColor,
-   darkestShadowColor: glColor,
-   terminatorColor: glColor,
+   highlightColor: glColor3,
+   avgLightColor: glColor3,
+   lightestLightColor: glColor3,
+   darkestLightColor: glColor3,
+   avgShadowColor: glColor3,
+   lightestShadowColor: glColor3,
+   darkestShadowColor: glColor3,
+   terminatorColor: glColor3,
 }
 
 /**
@@ -57,14 +57,14 @@ export class ColorAnalyzer {
 
       let data: IColorData = {
          maxChroma: 0,
-         avgLightColor: new glColor([0, 0, 0]),
-         lightestLightColor: new glColor([0, 0, 0]),
-         darkestLightColor: new glColor([1, 1, 1]),
-         avgShadowColor: new glColor([0, 0, 0]),
-         lightestShadowColor: new glColor([0, 0, 0]),
-         darkestShadowColor: new glColor([1, 1, 1]),
-         terminatorColor: new glColor([0, 0, 0]),
-         highlightColor: new glColor([0, 0, 0]),
+         avgLightColor: new glColor3([0, 0, 0]),
+         lightestLightColor: new glColor3([0, 0, 0]),
+         darkestLightColor: new glColor3([1, 1, 1]),
+         avgShadowColor: new glColor3([0, 0, 0]),
+         lightestShadowColor: new glColor3([0, 0, 0]),
+         darkestShadowColor: new glColor3([1, 1, 1]),
+         terminatorColor: new glColor3([0, 0, 0]),
+         highlightColor: new glColor3([0, 0, 0]),
       }
 
       // TODO handle case when the text type is UNSIGNED_BYTE
@@ -94,7 +94,7 @@ export class ColorAnalyzer {
                data.maxChroma = chroma;
             }
 
-            let color = new glColor([r, g, b]);
+            let color = new glColor3([r, g, b]);
             if (a == alphaLight) {
                numLightPixels++;
                if (data.lightestLightColor == null) {
@@ -103,8 +103,8 @@ export class ColorAnalyzer {
                if (data.darkestLightColor == null) {
                   data.darkestLightColor = color;
                }
-               data.lightestLightColor = glColor.lightest(data.lightestLightColor, color);
-               data.darkestLightColor = glColor.darkest(data.darkestLightColor, color);
+               data.lightestLightColor = glColor3.lightest(data.lightestLightColor, color);
+               data.darkestLightColor = glColor3.darkest(data.darkestLightColor, color);
                data.avgLightColor.r += color.r;
                data.avgLightColor.b += color.b;
                data.avgLightColor.g += color.g;
@@ -117,14 +117,14 @@ export class ColorAnalyzer {
                if (data.darkestShadowColor == null) {
                   data.darkestShadowColor = color;
                }
-               data.lightestShadowColor = glColor.lightest(data.lightestShadowColor, color);
-               data.darkestShadowColor = glColor.darkest(data.darkestShadowColor, color);
+               data.lightestShadowColor = glColor3.lightest(data.lightestShadowColor, color);
+               data.darkestShadowColor = glColor3.darkest(data.darkestShadowColor, color);
                data.avgShadowColor.r += color.r;
                data.avgShadowColor.b += color.b;
                data.avgShadowColor.g += color.g;
             }
             else if (a > alphaLight) {
-               data.highlightColor = glColor.lightest(data.highlightColor, color);
+               data.highlightColor = glColor3.lightest(data.highlightColor, color);
             }
 
             let terminator = (alphaLight + alphaShadow) / 2.0;

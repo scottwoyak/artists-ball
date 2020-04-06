@@ -67,7 +67,9 @@ export class ViewerApp {
       this.overlay.id = 'Overlay';
       parent.appendChild(this.overlay);
 
-      let context = canvas.getContext('webgl') as WebGLRenderingContext;
+      // don't try to make the canvas transparent to the underlying html. This
+      // seems to limit the alpha values we can use in our scene.
+      let context = canvas.getContext('webgl', { alpha: false }) as WebGLRenderingContext;
 
       if (!context) {
          // TODO display a message about not being able to create a WebGL context
@@ -201,9 +203,7 @@ export class ViewerApp {
                this.renderer.setModel(tObj);
                this.loader.orient(this.renderer.obj);
 
-               if (query.startsWith('Pose')) {
-                  this.renderer.showBase = true;
-               }
+               this.renderer.showFloor = query.startsWith('Pose');
 
                this.dirty = true;
                requestAnimationFrame(() => this.tick());

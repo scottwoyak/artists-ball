@@ -1,5 +1,5 @@
 import { Vec3 } from "./Vec";
-import { glColor } from "./glColor";
+import { glColor3, glColor4 } from "./glColor";
 import { Mat4 } from "./Mat";
 
 /**
@@ -36,7 +36,11 @@ export class glUniform {
     * @param value The value
     * @param int If true and the value is a number, it is treated as an integer
     */
-   public set(name: string, value: number | Vec3 | glColor | Mat4, int: boolean = false) {
+   public set(
+      name: string,
+      value: number | Vec3 | glColor3 | glColor4 | Mat4,
+      int: boolean = false
+   ) {
 
       let gl = this.gl;
 
@@ -45,8 +49,11 @@ export class glUniform {
          if (value instanceof Vec3) {
             gl.uniform3fv(loc, new Float32Array(value.values));
          }
-         else if (value instanceof glColor) {
+         else if (value instanceof glColor3) {
             gl.uniform3fv(loc, new Float32Array([value.r, value.g, value.b]));
+         }
+         else if (value instanceof glColor4) {
+            gl.uniform4fv(loc, new Float32Array([value.r, value.g, value.b, value.a]));
          }
          else if (value instanceof Mat4) {
             gl.uniformMatrix4fv(loc, false, new Float32Array(value.values));

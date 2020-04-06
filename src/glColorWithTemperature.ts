@@ -1,9 +1,9 @@
-import { glColor } from "./glColor";
+import { glColor3 } from "./glColor";
 
 /**
  * Class that adds temperature to a Color object
  */
-export class glColorWithTemperature extends glColor {
+export class glColorWithTemperature extends glColor3 {
    /**
     * Temperature in Kelvin
     */

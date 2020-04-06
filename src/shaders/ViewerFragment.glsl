@@ -5,6 +5,11 @@ varying vec3 vNormal;
 varying vec3 vVertex;
 varying vec3 vShadowVertex;
 
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 lightView;
+uniform mat4 projection;
+
 uniform float uLightIntensity;
 uniform float uAmbientIntensity;
 uniform vec3 uLightDirection;
@@ -24,6 +29,10 @@ uniform float uShadow;
 
 uniform int uUseShadows;
 uniform sampler2D uShadowTexture;
+
+uniform vec3 uFloorCenter;
+uniform float uFloorRadius;
+uniform int uShowFloor;
 
 bool in_shadow(void)
 {
@@ -81,81 +90,95 @@ bool in_shadow(void)
 
 vec4 getColor(float val)
 {
+   float a = 1.0;
+   if (uShowFloor == 1)
+   {
+      // gradiate out the background from half transparent to full transparency
+      vec3 center = (model * vec4(uFloorCenter, 1.0)).xyz;
+      float dist = length(center - vVertex);
+      a = 0.5 * (1.0 - dist / uFloorRadius);
+   }
+
    vec3 rgb = mix(uBlackColor, uWhiteColor, val);
-   return vec4(rgb.r, rgb.g, rgb.b, 1.0);
+   return vec4(rgb, a);
 }
 
 void main()
 {
+   vec4 fragColor;
    if (in_shadow())
    {
       if (uUseThresholds == 0)
       {
-         gl_FragColor = getColor(uAmbientIntensity);
+         fragColor = getColor(uAmbientIntensity);
       }
       else
       {
-         gl_FragColor = getColor(uShadow);
+         fragColor = getColor(uShadow);
       }
       // useful for debugging - turn shadows red
-      // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-      return;
-   }
-
-   vec3 toLight = normalize(-uLightDirection);
-   vec3 toEye = vec3(0.0, 0.0, -1.0);
-   vec3 normal = normalize(vNormal); // vNormal is interpolated and nolonger normal
-
-   // swap normals for back facing triangles
-   if (dot(normal, toEye) < -0.0)
-   {
-      normal = -normal;
-   }
-
-   // compute diffuse contribution = cos of angle between the vectors (dot product)
-   float diffuseFactor = clamp(dot(normal, toLight), 0.0, 1.0);
-   float diffuse = diffuseFactor * uLightIntensity;
-
-   // compute specular contribution
-   float shininess = 15.0;
-   vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
-   float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
-   float specular = 0.1 * pow(cosAngle, shininess);
-
-   float val;
-   if (uUseThresholds == 0)
-   {
-      val = uAmbientIntensity + diffuse + specular;
+      // gl_FragColor = vec4(1.0, 0.0, 0.0, 0.0);
+      // return;
    }
    else
    {
-      float threshold = 1.0 - diffuseFactor;
+      vec3 toLight = normalize(-uLightDirection);
+      vec3 toEye = vec3(0.0, 0.0, -1.0);
+      vec3 normal = normalize(vNormal); // vNormal is interpolated and nolonger normal
 
-      float v1 = min(uThreshold1, uThreshold2);
-      float v2 = max(uThreshold1, uThreshold2);
+      // swap normals for back facing triangles
+      if (dot(normal, toEye) < -0.0)
+      {
+         normal = -normal;
+      }
 
-      if (threshold < v1)
+      // compute diffuse contribution = cos of angle between the vectors (dot product)
+      float diffuseFactor = clamp(dot(normal, toLight), 0.0, 1.0);
+      float diffuse = diffuseFactor * uLightIntensity;
+
+      // compute specular contribution
+      float shininess = 15.0;
+      vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
+      float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
+      float specular = 0.1 * pow(cosAngle, shininess);
+
+      float val;
+      if (uUseThresholds == 0)
       {
-         val = uLightLight;
-      }
-      else if (threshold < v2)
-      {
-         val = uMidLight;
-      }
-      else if (threshold < 1.0)
-      {
-         val = uDarkLight;
+         val = uAmbientIntensity + diffuse + specular;
       }
       else
       {
-         val = uShadow;
+         float threshold = 1.0 - diffuseFactor;
+
+         float v1 = min(uThreshold1, uThreshold2);
+         float v2 = max(uThreshold1, uThreshold2);
+
+         if (threshold < v1)
+         {
+            val = uLightLight;
+         }
+         else if (threshold < v2)
+         {
+            val = uMidLight;
+         }
+         else if (threshold < 1.0)
+         {
+            val = uDarkLight;
+         }
+         else
+         {
+            val = uShadow;
+         }
+
+         if (specular > 0.05)
+         {
+            val = uHighlight;
+         }
       }
 
-      if (specular > 0.05)
-      {
-         val = uHighlight;
-      }
+      fragColor = getColor(val);
    }
 
-   gl_FragColor = getColor(val);
+   gl_FragColor = fragColor;
 }

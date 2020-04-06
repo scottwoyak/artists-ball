@@ -1,6 +1,6 @@
 import { htmlColor } from "./htmlColor";
 import { ColorRange } from "./ColorRange";
-import { glColor } from "./glColor";
+import { glColor3 } from "./glColor";
 import { htmlColorWithAlpha } from "./htmlColorWithAlpha";
 
 /**
@@ -188,13 +188,13 @@ export class Slider {
     * 
     * @returns The current color.
     */
-   public get glColor(): glColor {
+   public get glColor(): glColor3 {
       if (this._colors) {
          let val = (this.value - this.min) / (this.max - this.min);
          return this._colors.get(val).toGlColor();
       }
       else {
-         return new glColor([0, 0, 0]);
+         return new glColor3([0, 0, 0]);
       }
    }
 }
