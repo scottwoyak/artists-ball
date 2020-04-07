@@ -127,6 +127,8 @@ export class Renderer {
    }
 
    private updateProjectionMatrix() {
+
+      let gl = this.gl;
       let clipSpace = this.getClipSpace();
       if (this.orthographic) {
          this.projection = Mat4.makeOrtho(
@@ -144,8 +146,9 @@ export class Renderer {
          let up = new Vec3([0, 1, 0]);
          let mat = Mat4.makeLookAt(eye, center, up);
 
+         let ar = gl.canvas.width / this.gl.canvas.height;
 
-         let maxHeight = 2.0;
+         let maxHeight = 2.0 * (ar < 1 ? 1 / ar : 1);
          let fieldOfView = 2 * toDeg(Math.atan2(maxHeight / 2, eye.z));
          let aspectRatio = clipSpace.width / clipSpace.height;
          let near = 0.1;
@@ -493,12 +496,23 @@ export class Renderer {
    private drawMiniView() {
 
       let uni = this.setStdUniforms();
-      uni.set('projection', Mat4.ortho);
+
+      let clipSpace = this.getClipSpace();
+      let projection = Mat4.makeOrtho(
+         clipSpace.left,
+         clipSpace.right,
+         clipSpace.bottom,
+         clipSpace.top,
+         clipSpace.near,
+         clipSpace.far
+      );
+
+      uni.set('projection', projection);
+      uni.set('uOthrographic', true);
 
       // draw the object in the upper right at a reduced size
       let view = Mat4.identity;
       view.scale(this.miniSize);
-      let clipSpace = this.getClipSpace();
       view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.y - this.miniSize, 0]));
       uni.set('view', view);
       uni.set('uUseThresholds', this.miniViewUseThresholds ? 0 : 1, true);
@@ -508,14 +522,25 @@ export class Renderer {
    private drawBall() {
 
       let uni = this.setStdUniforms();
-      uni.set('projection', Mat4.ortho);
+
+      let clipSpace = this.getClipSpace();
+      let projection = Mat4.makeOrtho(
+         clipSpace.left,
+         clipSpace.right,
+         clipSpace.bottom,
+         clipSpace.top,
+         clipSpace.near,
+         clipSpace.far
+      );
+
+      uni.set('projection', projection);
+      uni.set('uOthrographic', true);
 
       // stop using the shadowmap
       uni.set('uUseShadows', false);
 
       let view = Mat4.identity;
       view.scale(this.miniSize);
-      let clipSpace = this.getClipSpace();
       view.translate(new Vec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
       uni.set('view', view);
       uni.set('uUseThresholds', this.useThresholds ? 1 : 0, true);
