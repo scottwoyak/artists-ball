@@ -61,8 +61,7 @@ export class PathTracerApp {
       this.query = query;
    }
 
-   public component(): HTMLElement {
-      const div = document.createElement('div');
+   public create(div: HTMLDivElement) {
 
       const container = document.createElement('span');
       container.className = 'container';
@@ -225,8 +224,6 @@ export class PathTracerApp {
             this.restart();
          }
       });
-
-      return div;
    }
 
    private loadModel(query: string): Promise<TriangleObj> {

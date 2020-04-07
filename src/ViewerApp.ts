@@ -36,8 +36,8 @@ export class ViewerApp {
       this.query = query;
    }
 
-   public component(): HTMLElement {
-      const div = document.createElement('div');
+   public create(div: HTMLDivElement) {
+
       div.className = 'ViewerApp';
 
       const viewContainer = document.createElement('div');
@@ -53,8 +53,6 @@ export class ViewerApp {
       this.createCtrlsElements(ctrlsContainer);
 
       this.loadModel(this.query);
-
-      return div;
    }
 
    private createViewElements(parent: HTMLElement) {
@@ -131,7 +129,6 @@ export class ViewerApp {
       window.onresize = () => {
 
          this.updateSize();
-         this.renderer.resize();
          this.dirty = true;
       }
    }

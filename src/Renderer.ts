@@ -107,7 +107,10 @@ export class Renderer {
       tArrow.addArrow();
       this.arrow = new glObject(gl, tArrow, this.program);
 
-      this.resize();
+      let style = getComputedStyle(<Element>gl.canvas);
+      let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
+      gl.clearColor(color.r, color.g, color.b, 1);
+      gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
    }
 
    public getClipSpace(): glClipSpace {
@@ -121,9 +124,6 @@ export class Renderer {
       else {
          return new glClipSpace(new Vec3([-1, -1 / ar, 100]), new Vec3([1, 1 / ar, -100]));
       }
-   }
-
-   public resize() {
    }
 
    private updateProjectionMatrix() {
@@ -263,11 +263,6 @@ export class Renderer {
    }
 
    public render(): void {
-
-      let gl = this.gl;
-      let style = getComputedStyle(<Element>gl.canvas);
-      let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
-      gl.clearColor(color.r, color.g, color.b, 1);
 
       this.updateProjectionMatrix();
       this.setStdUniforms();

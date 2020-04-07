@@ -42,8 +42,8 @@ export class PlanesApp {
       this.query = query;
    }
 
-   public component(): HTMLElement {
-      const div = document.createElement('div');
+   public create(div: HTMLDivElement) {
+
       div.className = 'PlanesApp';
 
       const viewContainer = document.createElement('div');
@@ -60,8 +60,6 @@ export class PlanesApp {
       this.createCtrlsElements(ctrlsContainer);
 
       this.loadModel(this.query);
-
-      return div;
    }
 
    private createViewElements(parent: HTMLElement) {

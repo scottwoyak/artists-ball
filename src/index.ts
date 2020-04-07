@@ -22,17 +22,23 @@ window.onload = function () {
       }
    }
 
+   let div = document.createElement('div');
+   document.body.appendChild(div);
+
    if (type === 'planes') {
+      document.title = 'Value Planes';
       let app = new PlanesApp(query);
-      document.body.appendChild(app.component());
+      app.create(div);
    }
    else if (type === 'viewer') {
+      document.title = 'Virtual Pose Tool';
       let app = new ViewerApp(query);
-      document.body.appendChild(app.component());
+      app.create(div);
    }
    else { // type === 'ball'
+      document.title = 'Artist\'s Ball';
       let app = new PathTracerApp(query);
-      document.body.appendChild(app.component());
+      app.create(div);
    }
 }
 
