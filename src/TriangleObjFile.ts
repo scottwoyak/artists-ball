@@ -93,7 +93,7 @@ export class TriangleObjFile extends TriangleObj {
                }
             }
 
-            if (ret.iN.length === 4) {
+            if (ret.iV.length === 4) {
 
                vIndices.push(ret.iV[0], ret.iV[1], ret.iV[2]);
                vIndices.push(ret.iV[0], ret.iV[2], ret.iV[3]);
