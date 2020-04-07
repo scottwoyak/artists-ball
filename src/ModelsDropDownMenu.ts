@@ -8,13 +8,19 @@ export function createModelsDropDownMenu(parent: HTMLElement, loadModel: LoadMod
    let menu = new DropDownMenu(parent, 'Models', 'ModelDropDown');
    menu.addItem('Female Pose', () => loadModel('Pose1.blob'));
    menu.addItem('Female Head', () => loadModel('FemaleHead.blob'));
-   menu.addItem('Skull 1', () => loadModel('Skull1.blob'));
-   menu.addItem('Skull 2', () => loadModel('Skull2.blob'));
-   menu.addItem('Skull 3', () => loadModel('Skull3.blob'));
-   menu.addItem('Pelvis', () => loadModel('Pelvis.blob'));
-   menu.addItem('Head Ecorche', () => loadModel('HeadEcorche.blob'));
    menu.addItem('Arnold', () => loadModel('Arnold.blob'));
    menu.addItem('Teapot', () => loadModel('Teapot.blob'));
+
+   subMenu = menu.addSubMenu('Anatomy', 'AnatomySubMenu');
+   subMenu.addItem('Skull 1', () => loadModel('Skull1.blob'));
+   subMenu.addItem('Skull 2', () => loadModel('Skull2.blob'));
+   subMenu.addItem('Skull 3', () => loadModel('Skull3.blob'));
+   subMenu.addItem('Skull 4', () => loadModel('Skull4.blob'));
+   subMenu.addItem('Pelvis', () => loadModel('Pelvis.blob'));
+   subMenu.addItem('Clavicle', () => loadModel('Clavicle.blob'));
+   subMenu.addItem('Scapula', () => loadModel('Scapula.blob'));
+   subMenu.addItem('Humerus', () => loadModel('Humerus.blob'));
+   subMenu.addItem('Head Ecorche', () => loadModel('HeadEcorche.blob'));
 
    subMenu = menu.addSubMenu('Poses', 'HeadsSubMenu');
    subMenu.addItem('Pose 1', () => loadModel('Pose_01.blob'));
@@ -45,6 +51,7 @@ export function createModelsDropDownMenu(parent: HTMLElement, loadModel: LoadMod
    subMenu.addItem('Head 8', () => loadModel('Head8.blob'));
    subMenu.addItem('Head 9', () => loadModel('Head9.blob'));
    subMenu.addItem('Head 10', () => loadModel('Head10.blob'));
+   subMenu.addItem('Head 11', () => loadModel('Head.blob'));
 
    return menu;
 }

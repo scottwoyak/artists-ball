@@ -81,6 +81,12 @@ export class ModelLoader {
             model.rotY(toRad(180));
             break;
 
+         case 'skull4':
+            model.rotX(toRad(80));
+            model.rotY(toRad(-22));
+            model.rotZ(toRad(-1));
+            break;
+
          case 'sheephead':
             model.rotY(toRad(20));
             break;
