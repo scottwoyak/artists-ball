@@ -30,8 +30,17 @@ export class Mat4 {
     * 
     * @returns A new idenity matrix.
     */
-   public static identity(): Mat4 {
+   public static get identity(): Mat4 {
       return new Mat4();
+   }
+
+   /**
+    * Creates an orthographic matrix in the WebGL coordinate system (positive z towards you)
+    * 
+    * @return A new orthographic matrix
+    */
+   public static get ortho(): Mat4 {
+      return Mat4.makeOrtho(-1, 1, -1, 1, 1, -1);
    }
 
    /**

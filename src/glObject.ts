@@ -80,7 +80,7 @@ export class glObject {
 
       let gl = this.gl;
       let uni = new glUniform(gl, this.program);
-      uni.set('model', this.xForm.get().transpose());
+      uni.set('model', this.xForm.get());
 
       this.vertexBuffer.bind();
       this.indexBuffer.bind();

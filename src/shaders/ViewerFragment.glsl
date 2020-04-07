@@ -9,6 +9,8 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 lightView;
 uniform mat4 projection;
+uniform vec3 uEye;
+uniform int uOrthographic;
 
 uniform float uLightIntensity;
 uniform float uAmbientIntensity;
@@ -123,7 +125,16 @@ void main()
    else
    {
       vec3 toLight = normalize(-uLightDirection);
-      vec3 toEye = vec3(0.0, 0.0, 1.0);
+      vec3 toEye;
+      if (uOrthographic == 1)
+      {
+         toEye = vec3(0.0, 0.0, 1.0);
+      }
+      else
+      {
+         toEye = normalize(uEye - vVertex);
+      }
+
       vec3 normal = normalize(vNormal); // vNormal is interpolated and nolonger normal
 
       // swap normals for back facing triangles

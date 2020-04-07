@@ -2,8 +2,8 @@ import { Mat4 } from "./Mat";
 import { Vec3 } from "./Vec";
 
 export class XForm {
-   public base = Mat4.identity();
-   public mat = Mat4.identity();
+   public base = Mat4.identity;
+   public mat = Mat4.identity;
 
    public get(): Mat4 {
       return this.mat.multM(this.base);
@@ -11,11 +11,11 @@ export class XForm {
 
    public snap() {
       this.base = this.get();
-      this.mat = Mat4.identity();
+      this.mat = Mat4.identity;
    }
 
    public reset() {
-      this.mat = Mat4.identity();
+      this.mat = Mat4.identity;
    }
 
    public rotX(angle: number): XForm {

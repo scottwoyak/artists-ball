@@ -29,15 +29,15 @@ export class glClipSpace {
    }
 
    public get width(): number {
-      return (this.max.x - this.min.x);
+      return Math.abs(this.max.x - this.min.x);
    }
 
    public get height(): number {
-      return (this.max.y - this.min.y);
+      return Math.abs(this.max.y - this.min.y);
    }
 
    public get depth(): number {
-      return (this.max.z - this.min.z);
+      return Math.abs(this.max.z - this.min.z);
    }
 
    public constructor(min: Vec3, max: Vec3) {

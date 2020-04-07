@@ -118,6 +118,11 @@ export class ViewerApp {
                this.renderer.showShadowMap = !this.renderer.showShadowMap;
                this.dirty = true;
                break;
+
+            case 'v':
+               this.renderer.orthographic = !this.renderer.orthographic;
+               this.dirty = true;
+               break;
          }
       }
 

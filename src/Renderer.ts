@@ -28,7 +28,7 @@ export let DEFAULT_THRESHOLD2 = 70;
 const HIGHLIGHT_DIFF = 0.1;
 const BALL_RADIUS = 0.5;
 const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, -1.5];
-const INITIAL_VIEW = Mat4.identity();
+const INITIAL_VIEW = Mat4.identity;
 
 /**
  * Class that renders triangles and a light source
@@ -40,6 +40,8 @@ export class Renderer {
    private view = INITIAL_VIEW;
    private lightView = new Mat4();
    private projection = new Mat4();
+   private uEye = new Vec3([0, 0, 8]); // 4 times the max object dimension of 2. For a model, about 20 ft away
+   public orthographic = false;
 
    private uThreshold1 = DEFAULT_THRESHOLD1;
    private uThreshold2 = DEFAULT_THRESHOLD2;
@@ -122,15 +124,34 @@ export class Renderer {
    }
 
    public resize() {
+   }
+
+   private updateProjectionMatrix() {
       let clipSpace = this.getClipSpace();
-      this.projection = Mat4.makeOrtho(
-         clipSpace.left,
-         clipSpace.right,
-         clipSpace.bottom,
-         clipSpace.top,
-         clipSpace.near,
-         clipSpace.far
-      );
+      if (this.orthographic) {
+         this.projection = Mat4.makeOrtho(
+            clipSpace.left,
+            clipSpace.right,
+            clipSpace.bottom,
+            clipSpace.top,
+            clipSpace.near,
+            clipSpace.far
+         );
+      }
+      else {
+         let eye = this.uEye;
+         let center = new Vec3([0, 0, 0]);
+         let up = new Vec3([0, 1, 0]);
+         let mat = Mat4.makeLookAt(eye, center, up);
+
+
+         let maxHeight = 2.0;
+         let fieldOfView = 2 * toDeg(Math.atan2(maxHeight / 2, eye.z));
+         let aspectRatio = clipSpace.width / clipSpace.height;
+         let near = 0.1;
+         let far = 20;
+         this.projection = Mat4.makePerspective(fieldOfView, aspectRatio, near, far).multM(mat);
+      }
    }
 
    //
@@ -248,6 +269,7 @@ export class Renderer {
       let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
       gl.clearColor(color.r, color.g, color.b, 1);
 
+      this.updateProjectionMatrix();
       this.setStdUniforms();
       this.renderToShadowMap();
       this.renderToScreen();
@@ -256,11 +278,13 @@ export class Renderer {
    private setStdUniforms(): glUniform {
 
       let uni = new glUniform(this.gl, this.program);
-      uni.set('view', this.view.transpose());
-      uni.set('lightView', this.lightView.transpose());
-      uni.set('projection', this.projection.transpose());
+      uni.set('view', this.view);
+      uni.set('lightView', this.lightView);
+      uni.set('projection', this.projection);
+      uni.set('uEye', this.uEye);
+      uni.set('uOrthographic', this.orthographic);
       uni.set('uLightDirection', this.uLightDirection);
-      uni.seti('uUseShadows', 1);
+      uni.set('uUseShadows', true);
 
       uni.set('uUseThresholds', this.useThresholds ? 1 : 0, true);
       uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
@@ -317,13 +341,13 @@ export class Renderer {
       let uni = this.setStdUniforms();
 
       // always render with bands
-      uni.seti('uUseThresholds', 1);
+      uni.set('uUseThresholds', true);
 
       // shoot the light straight down
       uni.set('uLightDirection', new Vec3([0, -1, 0]));
 
       // don't cast shadows
-      uni.seti('uUseShadows', 0);
+      uni.set('uUseShadows', false);
 
       uni.set('view', new Mat4());
 
@@ -340,7 +364,7 @@ export class Renderer {
 
       // draw the arrow
       uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
-      uni.seti('uUseThresholds', 0);
+      uni.set('uUseThresholds', false);
 
       // first reset things so that we're looking down the z-axis
       this.arrow.clearTransforms();
@@ -408,11 +432,11 @@ export class Renderer {
       let uni = this.setStdUniforms();
 
       // change the view matrix so that our view is from the light
-      uni.set('view', this.lightView.transpose());
-      uni.set('projection', Mat4.identity());
+      uni.set('view', this.lightView);
+      uni.set('projection', Mat4.identity);
 
       // don't try to use the shadow texture while we're creating it
-      uni.seti('uUseShadows', 0);
+      uni.set('uUseShadows', false);
 
       this.obj.draw();
 
@@ -434,6 +458,7 @@ export class Renderer {
             this.shadowFrameBuffer.width,
             this.shadowFrameBuffer.height
          );
+         gl.bindTexture(gl.TEXTURE_2D, null);
       }
       else {
          gl.useProgram(this.program);
@@ -447,7 +472,7 @@ export class Renderer {
          this.obj.draw();
 
          if (this.showFloor) {
-            uni.seti('uShowFloor', 1);
+            uni.set('uShowFloor', true);
 
             this.floor.xForm.mat = this.obj.xForm.mat.clone();
 
@@ -457,7 +482,7 @@ export class Renderer {
             this.floor.draw();
             gl.disable(gl.CULL_FACE)
 
-            uni.seti('uShowFloor', 0);
+            uni.set('uShowFloor', false);
          }
 
          gl.clear(gl.DEPTH_BUFFER_BIT);
@@ -473,13 +498,14 @@ export class Renderer {
    private drawMiniView() {
 
       let uni = this.setStdUniforms();
+      uni.set('projection', Mat4.ortho);
 
       // draw the object in the upper right at a reduced size
-      let view = Mat4.identity();
+      let view = Mat4.identity;
       view.scale(this.miniSize);
       let clipSpace = this.getClipSpace();
       view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.y - this.miniSize, 0]));
-      uni.set('view', view.transpose());
+      uni.set('view', view);
       uni.set('uUseThresholds', this.miniViewUseThresholds ? 0 : 1, true);
       this.obj.draw();
    }
@@ -487,15 +513,16 @@ export class Renderer {
    private drawBall() {
 
       let uni = this.setStdUniforms();
+      uni.set('projection', Mat4.ortho);
 
       // stop using the shadowmap
-      uni.seti('uUseShadows', 0);
+      uni.set('uUseShadows', false);
 
-      let view = Mat4.identity();
+      let view = Mat4.identity;
       view.scale(this.miniSize);
       let clipSpace = this.getClipSpace();
       view.translate(new Vec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
-      uni.set('view', view.transpose());
+      uni.set('view', view);
       uni.set('uUseThresholds', this.useThresholds ? 1 : 0, true);
       uni.set('uWhiteColor', this.ballColor);
       uni.set('uBlackColor', htmlColor.black.toGlColor());

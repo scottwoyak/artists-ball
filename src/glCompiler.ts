@@ -27,7 +27,9 @@ export class glCompiler {
       gl.compileShader(shader);
       if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
          console.log(source);
-         throw 'compile error: ' + gl.getShaderInfoLog(shader);
+         let err = gl.getShaderInfoLog(shader);
+         console.error(err);
+         throw 'compile error: ' + err;
       }
       return shader;
    }

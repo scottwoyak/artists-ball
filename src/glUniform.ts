@@ -38,7 +38,7 @@ export class glUniform {
     */
    public set(
       name: string,
-      value: number | Vec3 | glColor3 | glColor4 | Mat4,
+      value: Boolean | number | Vec3 | glColor3 | glColor4 | Mat4,
       int: boolean = false
    ) {
 
@@ -56,7 +56,10 @@ export class glUniform {
             gl.uniform4fv(loc, new Float32Array([value.r, value.g, value.b, value.a]));
          }
          else if (value instanceof Mat4) {
-            gl.uniformMatrix4fv(loc, false, new Float32Array(value.values));
+            gl.uniformMatrix4fv(loc, false, new Float32Array(value.transpose().values));
+         }
+         else if (value instanceof Boolean || typeof (value) === 'boolean') {
+            gl.uniform1i(loc, value ? 1.0 : 0.0);
          }
          else if (name === "uMode") {
             gl.uniform1i(loc, value);
