@@ -102,5 +102,7 @@ export class ModelLoader {
          default:
             break;
       }
+
+      model.xForm.snap();
    }
 }

@@ -192,8 +192,8 @@ export class PathTracerRenderer {
          uni.set('object.volumes[' + i + '].boxMax', vol.boxMax);
          startIndex += vol.triangles.length;
       }
-      uni.set('object.boxMin', tObj.boxMin);
-      uni.set('object.boxMax', tObj.boxMax);
+      uni.set('object.boxMin', tObj.box.min);
+      uni.set('object.boxMax', tObj.box.max);
    }
 
    public get renderMode(): RenderMode {

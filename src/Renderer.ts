@@ -62,6 +62,7 @@ export class Renderer {
    private arrow: glObject;
    private floor: glObject;
    public obj: glObject;
+   private objScale: number = 1;
 
    private shadowFrameBuffer: glFrameBuffer;
    private shadowColorTexture: glTexture;
@@ -130,14 +131,34 @@ export class Renderer {
 
       let gl = this.gl;
       let clipSpace = this.getClipSpace();
+      let winAR = gl.canvas.width / this.gl.canvas.height;
+
+      let xBox = this.tObj.box.xForm(this.obj.xForm.base);
+      let objMaxHeight = 1.1 * xBox.height;
+      let objMaxWidth = 1.1 * xBox.width;
+      let objAR = objMaxWidth / objMaxHeight;
+
+      let desiredWidth;
+      let desiredHeight;
+      if (objAR < winAR) {
+         // make the object height fit
+         desiredHeight = objMaxHeight;
+         desiredWidth = objMaxHeight * winAR;
+      }
+      else {
+         // make the object width fit
+         desiredHeight = objMaxWidth / winAR;
+         desiredWidth = objMaxWidth;
+      }
+
       if (this.orthographic) {
          this.projection = Mat4.makeOrtho(
-            clipSpace.left,
-            clipSpace.right,
-            clipSpace.bottom,
-            clipSpace.top,
+            -desiredWidth / 2,
+            desiredWidth / 2,
+            -desiredHeight / 2,
+            desiredHeight / 2,
             clipSpace.near,
-            clipSpace.far
+            clipSpace.far,
          );
       }
       else {
@@ -146,14 +167,11 @@ export class Renderer {
          let up = new Vec3([0, 1, 0]);
          let mat = Mat4.makeLookAt(eye, center, up);
 
-         let ar = gl.canvas.width / this.gl.canvas.height;
 
-         let maxHeight = 2.0 * (ar < 1 ? 1 / ar : 1);
-         let fieldOfView = 2 * toDeg(Math.atan2(maxHeight / 2, eye.z));
-         let aspectRatio = clipSpace.width / clipSpace.height;
+         let fieldOfView = 2 * toDeg(Math.atan2(desiredHeight / 2, eye.z));
          let near = 0.1;
          let far = 20;
-         this.projection = Mat4.makePerspective(fieldOfView, aspectRatio, near, far).multM(mat);
+         this.projection = Mat4.makePerspective(fieldOfView, winAR, near, far).multM(mat);
       }
    }
 
@@ -237,8 +255,8 @@ export class Renderer {
 
       let center = tObj.center;
       this.obj.translate(new Vec3([-center.x, -center.y, -center.z]));
-      let scale = 2.0 / Math.sqrt(tObj.width * tObj.width + tObj.height * tObj.height + tObj.depth * tObj.depth);
-      this.obj.scale(scale);
+      this.objScale = 2.0 / tObj.diagonal;
+      this.obj.scale(this.objScale);
       this.obj.xForm.snap();
 
       if (this.floor) {
@@ -248,7 +266,7 @@ export class Renderer {
 
       // make the floor size slightly larger than the object, centered at the bottom
       let radius = 4;
-      let pos = new Vec3([0, -scale * tObj.height / 2, 0]);
+      let pos = new Vec3([0, -this.objScale * tObj.height / 2, 0]);
       tFloor.addDisk(50, radius, pos);
       this.floor = new glObject(this.gl, tFloor, this.program);
 

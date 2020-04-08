@@ -6,6 +6,7 @@ import { clamp } from "./Globals";
 import { BlobFile } from "./BlobFile";
 import { IndexedVec3 } from "./IndexedVec3";
 import { IVec3 } from "./IVec3";
+import { BoundingBox } from "./BoundingBox";
 
 export enum NormalType {
    Smooth,
@@ -63,8 +64,7 @@ export class TriangleObj {
    public vertices: number[] = [];
    public normals: number[] = [];
    public indices: number[] = [];
-   public boxMin = new Vec3([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]);
-   public boxMax = new Vec3([-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE]);
+   public box = new BoundingBox();
    public volumes: Volume[] = [];
    public name: string;
 
@@ -77,23 +77,23 @@ export class TriangleObj {
    }
 
    public get width(): number {
-      return this.boxMax.x - this.boxMin.x;
+      return this.box.width;
    }
 
    public get height(): number {
-      return this.boxMax.y - this.boxMin.y;
+      return this.box.height;
    }
 
    public get depth(): number {
-      return this.boxMax.z - this.boxMin.z;
+      return this.box.depth;
+   }
+
+   public get diagonal(): number {
+      return this.box.diagonal;
    }
 
    public get center(): Vec3 {
-      return new Vec3([
-         (this.boxMin.x + this.boxMax.x) / 2,
-         (this.boxMin.y + this.boxMax.y) / 2,
-         (this.boxMin.z + this.boxMax.z) / 2,
-      ]);
+      return this.box.center;
    }
 
    public constructor(name?: string) {
@@ -116,9 +116,9 @@ export class TriangleObj {
       let p = new Profiler();
 
       let trans = new Vec3([
-         -(this.boxMax.x + this.boxMin.x) / 2,
-         -(this.boxMax.y + this.boxMin.y) / 2,
-         -(this.boxMax.z + this.boxMin.z) / 2,
+         -this.width / 2,
+         -this.height / 2,
+         -this.depth / 2,
       ]);
 
       let scale = size / Math.max(this.width, this.height, this.depth);
@@ -131,12 +131,12 @@ export class TriangleObj {
          v.z = (v.z + trans.z) * scale;
       }
 
-      this.boxMin.x = (this.boxMin.x + trans.x) * scale;
-      this.boxMin.y = (this.boxMin.y + trans.y) * scale;
-      this.boxMin.z = (this.boxMin.z + trans.z) * scale;
-      this.boxMax.x = (this.boxMax.x + trans.x) * scale;
-      this.boxMax.y = (this.boxMax.y + trans.y) * scale;
-      this.boxMax.z = (this.boxMax.z + trans.z) * scale;
+      this.box.min.x = (this.box.min.x + trans.x) * scale;
+      this.box.min.y = (this.box.min.y + trans.y) * scale;
+      this.box.min.z = (this.box.min.z + trans.z) * scale;
+      this.box.max.x = (this.box.max.x + trans.x) * scale;
+      this.box.max.y = (this.box.max.y + trans.y) * scale;
+      this.box.max.z = (this.box.max.z + trans.z) * scale;
 
       for (let i = 0; i < this.volumes.length; i++) {
          let v = this.volumes[i];
@@ -166,12 +166,12 @@ export class TriangleObj {
          v.z += offset.z;
       }
 
-      this.boxMin.x += offset.x;
-      this.boxMin.y += offset.y;
-      this.boxMin.z += offset.z;
-      this.boxMax.x += offset.x;
-      this.boxMax.y += offset.y;
-      this.boxMax.z += offset.z;
+      this.box.min.x += offset.x;
+      this.box.min.y += offset.y;
+      this.box.min.z += offset.z;
+      this.box.max.x += offset.x;
+      this.box.max.y += offset.y;
+      this.box.max.z += offset.z;
 
       for (let i = 0; i < this.volumes.length; i++) {
          let vol = this.volumes[i];
@@ -205,9 +205,9 @@ export class TriangleObj {
 
       for (let i = 0; i < this.numTriangles; i++) {
          let t = this.getTriangle(i);
-         let x = Math.floor(numSteps * (t.minX - this.boxMin.x) / (this.boxMax.x - this.boxMin.x));
-         let y = Math.floor(numSteps * (t.minY - this.boxMin.y) / (this.boxMax.y - this.boxMin.y));
-         let z = Math.floor(numSteps * (t.minZ - this.boxMin.z) / (this.boxMax.z - this.boxMin.z));
+         let x = Math.floor(numSteps * (t.minX - this.box.min.x) / (this.box.width));
+         let y = Math.floor(numSteps * (t.minY - this.box.min.y) / (this.box.height));
+         let z = Math.floor(numSteps * (t.minZ - this.box.min.z) / (this.box.depth));
          x = clamp(x, 0, numSteps - 1);
          y = clamp(y, 0, numSteps - 1);
          z = clamp(z, 0, numSteps - 1);
@@ -216,14 +216,6 @@ export class TriangleObj {
       }
    }
 
-   private updateBounds(v: IVec3) {
-      this.boxMin.x = Math.min(this.boxMin.x, v.x);
-      this.boxMin.y = Math.min(this.boxMin.y, v.y);
-      this.boxMin.z = Math.min(this.boxMin.z, v.z);
-      this.boxMax.x = Math.max(this.boxMax.x, v.x);
-      this.boxMax.y = Math.max(this.boxMax.y, v.y);
-      this.boxMax.z = Math.max(this.boxMax.z, v.z);
-   }
 
    public pushQuad(v1: IVec3, v2: IVec3, v3: IVec3, v4: IVec3) {
 
@@ -241,9 +233,9 @@ export class TriangleObj {
 
       // add vertices
       this.vertices.push(v1.x, v1.y, v1.z, v2.x, v2.y, v2.z, v3.x, v3.y, v3.z);
-      this.updateBounds(v1);
-      this.updateBounds(v2);
-      this.updateBounds(v3);
+      this.box.update(v1);
+      this.box.update(v2);
+      this.box.update(v3);
 
       // add normals
       let tri = new IndexedTriangle(this.vertices, this.normals, i1, i2, i3);
@@ -313,13 +305,13 @@ export class TriangleObj {
 
    protected findBounds() {
       for (let i = 0; i < this.numVertices; i++) {
-         this.boxMin.x = Math.min(this.boxMin.x, this.x(i));
-         this.boxMin.y = Math.min(this.boxMin.y, this.y(i));
-         this.boxMin.z = Math.min(this.boxMin.z, this.z(i));
+         this.box.min.x = Math.min(this.box.min.x, this.x(i));
+         this.box.min.y = Math.min(this.box.min.y, this.y(i));
+         this.box.min.z = Math.min(this.box.min.z, this.z(i));
 
-         this.boxMax.x = Math.max(this.boxMax.x, this.x(i));
-         this.boxMax.y = Math.max(this.boxMax.y, this.y(i));
-         this.boxMax.z = Math.max(this.boxMax.z, this.z(i));
+         this.box.max.x = Math.max(this.box.max.x, this.x(i));
+         this.box.max.y = Math.max(this.box.max.y, this.y(i));
+         this.box.max.z = Math.max(this.box.max.z, this.z(i));
       }
    }
 
@@ -420,12 +412,7 @@ export class TriangleObj {
       }
 
       // merge the bounding boxes
-      this.boxMin.x = Math.min(this.boxMin.x, tObj.boxMin.x);
-      this.boxMin.y = Math.min(this.boxMin.y, tObj.boxMin.y);
-      this.boxMin.z = Math.min(this.boxMin.z, tObj.boxMin.z);
-      this.boxMax.x = Math.max(this.boxMax.x, tObj.boxMax.x);
-      this.boxMax.y = Math.max(this.boxMax.y, tObj.boxMax.y);
-      this.boxMax.z = Math.max(this.boxMax.z, tObj.boxMax.z);
+      this.box.merge(tObj.box);
    }
 
    public toData(): TriangleObjData {
@@ -435,8 +422,8 @@ export class TriangleObj {
       data.vertices = new Float32Array(this.vertices);
       data.normals = new Float32Array(this.normals);
       data.indices = new Int32Array(this.indices);
-      data.boxMin = this.boxMin.clone();
-      data.boxMax = this.boxMax.clone();
+      data.boxMin = this.box.min.clone();
+      data.boxMax = this.box.max.clone();
       return data;
    }
 
@@ -447,8 +434,7 @@ export class TriangleObj {
       tObj.vertices = Array.from(data.vertices);
       tObj.normals = Array.from(data.normals);
       tObj.indices = Array.from(data.indices);
-      tObj.boxMin = new Vec3(data.boxMin.values);
-      tObj.boxMax = new Vec3(data.boxMax.values);
+      tObj.box = new BoundingBox(new Vec3(data.boxMin.values), new Vec3(data.boxMax.values));
       return tObj;
    }
 

@@ -280,6 +280,78 @@ export class Vec4 extends Vec {
    }
 
    /**
+    * Gets the X component of the vector
+    * 
+    * @returns The value
+    */
+   public get x(): number {
+      return this.values[0];
+   }
+
+   /**
+    * Sets the X component of the vector
+    * 
+    * @param val The value
+    */
+   public set x(val: number) {
+      this.values[0] = val;
+   }
+
+   /**
+    * Gets the Y component of the vector
+    *
+    * @returns The value
+    */
+   public get y(): number {
+      return this.values[1];
+   }
+
+   /**
+    * Sets the Y component of the vector
+    * 
+    * @param val The value
+    */
+   public set y(val: number) {
+      this.values[1] = val;
+   }
+
+   /**
+    * Gets the Z component of the vector
+    *
+    * @returns The value
+    */
+   public get z(): number {
+      return this.values[2];
+   }
+
+   /**
+    * Sets the Z component of the vector
+    * 
+    * @param val The value
+    */
+   public set z(val: number) {
+      this.values[2] = val;
+   }
+
+   /**
+    * Gets the Z component of the vector
+    *
+    * @returns The value
+    */
+   public get w(): number {
+      return this.values[3];
+   }
+
+   /**
+    * Sets the Z component of the vector
+    * 
+    * @param val The value
+    */
+   public set w(val: number) {
+      this.values[3] = val;
+   }
+
+   /**
     * Returns an x-y-z vector where each element is computed by dividing this vectors
     * elements by the w value.
     * 
