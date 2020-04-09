@@ -10,6 +10,8 @@ import { clamp } from "./Globals";
 import { TriangleObj } from "./TriangleObj";
 import { TriangleObjFile } from "./TriangleObjFile";
 import { TriangleObjBuilder } from "./TriangleObjBuilder";
+import { Profiler } from "./Profiler";
+import { IndexedVec3 } from "./IndexedVec3";
 
 let skinTones = [
    new htmlColor([240, 223, 214]),
@@ -233,7 +235,6 @@ export class PathTracerApp {
          let center = new Vec3([0, radius, 0]);
          let tObj = new TriangleObjBuilder();
          tObj.addSphere(8, radius, center);
-         tObj.breakIntoVolumes();
          return Promise.resolve(tObj);
       }
       else if (query && query.toLowerCase() === 'cube') {
@@ -242,7 +243,6 @@ export class PathTracerApp {
          let center = new Vec3([0, size / 2.0, 0]);
          let tObj = new TriangleObjBuilder();
          tObj.addCube(size, center);
-         tObj.breakIntoVolumes();
          return Promise.resolve(tObj);
       }
       else if (query && query.toLowerCase().endsWith('.obj')) {
@@ -251,10 +251,6 @@ export class PathTracerApp {
             .then(res => res.text())
             .then(res => {
                let tObj = new TriangleObjFile(query, res);
-               let size = 1.5;
-               tObj.autoCenter(size);
-               tObj.translate(new Vec3([0, tObj.height / 2, 0]));
-               tObj.breakIntoVolumes();
                return tObj;
             });
       }

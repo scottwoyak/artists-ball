@@ -65,7 +65,6 @@ export class TriangleObj {
    public normals: number[] = [];
    public indices: number[] = [];
    public box = new BoundingBox();
-   public volumes: Volume[] = [];
    public name: string;
 
    public get numVertices() {
@@ -105,115 +104,6 @@ export class TriangleObj {
       let i2 = this.indices[3 * index + 1];
       let i3 = this.indices[3 * index + 2];
       return new IndexedTriangle(this.vertices, this.normals, i1, i2, i3);
-   }
-
-   /**
-    * Scales the object to the specified size and centers it about (0,0,0)
-    * 
-    * @param size The max size for the width, height, and depth
-    */
-   public autoCenter(size: number) {
-      let p = new Profiler();
-
-      let trans = new Vec3([
-         -this.width / 2,
-         -this.height / 2,
-         -this.depth / 2,
-      ]);
-
-      let scale = size / Math.max(this.width, this.height, this.depth);
-
-      for (let i = 0; i < this.numVertices; i++) {
-         let v = new IndexedVec3(this.vertices, i);
-
-         v.x = (v.x + trans.x) * scale;
-         v.y = (v.y + trans.y) * scale;
-         v.z = (v.z + trans.z) * scale;
-      }
-
-      this.box.min.x = (this.box.min.x + trans.x) * scale;
-      this.box.min.y = (this.box.min.y + trans.y) * scale;
-      this.box.min.z = (this.box.min.z + trans.z) * scale;
-      this.box.max.x = (this.box.max.x + trans.x) * scale;
-      this.box.max.y = (this.box.max.y + trans.y) * scale;
-      this.box.max.z = (this.box.max.z + trans.z) * scale;
-
-      for (let i = 0; i < this.volumes.length; i++) {
-         let v = this.volumes[i];
-         v.boxMin.x = (v.boxMin.x + trans.x) * scale;
-         v.boxMin.y = (v.boxMin.y + trans.y) * scale;
-         v.boxMin.z = (v.boxMin.z + trans.z) * scale;
-         v.boxMax.x = (v.boxMax.x + trans.x) * scale;
-         v.boxMax.y = (v.boxMax.y + trans.y) * scale;
-         v.boxMax.z = (v.boxMax.z + trans.z) * scale;
-      }
-
-      p.log('autoAdjust()');
-   }
-
-   /**
-    * Shift the object in space.
-    * 
-    * @param offset The amount to shift
-    */
-   public translate(offset: Vec3) {
-
-      for (let i = 0; i < this.numVertices; i++) {
-         let v = new IndexedVec3(this.vertices, i);
-
-         v.x += offset.x;
-         v.y += offset.y;
-         v.z += offset.z;
-      }
-
-      this.box.min.x += offset.x;
-      this.box.min.y += offset.y;
-      this.box.min.z += offset.z;
-      this.box.max.x += offset.x;
-      this.box.max.y += offset.y;
-      this.box.max.z += offset.z;
-
-      for (let i = 0; i < this.volumes.length; i++) {
-         let vol = this.volumes[i];
-         vol.boxMin.x += offset.x;
-         vol.boxMin.y += offset.y;
-         vol.boxMin.z += offset.z;
-         vol.boxMax.x += offset.x;
-         vol.boxMax.y += offset.y;
-         vol.boxMax.z += offset.z;
-      }
-   }
-
-   /**
-    * Breaks the object into evenly spaced volumes. The number of volumes is automatically
-    * determined based on the number of triangles.
-    */
-   public breakIntoVolumes() {
-      let numSteps;
-      if (this.numTriangles < 40) {
-         numSteps = 1;
-      } else if (this.numTriangles < 1500) {
-         numSteps = 2;
-      }
-      else {
-         numSteps = 3;
-      }
-      this.volumes = [];
-      for (let i = 0; i < Math.pow(numSteps, 3); i++) {
-         this.volumes.push(new Volume());
-      }
-
-      for (let i = 0; i < this.numTriangles; i++) {
-         let t = this.getTriangle(i);
-         let x = Math.floor(numSteps * (t.minX - this.box.min.x) / (this.box.width));
-         let y = Math.floor(numSteps * (t.minY - this.box.min.y) / (this.box.height));
-         let z = Math.floor(numSteps * (t.minZ - this.box.min.z) / (this.box.depth));
-         x = clamp(x, 0, numSteps - 1);
-         y = clamp(y, 0, numSteps - 1);
-         z = clamp(z, 0, numSteps - 1);
-         let index = x + y * numSteps + z * numSteps * numSteps;
-         this.volumes[index].push(t);
-      }
    }
 
 

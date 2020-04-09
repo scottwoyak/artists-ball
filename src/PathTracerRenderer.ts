@@ -15,6 +15,7 @@ import { TriangleObj } from './TriangleObj';
 import { glUniformBlock } from './glUniformBlock';
 import { glTexture, glTextureStyle } from './glTexture';
 import { glFrameBuffer } from './glFrameBuffer';
+import { PathTracerObj } from './PathTracerObj';
 
 /**
  * Rendering mode for displaying the texture
@@ -94,7 +95,6 @@ export class PathTracerRenderer {
          this.textures.push(this.frameBuffer.createTexture(glTextureStyle.Color));
       }
 
-
       // create toScreen shader
       this.toScreenProgram = glCompiler.compile(gl, toScreenVertexSource, toScreenFragmentSource);
       this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
@@ -109,6 +109,9 @@ export class PathTracerRenderer {
       let p = new Profiler();
       // create the toTexture shader
       if (tObj && tObj.numTriangles > 0) {
+
+         let pObj = new PathTracerObj(tObj);
+
          this.toTextureProgram = glCompiler.compile(
             gl,
             toTextureVertexSource
@@ -118,12 +121,12 @@ export class PathTracerRenderer {
                .replace('<VERSION>', '#version 300 es')
                .replace('NOTHING', 'USE_TRIANGLES')
                .replace('<NUM_VERTICES>', tObj.numVertices.toString())
-               .replace('<NUM_VOLUMES>', tObj.volumes.length.toString())
+               .replace('<NUM_VOLUMES>', pObj.volumes.length.toString())
                .replace('<NUM_TRIANGLES>', tObj.numTriangles.toString())
          );
 
          // upload triangles to the GPU
-         this.uploadUniforms(tObj);
+         this.uploadUniforms(pObj);
       }
       else {
          this.toTextureProgram = glCompiler.compile(
@@ -145,16 +148,17 @@ export class PathTracerRenderer {
     * 
     * @param program The program to upload to
     */
-   private uploadUniforms(tObj: TriangleObj) {
+   private uploadUniforms(pObj: PathTracerObj) {
 
       let gl = this.gl as WebGL2RenderingContext;
+      let tObj = pObj.tObj;
 
       // upload the big chunks as Uniform Blocks
       let blockBinding = 2;
       let vBlock = new glUniformBlock(gl, this.toTextureProgram, 'MyVerticesBlock', blockBinding);
 
       // put the data into a Float32Array for uploading
-      let vData = new Float32Array(tObj.numVertices * 4);
+      let vData = new Float32Array(pObj.tObj.numVertices * 4);
       for (let i = 0; i < tObj.numVertices; i++) {
          vData[4 * i + 0] = tObj.vertices[3 * i + 0];
          vData[4 * i + 1] = tObj.vertices[3 * i + 1];
@@ -169,8 +173,8 @@ export class PathTracerRenderer {
       // put the data into a Float32Array for uploading
       let tData = new Int32Array(tObj.numTriangles * 4);
       let index = 0;
-      for (let v = 0; v < tObj.volumes.length; v++) {
-         let vol = tObj.volumes[v];
+      for (let v = 0; v < pObj.volumes.length; v++) {
+         let vol = pObj.volumes[v];
          for (let i = 0; i < vol.triangles.length; i++) {
             let t = vol.triangles[i];
             tData[index++] = t.i1;
@@ -184,8 +188,8 @@ export class PathTracerRenderer {
       // Upload the volume info as a standard uniform
       let uni = new glUniform(gl, this.toTextureProgram);
       let startIndex = 0;
-      for (let i = 0; i < tObj.volumes.length; i++) {
-         let vol = tObj.volumes[i];
+      for (let i = 0; i < pObj.volumes.length; i++) {
+         let vol = pObj.volumes[i];
          uni.set('object.volumes[' + i + '].startIndex', startIndex, true);
          uni.set('object.volumes[' + i + '].numTriangles', vol.triangles.length, true);
          uni.set('object.volumes[' + i + '].boxMin', vol.boxMin);
