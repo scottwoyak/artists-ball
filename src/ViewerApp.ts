@@ -2,12 +2,14 @@ import { htmlColor } from "./htmlColor";
 import { toRad, isMobile } from "./Globals";
 import { Renderer } from "./Renderer";
 import { Mat4 } from "./Mat";
-import { Vec4, Vec2 } from "./Vec";
-import { NormalType } from "./TriangleObj";
+import { Vec4, Vec2, Vec3 } from "./Vec";
+import { NormalType, TriangleObj } from "./TriangleObj";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { saveAs } from 'file-saver';
 import { createModelsDropDownMenu } from "./ModelsDropDownMenu";
 import { ModelLoader } from "./ModelLoader";
+import { Profiler } from "./Profiler";
+import { BoundingBox } from "./BoundingBox";
 
 enum PointerMode {
    View,
@@ -97,6 +99,8 @@ export class ViewerApp {
                   'Num Triangles: ' + this.renderer.tObj.numTriangles.toLocaleString() + '\n' +
                   'Num Vertices: ' + this.renderer.tObj.numVertices.toLocaleString() + '\n'
                );
+               break;
+
             case 'o':
                this.optimize(NormalType.Smooth);
                break;
@@ -106,6 +110,18 @@ export class ViewerApp {
                break;
 
             case 't':
+               /*
+               let box = BoundingBox.infinite;
+               box.max.x = 62.1;
+               this.trim(this.renderer.tObj, box);
+               */
+               /*
+               this.mirror(this.renderer.tObj, 62.0);
+               this.renderer.obj.applyXForm();
+               */
+               this.mirror(this.renderer.tObj, 62, false);
+               this.renderer.setModel(this.renderer.tObj);
+               this.dirty = true;
                break;
 
             case 's':
@@ -121,6 +137,11 @@ export class ViewerApp {
                this.renderer.orthographic = !this.renderer.orthographic;
                this.dirty = true;
                break;
+
+            case 'a':
+               this.renderer.obj.applyXForm();
+               this.dirty = true;
+               break;
          }
       }
 
@@ -133,6 +154,62 @@ export class ViewerApp {
       }
    }
 
+   private trim(tObj: TriangleObj, box: BoundingBox) {
+      let p = new Profiler();
+      let indices: number[] = [];
+      tObj.box.log('before trim: ');
+      for (let i = 0; i < tObj.numTriangles; i++) {
+         let tri = tObj.getTriangle(i);
+
+         if (box.inside(tri.v1) && box.inside(tri.v2) && box.inside(tri.v3)) {
+            indices.push(tri.i1);
+            indices.push(tri.i2);
+            indices.push(tri.i3);
+         }
+      }
+      console.log('trimmed ' + (tObj.indices.length - indices.length) + ' triangles');
+      tObj.indices = indices;
+      tObj.findBounds();
+      tObj.box.log('after trim: ');
+      p.log('Trip Complete');
+   }
+
+   private mirror(tObj: TriangleObj, x: number, add: boolean) {
+      let p = new Profiler();
+
+      if (add) {
+         // duplicate vertices
+         let numVertices = tObj.numVertices;
+         for (let i = 0; i < numVertices; i++) {
+            tObj.vertices[3 * i + 0] -= x;;
+            tObj.vertices.push(-tObj.vertices[3 * i + 0]);
+            tObj.vertices.push(tObj.vertices[3 * i + 1]);
+            tObj.vertices.push(tObj.vertices[3 * i + 2]);
+            tObj.normals.push(-tObj.normals[3 * i + 0]);
+            tObj.normals.push(tObj.normals[3 * i + 1]);
+            tObj.normals.push(tObj.normals[3 * i + 2]);
+         }
+
+         let numIndices = tObj.indices.length;
+         let startIndex = numVertices;
+         for (let i = 0; i < numIndices; i++) {
+            tObj.indices.push(startIndex + tObj.indices[i]);
+         }
+      }
+      else {
+         // reflect vertices
+         let numVertices = tObj.numVertices;
+         for (let i = 0; i < numVertices; i++) {
+            tObj.vertices[3 * i + 0] = x + (x - tObj.vertices[3 * i + 0]);
+            tObj.normals[3 * i + 0] = -tObj.normals[3 * i + 0];
+         }
+      }
+
+      tObj.findBounds();
+
+      p.log('Mirror Complete');
+   }
+
    private optimize(normalType: NormalType) {
 
       let obj = this.renderer.obj;
@@ -142,12 +219,14 @@ export class ViewerApp {
 
       let newNumVertices = obj.tObj.numVertices;
 
-      let msg = 'Optimized .OBJ content copied to clipboard\n\n';
+      //let msg = 'Optimized .OBJ content copied to clipboard\n\n';
+      let msg = 'Optimized .OBJ content\n\n';
       msg += 'Num Triangles: ' + obj.tObj.numTriangles + '\n';
       msg += 'Num Vertices: ' + oldNumVertices + ' to ' + newNumVertices + ', ' + (100 * newNumVertices / oldNumVertices).toFixed() + ' %\n';
+      alert(msg);
 
-      let str = obj.tObj.toObjString(6);
-      navigator.clipboard.writeText(str).then(() => { alert(msg) });
+      //let str = obj.tObj.toObjString(6);
+      //navigator.clipboard.writeText(str).then(() => { alert(msg) });
 
       this.dirty = true;
    }
@@ -211,18 +290,19 @@ export class ViewerApp {
                requestAnimationFrame(() => this.tick());
 
                /*
-                  let tokens = query.split('.');
-                  let propFile = tokens[0] + '_Prop.' + tokens[1];
-                  this.loadModelFile(propFile).then((tPropObj) => {
-                     tObj.combine(tPropObj);
-                     return tObj;
-                  }).then(() => {
-                     this.renderer.setModel(tObj);
-                     this.orient(tObj, query);
-      
-                     this.dirty = true;
-                     requestAnimationFrame(() => this.tick());
-                  });
+               let box = BoundingBox.infinite;
+               box.max.x = 62.1;
+               this.trim(tObj, box);
+
+               this.loader.loadModelFile('SubTool3.blob', statusFunc).then((tObj2) => {
+                  tObj.combine(tObj2);
+                  return tObj;
+               }).then(() => {
+                  this.renderer.setModel(tObj);
+
+                  this.dirty = true;
+                  requestAnimationFrame(() => this.tick());
+               });
                */
             });
       }

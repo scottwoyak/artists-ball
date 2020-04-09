@@ -34,9 +34,36 @@ export class BoundingBox {
    }
 
    public constructor(min: Vec3 = new Vec3([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]),
-      max: Vec3 = new Vec3([Number.MIN_VALUE, Number.MIN_VALUE, Number.MIN_VALUE])) {
+      max: Vec3 = new Vec3([-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE])) {
       this.min = min;
       this.max = max;
+   }
+
+   public static get infinite(): BoundingBox {
+      const MAX = Number.POSITIVE_INFINITY;
+      const MIN = Number.NEGATIVE_INFINITY;
+      return new BoundingBox(new Vec3([MIN, MIN, MIN]), new Vec3([MAX, MAX, MAX]));
+   }
+
+   public inside(vec: IVec3): boolean {
+      if (
+         vec.x >= this.min.x && vec.x <= this.max.x &&
+         vec.y >= this.min.y && vec.y <= this.max.y &&
+         vec.z >= this.min.z && vec.z <= this.max.z
+      ) {
+         return true;
+      }
+      else {
+         return false;
+      }
+
+   }
+
+   public log(msg: string) {
+      console.log(msg + ' ' +
+         '[' + this.min.x + ', ' + this.min.y + ', ' + this.min.z + ']' +
+         '[' + this.max.x + ', ' + this.max.y + ', ' + this.max.z + ']'
+      );
    }
 
    public update(v: IVec3) {

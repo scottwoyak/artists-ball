@@ -157,16 +157,17 @@ export class TriangleObj {
       return this.vertices[3 * i + 2];
    }
 
-   protected findBounds() {
-      for (let i = 0; i < this.numVertices; i++) {
-         this.box.min.x = Math.min(this.box.min.x, this.x(i));
-         this.box.min.y = Math.min(this.box.min.y, this.y(i));
-         this.box.min.z = Math.min(this.box.min.z, this.z(i));
+   public findBounds() {
+      let box = new BoundingBox();
 
-         this.box.max.x = Math.max(this.box.max.x, this.x(i));
-         this.box.max.y = Math.max(this.box.max.y, this.y(i));
-         this.box.max.z = Math.max(this.box.max.z, this.z(i));
+      for (let i = 0; i < this.numTriangles; i++) {
+         let tri = this.getTriangle(i);
+         box.update(tri.v1);
+         box.update(tri.v2);
+         box.update(tri.v3);
       }
+
+      this.box = box;
    }
 
    /**
@@ -257,8 +258,10 @@ export class TriangleObj {
       let startIndex = this.numVertices;
 
       // add the other vertices and normals to ours
-      this.vertices.push(...tObj.vertices);
-      this.normals.push(...tObj.normals);
+      for (let i = 0; i < tObj.vertices.length; i++) {
+         this.vertices.push(tObj.vertices[i]);
+         this.normals.push(tObj.normals[i]);
+      }
 
       // add the other indices, but offset them properly
       for (let i = 0; i < tObj.indices.length; i++) {

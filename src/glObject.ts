@@ -1,9 +1,10 @@
 import { TriangleObj, NormalType } from "./TriangleObj";
 import { glAttributeBuffer } from "./glAttributeBuffer";
-import { Vec3 } from "./Vec";
+import { Vec3, Vec4 } from "./Vec";
 import { glUniform } from "./glUniform";
 import { glIndexBuffer } from "./glIndexBuffer";
 import { XForm } from "./XForm";
+import { Profiler } from "./Profiler";
 
 export class glObject {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -32,18 +33,29 @@ export class glObject {
       this.tObj = tObj;
       this.program = program;
 
-      // create buffers (and associated attributes)
-      this.vertexBuffer = new glAttributeBuffer(gl, program, 'aVertex');
-      this.normalBuffer = new glAttributeBuffer(gl, program, 'aNormal');
-      this.indexBuffer = new glIndexBuffer(gl);
-
+      this.createBuffers();
       this.uploadTriangles();
+   }
+
+   private createBuffers() {
+      let gl = this.gl;
+
+      // create buffers (and associated attributes)
+      this.vertexBuffer = new glAttributeBuffer(gl, this.program, 'aVertex');
+      this.normalBuffer = new glAttributeBuffer(gl, this.program, 'aNormal');
+      this.indexBuffer = new glIndexBuffer(gl);
    }
 
    public delete() {
       this.vertexBuffer.delete();
       this.normalBuffer.delete();
       this.indexBuffer.delete();
+   }
+
+   private rebuildBuffers() {
+      this.delete();
+      this.createBuffers();
+      this.uploadTriangles();
    }
 
    public snap() {
@@ -91,6 +103,42 @@ export class glObject {
 
    public optimize(normalType: NormalType) {
       this.tObj.optimize(normalType);
-      this.uploadTriangles();
+      this.rebuildBuffers();
+   }
+
+   private applyToVecs(normals: boolean) {
+
+      let vecs = normals ? this.tObj.normals : this.tObj.vertices;
+
+      // if we're updating normals, ignore translation by setting w=0
+      let vec = new Vec4([0, 0, 0, normals ? 0 : 1]);
+
+      for (let i = 0; i < vecs.length / 3; i++) {
+         vec.x = vecs[3 * i + 0];
+         vec.y = vecs[3 * i + 1];
+         vec.z = vecs[3 * i + 2];
+         vec = this.xForm.mat.multM(this.xForm.base).multV(vec);
+
+         if (normals) {
+            vec = vec.normalize();
+         }
+
+         vecs[3 * i + 0] = vec.x;
+         vecs[3 * i + 1] = vec.y;
+         vecs[3 * i + 2] = vec.z;
+      }
+   }
+
+   public applyXForm() {
+      let p = new Profiler();
+      this.applyToVecs(false);
+      this.applyToVecs(true);
+
+      this.xForm = new XForm();
+      this.tObj.box.log('before: ');
+      this.tObj.findBounds();
+      this.tObj.box.log('after: ');
+      this.rebuildBuffers();
+      p.log('applyXForm');
    }
 }

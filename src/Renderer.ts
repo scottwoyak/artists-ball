@@ -135,7 +135,7 @@ export class Renderer {
 
       let xBox = this.tObj.box.xForm(this.obj.xForm.base);
       let objMaxHeight = 1.1 * xBox.height;
-      let objMaxWidth = 1.1 * xBox.width;
+      let objMaxWidth = 1.1 * Math.sqrt(xBox.width * xBox.width + xBox.depth * xBox.depth);
       let objAR = objMaxWidth / objMaxHeight;
 
       let desiredWidth;

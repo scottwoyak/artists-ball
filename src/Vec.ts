@@ -352,6 +352,15 @@ export class Vec4 extends Vec {
    }
 
    /**
+    * Creates a copy of the vector.
+    * 
+    * @returns A copy of the vector.
+    */
+   public clone(): Vec4 {
+      return new Vec4(this.values);
+   }
+
+   /**
     * Returns an x-y-z vector where each element is computed by dividing this vectors
     * elements by the w value.
     * 
@@ -364,6 +373,23 @@ export class Vec4 extends Vec {
          this.values[1] / w,
          this.values[2] / w
       ]);
+   }
+
+   /** 
+    * Normalizes this vector, and stores and returns the result.
+    * 
+    * @returns The resulting normalized vector.
+    */
+   public normalize(): Vec4 {
+      let mag = this.magnitude();
+      let ret = this.clone();
+      if (mag !== 0) {
+         for (let i = 0; i < this.values.length; i++) {
+            ret.values[i] /= mag;
+         }
+      }
+
+      return ret;
    }
 }
 
