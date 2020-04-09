@@ -1,8 +1,6 @@
 import { Vec3 } from "./Vec";
 import { IndexedTriangle } from "./IndexedTriangle";
-import { Volume } from "./Volume";
 import { Profiler } from "./Profiler";
-import { clamp } from "./Globals";
 import { BlobFile } from "./BlobFile";
 import { IndexedVec3 } from "./IndexedVec3";
 import { IVec3 } from "./IVec3";
@@ -20,39 +18,6 @@ export class TriangleObjData {
    indices: Int32Array;
    boxMin: Vec3;
    boxMax: Vec3;
-}
-
-/**
- * Class used to compute normals for vertices that join multiple faces
- */
-class MultiNormVertex {
-   private normals: Vec3[] = [];
-
-   /**
-    * Stores a normal for this vertex
-    * 
-    * @param normal Stores a normal for the vertex
-    */
-   public push(normal: Vec3) {
-      this.normals.push(normal);
-   }
-
-   /**
-    * Computes the normal by averaging all the individual normals associated with the vertex
-    */
-   public get normal(): Vec3 {
-      let n = new Vec3();
-      for (let i = 0; i < this.normals.length; i++) {
-         n.x += this.normals[i].x;
-         n.y += this.normals[i].y;
-         n.z += this.normals[i].z;
-      }
-      n.x /= this.normals.length;
-      n.y /= this.normals.length;
-      n.z /= this.normals.length;
-
-      return n;
-   }
 }
 
 /**
@@ -105,7 +70,6 @@ export class TriangleObj {
       let i3 = this.indices[3 * index + 2];
       return new IndexedTriangle(this.vertices, this.normals, i1, i2, i3);
    }
-
 
    public pushQuad(v1: IVec3, v2: IVec3, v3: IVec3, v4: IVec3) {
 
@@ -373,3 +337,38 @@ export class TriangleObj {
       return data;
    }
 }
+
+
+/**
+ * Class used to compute normals for vertices that join multiple faces
+ */
+class MultiNormVertex {
+   private normals: Vec3[] = [];
+
+   /**
+    * Stores a normal for this vertex
+    * 
+    * @param normal Stores a normal for the vertex
+    */
+   public push(normal: Vec3) {
+      this.normals.push(normal);
+   }
+
+   /**
+    * Computes the normal by averaging all the individual normals associated with the vertex
+    */
+   public get normal(): Vec3 {
+      let n = new Vec3();
+      for (let i = 0; i < this.normals.length; i++) {
+         n.x += this.normals[i].x;
+         n.y += this.normals[i].y;
+         n.z += this.normals[i].z;
+      }
+      n.x /= this.normals.length;
+      n.y /= this.normals.length;
+      n.z /= this.normals.length;
+
+      return n;
+   }
+}
+
