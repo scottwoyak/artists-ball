@@ -71,6 +71,15 @@ export class glObject {
    public rotZ(angle: number) {
       this.xForm.rotZ(angle);
    }
+   public preRotX(angle: number) {
+      this.xForm.preRotX(angle);
+   }
+   public preRotY(angle: number) {
+      this.xForm.preRotY(angle);
+   }
+   public preRotZ(angle: number) {
+      this.xForm.preRotZ(angle);
+   }
    public scale(scale: number) {
       this.xForm.scale(scale);
    }

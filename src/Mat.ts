@@ -268,6 +268,18 @@ export class Mat4 {
       this.values = Mat4.fromRotZ(angle).multM(this).values;
       return this;
    }
+   public preRotX(angle: number): Mat4 {
+      this.values = this.multM(Mat4.fromRotX(angle)).values;
+      return this;
+   }
+   public preRotY(angle: number): Mat4 {
+      this.values = this.multM(Mat4.fromRotY(angle)).values;
+      return this;
+   }
+   public preRotZ(angle: number): Mat4 {
+      this.values = this.multM(Mat4.fromRotZ(angle)).values;
+      return this;
+   }
    public translate(offset: Vec3): Mat4 {
       this.values = Mat4.fromTranslation(offset).multM(this).values;
       return this;

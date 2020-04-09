@@ -327,30 +327,34 @@ export class ViewerApp {
       this.dirty = true;
    }
 
+   private updateLight(deltaX: number, deltaY: number) {
+      let matY = Mat4.fromRotY(0.01 * -deltaX);
+      let matX = Mat4.fromRotX(0.01 * -deltaY);
+      let vec = new Vec4([
+         this.renderer.uLightDirection.x,
+         this.renderer.uLightDirection.y,
+         this.renderer.uLightDirection.z,
+         1
+      ]);
+      vec = matX.multV(vec);
+      vec = matY.multV(vec);
+      this.renderer.uLightDirection.x = vec.values[0];
+      this.renderer.uLightDirection.y = vec.values[1];
+      this.renderer.uLightDirection.z = vec.values[2];
+
+      this.dirty = true;
+   }
+
    private onDrag(pos: Vec2, delta: Vec2) {
       this.dirty = true;
 
       if (this.pointerMode === PointerMode.View) {
          this.renderer.obj.rotX(-delta.y * 0.01);
-         this.renderer.obj.rotY(-delta.x * 0.01);
+         this.renderer.obj.preRotY(-delta.x * 0.01);
+         this.updateLight(0, delta.y);
       }
       else if (this.pointerMode === PointerMode.Light) {
-
-         let matY = Mat4.fromRotY(toRad(-delta.x));
-         let matX = Mat4.fromRotX(toRad(-delta.y));
-         let vec = new Vec4([
-            this.renderer.uLightDirection.x,
-            this.renderer.uLightDirection.y,
-            this.renderer.uLightDirection.z,
-            1
-         ]);
-         vec = matX.multV(vec);
-         vec = matY.multV(vec);
-         this.renderer.uLightDirection.x = vec.values[0];
-         this.renderer.uLightDirection.y = vec.values[1];
-         this.renderer.uLightDirection.z = vec.values[2];
-
-         this.dirty = true;
+         this.updateLight(delta.x, delta.y);
       }
    }
 

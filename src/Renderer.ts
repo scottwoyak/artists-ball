@@ -281,6 +281,9 @@ export class Renderer {
 
    public resetView() {
       this.view = INITIAL_VIEW.clone();
+      this.uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
+      this.obj.xForm.mat = Mat4.identity;
+      this.objScale = 1.0;
    }
 
    public render(): void {

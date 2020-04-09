@@ -30,6 +30,18 @@ export class XForm {
       this.mat.rotZ(angle);
       return this;
    }
+   public preRotX(angle: number): XForm {
+      this.mat.preRotX(angle);
+      return this;
+   }
+   public preRotY(angle: number): XForm {
+      this.mat.preRotY(angle);
+      return this;
+   }
+   public preRotZ(angle: number): XForm {
+      this.mat.preRotZ(angle);
+      return this;
+   }
    public translate(offset: Vec3): XForm {
       this.mat.translate(offset);
       return this;
