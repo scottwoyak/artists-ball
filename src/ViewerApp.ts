@@ -87,8 +87,9 @@ export class ViewerApp {
 
       this.handler = new PointerEventHandler(canvas);
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
+      this.handler.onDown = () => this.animate = false;
       this.handler.onClick = (pos: Vec2) => this.onClick(pos);
-      this.handler.onDblClick = (pos: Vec2) => this.animate = !this.animate;
+      this.handler.onDblClick = () => this.animate = true;
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
       this.handler.onRotate = (angle: number, delta: number) => this.onRotate(angle, delta);
       this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
