@@ -105,6 +105,74 @@ vec4 getColor(float val)
    return vec4(rgb, a);
 }
 
+float getValueFromLight(vec3 toLight)
+{
+   vec3 toEye;
+   if (uOrthographic == 1)
+   {
+      toEye = vec3(0.0, 0.0, 1.0);
+   }
+   else
+   {
+      toEye = normalize(uEye - vVertex);
+   }
+
+   vec3 normal = normalize(vNormal); // vNormal is interpolated and nolonger normal
+
+   // swap normals for back facing triangles
+   if (dot(normal, toEye) < 0.0)
+   {
+      normal = -normal;
+   }
+
+   // compute diffuse contribution = cos of angle between the vectors (dot product)
+   float diffuseFactor = clamp(dot(normal, toLight), 0.0, 1.0);
+   float diffuse = diffuseFactor * uLightIntensity;
+
+   // compute specular contribution
+   float shininess = 15.0;
+   vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
+   float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
+   float specular = 0.1 * pow(cosAngle, shininess);
+
+   float val;
+   if (uUseThresholds == 0)
+   {
+      val = uAmbientIntensity + diffuse + specular;
+   }
+   else
+   {
+      float threshold = 1.0 - diffuseFactor;
+
+      float v1 = min(uThreshold1, uThreshold2);
+      float v2 = max(uThreshold1, uThreshold2);
+
+      if (threshold < v1)
+      {
+         val = uLightLight;
+      }
+      else if (threshold < v2)
+      {
+         val = uMidLight;
+      }
+      else if (threshold < 1.0)
+      {
+         val = uDarkLight;
+      }
+      else
+      {
+         val = uShadow;
+      }
+
+      if (specular > 0.05)
+      {
+         val = uHighlight;
+      }
+   }
+
+   return val;
+}
+
 void main()
 {
    vec4 fragColor;
@@ -112,7 +180,9 @@ void main()
    {
       if (uUseThresholds == 0)
       {
-         fragColor = getColor(uAmbientIntensity);
+         vec3 toLight = vec3(0.0, 0.0, 1.0);
+         float val = getValueFromLight(toLight) / 20.0;
+         fragColor = getColor(uAmbientIntensity + val);
       }
       else
       {
@@ -125,69 +195,7 @@ void main()
    else
    {
       vec3 toLight = normalize(-uLightDirection);
-      vec3 toEye;
-      if (uOrthographic == 1)
-      {
-         toEye = vec3(0.0, 0.0, 1.0);
-      }
-      else
-      {
-         toEye = normalize(uEye - vVertex);
-      }
-
-      vec3 normal = normalize(vNormal); // vNormal is interpolated and nolonger normal
-
-      // swap normals for back facing triangles
-      if (dot(normal, toEye) < 0.0)
-      {
-         normal = -normal;
-      }
-
-      // compute diffuse contribution = cos of angle between the vectors (dot product)
-      float diffuseFactor = clamp(dot(normal, toLight), 0.0, 1.0);
-      float diffuse = diffuseFactor * uLightIntensity;
-
-      // compute specular contribution
-      float shininess = 15.0;
-      vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
-      float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
-      float specular = 0.1 * pow(cosAngle, shininess);
-
-      float val;
-      if (uUseThresholds == 0)
-      {
-         val = uAmbientIntensity + diffuse + specular;
-      }
-      else
-      {
-         float threshold = 1.0 - diffuseFactor;
-
-         float v1 = min(uThreshold1, uThreshold2);
-         float v2 = max(uThreshold1, uThreshold2);
-
-         if (threshold < v1)
-         {
-            val = uLightLight;
-         }
-         else if (threshold < v2)
-         {
-            val = uMidLight;
-         }
-         else if (threshold < 1.0)
-         {
-            val = uDarkLight;
-         }
-         else
-         {
-            val = uShadow;
-         }
-
-         if (specular > 0.05)
-         {
-            val = uHighlight;
-         }
-      }
-
+      float val = getValueFromLight(toLight);
       fragColor = getColor(val);
    }
 
