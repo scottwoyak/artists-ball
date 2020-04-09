@@ -92,7 +92,7 @@ export class PathTracerRenderer {
       // create two textures. One we display and one we draw to
       this.textures = [];
       for (var i = 0; i < 2; i++) {
-         this.textures.push(this.frameBuffer.createTexture(glTextureStyle.Color));
+         this.textures.push(this.frameBuffer.createTexture(glTextureStyle.Float));
       }
 
       // create toScreen shader
