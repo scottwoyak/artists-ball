@@ -289,7 +289,9 @@ export class ViewerApp {
 
                this.renderer.showFloor = query.startsWith('Pose');
 
+               this.animate = false;
                this.dirty = true;
+               this.pointerMode = PointerMode.View;
                requestAnimationFrame(() => this.tick());
 
                /*
