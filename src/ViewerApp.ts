@@ -29,6 +29,7 @@ export class ViewerApp {
    private handler: PointerEventHandler;
 
    private dirty: boolean = true;
+   private animate: boolean = false;
 
    private query: string;
 
@@ -87,6 +88,7 @@ export class ViewerApp {
       this.handler = new PointerEventHandler(canvas);
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
       this.handler.onClick = (pos: Vec2) => this.onClick(pos);
+      this.handler.onDblClick = (pos: Vec2) => this.animate = !this.animate;
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
       this.handler.onRotate = (angle: number, delta: number) => this.onRotate(angle, delta);
       this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
@@ -416,9 +418,13 @@ export class ViewerApp {
    public tick() {
 
       if (this.dirty) {
-         // TODO only redraw the threshold ctrl if a slider changed
          this.renderer.render();
          this.dirty = false;
+      }
+
+      if (this.animate) {
+         this.renderer.obj.preRotY(toRad(1));
+         this.dirty = true;
       }
 
       requestAnimationFrame(() => this.tick());
