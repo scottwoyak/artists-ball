@@ -30,6 +30,7 @@ export class ViewerApp {
 
    private dirty: boolean = true;
    private animate: boolean = false;
+   private animationFrameHandler: number;
 
    private query: string;
 
@@ -292,7 +293,9 @@ export class ViewerApp {
                this.animate = false;
                this.dirty = true;
                this.pointerMode = PointerMode.View;
-               requestAnimationFrame(() => this.tick());
+               if (!this.animationFrameHandler) {
+                  this.animationFrameHandler = requestAnimationFrame(() => this.tick());
+               }
 
                /*
                let box = BoundingBox.infinite;
