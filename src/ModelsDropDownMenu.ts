@@ -23,6 +23,7 @@ export function createModelsDropDownMenu(parent: HTMLElement, loadModel: LoadMod
    subMenu.addItem('Head Ecorche', () => loadModel('HeadEcorche.blob'));
    subMenu.addItem('Head Ecorche 2', () => loadModel('HeadEcorche2.blob'));
    subMenu.addItem('Head Ecorche 3', () => loadModel('HeadEcorche3.blob'));
+   subMenu.addItem('Head Ecorche 4', () => loadModel('HeadEcorche4.blob'));
 
    subMenu = menu.addSubMenu('Poses', 'HeadsSubMenu');
    subMenu.addItem('Pose 1', () => loadModel('Pose_01.blob'));
