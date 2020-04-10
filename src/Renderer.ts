@@ -82,6 +82,7 @@ export class Renderer {
    public showShadowMap = false;
    public showMiniView = true;
    public showFloor = false;
+   public useCulling = true;
 
    public constructor(glCtx: WebGLRenderingContext) {
 
@@ -487,6 +488,9 @@ export class Renderer {
          gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
          // draw the main object
+         this.useCulling ? gl.enable(gl.CULL_FACE) : gl.disable(gl.CULL_FACE);
+         gl.cullFace(gl.BACK);
+
          let uni = this.setStdUniforms();
          this.obj.draw();
 
@@ -496,10 +500,9 @@ export class Renderer {
             this.floor.xForm.mat = this.obj.xForm.mat.clone();
 
             // cull polygons so we don't see the floor from below
-            gl.enable(gl.CULL_FACE)
+            gl.enable(gl.CULL_FACE);
             gl.cullFace(gl.BACK);
             this.floor.draw();
-            gl.disable(gl.CULL_FACE)
 
             uni.set('uShowFloor', false);
          }
@@ -515,6 +518,10 @@ export class Renderer {
    }
 
    private drawMiniView() {
+
+      let gl = this.gl;
+      gl.enable(gl.CULL_FACE);
+      gl.cullFace(gl.BACK);
 
       let uni = this.setStdUniforms();
 
@@ -541,6 +548,10 @@ export class Renderer {
    }
 
    private drawBall() {
+
+      let gl = this.gl;
+      gl.enable(gl.CULL_FACE);
+      gl.cullFace(gl.BACK);
 
       let uni = this.setStdUniforms();
 

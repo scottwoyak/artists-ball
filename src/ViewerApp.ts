@@ -289,6 +289,7 @@ export class ViewerApp {
                this.loader.orient(this.renderer.obj);
 
                this.renderer.showFloor = query.startsWith('Pose');
+               this.renderer.useCulling = !query.startsWith('Head');
 
                this.animate = false;
                this.dirty = true;
@@ -429,7 +430,7 @@ export class ViewerApp {
       }
 
       if (this.animate) {
-         this.renderer.obj.preRotY(toRad(1));
+         this.renderer.obj.preRotY(toRad(-1));
          this.dirty = true;
       }
 
