@@ -49,12 +49,20 @@
   width: 18%;
 }
 
-.PlanesApp #ThresholdCanvas {
+.PlanesApp #ThresholdCtrlCanvas {
   position: absolute;
   right: 0px;
   width: 150px;
   height: 150px;
   background-color: rgb(128, 128, 150);
+}
+
+.PlanesApp #ThresholdCtrlOverlayCanvas {
+  position: absolute;
+  right: 0px;
+  width: 150px;
+  height: 150px;
+  background-color: transparent;
 }
 
 @media only screen and (max-device-width: 800px) {
@@ -66,9 +74,13 @@
     width: 22%;
   }
 
-  .PlanesApp #ThresholdCanvas {
+  .PlanesApp #ThresholdCtrlCanvas {
     width: 300px;
     height: 300px;
-    background-color: rgb(128, 128, 150);
+  }
+
+  .PlanesApp #ThresholdCtrlOverlayCanvas {
+    width: 300px;
+    height: 300px;
   }
 }

@@ -1,28 +1,38 @@
-import { PlanesApp } from "./PlanesApp";
 import { toRad, toDeg, clamp, isMobile } from "./Globals";
-import { Vec2 } from "./Vec";
+import { Vec2, Vec3 } from "./Vec";
 import { PointerEventHandler } from "./PointerEventHandler";
-import { Profiler } from "./Profiler";
-
-// TODO make these variables
-export let textureSize = 256;
-export let displaySize = 150;
+import { glObject } from "./glObject";
+import { TriangleObjBuilder } from "./TriangleObjBuilder";
+import { NormalType } from "./TriangleObj";
+import { glCompiler } from "./glCompiler";
+import { glUniform } from "./glUniform";
+import { Mat4 } from "./Mat";
+import { glColor3 } from "./glColor";
+import { htmlColor } from "./htmlColor";
+import vertexSource from './shaders/ViewerVertex.glsl';
+import fragmentSource from './shaders/ViewerFragment.glsl';
+import { IThresholdProvider } from "./IThresholdProvider";
 
 export type ThresholdChangeFunction = (value: number) => void;
 
+const BALL_RADIUS = 0.875;
 
+let CTRL_SIZE = 150;
 const NOMINAL_DISPLAY_SIZE = 150;
 const NOMINAL_KNOB_LENGTH = 25;
 const NOMINAL_KNOB_RADIUS = 10;
 
 export class ThresholdCtrl {
-   private canvas: HTMLCanvasElement;
-   private hiddenCanvas: HTMLCanvasElement;
-   private app: PlanesApp;
+   private gl: WebGLRenderingContext;
+   private program: WebGLProgram;
+   private overlay: HTMLCanvasElement;
    private mouseOffset = new Vec2();
    private hit = 0;
    private handler: PointerEventHandler;
+   private provider: IThresholdProvider;
 
+   private ball: glObject;
+   private arrow: glObject;
    private ballCenter: Vec2;
    private p1: Vec2;
    private p2: Vec2;
@@ -32,36 +42,61 @@ export class ThresholdCtrl {
 
    public constructor(
       parent: HTMLElement,
-      app: PlanesApp,
+      provider: IThresholdProvider,
       onThreshold1Change: ThresholdChangeFunction,
       onThreshold2Change: ThresholdChangeFunction
    ) {
 
       if (isMobile) {
-         displaySize = 300;
+         CTRL_SIZE = 300;
       }
 
-      this.app = app;
+      this.provider = provider;
       this.onThreshold1Change = onThreshold1Change;
       this.onThreshold2Change = onThreshold2Change;
 
-      this.canvas = document.createElement('canvas');
-      this.canvas.id = 'ThresholdCanvas';
-      this.canvas.width = displaySize;
-      this.canvas.height = displaySize;
+      let canvas = document.createElement('canvas');
+      canvas.id = 'ThresholdCtrlCanvas';
+      canvas.width = CTRL_SIZE;
+      canvas.height = CTRL_SIZE;
+      parent.appendChild(canvas);
 
-      parent.appendChild(this.canvas);
+      // don't try to make the canvas transparent to the underlying html. This
+      // seems to limit the alpha values we can use in our scene.
+      let context = canvas.getContext('webgl') as WebGLRenderingContext;
 
-      this.hiddenCanvas = document.createElement('canvas');
-      this.hiddenCanvas.width = textureSize;
-      this.hiddenCanvas.height = textureSize;
-      this.hiddenCanvas.style.display = 'none';
-      parent.appendChild(this.hiddenCanvas);
+      if (!context) {
+         // TODO display a message about not being able to create a WebGL context
+         console.log("Unable to get WebGL context");
+      }
+      this.gl = context;
 
-      this.handler = new PointerEventHandler(this.canvas);
+      this.overlay = document.createElement('canvas');
+      this.overlay.id = 'ThresholdCtrlOverlayCanvas';
+      this.overlay.width = CTRL_SIZE;
+      this.overlay.height = CTRL_SIZE;
+
+      parent.appendChild(this.overlay);
+
+      this.handler = new PointerEventHandler(this.overlay);
       this.handler.onDown = (pos: Vec2) => this.onDown(pos);
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
+
+      let gl = this.gl;
+      gl.enable(gl.DEPTH_TEST);
+
+      this.program = glCompiler.compile(gl, vertexSource, fragmentSource);
+
+      let tBall = new TriangleObjBuilder('Ball');
+      tBall.addSphere(50, BALL_RADIUS, new Vec3([0, 0, 0]));
+      tBall.optimize(NormalType.Smooth);
+      this.ball = new glObject(gl, tBall, this.program);
+
+      let tArrow = new TriangleObjBuilder('Light Arrow');
+      tArrow.addArrow();
+      this.arrow = new glObject(gl, tArrow, this.program);
    }
+
    private onDown(pos: Vec2) {
 
       this.hitTest(pos);
@@ -71,7 +106,7 @@ export class ThresholdCtrl {
       let d1 = this.p1.distance(pos);
       let d2 = this.p2.distance(pos);
 
-      const HIT_RADIUS = NOMINAL_KNOB_RADIUS * (displaySize / NOMINAL_DISPLAY_SIZE);
+      const HIT_RADIUS = NOMINAL_KNOB_RADIUS * (CTRL_SIZE / NOMINAL_DISPLAY_SIZE);
       if (d1 < HIT_RADIUS && d1 <= d2) {
          this.hit = 1;
          this.mouseOffset = new Vec2([this.p1.x - pos.x, this.p1.y - pos.y]);
@@ -101,36 +136,99 @@ export class ThresholdCtrl {
       }
    }
 
+   private setStdUniforms(): glUniform {
+
+      let uni = new glUniform(this.gl, this.program);
+      uni.set('view', Mat4.identity);
+      uni.set('projection', Mat4.ortho);
+      uni.set('uEye', new Vec3([0, 0, 1]));
+      uni.set('uOrthographic', true);
+
+      uni.set('uThreshold1', 1 - Math.sin(toRad(this.provider.threshold1 + 90)));
+      uni.set('uThreshold2', 1 - Math.sin(toRad(this.provider.threshold2 + 90)));
+
+      let HIGHLIGHT_DIFF = 0.1;
+      uni.set('uLightIntensity', this.provider.highlight - this.provider.shadow - HIGHLIGHT_DIFF);
+      uni.set('uAmbientIntensity', this.provider.shadow);
+      uni.set('uHighlight', this.provider.highlight);
+      uni.set('uLightLight', this.provider.lightLight);
+      uni.set('uMidLight', this.provider.midLight);
+      uni.set('uDarkLight', this.provider.darkLight);
+      uni.set('uShadow', this.provider.shadow);
+      uni.set('uWhiteColor', this.provider.whiteColor);
+      uni.set('uBlackColor', this.provider.blackColor);
+
+      return uni;
+   }
+
    public draw() {
 
-      let ballImageData = this.app.renderer.getBallImage();
+      this.drawBall();
+      this.drawOverlay();
+   }
 
-      this.hiddenCanvas.getContext('2d').putImageData(ballImageData.image, 0, 0);
+   private drawBall() {
+      let gl = this.gl;
+      gl.clear(gl.COLOR_BUFFER_BIT);
 
-      let ctx = this.canvas.getContext('2d');
-      ctx.resetTransform();
-      ctx.translate(0, displaySize / 2);
-      ctx.scale(displaySize / textureSize, -displaySize / textureSize);
-      ctx.drawImage(this.hiddenCanvas, 0, -textureSize / 2);
+      let uni = this.setStdUniforms();
 
+      // always render with bands
+      uni.set('uUseThresholds', true);
+
+      // shoot the light straight down
+      uni.set('uLightDirection', new Vec3([0, -1, 0]));
+
+      // don't cast shadows
+      uni.set('uUseShadows', false);
+
+      // move the ball to the lower left and partially offscreen
+      const offset = new Vec3([-0.6, -0.6, 0]);
+      this.ball.clearTransforms();
+      this.ball.translate(offset);
+
+      // render the ball
+      this.ball.draw();
+      this.ball.clearTransforms();
+
+      // draw the arrow
+      uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
+      uni.set('uUseThresholds', false);
+
+      // first reset things so that we're looking down the z-axis
+      this.arrow.clearTransforms();
+      this.arrow.scale(1.25)
+      this.arrow.translate(new Vec3([offset.x, offset.y + BALL_RADIUS + 0.1, 0.0]));
+
+      uni.set('uWhiteColor', new glColor3([1.0, 1.0, 0.5]));
+      uni.set('uBlackColor', htmlColor.black.toGlColor());
+      uni.set('uAmbientIntensity', 0.4);
+      this.arrow.draw();
+   }
+
+   private drawOverlay() {
+      let ctx = this.overlay.getContext('2d');
+      let ballCenter = new Vec2([0.15, 0.15]);
+      let ballRadius = 0.5;
       ctx.resetTransform();
       this.ballCenter = new Vec2([
-         displaySize * ballImageData.ballCenter.x,
-         displaySize * (1 - ballImageData.ballCenter.y)
+         CTRL_SIZE * ballCenter.x,
+         CTRL_SIZE * (1 - ballCenter.y)
       ]);
 
+      ctx.clearRect(0, 0, CTRL_SIZE, CTRL_SIZE);
       ctx.fillStyle = 'limegreen';
       ctx.strokeStyle = 'black'
 
-      const KNOB_LENGTH = NOMINAL_KNOB_LENGTH * (displaySize / NOMINAL_DISPLAY_SIZE);
-      const KNOB_RADIUS = NOMINAL_KNOB_RADIUS * (displaySize / NOMINAL_DISPLAY_SIZE);
-      let r = displaySize * ballImageData.ballRadius;
-      let s1 = this.getPt(this.ballCenter, this.app.renderer.threshold1, r);
-      this.p1 = this.getPt(this.ballCenter, this.app.renderer.threshold1, r + KNOB_LENGTH);
-      let s2 = this.getPt(this.ballCenter, this.app.renderer.threshold2, r);
-      this.p2 = this.getPt(this.ballCenter, this.app.renderer.threshold2, r + KNOB_LENGTH);
+      const KNOB_LENGTH = NOMINAL_KNOB_LENGTH * (CTRL_SIZE / NOMINAL_DISPLAY_SIZE);
+      const KNOB_RADIUS = NOMINAL_KNOB_RADIUS * (CTRL_SIZE / NOMINAL_DISPLAY_SIZE);
+      let r = CTRL_SIZE * ballRadius;
+      let s1 = this.getPt(this.ballCenter, this.provider.threshold1, r);
+      this.p1 = this.getPt(this.ballCenter, this.provider.threshold1, r + KNOB_LENGTH);
+      let s2 = this.getPt(this.ballCenter, this.provider.threshold2, r);
+      this.p2 = this.getPt(this.ballCenter, this.provider.threshold2, r + KNOB_LENGTH);
 
-      ctx.lineWidth = (1 / 150) * displaySize;
+      ctx.lineWidth = (1 / 150) * CTRL_SIZE;
       ctx.beginPath();
       ctx.moveTo(s1.x, s1.y);
       ctx.lineTo(this.p1.x, this.p1.y);

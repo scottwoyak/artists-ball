@@ -16,10 +16,8 @@ enum PointerMode {
    Light,
 }
 
-//const WHITE_COLOR = new htmlColor([255, 255, 255]);
 const WHITE_COLOR = new htmlColor([255, 250, 242]);
 const BLACK_COLOR = new htmlColor([0, 0, 0]);
-//const BLACK_COLOR = new htmlColor([30, 20, 0]);
 
 export class ViewerApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -82,8 +80,8 @@ export class ViewerApp {
       this.updateSize();
 
       this.renderer = new Renderer(this.gl);
-      this.renderer.whiteColor = WHITE_COLOR;
-      this.renderer.blackColor = BLACK_COLOR;
+      this.renderer.whiteColor = WHITE_COLOR.toGlColor();
+      this.renderer.blackColor = BLACK_COLOR.toGlColor();
       this.renderer.showMiniView = false;
 
       this.handler = new PointerEventHandler(canvas);

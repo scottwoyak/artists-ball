@@ -9,23 +9,16 @@ import { TriangleObj, NormalType } from './TriangleObj';
 import { glObject } from './glObject';
 import { glColor3 } from './glColor';
 import { TextureRenderer } from './TextureRenderer';
-import { textureSize } from './ThresholdCtrl';
 import { htmlColor } from './htmlColor';
 import { glClipSpace } from './glClipSpace';
 import { TriangleObjBuilder } from './TriangleObjBuilder';
 import { glTexture, glTextureStyle } from './glTexture';
 import { glFrameBuffer } from './glFrameBuffer';
-
-export class BallImageData {
-   public image: ImageData;
-   public ballCenter: Vec2;
-   public ballRadius: number;
-}
+import { IThresholdProvider } from './IThresholdProvider';
 
 export let DEFAULT_THRESHOLD1 = 40;
 export let DEFAULT_THRESHOLD2 = 70;
 
-const HIGHLIGHT_DIFF = 0.1;
 const BALL_RADIUS = 0.5;
 const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, -1.5];
 const INITIAL_VIEW = Mat4.identity;
@@ -33,7 +26,7 @@ const INITIAL_VIEW = Mat4.identity;
 /**
  * Class that renders triangles and a light source
  */
-export class Renderer {
+export class Renderer implements IThresholdProvider {
 
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private program: WebGLProgram;
@@ -51,6 +44,7 @@ export class Renderer {
    private uMidLight: number;
    private uDarkLight: number;
    private uShadow: number = 0.2;
+   public highlightDifference = 0.1;
 
    // size of the smaller view
    public readonly miniSize = 0.2;
@@ -68,16 +62,12 @@ export class Renderer {
    private shadowColorTexture: glTexture;
    private shadowDepthTexture: glTexture;
 
-   private tCtrlFrameBuffer: glFrameBuffer;
-   private tCtrlColorTexture: glTexture;
-   private tCtrlDepthTexture: glTexture;
-
    public uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
 
    public ballColor = new glColor3([1, 1, 1]);
    public readonly yellow = new glColor3([1.0, 0.9, 0.7]);
-   public whiteColor = new htmlColor([255, 255, 255]);
-   public blackColor = new htmlColor([0, 0, 0]);
+   public whiteColor = new glColor3([1, 1, 1]);
+   public blackColor = new glColor3([0, 0, 0]);
 
    public showShadowMap = false;
    public showMiniView = true;
@@ -187,12 +177,16 @@ export class Renderer {
       this.view.translate(new Vec3([delta.x, delta.y, 0]));
    }
 
+   public get lightIntensity(): number {
+      return this.uHighlight - this.uShadow - this.highlightDifference;
+   }
+
    public get highlight(): number {
       return this.uHighlight;
    }
    public set highlight(val: number) {
-      this.uHighlight = Math.max(val, HIGHLIGHT_DIFF);
-      this.uShadow = Math.min(this.uShadow, this.uHighlight - HIGHLIGHT_DIFF);
+      this.uHighlight = Math.max(val, this.highlightDifference);
+      this.uShadow = Math.min(this.uShadow, this.uHighlight - this.highlightDifference);
       this.computeColors();
    }
 
@@ -210,8 +204,8 @@ export class Renderer {
       return this.uShadow;
    }
    public set shadow(val: number) {
-      this.uShadow = Math.min(val, 1 - HIGHLIGHT_DIFF);
-      this.uHighlight = Math.max(this.uHighlight, this.uShadow + HIGHLIGHT_DIFF);
+      this.uShadow = Math.min(val, 1 - this.highlightDifference);
+      this.uHighlight = Math.max(this.uHighlight, this.uShadow + this.highlightDifference);
       this.computeColors();
    }
 
@@ -239,7 +233,7 @@ export class Renderer {
 
    private colorAt(deg: number): number {
       deg = clamp(deg, 0, 90);
-      return mix(this.uShadow, this.uHighlight - HIGHLIGHT_DIFF, Math.cos(toRad(deg)));
+      return mix(this.uShadow, this.uHighlight - this.highlightDifference, Math.cos(toRad(deg)));
    }
 
    public computeColors() {
@@ -310,7 +304,7 @@ export class Renderer {
       uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
       uni.set('uThreshold2', 1 - Math.sin(toRad(this.threshold2 + 90)));
 
-      uni.set('uLightIntensity', this.uHighlight - this.uShadow - HIGHLIGHT_DIFF);
+      uni.set('uLightIntensity', this.lightIntensity);
       uni.set('uAmbientIntensity', this.uShadow);
       uni.set('uHighlight', this.uHighlight);
       uni.set('uLightLight', this.uLightLight);
@@ -318,99 +312,10 @@ export class Renderer {
       uni.set('uDarkLight', this.uDarkLight);
       uni.set('uShadow', this.uShadow);
 
-      uni.set('uWhiteColor', this.whiteColor.toGlColor());
-      uni.set('uBlackColor', this.blackColor.toGlColor());
+      uni.set('uWhiteColor', this.whiteColor);
+      uni.set('uBlackColor', this.blackColor);
 
       return uni;
-   }
-
-   public getBallImage(): BallImageData {
-
-      let gl = this.gl;
-
-      if (!this.tCtrlFrameBuffer) {
-         this.tCtrlFrameBuffer = new glFrameBuffer(gl, textureSize, textureSize);
-         this.tCtrlColorTexture = this.tCtrlFrameBuffer.createTexture(glTextureStyle.Color);
-         this.tCtrlDepthTexture = this.tCtrlFrameBuffer.createTexture(glTextureStyle.Depth);
-
-         this.tCtrlFrameBuffer.attachTexture(gl.COLOR_ATTACHMENT0, this.tCtrlColorTexture);
-         this.tCtrlFrameBuffer.attachTexture(gl.DEPTH_ATTACHMENT, this.tCtrlDepthTexture);
-
-         this.tCtrlFrameBuffer.check();
-
-         // Unbind these new objects, which makes the default frame buffer the
-         // target for rendering.
-         gl.bindTexture(gl.TEXTURE_2D, null);
-         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      }
-
-      gl.viewport(0, 0, textureSize, textureSize);
-
-      this.tCtrlColorTexture.bind();
-      this.tCtrlFrameBuffer.bind();
-      this.tCtrlFrameBuffer.attachTexture(gl.COLOR_ATTACHMENT0, this.tCtrlColorTexture);
-      gl.bindTexture(gl.TEXTURE_2D, null);
-
-      gl.useProgram(this.program);
-
-      let style = getComputedStyle(<Element>gl.canvas);
-      let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
-      gl.clearColor(color.r, color.g, color.b, 1);
-      gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-
-      let uni = this.setStdUniforms();
-
-      // always render with bands
-      uni.set('uUseThresholds', true);
-
-      // shoot the light straight down
-      uni.set('uLightDirection', new Vec3([0, -1, 0]));
-
-      // don't cast shadows
-      uni.set('uUseShadows', false);
-
-      uni.set('view', new Mat4());
-
-      // move the ball to the lower left and partially offscreen
-      const scale = 1.75;
-      const offset = new Vec3([-0.6, -0.6, 0]);
-      this.ball.clearTransforms();
-      this.ball.scale(scale);
-      this.ball.translate(offset);
-
-      // render the ball
-      this.ball.draw();
-      this.ball.clearTransforms();
-
-      // draw the arrow
-      uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
-      uni.set('uUseThresholds', false);
-
-      // first reset things so that we're looking down the z-axis
-      this.arrow.clearTransforms();
-      this.arrow.scale(1.25)
-      this.arrow.translate(new Vec3([offset.x, offset.y + scale * BALL_RADIUS + 0.1, 0.0]));
-
-      uni.set('uWhiteColor', new glColor3([1.0, 1.0, 0.5]));
-      uni.set('uBlackColor', htmlColor.black.toGlColor());
-      uni.set('uAmbientIntensity', 0.4);
-      this.arrow.draw();
-
-      let pixels = new Uint8Array(textureSize * textureSize * 4);
-      gl.readPixels(0, 0, textureSize, textureSize, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-
-      // create the data structure we'll return
-      let data = new BallImageData();
-      data.image = new ImageData(new Uint8ClampedArray(pixels), textureSize, textureSize);
-
-      // convert from [-1,1] drawing space to [0,1]
-      data.ballRadius = scale * BALL_RADIUS;
-      data.ballCenter = new Vec2([offset.x, offset.y]);
-      data.ballRadius /= 2;
-      data.ballCenter.x = 0.5 * (data.ballCenter.x + 1);
-      data.ballCenter.y = 0.5 * (data.ballCenter.y + 1);
-
-      return data;
    }
 
    private renderToShadowMap(): void {

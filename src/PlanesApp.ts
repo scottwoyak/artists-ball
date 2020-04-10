@@ -14,10 +14,8 @@ enum PointerMode {
    Light,
 }
 
-//const WHITE_COLOR = new htmlColor([255, 255, 255]);
 const WHITE_COLOR = new htmlColor([255, 250, 242]);
 const BLACK_COLOR = new htmlColor([0, 0, 0]);
-//const BLACK_COLOR = new htmlColor([30, 20, 0]);
 
 export class PlanesApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -93,8 +91,8 @@ export class PlanesApp {
       this.gl = context;
 
       this.renderer = new Renderer(this.gl);
-      this.renderer.whiteColor = WHITE_COLOR;
-      this.renderer.blackColor = BLACK_COLOR;
+      this.renderer.whiteColor = WHITE_COLOR.toGlColor();
+      this.renderer.blackColor = BLACK_COLOR.toGlColor();
       this.renderer.useThresholds = false;
       this.renderer.miniViewUseThresholds = true;
 
@@ -111,7 +109,7 @@ export class PlanesApp {
    private createCtrlsElements(parent: HTMLElement) {
       this.thresholdCtrl = new ThresholdCtrl(
          parent,
-         this,
+         this.renderer,
          (value: number) => {
             this.renderer.threshold1 = value;
             this.updateSliders();
