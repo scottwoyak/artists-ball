@@ -11,6 +11,18 @@ export function createModelsDropDownMenu(parent: HTMLElement, loadModel: LoadMod
    menu.addItem('Arnold', () => loadModel('Arnold.blob'));
    menu.addItem('Teapot', () => loadModel('Teapot.blob'));
 
+   subMenu = menu.addSubMenu('Sculptures', 'Sculptures');
+   subMenu.addItem('Belvedere Torso', () => loadModel('BelvedereTorso.blob'));
+   subMenu.addItem('David', () => loadModel('David.blob'));
+   subMenu.addItem('Head of David', () => loadModel('HeadOfDavid.blob'));
+   subMenu.addItem('Lacoon and His Sons', () => loadModel('LaocoonAndHisSons.blob'));
+   subMenu.addItem('Nefertiti', () => loadModel('Nefertiti.blob'));
+   subMenu.addItem('Thinker', () => loadModel('Thinker.blob'));
+   subMenu.addItem('Venus de Milo', () => loadModel('VenusDeMilo.blob'));
+   subMenu.addItem('Venus of Willendorf', () => loadModel('VenusOfWillendorf.blob'));
+   subMenu.addItem('Winged Victory of Samothrace', () => loadModel('WingedVictory.blob'));
+   subMenu.addItem('Winged Victory of Samothrace w/Base', () => loadModel('WingedVictoryWithBase.blob'));
+
    subMenu = menu.addSubMenu('Anatomy', 'AnatomySubMenu');
    subMenu.addItem('Skull 1', () => loadModel('Skull1.blob'));
    subMenu.addItem('Skull 2', () => loadModel('Skull2.blob'));
