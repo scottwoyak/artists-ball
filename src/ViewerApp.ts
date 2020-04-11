@@ -356,9 +356,15 @@ export class ViewerApp {
       this.dirty = true;
 
       if (this.pointerMode === PointerMode.View) {
-         this.renderer.obj.rotX(-delta.y * 0.01);
-         this.renderer.obj.preRotY(-delta.x * 0.01);
-         this.updateLight(0, delta.y);
+         if (this.handler.ctrlKey) {
+            this.renderer.obj.rotX(-delta.y * 0.01);
+            this.renderer.obj.rotY(-delta.x * 0.01);
+         }
+         else {
+            this.renderer.obj.rotX(-delta.y * 0.01);
+            this.renderer.obj.preRotY(-delta.x * 0.01);
+            this.updateLight(0, delta.y);
+         }
       }
       else if (this.pointerMode === PointerMode.Light) {
          this.updateLight(delta.x, delta.y);

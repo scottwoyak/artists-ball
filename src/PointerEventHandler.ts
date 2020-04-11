@@ -27,6 +27,7 @@ export class PointerEventHandler {
    public onClick: PointerClickFunction;
    public onDblClick: PointerDblClickFunction;
    public onDrag: PointerDragFunction;
+   public ctrlKey = false;
 
    public lastPos: Vec2;
    private lastTouchTime: number;
@@ -43,6 +44,8 @@ export class PointerEventHandler {
 
       // element.ontouch isn't supported on desktop devices so use addEventListener instead
       element.addEventListener('touchstart', (event: TouchEvent) => {
+
+         this.ctrlKey = event.ctrlKey;
 
          // prevent the browser from using the event
          event.preventDefault();
@@ -83,6 +86,8 @@ export class PointerEventHandler {
 
       element.addEventListener('touchmove', (event: TouchEvent) => {
 
+         this.ctrlKey = event.ctrlKey;
+
          // prevent the browser from using the event
          event.preventDefault();
 
@@ -120,6 +125,8 @@ export class PointerEventHandler {
 
       element.addEventListener('touchend', (event: TouchEvent) => {
 
+         this.ctrlKey = event.ctrlKey;
+
          // prevent the browser from using the event
          event.preventDefault();
 
@@ -154,6 +161,9 @@ export class PointerEventHandler {
       });
 
       element.onmousedown = (event: MouseEvent) => {
+
+         this.ctrlKey = event.ctrlKey;
+
          let pos = new Vec2([(<any>event).layerX, (<any>event).layerY]);
          this.ourOnDown(pos);
 
@@ -162,6 +172,9 @@ export class PointerEventHandler {
       }
 
       element.onmousemove = (event: MouseEvent) => {
+
+         this.ctrlKey = event.ctrlKey;
+
          let pos = new Vec2([(<any>event).layerX, (<any>event).layerY]);
          if (this.mouseDown) {
             this.ourOnDrag(pos);
@@ -169,6 +182,9 @@ export class PointerEventHandler {
       }
 
       element.onmouseup = (event: MouseEvent) => {
+
+         this.ctrlKey = event.ctrlKey;
+
          this.ourOnUp();
       };
 
@@ -177,6 +193,9 @@ export class PointerEventHandler {
       }
 
       element.ondblclick = (event: MouseEvent) => {
+
+         this.ctrlKey = event.ctrlKey;
+
          let pos = new Vec2([(<any>event).layerX, (<any>event).layerY]);
          this.ourDblClick(pos);
       }
