@@ -43,7 +43,7 @@ export class AppLauncher {
       switch (type) {
          case AppType.ArtistsBall:
             document.title = 'Artist\'s Tools: Artist\'s Ball';
-            this.app = new PathTracerApp('');
+            this.app = new PathTracerApp(query);
             break;
 
          case AppType.ValuePlanes:

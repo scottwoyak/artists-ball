@@ -1,4 +1,4 @@
-import { Vec3 } from "./Vec";
+import { Vec3, Vec2 } from "./Vec";
 import { PathTracerRenderer, RenderMode } from "./PathTracerRenderer";
 import { Mat4 } from "./Mat";
 import { SphericalCoord } from "./SphericalCoord";
@@ -12,6 +12,7 @@ import { TriangleObjBuilder } from "./TriangleObjBuilder";
 import { Profiler } from "./Profiler";
 import { IApp } from "./IApp";
 import { Menubar } from "./Menu";
+import { PointerEventHandler } from "./PointerEventHandler";
 
 let skinTones = [
    new htmlColor([240, 223, 214]),
@@ -51,10 +52,6 @@ export class PathTracerApp implements IApp {
    private angleY = 0.75;
    private zoomZ = 3.5;
 
-   private mouseDown = false;
-   private oldX: number;
-   private oldY: number;
-
    private lastTimes: number[] = [];
    private readonly MAX_SAMPLES = 500;
 
@@ -89,42 +86,10 @@ export class PathTracerApp implements IApp {
       this.gl = context;
       this.renderer = new PathTracerRenderer(this.gl);
 
-      this.canvas.ontouchstart = (event: TouchEvent) => {
-         event.preventDefault();
-         if (event.touches.length === 1) {
-
-            this.onDown(event.touches[0].clientX, event.touches[0].clientY);
-         }
-      }
-
-      this.canvas.ontouchmove = (event: TouchEvent) => {
-         event.preventDefault();
-         this.onMove(event.touches[0].clientX, event.touches[0].clientY);
-      }
-
-      this.canvas.ontouchend = (event: TouchEvent) => {
-         event.preventDefault();
-         this.mouseDown = false;
-      }
-
-      this.canvas.onmousedown = (event: MouseEvent) => {
-         this.onDown(event.x, event.y);
-
-         // disable selection because dragging is used for rotating the camera and moving objects
-         return false;
-      }
-
-      this.canvas.onmousemove = (event: MouseEvent) => {
-         this.onMove(event.x, event.y);
-      }
-
-      this.canvas.onmouseup = (event) => {
-         this.mouseDown = false;
-      };
-
-      this.canvas.onmouseleave = (event) => {
-         this.mouseDown = false;
-      }
+      let handler = new PointerEventHandler(this.canvas);
+      handler.onDrag = (pos: Vec2, delta: Vec2) => this.onMove(pos, delta);
+      handler.onClick = (pos: Vec2) => this.click(pos.x, pos.y);
+      handler.onDown = (pos: Vec2) => this.onDown(pos.x, pos.y);
 
       this.loadModel(this.query).then((tObj: TriangleObj) => {
          this.renderer.setObj(tObj);
@@ -284,59 +249,44 @@ export class PathTracerApp implements IApp {
 
    private onDown(x: number, y: number) {
 
-      if (this.click(x, y)) {
-         return;
-      };
-
       this.pointerModeSpecial = (x < 0.1 * this.canvas.width) ? true : false;
 
-      this.oldX = x;
-      this.oldY = y;
-
       this.pos = SphericalCoord.fromXYZ(this.renderer.uniforms.uLightPos.values);
-
-      this.mouseDown = true;
    }
 
-   private onMove(x: number, y: number) {
-      if (this.mouseDown) {
-         if (this.pointerMode === PointerMode.View) {
-            if (this.pointerModeSpecial) {
-               this.zoomZ -= (y - this.oldY) * 0.01;
-               this.zoomZ = clamp(this.zoomZ, 1, 8);
-            }
-            else {
-               // update the angles based on how far we moved since last time
-               this.angleY -= (x - this.oldX) * 0.01;
-               this.angleX += (y - this.oldY) * 0.01;
-
-               // don't go upside down
-               this.angleX = Math.max(this.angleX, -Math.PI / 2 + 0.01);
-               this.angleX = Math.min(this.angleX, Math.PI / 2 - 0.01);
-            }
+   private onMove(pos: Vec2, delta: Vec2) {
+      if (this.pointerMode === PointerMode.View) {
+         if (this.pointerModeSpecial) {
+            this.zoomZ -= (delta.y) * 0.01;
+            this.zoomZ = clamp(this.zoomZ, 1, 8);
          }
-         else if (this.pointerMode === PointerMode.Light) {
+         else {
+            // update the angles based on how far we moved since last time
+            this.angleY -= (delta.x) * 0.01;
+            this.angleX += (delta.y) * 0.01;
 
-            if (this.pointerModeSpecial) {
-               this.pos.radius -= (y - this.oldY) * 0.005;
-               this.pos.radius = clamp(this.pos.radius, this.renderer.uniforms.uBallRadius + 0.5, 5);
-               this.renderer.uniforms.uLightPos.values = this.pos.toXYZ();
-            }
-            else {
-               this.pos.rotationAngle += (x - this.oldX);
-               this.pos.elevationAngle += (y - this.oldY);
-               this.pos.elevationAngle = clamp(this.pos.elevationAngle, 0, 180);
-               this.renderer.uniforms.uLightPos.values = this.pos.toXYZ();
-            }
+            // don't go upside down
+            this.angleX = Math.max(this.angleX, -Math.PI / 2 + 0.01);
+            this.angleX = Math.min(this.angleX, Math.PI / 2 - 0.01);
          }
-
-         // clear the sample buffer
-         this.restart();
-
-         // remember this coordinate
-         this.oldX = x;
-         this.oldY = y;
       }
+      else if (this.pointerMode === PointerMode.Light) {
+
+         if (this.pointerModeSpecial) {
+            this.pos.radius -= (delta.y) * 0.005;
+            this.pos.radius = clamp(this.pos.radius, this.renderer.uniforms.uBallRadius + 0.5, 5);
+            this.renderer.uniforms.uLightPos.values = this.pos.toXYZ();
+         }
+         else {
+            this.pos.rotationAngle += (-delta.x);
+            this.pos.elevationAngle += (-delta.y);
+            this.pos.elevationAngle = clamp(this.pos.elevationAngle, 0, 180);
+            this.renderer.uniforms.uLightPos.values = this.pos.toXYZ();
+         }
+      }
+
+      // clear the sample buffer
+      this.restart();
    }
 
    /**
