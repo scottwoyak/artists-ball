@@ -2,6 +2,10 @@
   font-family: Verdana;
 }
 
+:root {
+  --main-color: 114, 117, 134;
+}
+
 body {
   margin: 0px;
   overflow: hidden;
@@ -11,61 +15,7 @@ body {
   position: relative;
 }
 
-#description {
-  position: absolute;
-  bottom: 5px;
-  left: 2px;
-  padding: 2px;
-  padding-right: 5px;
-  padding-left: 5px;
-  border-radius: 5px;
-  font-size: 10pt;
-  font-family: arial;
-  color: white;
-  text-shadow: 0px 0px 6px rgba(0, 0, 0, 1);
-  user-select: none;
-}
-
-#drawTime {
-  position: absolute;
-  top: -495px;
-  left: 2px;
-  padding: 2px;
-  padding-right: 5px;
-  padding-left: 5px;
-  font-size: 8pt;
-  font-family: arial;
-  color: white;
-  text-shadow: 0px 0px 6px rgba(0, 0, 0, 1);
-  user-select: none;
-}
-
-#progressSpan {
-  position: absolute;
-  bottom: 3px;
-  left: 0px;
-  right: 0px;
-  height: 5px;
-  background-color: rgba(50, 205, 50, 0.75);
-}
-
-#modeButton {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  padding: 2px;
-  padding-right: 5px;
-  padding-left: 5px;
-  border-radius: 5px;
-  font-size: 10pt;
-  font-family: arial;
-  color: yellow;
-  text-shadow: 0px 0px 6px rgba(0, 0, 0, 1);
-  user-select: none;
-  cursor: pointer;
-}
-
-@import "DropDownMenu.css";
+@import "Menu.css";
 @import "Slider.css";
 @import "Tabs.css";
 
@@ -73,24 +23,8 @@ body {
   * {
     font-size: 40px;
   }
-
-  #drawTime {
-    top: -960px;
-    left: 4px;
-    font-size: 16pt;
-    font-weight: darker;
-  }
-
-  #modeButton {
-    font-size: 20pt;
-    font-weight: darker;
-  }
-
-  #description {
-    font-size: 20pt;
-    font-weight: darker;
-  }
 }
 
-@import "PlanesApp.css";
+@import "PathTracerApp.css";
+@import "ValuePlanesApp.css";
 @import "ViewerApp.css";

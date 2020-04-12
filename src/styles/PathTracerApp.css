@@ -1,0 +1,76 @@
+.PathTracerApp #description {
+  position: absolute;
+  bottom: 5px;
+  left: 2px;
+  padding: 2px;
+  padding-right: 5px;
+  padding-left: 5px;
+  border-radius: 5px;
+  font-size: 10pt;
+  font-family: arial;
+  color: white;
+  text-shadow: 0px 0px 6px rgba(0, 0, 0, 1);
+  user-select: none;
+}
+
+.PathTracerApp #drawTime {
+  position: absolute;
+  top: -495px;
+  left: 2px;
+  padding: 2px;
+  padding-right: 5px;
+  padding-left: 5px;
+  font-size: 8pt;
+  font-family: arial;
+  color: white;
+  text-shadow: 0px 0px 6px rgba(0, 0, 0, 1);
+  user-select: none;
+}
+
+.PathTracerApp #progressSpan {
+  position: absolute;
+  bottom: 3px;
+  left: 0px;
+  right: 0px;
+  height: 5px;
+  background-color: rgba(50, 205, 50, 0.75);
+}
+
+.PathTracerApp #modeButton {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  padding: 2px;
+  padding-right: 5px;
+  padding-left: 5px;
+  border-radius: 5px;
+  font-size: 10pt;
+  font-family: arial;
+  color: yellow;
+  text-shadow: 0px 0px 6px rgba(0, 0, 0, 1);
+  user-select: none;
+  cursor: pointer;
+}
+
+@import "Menu.css";
+@import "Slider.css";
+@import "Tabs.css";
+
+@media only screen and (max-device-width: 800px) {
+  .PathTracerApp #drawTime {
+    top: -940px;
+    left: 4px;
+    font-size: 16pt;
+    font-weight: darker;
+  }
+
+  .PathTracerApp #modeButton {
+    font-size: 20pt;
+    font-weight: darker;
+  }
+
+  .PathTracerApp #description {
+    font-size: 20pt;
+    font-weight: darker;
+  }
+}

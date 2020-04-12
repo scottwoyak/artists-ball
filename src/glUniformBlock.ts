@@ -20,6 +20,11 @@ export class glUniformBlock {
       gl2.bindBufferBase(gl2.UNIFORM_BUFFER, blockBinding, this.blockBuffer);
    }
 
+   delete() {
+      let gl2 = this.gl2;
+      gl2.deleteBuffer(this.blockBuffer);
+   }
+
    upload(data: Float32Array | Int32Array) {
 
       let gl2 = this.gl2;

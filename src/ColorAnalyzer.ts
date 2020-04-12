@@ -68,6 +68,7 @@ export class ColorAnalyzer {
       }
 
       // TODO handle case when the text type is UNSIGNED_BYTE
+      // TODO gl.FLOAT not supported on Safari.
       gl.readPixels(0, 0, this.size, this.size, gl.RGBA, gl.FLOAT, this.pixels);
 
       let numLightPixels = 0;

@@ -2,14 +2,16 @@ import { htmlColor } from "./htmlColor";
 import { toRad, isMobile } from "./Globals";
 import { Renderer } from "./Renderer";
 import { Mat4 } from "./Mat";
-import { Vec4, Vec2, Vec3 } from "./Vec";
+import { Vec4, Vec2 } from "./Vec";
 import { NormalType, TriangleObj } from "./TriangleObj";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { saveAs } from 'file-saver';
-import { createModelsDropDownMenu } from "./ModelsDropDownMenu";
+import { createModelsMenu } from "./ModelsMenu";
 import { ModelLoader } from "./ModelLoader";
 import { Profiler } from "./Profiler";
 import { BoundingBox } from "./BoundingBox";
+import { IApp } from "./IApp";
+import { Menubar, SubMenu } from "./Menu";
 
 enum PointerMode {
    View,
@@ -19,7 +21,7 @@ enum PointerMode {
 const WHITE_COLOR = new htmlColor([255, 250, 242]);
 const BLACK_COLOR = new htmlColor([0, 0, 0]);
 
-export class ViewerApp {
+export class ViewerApp implements IApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    public renderer: Renderer;
    private pointerMode: PointerMode = PointerMode.View;
@@ -28,7 +30,7 @@ export class ViewerApp {
 
    private dirty: boolean = true;
    private animate: boolean = false;
-   private animationFrameHandler: number;
+   private animationFrame: number;
 
    private query: string;
 
@@ -55,6 +57,10 @@ export class ViewerApp {
       this.createCtrlsElements(ctrlsContainer);
 
       this.loadModel(this.query);
+   }
+
+   public delete() {
+      cancelAnimationFrame(this.animationFrame);
    }
 
    private createViewElements(parent: HTMLElement) {
@@ -146,9 +152,6 @@ export class ViewerApp {
                break;
          }
       }
-
-      createModelsDropDownMenu(parent, (file) => this.loadModel(file));
-
       window.onresize = () => {
 
          this.updateSize();
@@ -212,6 +215,10 @@ export class ViewerApp {
       p.log('Mirror Complete');
    }
 
+   public buildMenu(menubar: Menubar) {
+      createModelsMenu(menubar, (file) => this.loadModel(file));
+   }
+
    private optimize(normalType: NormalType) {
 
       let obj = this.renderer.obj;
@@ -236,11 +243,12 @@ export class ViewerApp {
    private updateSize() {
       let gl = this.gl;
 
+      let menubarHeight = document.getElementById('Menubar').clientHeight;
       let width = window.innerWidth;
       let height = window.innerHeight;
 
       gl.canvas.width = width;
-      gl.canvas.height = height;
+      gl.canvas.height = height - menubarHeight;
       this.overlay.style.width = width + 'px';
       this.overlay.style.height = height + 'px';
       this.overlay.style.lineHeight = height + 'px'; // vertically center text
@@ -292,8 +300,8 @@ export class ViewerApp {
                this.animate = false;
                this.dirty = true;
                this.pointerMode = PointerMode.View;
-               if (!this.animationFrameHandler) {
-                  this.animationFrameHandler = requestAnimationFrame(() => this.tick());
+               if (!this.animationFrame) {
+                  this.animationFrame = requestAnimationFrame(() => this.tick());
                }
 
                /*

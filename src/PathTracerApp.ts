@@ -1,7 +1,6 @@
 import { Vec3 } from "./Vec";
 import { PathTracerRenderer, RenderMode } from "./PathTracerRenderer";
 import { Mat4 } from "./Mat";
-import { Uniforms } from "./Uniforms";
 import { SphericalCoord } from "./SphericalCoord";
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
@@ -11,7 +10,8 @@ import { TriangleObj } from "./TriangleObj";
 import { TriangleObjFile } from "./TriangleObjFile";
 import { TriangleObjBuilder } from "./TriangleObjBuilder";
 import { Profiler } from "./Profiler";
-import { IndexedVec3 } from "./IndexedVec3";
+import { IApp } from "./IApp";
+import { Menubar } from "./Menu";
 
 let skinTones = [
    new htmlColor([240, 223, 214]),
@@ -30,7 +30,7 @@ enum PointerMode {
    Light,
 }
 
-export class PathTracerApp {
+export class PathTracerApp implements IApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    public renderer: PathTracerRenderer;
    private modelview: Mat4;
@@ -40,6 +40,7 @@ export class PathTracerApp {
    private pointerModeSpecial = false;
    private pos: SphericalCoord;
    private canvas: HTMLCanvasElement;
+   private animationFrame: number;
 
    private intensitySlider: Slider;
    private lightColorSlider: Slider;
@@ -65,6 +66,8 @@ export class PathTracerApp {
 
    public create(div: HTMLDivElement) {
 
+      div.className = 'PathTracerApp';
+
       const container = document.createElement('span');
       container.className = 'container';
       div.appendChild(container);
@@ -84,6 +87,7 @@ export class PathTracerApp {
          console.log("Unable to get WebGL context");
       }
       this.gl = context;
+      this.renderer = new PathTracerRenderer(this.gl);
 
       this.canvas.ontouchstart = (event: TouchEvent) => {
          event.preventDefault();
@@ -123,7 +127,7 @@ export class PathTracerApp {
       }
 
       this.loadModel(this.query).then((tObj: TriangleObj) => {
-         this.renderer = new PathTracerRenderer(this.gl, tObj);
+         this.renderer.setObj(tObj);
          requestAnimationFrame(() => this.tick());
       })
 
@@ -166,10 +170,10 @@ export class PathTracerApp {
          label: 'Light Intensity',
          min: 0,
          max: 100,
-         value: Uniforms.uLightIntensity * 100,
+         value: this.renderer.uniforms.uLightIntensity * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            Uniforms.uLightIntensity = this.intensitySlider.value / 100;
+            this.renderer.uniforms.uLightIntensity = this.intensitySlider.value / 100;
             this.restart();
          }
       });
@@ -206,31 +210,39 @@ export class PathTracerApp {
          value: 50,
          colors: skinTones,
          oninput: () => {
-            Uniforms.uObjColor = this.ballColorSlider.glColor;
+            this.renderer.uniforms.uObjColor = this.ballColorSlider.glColor;
             this.restart();
          }
       });
 
       // make sure gl matches the initial UI setting
-      Uniforms.uObjColor = this.ballColorSlider.glColor;
+      this.renderer.uniforms.uObjColor = this.ballColorSlider.glColor;
 
       this.ambientIntensitySlider = new Slider(div, {
          id: 'AmbientIntensity',
          label: 'Ambient Light',
          min: 0,
          max: 100,
-         value: Uniforms.uAmbientLightIntensity * 100,
+         value: this.renderer.uniforms.uAmbientLightIntensity * 100,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            Uniforms.uAmbientLightIntensity = this.ambientIntensitySlider.value / 100;
+            this.renderer.uniforms.uAmbientLightIntensity = this.ambientIntensitySlider.value / 100;
             this.restart();
          }
       });
    }
 
+   public delete() {
+      cancelAnimationFrame(this.animationFrame);
+      this.renderer.delete();
+   }
+
+   public buildMenu(menubar: Menubar) {
+   }
+
    private loadModel(query: string): Promise<TriangleObj> {
       if (query && query.toLowerCase() === 'sphere') {
-         Uniforms.uBallRadius = 0;
+         this.renderer.uniforms.uBallRadius = 0;
          let radius = 0.5;
          let center = new Vec3([0, radius, 0]);
          let tObj = new TriangleObjBuilder();
@@ -238,7 +250,7 @@ export class PathTracerApp {
          return Promise.resolve(tObj);
       }
       else if (query && query.toLowerCase() === 'cube') {
-         Uniforms.uBallRadius = 0;
+         this.renderer.uniforms.uBallRadius = 0;
          let size = 0.8;
          let center = new Vec3([0, size / 2.0, 0]);
          let tObj = new TriangleObjBuilder();
@@ -246,7 +258,7 @@ export class PathTracerApp {
          return Promise.resolve(tObj);
       }
       else if (query && query.toLowerCase().endsWith('.obj')) {
-         Uniforms.uBallRadius = 0;
+         this.renderer.uniforms.uBallRadius = 0;
          return fetch(query)
             .then(res => res.text())
             .then(res => {
@@ -265,7 +277,7 @@ export class PathTracerApp {
       this.intensitySlider.colors = [htmlColor.black, this.lightColorSlider.htmlColor];
 
       // use the value in rendering
-      Uniforms.uLightColor = this.lightColorSlider.glColor;
+      this.renderer.uniforms.uLightColor = this.lightColorSlider.glColor;
 
       this.restart();
    }
@@ -281,7 +293,7 @@ export class PathTracerApp {
       this.oldX = x;
       this.oldY = y;
 
-      this.pos = SphericalCoord.fromXYZ(Uniforms.uLightPos.values);
+      this.pos = SphericalCoord.fromXYZ(this.renderer.uniforms.uLightPos.values);
 
       this.mouseDown = true;
    }
@@ -307,14 +319,14 @@ export class PathTracerApp {
 
             if (this.pointerModeSpecial) {
                this.pos.radius -= (y - this.oldY) * 0.005;
-               this.pos.radius = clamp(this.pos.radius, Uniforms.uBallRadius + 0.5, 5);
-               Uniforms.uLightPos.values = this.pos.toXYZ();
+               this.pos.radius = clamp(this.pos.radius, this.renderer.uniforms.uBallRadius + 0.5, 5);
+               this.renderer.uniforms.uLightPos.values = this.pos.toXYZ();
             }
             else {
                this.pos.rotationAngle += (x - this.oldX);
                this.pos.elevationAngle += (y - this.oldY);
                this.pos.elevationAngle = clamp(this.pos.elevationAngle, 0, 180);
-               Uniforms.uLightPos.values = this.pos.toXYZ();
+               this.renderer.uniforms.uLightPos.values = this.pos.toXYZ();
             }
          }
 
@@ -385,7 +397,7 @@ export class PathTracerApp {
 
    private updateTexture() {
       this.modelview = Mat4.makeLookAt(
-         Uniforms.uEye,
+         this.renderer.uniforms.uEye,
          new Vec3([0, 1, 0]),  // center point
          new Vec3([0, 1, 0])   // up vector
       );
@@ -413,16 +425,16 @@ export class PathTracerApp {
 
       this.updateTimerLabel();
       this.updateProgress();
-      if (Uniforms.uSample < this.MAX_SAMPLES) {
-         Uniforms.uEye.values[0] = this.zoomZ * Math.sin(this.angleY) * Math.cos(this.angleX);
-         Uniforms.uEye.values[1] = this.zoomZ * Math.sin(this.angleX);
-         Uniforms.uEye.values[2] = this.zoomZ * Math.cos(this.angleY) * Math.cos(this.angleX);
+      if (this.renderer.uniforms.uSample < this.MAX_SAMPLES) {
+         this.renderer.uniforms.uEye.values[0] = this.zoomZ * Math.sin(this.angleY) * Math.cos(this.angleX);
+         this.renderer.uniforms.uEye.values[1] = this.zoomZ * Math.sin(this.angleX);
+         this.renderer.uniforms.uEye.values[2] = this.zoomZ * Math.cos(this.angleY) * Math.cos(this.angleX);
 
          this.updateTexture();
          this.displayTexture();
       }
 
-      requestAnimationFrame(() => this.tick());
+      this.animationFrame = requestAnimationFrame(() => this.tick());
    }
 
    private updateTimerLabel() {
@@ -438,11 +450,11 @@ export class PathTracerApp {
          this.lastTimes.shift();
       }
 
-      drawTimeLabel.style.visibility = Uniforms.uSample < this.MAX_SAMPLES ? 'visible' : 'hidden';
+      drawTimeLabel.style.visibility = this.renderer.uniforms.uSample < this.MAX_SAMPLES ? 'visible' : 'hidden';
    }
 
    private updateProgress() {
-      let progress = Uniforms.uSample / this.MAX_SAMPLES;
+      let progress = this.renderer.uniforms.uSample / this.MAX_SAMPLES;
       let span = document.getElementById('progressSpan') as HTMLSpanElement;
       if (progress >= 0 && progress < 1) {
          span.style.visibility = 'visible';

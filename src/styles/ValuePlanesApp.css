@@ -1,0 +1,86 @@
+.ValuePlanesApp #MainCanvas {
+  background-color: rgb(128, 128, 150);
+}
+
+.ValuePlanesApp #Overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  font-size: 40px;
+  text-align: center;
+  color: white;
+  background-color: transparent;
+  user-select: none;
+  pointer-events: none;
+}
+
+.ValuePlanesApp #CtrlsContainer {
+  margin-top: 5px;
+}
+
+.ValuePlanesApp #LightLightRange::-webkit-slider-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+.ValuePlanesApp #LightLightSliderRange::-moz-range-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+
+.ValuePlanesApp #MidLightRange::-webkit-slider-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+.ValuePlanesApp #MidLightSliderRange::-moz-range-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+
+.ValuePlanesApp #DarkLightRange::-webkit-slider-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+.ValuePlanesApp #DarkLightSliderRange::-moz-range-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+
+.ValuePlanesApp .SliderRange {
+  width: 35%;
+}
+
+.ValuePlanesApp .SliderLabel {
+  width: 18%;
+}
+
+.ValuePlanesApp #ThresholdCtrlCanvas {
+  position: absolute;
+  right: 0px;
+  width: 150px;
+  height: 150px;
+  background-color: rgb(128, 128, 150);
+}
+
+.ValuePlanesApp #ThresholdCtrlOverlayCanvas {
+  position: absolute;
+  right: 0px;
+  width: 150px;
+  height: 150px;
+  background-color: transparent;
+}
+
+@media only screen and (max-device-width: 800px) {
+  .ValuePlanesApp .SliderRange {
+    width: 28%;
+  }
+
+  .ValuePlanesApp .SliderLabel {
+    width: 22%;
+  }
+
+  .ValuePlanesApp #ThresholdCtrlCanvas {
+    width: 300px;
+    height: 300px;
+  }
+
+  .ValuePlanesApp #ThresholdCtrlOverlayCanvas {
+    width: 300px;
+    height: 300px;
+  }
+}
