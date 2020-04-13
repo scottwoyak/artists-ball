@@ -4,7 +4,6 @@ import vertexSource from './shaders/ViewerVertex.glsl';
 import fragmentSource from './shaders/ViewerFragment.glsl';
 import { clamp, mix, toRad, toDeg } from './Globals';
 import { glUniform } from './glUniform';
-import { glCompiler } from './glCompiler';
 import { TriangleObj, NormalType } from './TriangleObj';
 import { glObject } from './glObject';
 import { glColor3 } from './glColor';
@@ -15,6 +14,7 @@ import { TriangleObjBuilder } from './TriangleObjBuilder';
 import { glTexture, glTextureStyle } from './glTexture';
 import { glFrameBuffer } from './glFrameBuffer';
 import { IThresholdProvider } from './IThresholdProvider';
+import { glProgram } from './glProgram';
 
 export let DEFAULT_THRESHOLD1 = 40;
 export let DEFAULT_THRESHOLD2 = 70;
@@ -29,7 +29,7 @@ const INITIAL_VIEW = Mat4.identity;
 export class Renderer implements IThresholdProvider {
 
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
-   private program: WebGLProgram;
+   private program: glProgram;
    private view = INITIAL_VIEW;
    private lightView = new Mat4();
    private projection = new Mat4();
@@ -88,7 +88,7 @@ export class Renderer implements IThresholdProvider {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-      this.program = glCompiler.compile(gl, vertexSource, fragmentSource);
+      this.program = new glProgram(gl, vertexSource, fragmentSource);
 
       let tBall = new TriangleObjBuilder('Ball');
       tBall.addSphere(50, BALL_RADIUS, new Vec3([0, 0, 0]));
@@ -246,7 +246,7 @@ export class Renderer implements IThresholdProvider {
       if (this.obj) {
          this.obj.delete();
       }
-      this.obj = new glObject(this.gl, tObj, this.program);
+      this.obj = new glObject(this.gl, tObj, this.program.get());
 
       let center = tObj.center;
       this.obj.translate(new Vec3([-center.x, -center.y, -center.z]));
@@ -337,7 +337,7 @@ export class Renderer implements IThresholdProvider {
       gl.viewport(0, 0, this.shadowFrameBuffer.width, this.shadowFrameBuffer.height);
       this.shadowFrameBuffer.bind();
 
-      gl.useProgram(this.program);
+      this.program.use();
 
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
@@ -387,7 +387,7 @@ export class Renderer implements IThresholdProvider {
          gl.bindTexture(gl.TEXTURE_2D, null);
       }
       else {
-         gl.useProgram(this.program);
+         this.program.use();
 
          this.shadowDepthTexture.bind();
 

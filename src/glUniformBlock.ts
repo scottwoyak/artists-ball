@@ -1,3 +1,5 @@
+import { glProgram } from "./glProgram";
+
 export class glUniformBlock {
    private gl2: WebGL2RenderingContext = null;
    private blockLocation: number;
@@ -5,13 +7,17 @@ export class glUniformBlock {
 
    constructor(
       glCtx: WebGL2RenderingContext,
-      program: WebGLProgram,
+      program: WebGLProgram | glProgram,
       blockName: string,
       blockBinding: number
    ) {
 
       this.gl2 = glCtx;
       let gl2 = this.gl2;
+
+      if (program instanceof glProgram) {
+         program = program.get();
+      }
 
       this.blockLocation = gl2.getUniformBlockIndex(program, blockName);
       gl2.uniformBlockBinding(program, this.blockLocation, blockBinding);

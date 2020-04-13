@@ -8,7 +8,7 @@ import { ColorRange } from './ColorRange';
 import { isMobile } from './Globals';
 import { Profiler } from './Profiler';
 import { glUniform } from './glUniform';
-import { glCompiler } from './glCompiler';
+import { glProgram } from './glProgram';
 import { ColorAnalyzer } from './ColorAnalyzer';
 import { TriangleObj } from './TriangleObj';
 import { glUniformBlock } from './glUniformBlock';
@@ -71,9 +71,9 @@ export class PathTracerRenderer {
    private vertexBuffer: WebGLBuffer;
    private frameBuffer: glFrameBuffer;
    private textures: glTexture[];
-   private toScreenProgram: WebGLProgram;
+   private toScreenProgram: glProgram;
    private toScreenVertexAttribute: number;
-   private toTextureProgram: WebGLProgram;
+   private toTextureProgram: glProgram;
    private toTextureVertexAttribute: number;
    private analyzer: ColorAnalyzer;
    private tBlock: glUniformBlock;
@@ -130,8 +130,8 @@ export class PathTracerRenderer {
       }
 
       // create toScreen shader
-      this.toScreenProgram = glCompiler.compile(gl, toScreenVertexSource, toScreenFragmentSource);
-      this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram, 'vertex');
+      this.toScreenProgram = new glProgram(gl, toScreenVertexSource, toScreenFragmentSource);
+      this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram.get(), 'vertex');
       gl.enableVertexAttribArray(this.toScreenVertexAttribute);
    }
 
@@ -154,13 +154,18 @@ export class PathTracerRenderer {
    private compileShader(tObj?: TriangleObj) {
       let gl = this.gl;
 
+      if (this.toTextureProgram) {
+         this.toTextureProgram.delete();
+         this.toTextureProgram = null;
+      }
+
       let p = new Profiler();
       // create the toTexture shader
       if (tObj && tObj.numTriangles > 0) {
 
          let pObj = new PathTracerObj(tObj);
 
-         this.toTextureProgram = glCompiler.compile(
+         this.toTextureProgram = new glProgram(
             gl,
             toTextureVertexSource
                .replace('<VERSION>', '#version 300 es')
@@ -177,7 +182,7 @@ export class PathTracerRenderer {
          this.uploadUniforms(pObj);
       }
       else {
-         this.toTextureProgram = glCompiler.compile(
+         this.toTextureProgram = new glProgram(
             gl,
             toTextureVertexSource
                .replace('<VERSION>', ''),
@@ -186,7 +191,7 @@ export class PathTracerRenderer {
          );
       }
 
-      this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram, 'vertex');
+      this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram.get(), 'vertex');
       gl.enableVertexAttribArray(this.toTextureVertexAttribute);
       p.log('compile');
    }
@@ -322,7 +327,7 @@ export class PathTracerRenderer {
       let gl = this.gl;
 
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-      gl.useProgram(this.toScreenProgram);
+      this.toScreenProgram.use();
       this.textures[0].bind();
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
       gl.vertexAttribPointer(this.toScreenVertexAttribute, 2, gl.FLOAT, false, 0, 0);

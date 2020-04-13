@@ -4,7 +4,7 @@ import { PointerEventHandler } from "./PointerEventHandler";
 import { glObject } from "./glObject";
 import { TriangleObjBuilder } from "./TriangleObjBuilder";
 import { NormalType } from "./TriangleObj";
-import { glCompiler } from "./glCompiler";
+import { glProgram } from "./glProgram";
 import { glUniform } from "./glUniform";
 import { Mat4 } from "./Mat";
 import { glColor3 } from "./glColor";
@@ -24,7 +24,7 @@ const NOMINAL_KNOB_RADIUS = 10;
 
 export class ThresholdCtrl {
    private gl: WebGLRenderingContext;
-   private program: WebGLProgram;
+   private program: glProgram;
    private overlay: HTMLCanvasElement;
    private mouseOffset = new Vec2();
    private hit = 0;
@@ -85,7 +85,7 @@ export class ThresholdCtrl {
       let gl = this.gl;
       gl.enable(gl.DEPTH_TEST);
 
-      this.program = glCompiler.compile(gl, vertexSource, fragmentSource);
+      this.program = new glProgram(gl, vertexSource, fragmentSource);
 
       let tBall = new TriangleObjBuilder('Ball');
       tBall.addSphere(50, BALL_RADIUS, new Vec3([0, 0, 0]));

@@ -1,6 +1,7 @@
 import { Vec3 } from "./Vec";
 import { glColor3, glColor4 } from "./glColor";
 import { Mat4 } from "./Mat";
+import { glProgram } from "./glProgram";
 
 /**
  * Utility class for setting uniform values in a shader
@@ -20,10 +21,14 @@ export class glUniform {
     */
    public constructor(
       glCtx: WebGLRenderingContext | WebGL2RenderingContext,
-      program: WebGLProgram
+      program: WebGLProgram | glProgram
    ) {
       this.gl = glCtx;
       let gl = this.gl;
+
+      if (program instanceof glProgram) {
+         program = program.get();
+      }
 
       this.program = program;
       gl.useProgram(program);

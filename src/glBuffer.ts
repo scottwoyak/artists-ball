@@ -1,3 +1,4 @@
+import { glProgram } from "./glProgram";
 
 /**
  * Wrapper for a WebGl Buffer and Attribute
@@ -9,11 +10,15 @@ export class glBuffer {
 
    public constructor(
       glCtx: WebGLRenderingContext | WebGL2RenderingContext,
-      program: WebGLProgram,
+      program: WebGLProgram | glProgram,
       attributeName: string
    ) {
       this.gl = glCtx;
       let gl = this.gl;
+
+      if (program instanceof glProgram) {
+         program = program.get();
+      }
 
       this.buffer = gl.createBuffer();
       this.attributeLocation = gl.getAttribLocation(program, attributeName);

@@ -1,6 +1,6 @@
 import vertexSource from './shaders/TextureRendererVertex.glsl';
 import fragmentSource from './shaders/TextureRendererFragment.glsl';
-import { glCompiler } from './glCompiler';
+import { glProgram } from './glProgram';
 import { glBuffer } from './glBuffer';
 import { glTexture } from './glTexture';
 
@@ -10,7 +10,7 @@ import { glTexture } from './glTexture';
 export class TextureRenderer {
 
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
-   private program: WebGLProgram;
+   private program: glProgram;
    private vertexBuffer: glBuffer;
 
    private vertices = [
@@ -26,7 +26,7 @@ export class TextureRenderer {
       let gl = this.gl;
 
       // create shader
-      this.program = glCompiler.compile(gl, vertexSource, fragmentSource);
+      this.program = new glProgram(gl, vertexSource, fragmentSource);
 
       // create vertex buffer - the block we'll draw our rendered texture on
       this.vertexBuffer = new glBuffer(gl, this.program, 'vertex');
@@ -44,7 +44,7 @@ export class TextureRenderer {
          height
       );
 
-      gl.useProgram(this.program);
+      this.program.use();
       texture.bind();
       this.vertexBuffer.bind(2);
 
