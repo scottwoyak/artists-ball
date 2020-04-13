@@ -23,7 +23,7 @@ const BLACK_COLOR = new htmlColor([0, 0, 0]);
 
 export class ViewerApp implements IApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
-   public renderer: Renderer;
+   private renderer: Renderer;
    private pointerMode: PointerMode = PointerMode.View;
    private overlay: HTMLSpanElement;
    private handler: PointerEventHandler;
@@ -142,7 +142,7 @@ export class ViewerApp implements IApp {
                break;
 
             case 'v':
-               this.renderer.orthographic = !this.renderer.orthographic;
+               this.renderer.useOrthographic = !this.renderer.useOrthographic;
                this.dirty = true;
                break;
 

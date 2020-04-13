@@ -21,7 +21,7 @@ const BLACK_COLOR = new htmlColor([0, 0, 0]);
 
 export class ValuePlanesApp implements IApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
-   public renderer: Renderer;
+   private renderer: Renderer;
    private pointerMode: PointerMode = PointerMode.View;
    private overlay: HTMLSpanElement;
    private handler: PointerEventHandler;

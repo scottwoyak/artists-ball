@@ -33,10 +33,7 @@ enum PointerMode {
 
 export class PathTracerApp implements IApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
-   public renderer: PathTracerRenderer;
-   private modelview: Mat4;
-   private projection: Mat4;
-   private modelviewProjection: Mat4;
+   private renderer: PathTracerRenderer;
    private pointerMode: PointerMode = PointerMode.View;
    private pointerModeSpecial = false;
    private pos: SphericalCoord;
@@ -353,15 +350,15 @@ export class PathTracerApp implements IApp {
    }
 
    private updateTexture() {
-      this.modelview = Mat4.makeLookAt(
+      let modelview = Mat4.makeLookAt(
          this.renderer.uniforms.uEye,
          new Vec3([0, 1, 0]),  // center point
          new Vec3([0, 1, 0])   // up vector
       );
 
-      this.projection = Mat4.makePerspective(55, 1, 0.1, 100);
-      this.modelviewProjection = this.projection.multM(this.modelview);
-      this.renderer.updateTexture(this.modelviewProjection);
+      let projection = Mat4.makePerspective(55, 1, 0.1, 100);
+      let modelviewProjection = projection.multM(modelview);
+      this.renderer.updateTexture(modelviewProjection);
    };
 
    private displayTexture(): void {

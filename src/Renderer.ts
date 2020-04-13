@@ -34,7 +34,7 @@ export class Renderer implements IThresholdProvider {
    private lightView = new Mat4();
    private projection = new Mat4();
    private uEye = new Vec3([0, 0, 8]); // 4 times the max object dimension of 2. For a model, about 20 ft away
-   public orthographic = false;
+   public useOrthographic = false;
 
    private uThreshold1 = DEFAULT_THRESHOLD1;
    private uThreshold2 = DEFAULT_THRESHOLD2;
@@ -142,7 +142,7 @@ export class Renderer implements IThresholdProvider {
          desiredWidth = objMaxWidth;
       }
 
-      if (this.orthographic) {
+      if (this.useOrthographic) {
          this.projection = Mat4.makeOrtho(
             -desiredWidth / 2,
             desiredWidth / 2,
@@ -296,7 +296,7 @@ export class Renderer implements IThresholdProvider {
       uni.set('lightView', this.lightView);
       uni.set('projection', this.projection);
       uni.set('uEye', this.uEye);
-      uni.set('uOrthographic', this.orthographic);
+      uni.set('uOrthographic', this.useOrthographic);
       uni.set('uLightDirection', this.uLightDirection);
       uni.set('uUseShadows', true);
 
