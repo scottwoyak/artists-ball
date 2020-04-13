@@ -70,7 +70,6 @@ export class PathTracerRenderer {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private vertexBuffer: WebGLBuffer;
    private frameBuffer: glFrameBuffer;
-   private renderTexture: glTexture;
    private textures: glTexture[];
    private toScreenProgram: WebGLProgram;
    private toScreenVertexAttribute: number;
@@ -124,8 +123,6 @@ export class PathTracerRenderer {
          this.uniforms.uTextureSize,
       );
 
-      this.renderTexture = this.frameBuffer.createTexture(glTextureStyle.Float);
-
       // create two textures. One we display and one we draw to
       this.textures = [];
       for (var i = 0; i < 2; i++) {
@@ -146,7 +143,6 @@ export class PathTracerRenderer {
       this.frameBuffer.delete();
       this.textures[0].delete();
       this.textures[1].delete();
-      this.renderTexture.delete();
       if (this.vBlock) {
          this.vBlock.delete();
       }
