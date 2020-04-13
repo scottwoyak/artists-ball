@@ -17,6 +17,7 @@ import { glFrameBuffer } from './glFrameBuffer';
 import { PathTracerObj } from './PathTracerObj';
 import { glColor3 } from './glColor';
 import { SphericalCoord } from './SphericalCoord';
+import { glAttributeBuffer } from './glAttributeBuffer';
 
 /**
  * Rendering mode for displaying the texture
@@ -72,9 +73,9 @@ export class PathTracerRenderer {
    private frameBuffer: glFrameBuffer;
    private textures: glTexture[];
    private toScreenProgram: glProgram;
-   private toScreenVertexAttribute: number;
+   private toScreenVertexAttribute: glAttributeBuffer;
    private toTextureProgram: glProgram;
-   private toTextureVertexAttribute: number;
+   private toTextureVertexAttribute: glAttributeBuffer;
    private analyzer: ColorAnalyzer;
    private tBlock: glUniformBlock;
    private vBlock: glUniformBlock;
@@ -111,11 +112,6 @@ export class PathTracerRenderer {
       }
       this.analyzer = new ColorAnalyzer(this.uniforms.uTextureSize);
 
-      // create vertex buffer - the block we'll draw our rendered texture on
-      this.vertexBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
-
       // create framebuffer
       this.frameBuffer = new glFrameBuffer(
          gl,
@@ -131,8 +127,8 @@ export class PathTracerRenderer {
 
       // create toScreen shader
       this.toScreenProgram = new glProgram(gl, toScreenVertexSource, toScreenFragmentSource);
-      this.toScreenVertexAttribute = gl.getAttribLocation(this.toScreenProgram.get(), 'vertex');
-      gl.enableVertexAttribArray(this.toScreenVertexAttribute);
+      this.toScreenVertexAttribute = new glAttributeBuffer(gl, this.toScreenProgram, 'vertex');
+      this.toScreenVertexAttribute.upload(this.vertices);
    }
 
    public setObj(tObj: TriangleObj) {
@@ -191,8 +187,9 @@ export class PathTracerRenderer {
          );
       }
 
-      this.toTextureVertexAttribute = gl.getAttribLocation(this.toTextureProgram.get(), 'vertex');
-      gl.enableVertexAttribArray(this.toTextureVertexAttribute);
+      this.toTextureVertexAttribute = new glAttributeBuffer(gl, this.toTextureProgram, 'vertex');
+      this.toTextureVertexAttribute.upload(this.vertices);
+
       p.log('compile');
    }
 
@@ -294,7 +291,7 @@ export class PathTracerRenderer {
       this.frameBuffer.bind();
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.textures[1].get(), 0);
 
-      gl.vertexAttribPointer(this.toTextureVertexAttribute, 2, gl.FLOAT, false, 0, 0);
+      this.toTextureVertexAttribute.bind(2);
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -329,8 +326,7 @@ export class PathTracerRenderer {
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       this.toScreenProgram.use();
       this.textures[0].bind();
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-      gl.vertexAttribPointer(this.toScreenVertexAttribute, 2, gl.FLOAT, false, 0, 0);
+      this.toScreenVertexAttribute.bind(2);
 
       // display the main screen
       let uni = new glUniform(gl, this.toScreenProgram);
