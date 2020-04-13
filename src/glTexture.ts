@@ -34,7 +34,7 @@ export class glTexture {
 
       switch (style) {
          case glTextureStyle.Color:
-            this.create(width, height);
+            this.createColor(width, height);
             break;
 
          case glTextureStyle.Depth:
@@ -56,11 +56,10 @@ export class glTexture {
       }
    }
 
-   private create(width: number, height: number) {
+   private createColor(width: number, height: number) {
 
       let gl = this.gl;
 
-      // Step 2: Create and initialize a texture buffer to hold the colors.
       this.texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
