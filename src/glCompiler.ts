@@ -53,7 +53,9 @@ export class glCompiler {
       gl.attachShader(program, glCompiler.compileShader(gl, fragmentSource, gl.FRAGMENT_SHADER));
       gl.linkProgram(program);
       if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-         throw 'link error: ' + gl.getProgramInfoLog(program);
+         let err = gl.getProgramInfoLog(program);
+         console.error(err);
+         throw 'link error: ' + err;
       }
       return program;
    }
