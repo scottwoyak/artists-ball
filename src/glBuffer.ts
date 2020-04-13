@@ -31,13 +31,13 @@ export class glBuffer {
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
    }
 
-   public bind() {
+   public bind(size = 3) {
       let gl = this.gl;
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
       gl.enableVertexAttribArray(this.attributeLocation);
       gl.vertexAttribPointer(
          this.attributeLocation,
-         3,                // size
+         size,             // size - 2,3 or 4 values per vertex
          gl.FLOAT,         // type
          false,            // normalized
          0,                // stride

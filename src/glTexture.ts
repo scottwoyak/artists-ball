@@ -112,7 +112,7 @@ export class glTexture {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
    }
 
-   public createFloat(width: number, height: number) {
+   private createFloat(width: number, height: number) {
       let gl = this.gl;
 
       let internalFormat: number;

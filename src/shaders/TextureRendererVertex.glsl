@@ -1,5 +1,5 @@
 
-attribute vec3 vertex;
+attribute vec2 vertex;
 varying vec2 texCoord;
 
 void main()

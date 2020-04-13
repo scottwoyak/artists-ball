@@ -377,9 +377,10 @@ export class Renderer implements IThresholdProvider {
 
       // display the depth buffer for testing purposes
       if (this.showShadowMap) {
+         gl.disable(gl.CULL_FACE);
          let tr = new TextureRenderer(gl);
          tr.render(
-            this.shadowDepthTexture.get(),
+            this.shadowDepthTexture,
             this.shadowFrameBuffer.width,
             this.shadowFrameBuffer.height
          );
