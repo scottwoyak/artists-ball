@@ -325,16 +325,6 @@ export class PathTracerRenderer {
 
       let gl = this.gl;
 
-      // size of the actual canvas. The texture we create is drawn to this item
-      let size = document.body.clientWidth;
-
-      if (isMobile === false) {
-         // not sure why, but this basically becomes full width on my phone
-         size = 512;
-      }
-
-      gl.canvas.width = size;
-      gl.canvas.height = size;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       gl.useProgram(this.toScreenProgram);
       this.textures[0].bind();

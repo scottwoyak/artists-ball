@@ -15,7 +15,7 @@
 
 .PathTracerApp #drawTime {
   position: absolute;
-  top: -495px;
+  top: 5px;
   left: 2px;
   padding: 2px;
   padding-right: 5px;
@@ -27,9 +27,9 @@
   user-select: none;
 }
 
-.PathTracerApp #progressSpan {
+.PathTracerApp #progressBar {
   position: absolute;
-  bottom: 3px;
+  bottom: 0px;
   left: 0px;
   right: 0px;
   height: 5px;
@@ -50,16 +50,13 @@
   text-shadow: 0px 0px 6px rgba(0, 0, 0, 1);
   user-select: none;
   cursor: pointer;
+  display: inline-block;
 }
-
-@import "Menu.css";
-@import "Slider.css";
-@import "Tabs.css";
 
 @media only screen and (max-device-width: 800px) {
   .PathTracerApp #drawTime {
-    top: -940px;
     left: 4px;
+    top: 10px;
     font-size: 16pt;
     font-weight: darker;
   }

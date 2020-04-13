@@ -5,7 +5,7 @@ import { SphericalCoord } from "./SphericalCoord";
 import { Slider } from "./Slider";
 import { htmlColor } from "./htmlColor";
 import { glColorWithTemperature } from "./glColorWithTemperature";
-import { clamp } from "./Globals";
+import { clamp, isMobile } from "./Globals";
 import { TriangleObj } from "./TriangleObj";
 import { TriangleObjFile } from "./TriangleObjFile";
 import { TriangleObjBuilder } from "./TriangleObjBuilder";
@@ -65,12 +65,12 @@ export class PathTracerApp implements IApp {
 
       div.className = 'PathTracerApp';
 
-      const container = document.createElement('span');
+      const container = document.createElement('div');
       container.className = 'container';
       div.appendChild(container);
 
       this.canvas = document.createElement('canvas');
-      this.canvas.id = 'canvas';
+      this.canvas.id = 'canvasx';
       container.appendChild(this.canvas);
 
       let context: WebGLRenderingContext | WebGL2RenderingContext = this.canvas.getContext('webgl2');
@@ -84,6 +84,16 @@ export class PathTracerApp implements IApp {
          console.log("Unable to get WebGL context");
       }
       this.gl = context;
+
+      let size = 512;
+      if (isMobile) {
+         size = document.body.clientWidth;
+      }
+      this.gl.canvas.width = size;
+      this.gl.canvas.height = size;
+      div.style.width = size + 'px';
+      container.style.height = size + 'px';
+
       this.renderer = new PathTracerRenderer(this.gl);
 
       let handler = new PointerEventHandler(this.canvas);
@@ -104,7 +114,7 @@ export class PathTracerApp implements IApp {
       description.id = 'description';
       container.appendChild(description);
 
-      let button = document.createElement('span');
+      let button = document.createElement('div');
       button.id = 'modeButton';
       button.innerHTML = 'View';
       this.pointerMode = PointerMode.View;
@@ -123,12 +133,9 @@ export class PathTracerApp implements IApp {
       }
       container.appendChild(button);
 
-      let progressSpan = document.createElement('span');
-      progressSpan.id = 'progressSpan';
-      container.appendChild(progressSpan);
-
-      div.appendChild(document.createElement('br'));
-      div.appendChild(document.createElement('br'));
+      let progressBar = document.createElement('div');
+      progressBar.id = 'progressBar';
+      container.appendChild(progressBar);
 
       this.intensitySlider = new Slider(div, {
          id: 'LightIntensity',
@@ -405,14 +412,14 @@ export class PathTracerApp implements IApp {
 
    private updateProgress() {
       let progress = this.renderer.uniforms.uSample / this.MAX_SAMPLES;
-      let span = document.getElementById('progressSpan') as HTMLSpanElement;
+      let bar = document.getElementById('progressBar') as HTMLElement;
       if (progress >= 0 && progress < 1) {
-         span.style.visibility = 'visible';
+         bar.style.visibility = 'visible';
          let w = this.canvas.width;
-         span.style.right = w * (1 - progress) + 'px';
+         bar.style.right = w * (1 - progress) + 'px';
       }
       else {
-         span.style.visibility = 'hidden';
+         bar.style.visibility = 'hidden';
       }
    }
 }
