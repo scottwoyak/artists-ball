@@ -3,8 +3,7 @@ import { glAttributeBuffer } from "./glAttributeBuffer";
 import { Vec3, Vec4 } from "./Vec";
 import { glUniform } from "./glUniform";
 import { glIndexBuffer } from "./glIndexBuffer";
-import { XForm } from "./XForm";
-import { Profiler } from "./Profiler";
+import { Mat4 } from "./Mat";
 
 export class glObject {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -13,7 +12,13 @@ export class glObject {
    private vertexBuffer: glAttributeBuffer;
    private normalBuffer: glAttributeBuffer;
    private indexBuffer: glIndexBuffer;
-   public xForm = new XForm();
+
+   // this matrix normals the object so that all object are centered
+   // about the origin with diagonal length of 2 units
+   public normalize = Mat4.identity;
+
+   // this is the standard "model" matrix
+   public model = Mat4.identity;
 
    public get name(): string {
       return this.tObj.name;
@@ -37,6 +42,14 @@ export class glObject {
       this.uploadTriangles();
    }
 
+   public autoSize(center: Vec3, size: number) {
+
+      let objCenter = this.tObj.center;
+      this.normalize = Mat4.identity;
+      this.normalize.translate(new Vec3([center.x - objCenter.x, center.y - objCenter.y, center.z - objCenter.z]));
+      this.normalize.scale(size / this.tObj.diagonal);
+   }
+
    private createBuffers() {
       let gl = this.gl;
 
@@ -58,36 +71,32 @@ export class glObject {
       this.uploadTriangles();
    }
 
-   public snap() {
-      this.xForm.snap();
-   }
-
    public rotX(angle: number) {
-      this.xForm.rotX(angle);
+      this.model.rotX(angle);
    }
    public rotY(angle: number) {
-      this.xForm.rotY(angle);
+      this.model.rotY(angle);
    }
    public rotZ(angle: number) {
-      this.xForm.rotZ(angle);
+      this.model.rotZ(angle);
    }
    public preRotX(angle: number) {
-      this.xForm.preRotX(angle);
+      this.model.preRotX(angle);
    }
    public preRotY(angle: number) {
-      this.xForm.preRotY(angle);
+      this.model.preRotY(angle);
    }
    public preRotZ(angle: number) {
-      this.xForm.preRotZ(angle);
+      this.model.preRotZ(angle);
    }
    public scale(scale: number) {
-      this.xForm.scale(scale);
+      this.model.scale(scale);
    }
    public translate(offset: Vec3) {
-      this.xForm.translate(offset);
+      this.model.translate(offset);
    }
    public clearTransforms() {
-      this.xForm.reset();
+      this.model = Mat4.identity;
    }
 
    public uploadTriangles() {
@@ -101,7 +110,8 @@ export class glObject {
 
       let gl = this.gl;
       let uni = new glUniform(gl, this.program);
-      uni.set('model', this.xForm.get());
+      uni.set('normalize', this.normalize);
+      uni.set('model', this.model.multM(this.normalize));
 
       this.vertexBuffer.bind();
       this.indexBuffer.bind();
@@ -122,11 +132,12 @@ export class glObject {
       // if we're updating normals, ignore translation by setting w=0
       let vec = new Vec4([0, 0, 0, normals ? 0 : 1]);
 
+      let xForm = this.model.multM(this.normalize);
       for (let i = 0; i < vecs.length / 3; i++) {
          vec.x = vecs[3 * i + 0];
          vec.y = vecs[3 * i + 1];
          vec.z = vecs[3 * i + 2];
-         vec = this.xForm.mat.multM(this.xForm.base).multV(vec);
+         vec = xForm.multV(vec);
 
          if (normals) {
             vec = vec.normalize();
@@ -139,15 +150,12 @@ export class glObject {
    }
 
    public applyXForm() {
-      let p = new Profiler();
       this.applyToVecs(false);
       this.applyToVecs(true);
 
-      this.xForm = new XForm();
-      this.tObj.box.log('before: ');
+      this.normalize = Mat4.identity;
+      this.model = Mat4.identity;
       this.tObj.findBounds();
-      this.tObj.box.log('after: ');
       this.rebuildBuffers();
-      p.log('applyXForm');
    }
 }

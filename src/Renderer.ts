@@ -124,7 +124,7 @@ export class Renderer implements IThresholdProvider {
       let clipSpace = this.getClipSpace();
       let winAR = gl.canvas.width / this.gl.canvas.height;
 
-      let xBox = this.tObj.box.xForm(this.obj.xForm.base);
+      let xBox = this.tObj.box.xForm(this.obj.normalize);
       let objMaxHeight = 1.1 * xBox.height;
       let objMaxWidth = 1.1 * Math.sqrt(xBox.width * xBox.width + xBox.depth * xBox.depth);
       let objAR = objMaxWidth / objMaxHeight;
@@ -248,11 +248,10 @@ export class Renderer implements IThresholdProvider {
       }
       this.obj = new glObject(this.gl, tObj, this.program.get());
 
-      let center = tObj.center;
-      this.obj.translate(new Vec3([-center.x, -center.y, -center.z]));
+      // move the object so that the center is at [0,0,0] and it is scaled
+      // so that it's diagonal is 2 units across
       this.objScale = 2.0 / tObj.diagonal;
-      this.obj.scale(this.objScale);
-      this.obj.xForm.snap();
+      this.obj.autoSize(new Vec3([0, 0, 0]), 2);
 
       if (this.floor) {
          this.floor.delete;
@@ -277,7 +276,7 @@ export class Renderer implements IThresholdProvider {
    public resetView() {
       this.view = INITIAL_VIEW.clone();
       this.uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
-      this.obj.xForm.mat = Mat4.identity;
+      this.obj.clearTransforms();
       this.objScale = 1.0;
    }
 
@@ -363,6 +362,8 @@ export class Renderer implements IThresholdProvider {
       // don't try to use the shadow texture while we're creating it
       uni.set('uUseShadows', false);
 
+      gl.disable(gl.CULL_FACE);
+
       this.obj.draw();
 
       gl.bindTexture(gl.TEXTURE_2D, null);
@@ -403,7 +404,8 @@ export class Renderer implements IThresholdProvider {
          if (this.showFloor) {
             uni.set('uShowFloor', true);
 
-            this.floor.xForm.mat = this.obj.xForm.mat.clone();
+            // apply the same transform to the floor that exists for the object
+            this.floor.model = this.obj.model.clone();
 
             // cull polygons so we don't see the floor from below
             gl.enable(gl.CULL_FACE);

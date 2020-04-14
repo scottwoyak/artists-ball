@@ -65,13 +65,13 @@ export class ModelLoader {
       let name = model.name.split('.')[0].toLowerCase();
       switch (name) {
          case 'wolf':
-            model.rotY(toRad(-140));
-            model.rotX(toRad(5));
-            model.rotY(toRad(180));
+            model.normalize.rotY(toRad(-140));
+            model.normalize.rotX(toRad(5));
+            model.normalize.rotY(toRad(180));
             break;
 
          case 'sheephead':
-            model.rotY(toRad(20));
+            model.normalize.rotY(toRad(20));
             break;
 
          /*
@@ -103,7 +103,5 @@ export class ModelLoader {
          default:
             break;
       }
-
-      model.xForm.snap();
    }
 }
