@@ -40,6 +40,10 @@ uniform bool uShowContours;
 uniform vec3 uContourColors[9];
 uniform bool uShowHighlights;
 
+// For contour shading, the minimum specular contribution required to
+// show something as a highlight
+const float SPECULAR_THRESHOLD = 0.08;
+
 bool in_shadow()
 {
    if (uUseShadows == false)
@@ -94,10 +98,31 @@ bool in_shadow()
    }
 }
 
+float getSpecular(vec3 normal, vec3 toLight, vec3 toEye)
+{
+   float specular = 0.0;
+
+   if (uShowHighlights)
+   {
+      float shininess = 15.0;
+      vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
+      float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
+      specular = 0.1 * pow(cosAngle, shininess);
+   }
+
+   return specular;
+}
+
 float round(float val) { return floor(val + 0.5); }
 
-vec3 getContourColor(float vDot)
+vec3 getContourColor(float vDot, vec3 normal, vec3 toLight, vec3 toEye)
 {
+   float specular = getSpecular(normal, toLight, toEye);
+   if (specular > SPECULAR_THRESHOLD)
+   {
+      return vec3(1.0, 1.0, 1.0);
+   }
+
    float angle = (180.0 / 3.1415926) * acos(vDot);
    float numVals = 9.0;
    if (angle < 1.0 * (90.0 / numVals))
@@ -138,7 +163,7 @@ vec3 getContourColor(float vDot)
    }
 }
 
-vec4 getColor(float valForLight, float vDot, bool inShadow)
+vec4 getColor(float valForLight, float vDot, bool inShadow, vec3 normal, vec3 toLight, vec3 toEye)
 {
    float a = 1.0;
    if (uShowFloor)
@@ -151,7 +176,7 @@ vec4 getColor(float valForLight, float vDot, bool inShadow)
 
    if (uShowContours && vDot >= 0.0 && inShadow == false)
    {
-      return vec4(getContourColor(vDot), a);
+      return vec4(getContourColor(vDot, normal, toLight, toEye), a);
    }
    else
    {
@@ -164,17 +189,7 @@ float getValueFromLight(vec3 normal, vec3 toLight, vec3 toEye)
    float vDot = dot(normal, toLight);
    float diffuseFactor = clamp(vDot, 0.0, 1.0);
    float diffuse = diffuseFactor * uLightIntensity;
-
-   // compute specular contribution
-   float specular = 0.0;
-
-   if (uShowHighlights)
-   {
-      float shininess = 15.0;
-      vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
-      float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
-      specular = 0.1 * pow(cosAngle, shininess);
-   }
+   float specular = getSpecular(normal, toLight, toEye);
 
    float val;
    if (uUseThresholds == false)
@@ -205,7 +220,7 @@ float getValueFromLight(vec3 normal, vec3 toLight, vec3 toEye)
          val = uShadow;
       }
 
-      if (specular > 0.05)
+      if (specular > SPECULAR_THRESHOLD)
       {
          val = uHighlight;
       }
@@ -249,11 +264,12 @@ void main()
          // were coming from the eye.
          vec3 toShadowLight = vec3(0.0, 0.0, 1.0);
          float val = getValueFromLight(normal, toShadowLight, toEye) / 20.0;
-         fragColor = getColor(uAmbientIntensity + val, vDot, inShadow);
+         fragColor =
+             getColor(uAmbientIntensity + val, vDot, inShadow, normal, toShadowLight, toEye);
       }
       else
       {
-         fragColor = getColor(uShadow, vDot, inShadow);
+         fragColor = getColor(uShadow, vDot, inShadow, normal, toLight, toEye);
       }
       // useful for debugging - turn shadows red
       // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -262,7 +278,7 @@ void main()
    else
    {
       float val = getValueFromLight(normal, toLight, toEye);
-      fragColor = getColor(val, vDot, inShadow);
+      fragColor = getColor(val, vDot, inShadow, normal, toLight, toEye);
    }
 
    gl_FragColor = fragColor;
