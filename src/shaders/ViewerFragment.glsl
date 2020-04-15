@@ -42,7 +42,7 @@ uniform bool uShowHighlights;
 
 bool in_shadow()
 {
-   if (uUseShadows)
+   if (uUseShadows == false)
    {
       return false;
    }
