@@ -69,6 +69,18 @@ export class Renderer implements IThresholdProvider {
    public whiteColor = new glColor3([1, 1, 1]);
    public blackColor = new glColor3([0, 0, 0]);
 
+   private contourColors = [
+      new glColor3([1.00, 0.20, 0.20]), // red
+      new glColor3([1.00, 0.55, 0.25]), // orange
+      new glColor3([1.00, 0.81, 0.25]), // light orange
+      new glColor3([1.00, 1.00, 0.00]), // yellow
+      new glColor3([0.30, 1.00, 0.10]), // green
+      new glColor3([0.25, 0.90, 0.90]), // cyan
+      new glColor3([0.50, 0.50, 1.00]), // light blue
+      new glColor3([0.20, 0.20, 1.00]), // blue
+      new glColor3([0.30, 0.11, 0.40]), // purple
+   ]
+
    public showShadowMap = false;
    public showMiniView = true;
    public showFloor = true;
@@ -318,24 +330,14 @@ export class Renderer implements IThresholdProvider {
       uni.set('uWhiteColor', this.whiteColor);
       uni.set('uBlackColor', this.blackColor);
 
+      uni.seti('uNumContours', this.contourColors.length);
       for (let i = 0; i < this.contourColors.length; i++) {
+         uni.set('uContourAngles[' + i + ']', (i + 1) * (90 / this.contourColors.length));
          uni.set('uContourColors[' + i + ']', this.contourColors[i]);
       }
 
       return uni;
    }
-
-   private contourColors = [
-      new glColor3([1.00, 0.20, 0.20]), // red
-      new glColor3([1.00, 0.55, 0.25]), // orange
-      new glColor3([1.00, 0.81, 0.25]), // light orange
-      new glColor3([1.00, 1.00, 0.00]), // yellow
-      new glColor3([0.30, 1.00, 0.10]), // green
-      new glColor3([0.25, 0.90, 0.90]), // cyan
-      new glColor3([0.50, 0.50, 1.00]), // light blue
-      new glColor3([0.20, 0.20, 1.00]), // blue
-      new glColor3([0.30, 0.11, 0.40]), // purple
-   ]
 
    private renderToShadowMap(): void {
 

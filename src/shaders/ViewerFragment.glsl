@@ -37,7 +37,9 @@ uniform vec3 uFloorCenter;
 uniform float uFloorRadius;
 uniform bool uShowFloor;
 uniform bool uShowContours;
+uniform int uNumContours;
 uniform vec3 uContourColors[9];
+uniform float uContourAngles[9];
 uniform bool uShowHighlights;
 
 // For contour shading, the minimum specular contribution required to
@@ -124,42 +126,15 @@ vec3 getContourColor(float vDot, vec3 normal, vec3 toLight, vec3 toEye)
    }
 
    float angle = (180.0 / 3.1415926) * acos(vDot);
-   float numVals = 9.0;
-   if (angle < 1.0 * (90.0 / numVals))
+   for (int i = 0; i < 9; i++)
    {
-      return uContourColors[0];
-   }
-   else if (angle < 2.0 * (90.0 / numVals))
-   {
-      return uContourColors[1];
-   }
-   else if (angle < 3.0 * (90.0 / numVals))
-   {
-      return uContourColors[2];
-   }
-   else if (angle < 4.0 * (90.0 / numVals))
-   {
-      return uContourColors[3];
-   }
-   else if (angle < 5.0 * (90.0 / numVals))
-   {
-      return uContourColors[4];
-   }
-   else if (angle < 6.0 * (90.0 / numVals))
-   {
-      return uContourColors[5];
-   }
-   else if (angle < 7.0 * (90.0 / numVals))
-   {
-      return uContourColors[6];
-   }
-   else if (angle < 8.0 * (90.0 / numVals))
-   {
-      return uContourColors[7];
-   }
-   else if (angle < 9.0 * (90.0 / numVals))
-   {
-      return uContourColors[8];
+      if (i < uNumContours)
+      {
+         if (angle < uContourAngles[i])
+         {
+            return uContourColors[i];
+         }
+      }
    }
 }
 
