@@ -307,7 +307,8 @@ export class ViewerApp implements IApp {
 
       // if nothing was specified, load an interesting model
       if (!query) {
-         query = 'Pose_02.blob';
+         let num = Math.round(0.5 + 16 * Math.random());
+         query = 'Pose_0' + num + '.blob';
       }
 
       let lc = query.toLowerCase();

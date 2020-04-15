@@ -5,12 +5,22 @@ type LoadModelFunction = (file: string) => void;
 export function createModelsMenu(menubar: Menubar, loadModel: LoadModelFunction) {
 
    let menu = menubar.addSubMenu('Models', 'Models');
-   menu.addItem('Female Pose', () => loadModel('Pose1.blob'));
-   menu.addItem('Female Head', () => loadModel('FemaleHead.blob'));
-   menu.addItem('Arnold', () => loadModel('Arnold.blob'));
-   menu.addItem('Teapot', () => loadModel('Teapot.blob'));
 
    let subMenu;
+   subMenu = menu.addSubMenu('Objects', 'Objects');
+   subMenu.addItem('Football', () => loadModel('Football.blob'));
+   subMenu.addItem('Pill', () => loadModel('Pill.blob'));
+   subMenu.addItem('Pill Bottle', () => loadModel('PillBottle.blob'));
+   subMenu.addItem('Soda Can', () => loadModel('SodaCan.blob'));
+   subMenu.addItem('Soccer Ball', () => loadModel('SoccerBall.blob'));
+   subMenu.addItem('Spoon', () => loadModel('Spoon.blob'));
+   subMenu.addItem('Teapot', () => loadModel('Teapot.blob'));
+   subMenu.addItem('Torus (Donut)', () => loadModel('Torus.blob'));
+   subMenu.addItem('Torus Knot', () => loadModel('TorusKnot.blob'));
+   subMenu.addItem('Vase', () => loadModel('Vase.blob'));
+   subMenu.addItem('Vitamin', () => loadModel('Vitamin.blob'));
+   subMenu.addItem('Wine Bottle', () => loadModel('WineBottle.blob'));
+
    subMenu = menu.addSubMenu('Sculptures', 'Sculptures');
    subMenu.addItem('Belvedere Torso', () => loadModel('BelvedereTorso.blob'));
    subMenu.addItem('David', () => loadModel('David.blob'));
@@ -54,6 +64,7 @@ export function createModelsMenu(menubar: Menubar, loadModel: LoadModelFunction)
    subMenu.addItem('Pose 14', () => loadModel('Pose_014.blob'));
    subMenu.addItem('Pose 15', () => loadModel('Pose_015.blob'));
    subMenu.addItem('Pose 16', () => loadModel('Pose_016.blob'));
+   subMenu.addItem('Female Pose', () => loadModel('Pose1.blob'));
 
    subMenu = menu.addSubMenu('Heads', 'HeadsSubMenu');
    subMenu.addItem('Head 1', () => loadModel('Head1.blob'));
@@ -67,4 +78,6 @@ export function createModelsMenu(menubar: Menubar, loadModel: LoadModelFunction)
    subMenu.addItem('Head 9', () => loadModel('Head9.blob'));
    subMenu.addItem('Head 10', () => loadModel('Head10.blob'));
    subMenu.addItem('Head 11', () => loadModel('Head.blob'));
+   subMenu.addItem('Female Head', () => loadModel('FemaleHead.blob'));
+   subMenu.addItem('Arnold', () => loadModel('Arnold.blob'));
 }

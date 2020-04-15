@@ -127,7 +127,7 @@ export class Renderer implements IThresholdProvider {
       let winAR = gl.canvas.width / this.gl.canvas.height;
 
       let xBox = this.tObj.box.xForm(this.obj.normalize);
-      let objMaxHeight = 1.1 * xBox.height;
+      let objMaxHeight = 1.1 * Math.sqrt(xBox.height * xBox.height + xBox.depth * xBox.depth);
       let objMaxWidth = 1.1 * Math.sqrt(xBox.width * xBox.width + xBox.depth * xBox.depth);
       let objAR = objMaxWidth / objMaxHeight;
 

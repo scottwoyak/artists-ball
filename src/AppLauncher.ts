@@ -53,7 +53,7 @@ export class AppLauncher {
 
          case AppType.Viewer:
             document.title = 'Artist\'s Tools: Viewer';
-            this.app = new ViewerApp(query ?? 'Pose_01.blob');
+            this.app = new ViewerApp(query);
       }
       this.app.create(this.div);
       this.app.buildMenu(this.menubar);
