@@ -252,6 +252,81 @@ export class TriangleObj {
       this.computeNormals(normalType);
    }
 
+   public trim(box: BoundingBox) {
+      let p = new Profiler();
+      let indices: number[] = [];
+      for (let i = 0; i < this.numTriangles; i++) {
+         let tri = this.getTriangle(i);
+
+         if (box.inside(tri.v1) && box.inside(tri.v2) && box.inside(tri.v3)) {
+            indices.push(tri.i1);
+            indices.push(tri.i2);
+            indices.push(tri.i3);
+         }
+      }
+      console.log('trimmed ' + (this.indices.length - indices.length) + ' triangles');
+      this.indices = indices;
+      this.findBounds();
+      p.log('Trip Complete');
+   }
+
+   public mirror(x: number, add: boolean) {
+      let p = new Profiler();
+
+      if (add) {
+         // duplicate vertices
+         let numVertices = this.numVertices;
+         for (let i = 0; i < numVertices; i++) {
+            this.vertices[3 * i + 0] -= x;;
+            this.vertices.push(-this.vertices[3 * i + 0]);
+            this.vertices.push(this.vertices[3 * i + 1]);
+            this.vertices.push(this.vertices[3 * i + 2]);
+            this.normals.push(-this.normals[3 * i + 0]);
+            this.normals.push(this.normals[3 * i + 1]);
+            this.normals.push(this.normals[3 * i + 2]);
+         }
+
+         let numIndices = this.indices.length;
+         let startIndex = numVertices;
+         for (let i = 0; i < numIndices; i++) {
+            this.indices.push(startIndex + this.indices[i]);
+         }
+      }
+      else {
+         // reflect vertices
+         let numVertices = this.numVertices;
+         for (let i = 0; i < numVertices; i++) {
+            this.vertices[3 * i + 0] = x + (x - this.vertices[3 * i + 0]);
+            this.normals[3 * i + 0] = -this.normals[3 * i + 0];
+         }
+      }
+
+      this.findBounds();
+
+      p.log('Mirror Complete');
+   }
+
+   public reverse() {
+      let p = new Profiler();
+
+      // reflect vertices
+      let x = this.center.x;
+      for (let i = 0; i < this.numVertices; i++) {
+         this.vertices[3 * i + 0] = x + (x - this.vertices[3 * i + 0]);
+         this.normals[3 * i + 0] = -this.normals[3 * i + 0];
+      }
+
+      // reorder triangles to preserve front-back facing
+      for (let i = 0; i < this.numTriangles; i++) {
+         let i1 = this.indices[3 * i + 0];
+         let i2 = this.indices[3 * i + 1];
+         this.indices[3 * i + 0] = i2;
+         this.indices[3 * i + 1] = i1;
+      }
+
+      p.log('Reverse Complete');
+   }
+
    public combine(tObj: TriangleObj) {
 
       // save the value for the first index of the combined objects

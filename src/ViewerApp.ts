@@ -101,6 +101,27 @@ export class ViewerApp implements IApp {
 
       document.onkeypress = (event: KeyboardEvent) => {
          switch (event.key) {
+
+            case 'a':
+               this.renderer.obj.applyXForm();
+               this.dirty = true;
+               break;
+
+            case 'c':
+               this.renderer.showContours = !this.renderer.showContours;
+               this.dirty = true;
+               break;
+
+            case 'd':
+               this.renderer.showShadowMap = !this.renderer.showShadowMap;
+               this.dirty = true;
+               break;
+
+            case 'h':
+               this.renderer.showHighlights = !this.renderer.showHighlights;
+               this.dirty = true;
+               break;
+
             case 'i':
                alert(
                   this.renderer.tObj.name + '\n' +
@@ -117,28 +138,9 @@ export class ViewerApp implements IApp {
                this.optimize(NormalType.Flat);
                break;
 
-            case 'c':
-               this.renderer.showContours = !this.renderer.showContours;
-               this.dirty = true;
-               break;
-
-            case 'h':
-               this.renderer.showHighlights = !this.renderer.showHighlights;
-               this.dirty = true;
-               break;
-
-            case 't':
-               /*
-               let box = BoundingBox.infinite;
-               box.max.x = 62.1;
-               this.trim(this.renderer.tObj, box);
-               */
-               /*
-               this.mirror(this.renderer.tObj, 62.0);
-               this.renderer.obj.applyXForm();
-               */
-               this.mirror(this.renderer.tObj, 62, false);
-               this.renderer.setModel(this.renderer.tObj);
+            case 'r':
+               this.renderer.tObj.reverse();
+               this.renderer.obj.uploadTriangles();
                this.dirty = true;
                break;
 
@@ -146,18 +148,14 @@ export class ViewerApp implements IApp {
                this.save();
                break;
 
-            case 'd':
-               this.renderer.showShadowMap = !this.renderer.showShadowMap;
+            case 't':
+               this.renderer.tObj.mirror(62, false);
+               this.renderer.setModel(this.renderer.tObj);
                this.dirty = true;
                break;
 
             case 'v':
                this.renderer.useOrthographic = !this.renderer.useOrthographic;
-               this.dirty = true;
-               break;
-
-            case 'a':
-               this.renderer.obj.applyXForm();
                this.dirty = true;
                break;
          }
@@ -167,62 +165,6 @@ export class ViewerApp implements IApp {
          this.updateSize();
          this.dirty = true;
       }
-   }
-
-   private trim(tObj: TriangleObj, box: BoundingBox) {
-      let p = new Profiler();
-      let indices: number[] = [];
-      tObj.box.log('before trim: ');
-      for (let i = 0; i < tObj.numTriangles; i++) {
-         let tri = tObj.getTriangle(i);
-
-         if (box.inside(tri.v1) && box.inside(tri.v2) && box.inside(tri.v3)) {
-            indices.push(tri.i1);
-            indices.push(tri.i2);
-            indices.push(tri.i3);
-         }
-      }
-      console.log('trimmed ' + (tObj.indices.length - indices.length) + ' triangles');
-      tObj.indices = indices;
-      tObj.findBounds();
-      tObj.box.log('after trim: ');
-      p.log('Trip Complete');
-   }
-
-   private mirror(tObj: TriangleObj, x: number, add: boolean) {
-      let p = new Profiler();
-
-      if (add) {
-         // duplicate vertices
-         let numVertices = tObj.numVertices;
-         for (let i = 0; i < numVertices; i++) {
-            tObj.vertices[3 * i + 0] -= x;;
-            tObj.vertices.push(-tObj.vertices[3 * i + 0]);
-            tObj.vertices.push(tObj.vertices[3 * i + 1]);
-            tObj.vertices.push(tObj.vertices[3 * i + 2]);
-            tObj.normals.push(-tObj.normals[3 * i + 0]);
-            tObj.normals.push(tObj.normals[3 * i + 1]);
-            tObj.normals.push(tObj.normals[3 * i + 2]);
-         }
-
-         let numIndices = tObj.indices.length;
-         let startIndex = numVertices;
-         for (let i = 0; i < numIndices; i++) {
-            tObj.indices.push(startIndex + tObj.indices[i]);
-         }
-      }
-      else {
-         // reflect vertices
-         let numVertices = tObj.numVertices;
-         for (let i = 0; i < numVertices; i++) {
-            tObj.vertices[3 * i + 0] = x + (x - tObj.vertices[3 * i + 0]);
-            tObj.normals[3 * i + 0] = -tObj.normals[3 * i + 0];
-         }
-      }
-
-      tObj.findBounds();
-
-      p.log('Mirror Complete');
    }
 
    public buildMenu(menubar: Menubar) {
@@ -244,6 +186,11 @@ export class ViewerApp implements IApp {
       })
       subMenu.addItem('Toggle Highlights', () => {
          this.renderer.showHighlights = !this.renderer.showHighlights;
+         this.dirty = true;
+      })
+      subMenu.addItem('Reverse Object', () => {
+         this.renderer.tObj.reverse();
+         this.renderer.obj.uploadTriangles();
          this.dirty = true;
       })
    }
