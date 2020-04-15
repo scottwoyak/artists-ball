@@ -99,6 +99,30 @@ export class ViewerApp implements IApp {
       this.handler.onRotate = (angle: number, delta: number) => this.onRotate(angle, delta);
       this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
 
+      document.onkeydown = (event: KeyboardEvent) => {
+         let angle = 90;
+         if (event.ctrlKey) {
+            angle = 1;
+         }
+         switch (event.keyCode) {
+            case 37: // left
+               this.renderer.obj.rotY(toRad(angle));
+               this.dirty = true;
+               break;
+            case 38: // up
+               this.renderer.obj.rotX(toRad(angle));
+               this.dirty = true;
+               break;
+            case 39: // right
+               this.renderer.obj.rotY(toRad(-angle));
+               this.dirty = true;
+               break;
+            case 40: // down
+               this.renderer.obj.rotX(toRad(-angle));
+               this.dirty = true;
+               break;
+         }
+      }
       document.onkeypress = (event: KeyboardEvent) => {
          switch (event.key) {
 
