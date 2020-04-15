@@ -71,8 +71,9 @@ export class Renderer implements IThresholdProvider {
 
    public showShadowMap = false;
    public showMiniView = true;
-   public showFloor = false;
+   public showFloor = true;
    public useCulling = true;
+   public showContours = false;
 
    public constructor(glCtx: WebGLRenderingContext) {
 
@@ -298,6 +299,7 @@ export class Renderer implements IThresholdProvider {
       uni.set('uOrthographic', this.useOrthographic);
       uni.set('uLightDirection', this.uLightDirection);
       uni.set('uUseShadows', true);
+      uni.set('uShowContours', this.showContours);
 
       uni.set('uUseThresholds', this.useThresholds ? 1 : 0, true);
       uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
@@ -314,8 +316,24 @@ export class Renderer implements IThresholdProvider {
       uni.set('uWhiteColor', this.whiteColor);
       uni.set('uBlackColor', this.blackColor);
 
+      for (let i = 0; i < this.contourColors.length; i++) {
+         uni.set('uContourColors[' + i + ']', this.contourColors[i]);
+      }
+
       return uni;
    }
+
+   private contourColors = [
+      new glColor3([1.00, 0.20, 0.20]), // red
+      new glColor3([1.00, 0.55, 0.25]), // orange
+      new glColor3([1.00, 0.81, 0.25]), // light orange
+      new glColor3([1.00, 1.00, 0.00]), // yellow
+      new glColor3([0.30, 1.00, 0.10]), // green
+      new glColor3([0.25, 0.90, 0.90]), // cyan
+      new glColor3([0.50, 0.50, 1.00]), // light blue
+      new glColor3([0.20, 0.20, 1.00]), // blue
+      new glColor3([0.30, 0.11, 0.40]), // purple
+   ]
 
    private renderToShadowMap(): void {
 
@@ -361,6 +379,7 @@ export class Renderer implements IThresholdProvider {
 
       // don't try to use the shadow texture while we're creating it
       uni.set('uUseShadows', false);
+      uni.set('uShowContours', false);
 
       gl.disable(gl.CULL_FACE);
 
@@ -410,6 +429,8 @@ export class Renderer implements IThresholdProvider {
             // cull polygons so we don't see the floor from below
             gl.enable(gl.CULL_FACE);
             gl.cullFace(gl.BACK);
+            uni.set('uShowContours', false);
+
             this.floor.draw();
 
             uni.set('uShowFloor', false);
@@ -452,6 +473,7 @@ export class Renderer implements IThresholdProvider {
       view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.y - this.miniSize, 0]));
       uni.set('view', view);
       uni.set('uUseThresholds', this.miniViewUseThresholds ? 0 : 1, true);
+      uni.set('uShowContours', false);
       this.obj.draw();
    }
 
@@ -478,6 +500,7 @@ export class Renderer implements IThresholdProvider {
 
       // stop using the shadowmap
       uni.set('uUseShadows', false);
+      uni.set('uShowContours', false);
 
       let view = Mat4.identity;
       view.scale(this.miniSize);
@@ -486,10 +509,12 @@ export class Renderer implements IThresholdProvider {
       uni.set('uUseThresholds', this.useThresholds ? 1 : 0, true);
       uni.set('uWhiteColor', this.ballColor);
       uni.set('uBlackColor', htmlColor.black.toGlColor());
+      uni.set('uShowContours', this.showContours);
       this.ball.draw();
 
       uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
       uni.set('uUseThresholds', 0, true);
+      uni.set('uShowContours', false);
 
       // back out angles as if looking down the z-axis
       let x = this.uLightDirection.x;

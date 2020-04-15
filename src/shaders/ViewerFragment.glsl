@@ -4,6 +4,7 @@ precision highp float;
 varying vec3 vNormal;
 varying vec3 vVertex;
 varying vec3 vShadowVertex;
+varying vec3 vObjVertex;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -35,8 +36,10 @@ uniform sampler2D uShadowTexture;
 uniform vec3 uFloorCenter;
 uniform float uFloorRadius;
 uniform int uShowFloor;
+uniform int uShowContours;
+uniform vec3 uContourColors[9];
 
-bool in_shadow(void)
+bool in_shadow()
 {
    if (uUseShadows == 0)
    {
@@ -90,7 +93,51 @@ bool in_shadow(void)
    }
 }
 
-vec4 getColor(float val)
+float round(float val) { return floor(val + 0.5); }
+
+vec3 getContourColor(float vDot)
+{
+   float angle = (180.0 / 3.1415926) * acos(vDot);
+   float numVals = 9.0;
+   if (angle < 1.0 * (90.0 / numVals))
+   {
+      return uContourColors[0];
+   }
+   else if (angle < 2.0 * (90.0 / numVals))
+   {
+      return uContourColors[1];
+   }
+   else if (angle < 3.0 * (90.0 / numVals))
+   {
+      return uContourColors[2];
+   }
+   else if (angle < 4.0 * (90.0 / numVals))
+   {
+      return uContourColors[3];
+   }
+   else if (angle < 5.0 * (90.0 / numVals))
+   {
+      return uContourColors[4];
+   }
+   else if (angle < 6.0 * (90.0 / numVals))
+   {
+      return uContourColors[5];
+   }
+   else if (angle < 7.0 * (90.0 / numVals))
+   {
+      return uContourColors[6];
+   }
+   else if (angle < 8.0 * (90.0 / numVals))
+   {
+      return uContourColors[7];
+   }
+   else if (angle < 9.0 * (90.0 / numVals))
+   {
+      return uContourColors[8];
+   }
+}
+
+vec4 getColor(float valForLight, float vDot, bool inShadow)
 {
    float a = 1.0;
    if (uShowFloor == 1)
@@ -101,32 +148,20 @@ vec4 getColor(float val)
       a = 0.5 * (1.0 - dist / uFloorRadius);
    }
 
-   vec3 rgb = mix(uBlackColor, uWhiteColor, val);
-   return vec4(rgb, a);
-}
-
-float getValueFromLight(vec3 toLight)
-{
-   vec3 toEye;
-   if (uOrthographic == 1)
+   if (uShowContours == 1 && vDot >= 0.0 && inShadow == false)
    {
-      toEye = vec3(0.0, 0.0, 1.0);
+      return vec4(getContourColor(vDot), a);
    }
    else
    {
-      toEye = normalize(uEye - vVertex);
+      return vec4(mix(uBlackColor, uWhiteColor, valForLight), a);
    }
+}
 
-   vec3 normal = normalize(vNormal); // vNormal is interpolated and nolonger normal
-
-   // swap normals for back facing triangles
-   if (dot(normal, toEye) < 0.0)
-   {
-      normal = -normal;
-   }
-
-   // compute diffuse contribution = cos of angle between the vectors (dot product)
-   float diffuseFactor = clamp(dot(normal, toLight), 0.0, 1.0);
+float getValueFromLight(vec3 normal, vec3 toLight, vec3 toEye)
+{
+   float vDot = dot(normal, toLight);
+   float diffuseFactor = clamp(vDot, 0.0, 1.0);
    float diffuse = diffuseFactor * uLightIntensity;
 
    // compute specular contribution
@@ -175,18 +210,44 @@ float getValueFromLight(vec3 toLight)
 
 void main()
 {
+   vec3 toLight = normalize(-uLightDirection);
+   bool inShadow = in_shadow();
+
+   vec3 toEye;
+   if (uOrthographic == 1)
+   {
+      toEye = vec3(0.0, 0.0, 1.0);
+   }
+   else
+   {
+      toEye = normalize(uEye - vVertex);
+   }
+
+   vec3 normal = normalize(vNormal); // vNormal is interpolated and nolonger normal
+
+   // swap normals for back facing triangles
+   if (dot(normal, toEye) < 0.0)
+   {
+      normal = -normal;
+   }
+
+   // compute diffuse contribution = cos of angle between the vectors (dot product)
+   float vDot = dot(normal, toLight);
+
    vec4 fragColor;
-   if (in_shadow())
+   if (inShadow)
    {
       if (uUseThresholds == 0)
       {
-         vec3 toLight = vec3(0.0, 0.0, 1.0);
-         float val = getValueFromLight(toLight) / 20.0;
-         fragColor = getColor(uAmbientIntensity + val);
+         // when in shadow, apply slight shading as if the light
+         // were coming from the eye.
+         vec3 toShadowLight = vec3(0.0, 0.0, 1.0);
+         float val = getValueFromLight(normal, toShadowLight, toEye) / 20.0;
+         fragColor = getColor(uAmbientIntensity + val, vDot, inShadow);
       }
       else
       {
-         fragColor = getColor(uShadow);
+         fragColor = getColor(uShadow, vDot, inShadow);
       }
       // useful for debugging - turn shadows red
       // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -194,9 +255,8 @@ void main()
    }
    else
    {
-      vec3 toLight = normalize(-uLightDirection);
-      float val = getValueFromLight(toLight);
-      fragColor = getColor(val);
+      float val = getValueFromLight(normal, toLight, toEye);
+      fragColor = getColor(val, vDot, inShadow);
    }
 
    gl_FragColor = fragColor;

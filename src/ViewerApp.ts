@@ -117,6 +117,11 @@ export class ViewerApp implements IApp {
                this.optimize(NormalType.Flat);
                break;
 
+            case 'c':
+               this.renderer.showContours = !this.renderer.showContours;
+               this.dirty = true;
+               break;
+
             case 't':
                /*
                let box = BoundingBox.infinite;
@@ -217,6 +222,21 @@ export class ViewerApp implements IApp {
 
    public buildMenu(menubar: Menubar) {
       createModelsMenu(menubar, (file) => this.loadModel(file));
+
+      let subMenu: SubMenu;
+      subMenu = menubar.addSubMenu('Options', 'Options');
+      subMenu.addItem('Toggle Floor', () => {
+         this.renderer.showFloor = !this.renderer.showFloor;
+         this.dirty = true;
+      })
+      subMenu.addItem('Toggle Contours', () => {
+         this.renderer.showContours = !this.renderer.showContours;
+         this.dirty = true;
+      })
+      subMenu.addItem('Toggle Perspective', () => {
+         this.renderer.useOrthographic = !this.renderer.useOrthographic;
+         this.dirty = true;
+      })
    }
 
    private optimize(normalType: NormalType) {
@@ -294,7 +314,6 @@ export class ViewerApp implements IApp {
                this.renderer.setModel(tObj);
                this.loader.orient(this.renderer.obj);
 
-               this.renderer.showFloor = query.startsWith('Pose');
                this.renderer.useCulling = !query.startsWith('Head');
 
                this.animate = false;

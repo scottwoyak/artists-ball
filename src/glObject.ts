@@ -111,7 +111,7 @@ export class glObject {
       let gl = this.gl;
       let uni = new glUniform(gl, this.program);
       uni.set('normalize', this.normalize);
-      uni.set('model', this.model.multM(this.normalize));
+      uni.set('model', this.model);
 
       this.vertexBuffer.bind();
       this.indexBuffer.bind();
