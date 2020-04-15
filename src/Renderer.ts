@@ -74,6 +74,7 @@ export class Renderer implements IThresholdProvider {
    public showFloor = true;
    public useCulling = true;
    public showContours = false;
+   public showHighlights = true;
 
    public constructor(glCtx: WebGLRenderingContext) {
 
@@ -300,6 +301,7 @@ export class Renderer implements IThresholdProvider {
       uni.set('uLightDirection', this.uLightDirection);
       uni.set('uUseShadows', true);
       uni.set('uShowContours', this.showContours);
+      uni.set('uShowHighlights', this.showHighlights);
 
       uni.set('uUseThresholds', this.useThresholds ? 1 : 0, true);
       uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));

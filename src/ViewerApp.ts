@@ -122,6 +122,11 @@ export class ViewerApp implements IApp {
                this.dirty = true;
                break;
 
+            case 'h':
+               this.renderer.showHighlights = !this.renderer.showHighlights;
+               this.dirty = true;
+               break;
+
             case 't':
                /*
                let box = BoundingBox.infinite;
@@ -235,6 +240,10 @@ export class ViewerApp implements IApp {
       })
       subMenu.addItem('Toggle Perspective', () => {
          this.renderer.useOrthographic = !this.renderer.useOrthographic;
+         this.dirty = true;
+      })
+      subMenu.addItem('Toggle Highlights', () => {
+         this.renderer.showHighlights = !this.renderer.showHighlights;
          this.dirty = true;
       })
    }

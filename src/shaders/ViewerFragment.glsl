@@ -11,7 +11,7 @@ uniform mat4 view;
 uniform mat4 lightView;
 uniform mat4 projection;
 uniform vec3 uEye;
-uniform int uOrthographic;
+uniform bool uOrthographic;
 
 uniform float uLightIntensity;
 uniform float uAmbientIntensity;
@@ -21,7 +21,7 @@ uniform vec3 uLightDirection;
 uniform vec3 uWhiteColor;
 uniform vec3 uBlackColor;
 
-uniform int uUseThresholds;
+uniform bool uUseThresholds;
 uniform float uThreshold1;
 uniform float uThreshold2;
 uniform float uHighlight;
@@ -30,18 +30,19 @@ uniform float uMidLight;
 uniform float uDarkLight;
 uniform float uShadow;
 
-uniform int uUseShadows;
+uniform bool uUseShadows;
 uniform sampler2D uShadowTexture;
 
 uniform vec3 uFloorCenter;
 uniform float uFloorRadius;
-uniform int uShowFloor;
-uniform int uShowContours;
+uniform bool uShowFloor;
+uniform bool uShowContours;
 uniform vec3 uContourColors[9];
+uniform bool uShowHighlights;
 
 bool in_shadow()
 {
-   if (uUseShadows == 0)
+   if (uUseShadows)
    {
       return false;
    }
@@ -140,7 +141,7 @@ vec3 getContourColor(float vDot)
 vec4 getColor(float valForLight, float vDot, bool inShadow)
 {
    float a = 1.0;
-   if (uShowFloor == 1)
+   if (uShowFloor)
    {
       // gradiate out the background from half transparent to full transparency
       vec3 center = (model * vec4(uFloorCenter, 1.0)).xyz;
@@ -148,7 +149,7 @@ vec4 getColor(float valForLight, float vDot, bool inShadow)
       a = 0.5 * (1.0 - dist / uFloorRadius);
    }
 
-   if (uShowContours == 1 && vDot >= 0.0 && inShadow == false)
+   if (uShowContours && vDot >= 0.0 && inShadow == false)
    {
       return vec4(getContourColor(vDot), a);
    }
@@ -165,13 +166,18 @@ float getValueFromLight(vec3 normal, vec3 toLight, vec3 toEye)
    float diffuse = diffuseFactor * uLightIntensity;
 
    // compute specular contribution
-   float shininess = 15.0;
-   vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
-   float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
-   float specular = 0.1 * pow(cosAngle, shininess);
+   float specular = 0.0;
+
+   if (uShowHighlights)
+   {
+      float shininess = 15.0;
+      vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
+      float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
+      specular = 0.1 * pow(cosAngle, shininess);
+   }
 
    float val;
-   if (uUseThresholds == 0)
+   if (uUseThresholds == false)
    {
       val = uAmbientIntensity + diffuse + specular;
    }
@@ -214,7 +220,7 @@ void main()
    bool inShadow = in_shadow();
 
    vec3 toEye;
-   if (uOrthographic == 1)
+   if (uOrthographic)
    {
       toEye = vec3(0.0, 0.0, 1.0);
    }
@@ -237,7 +243,7 @@ void main()
    vec4 fragColor;
    if (inShadow)
    {
-      if (uUseThresholds == 0)
+      if (uUseThresholds == false)
       {
          // when in shadow, apply slight shading as if the light
          // were coming from the eye.
