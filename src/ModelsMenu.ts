@@ -7,7 +7,7 @@ export function createModelsMenu(menubar: Menubar, loadModel: LoadModelFunction)
    let menu = menubar.addSubMenu('Models', 'Models');
 
    let subMenu;
-   subMenu = menu.addSubMenu('Objects', 'Objects');
+   subMenu = menu.addSubMenu('Objects', 'ObjectsSubMenu');
    subMenu.addItem('Football', () => loadModel('Football.blob'));
    subMenu.addItem('Pill', () => loadModel('Pill.blob'));
    subMenu.addItem('Pill Bottle', () => loadModel('PillBottle.blob'));
@@ -21,7 +21,7 @@ export function createModelsMenu(menubar: Menubar, loadModel: LoadModelFunction)
    subMenu.addItem('Vitamin', () => loadModel('Vitamin.blob'));
    subMenu.addItem('Wine Bottle', () => loadModel('WineBottle.blob'));
 
-   subMenu = menu.addSubMenu('Sculptures', 'Sculptures');
+   subMenu = menu.addSubMenu('Sculptures', 'SculpturesSubMenu');
    subMenu.addItem('Belvedere Torso', () => loadModel('BelvedereTorso.blob'));
    subMenu.addItem('David', () => loadModel('David.blob'));
    subMenu.addItem('Head of David', () => loadModel('HeadOfDavid.blob'));
@@ -47,7 +47,7 @@ export function createModelsMenu(menubar: Menubar, loadModel: LoadModelFunction)
    subMenu.addItem('Head Ecorche 3', () => loadModel('HeadEcorche3.blob'));
    subMenu.addItem('Head Ecorche 4', () => loadModel('HeadEcorche4.blob'));
 
-   subMenu = menu.addSubMenu('Poses', 'HeadsSubMenu');
+   subMenu = menu.addSubMenu('Poses', 'PosesSubMenu');
    subMenu.addItem('Pose 1', () => loadModel('Pose_01.blob'));
    subMenu.addItem('Pose 2', () => loadModel('Pose_02.blob'));
    subMenu.addItem('Pose 3', () => loadModel('Pose_03.blob'));

@@ -81,37 +81,41 @@ class Menu {
 
       item.onclick = () => {
 
-         // position the menu off screen so that we can query it's height when
-         // we make it visible. Then position it properly
-         subMenu.div.style.left = -500 + 'px'
-         subMenu.div.style.top = 0 + 'px'
-
-         // hide sibling menus that are open
-         this.hideDown();
-
-         // show the desired submenu
-         subMenu.show();
-
-         // position the new menu
-         if (location === MenuLocation.Below) {
-            subMenu.div.style.left = item.offsetLeft + 'px'
-            subMenu.div.style.top = (item.offsetTop + item.offsetHeight) + 'px'
-         }
-         else if (location === MenuLocation.Right) {
-            subMenu.div.style.left = (item.offsetLeft + item.offsetWidth) + 'px'
-            let top = item.offsetTop;
-            if (top + subMenu.div.clientHeight > window.innerHeight) {
-               top = window.innerHeight - subMenu.div.clientHeight;
-            }
-            subMenu.div.style.top = top + 'px'
-         }
-
+         this.showSubMenu(item, subMenu, location);
       }
       this.div.appendChild(item);
 
       let subMenu = new SubMenu(this, id);
       this.children.push(subMenu);
       return subMenu;
+   }
+
+   protected showSubMenu(menuItem: HTMLDivElement, subMenu: SubMenu, location: MenuLocation) {
+
+      // position the menu off screen so that we can query it's height when
+      // we make it visible. Then position it properly
+      subMenu.div.style.left = -500 + 'px'
+      subMenu.div.style.top = 0 + 'px'
+
+      // hide sibling menus that are open
+      this.hideDown();
+
+      // show the desired submenu
+      subMenu.show();
+
+      // position the new menu
+      if (location === MenuLocation.Below) {
+         subMenu.div.style.left = menuItem.offsetLeft + 'px'
+         subMenu.div.style.top = (menuItem.offsetTop + menuItem.offsetHeight) + 'px'
+      }
+      else if (location === MenuLocation.Right) {
+         subMenu.div.style.left = (menuItem.offsetLeft + menuItem.offsetWidth) + 'px'
+         let top = menuItem.offsetTop;
+         if (top + subMenu.div.clientHeight > window.innerHeight) {
+            top = window.innerHeight - subMenu.div.clientHeight;
+         }
+         subMenu.div.style.top = top + 'px'
+      }
    }
 
    public addItem(text: string, callback: MenuItemFunction): HTMLDivElement {
@@ -174,6 +178,17 @@ export class SubMenu extends Menu {
 
    public addSubMenu(text: string, id: string): SubMenu {
 
-      return this.internalAddSubMenu(text + '<span style="float:right">></span>', id, MenuLocation.Right);
+      let spanId = id + 'Span';
+      let subMenu = this.internalAddSubMenu(text + '<span id="' + spanId + '" style="float:right">></span>', id, MenuLocation.Right);
+
+      let span = document.getElementById(spanId) as HTMLSpanElement;
+      let div = span.parentElement as HTMLDivElement;
+      div.onmouseenter = () => {
+         this.showSubMenu(div, subMenu, MenuLocation.Right);
+         this.hideDown();
+         subMenu.show();
+      };
+
+      return subMenu;
    }
 }
