@@ -2,7 +2,7 @@ import { Mat4 } from './Mat';
 import { Vec3, Vec2 } from './Vec';
 import vertexSource from './shaders/ViewerVertex.glsl';
 import fragmentSource from './shaders/ViewerFragment.glsl';
-import { clamp, mix, toRad, toDeg } from './Globals';
+import { toRad, toDeg, Globals } from './Globals';
 import { glUniform } from './glUniform';
 import { TriangleObj, NormalType } from './TriangleObj';
 import { glObject } from './glObject';
@@ -13,20 +13,34 @@ import { glClipSpace } from './glClipSpace';
 import { TriangleObjBuilder } from './TriangleObjBuilder';
 import { glTexture, glTextureStyle } from './glTexture';
 import { glFrameBuffer } from './glFrameBuffer';
-import { IThresholdProvider } from './IThresholdProvider';
 import { glProgram } from './glProgram';
-
-export let DEFAULT_THRESHOLD1 = 40;
-export let DEFAULT_THRESHOLD2 = 70;
+import { ValueRange } from './ValueRange';
 
 const BALL_RADIUS = 0.5;
 const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, -1.5];
 const INITIAL_VIEW = Mat4.identity;
 
+export class Contour {
+   public color: glColor3;
+   public angle: number; // degrees
+
+   public constructor(color: glColor3 | number, angle: number) {
+
+      if (color instanceof glColor3) {
+         this.color = color;
+      }
+      else {
+         this.color = new glColor3([color, color, color]);
+      }
+
+      this.angle = angle;
+   }
+}
+
 /**
  * Class that renders triangles and a light source
  */
-export class Renderer implements IThresholdProvider {
+export class Renderer {
 
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private program: glProgram;
@@ -36,21 +50,10 @@ export class Renderer implements IThresholdProvider {
    private uEye = new Vec3([0, 0, 8]); // 4 times the max object dimension of 2. For a model, about 20 ft away
    public useOrthographic = false;
 
-   private uThreshold1 = DEFAULT_THRESHOLD1;
-   private uThreshold2 = DEFAULT_THRESHOLD2;
-
-   private uHighlight: number = 1.0;
-   private uLightLight: number;
-   private uMidLight: number;
-   private uDarkLight: number;
-   private uShadow: number = 0.2;
-   public highlightDifference = 0.1;
+   public valueRange = new ValueRange();
 
    // size of the smaller view
    public readonly miniSize = 0.2;
-
-   public useThresholds = false;
-   public miniViewUseThresholds = true;
 
    private ball: glObject;
    private arrow: glObject;
@@ -66,34 +69,21 @@ export class Renderer implements IThresholdProvider {
 
    public ballColor = new glColor3([1, 1, 1]);
    public readonly yellow = new glColor3([1.0, 0.9, 0.7]);
-   public whiteColor = new glColor3([1, 1, 1]);
-   public blackColor = new glColor3([0, 0, 0]);
 
-   private contourColors = [
-      new glColor3([1.00, 0.20, 0.20]), // red
-      new glColor3([1.00, 0.55, 0.25]), // orange
-      new glColor3([1.00, 0.81, 0.25]), // light orange
-      new glColor3([1.00, 1.00, 0.00]), // yellow
-      new glColor3([0.30, 1.00, 0.10]), // green
-      new glColor3([0.25, 0.90, 0.90]), // cyan
-      new glColor3([0.50, 0.50, 1.00]), // light blue
-      new glColor3([0.20, 0.20, 1.00]), // blue
-      new glColor3([0.30, 0.11, 0.40]), // purple
-   ]
+   public contours: Contour[] = [];
 
    public showShadowMap = false;
    public showMiniView = true;
    public showFloor = true;
    public useCulling = true;
-   public showContours = false;
+   public useContours = false;
+   public miniViewShowContours = false;
    public showHighlights = true;
 
    public constructor(glCtx: WebGLRenderingContext) {
 
       this.gl = glCtx;
       let gl = this.gl;
-
-      this.computeColors();
 
       // enable z-buffer
       gl.enable(gl.DEPTH_TEST);
@@ -191,69 +181,8 @@ export class Renderer implements IThresholdProvider {
       this.view.translate(new Vec3([delta.x, delta.y, 0]));
    }
 
-   public get lightIntensity(): number {
-      return this.uHighlight - this.uShadow - this.highlightDifference;
-   }
-
-   public get highlight(): number {
-      return this.uHighlight;
-   }
-   public set highlight(val: number) {
-      this.uHighlight = Math.max(val, this.highlightDifference);
-      this.uShadow = Math.min(this.uShadow, this.uHighlight - this.highlightDifference);
-      this.computeColors();
-   }
-
-   public get lightLight(): number {
-      return this.uLightLight;
-   }
-   public get midLight(): number {
-      return this.uMidLight;
-   }
-   public get darkLight(): number {
-      return this.uDarkLight;
-   }
-
-   public get shadow(): number {
-      return this.uShadow;
-   }
-   public set shadow(val: number) {
-      this.uShadow = Math.min(val, 1 - this.highlightDifference);
-      this.uHighlight = Math.max(this.uHighlight, this.uShadow + this.highlightDifference);
-      this.computeColors();
-   }
-
-   public get threshold1(): number {
-      return this.uThreshold1;
-   }
-   public set threshold1(val: number) {
-      this.uThreshold1 = val;
-      this.uThreshold2 = Math.max(this.uThreshold2, val);
-      this.computeColors();
-   }
-
-   public get threshold2(): number {
-      return this.uThreshold2;
-   }
-   public set threshold2(val: number) {
-      this.uThreshold2 = val;
-      this.uThreshold1 = Math.min(this.uThreshold1, val);
-      this.computeColors();
-   }
-
    public get tObj(): TriangleObj {
       return this.obj.tObj;
-   }
-
-   private colorAt(deg: number): number {
-      deg = clamp(deg, 0, 90);
-      return mix(this.uShadow, this.uHighlight - this.highlightDifference, Math.cos(toRad(deg)));
-   }
-
-   public computeColors() {
-      this.uLightLight = this.colorAt(0.5 * this.threshold1);
-      this.uMidLight = this.colorAt(mix(this.threshold1, this.threshold2, 0.5));
-      this.uDarkLight = this.colorAt((this.threshold2 + 90) / 2);
    }
 
    public setModel(tObj: TriangleObj) {
@@ -312,28 +241,19 @@ export class Renderer implements IThresholdProvider {
       uni.set('uOrthographic', this.useOrthographic);
       uni.set('uLightDirection', this.uLightDirection);
       uni.set('uUseShadows', true);
-      uni.set('uShowContours', this.showContours);
+      uni.set('uUseContours', this.useContours);
       uni.set('uShowHighlights', this.showHighlights);
 
-      uni.set('uUseThresholds', this.useThresholds ? 1 : 0, true);
-      uni.set('uThreshold1', 1 - Math.sin(toRad(this.threshold1 + 90)));
-      uni.set('uThreshold2', 1 - Math.sin(toRad(this.threshold2 + 90)));
+      uni.set('uLightIntensity', this.valueRange.lightIntensity);
+      uni.set('uAmbientIntensity', this.valueRange.shadow);
+      uni.set('uWhiteColor', Globals.WHITE);
+      uni.set('uBlackColor', Globals.BLACK);
+      uni.set('uHighlight', this.valueRange.highlight);
 
-      uni.set('uLightIntensity', this.lightIntensity);
-      uni.set('uAmbientIntensity', this.uShadow);
-      uni.set('uHighlight', this.uHighlight);
-      uni.set('uLightLight', this.uLightLight);
-      uni.set('uMidLight', this.uMidLight);
-      uni.set('uDarkLight', this.uDarkLight);
-      uni.set('uShadow', this.uShadow);
-
-      uni.set('uWhiteColor', this.whiteColor);
-      uni.set('uBlackColor', this.blackColor);
-
-      uni.seti('uNumContours', this.contourColors.length);
-      for (let i = 0; i < this.contourColors.length; i++) {
-         uni.set('uContourAngles[' + i + ']', (i + 1) * (90 / this.contourColors.length));
-         uni.set('uContourColors[' + i + ']', this.contourColors[i]);
+      uni.seti('uNumContours', this.contours.length);
+      for (let i = 0; i < this.contours.length; i++) {
+         uni.set('uContourColors[' + i + ']', this.contours[i].color);
+         uni.set('uContourAngles[' + i + ']', this.contours[i].angle);
       }
 
       return uni;
@@ -383,7 +303,7 @@ export class Renderer implements IThresholdProvider {
 
       // don't try to use the shadow texture while we're creating it
       uni.set('uUseShadows', false);
-      uni.set('uShowContours', false);
+      uni.set('uUseContours', false);
 
       gl.disable(gl.CULL_FACE);
 
@@ -425,7 +345,7 @@ export class Renderer implements IThresholdProvider {
          this.obj.draw();
 
          if (this.showFloor) {
-            uni.set('uShowFloor', true);
+            uni.set('uRenderingFloor', true);
 
             // apply the same transform to the floor that exists for the object
             this.floor.model = this.obj.model.clone();
@@ -433,11 +353,11 @@ export class Renderer implements IThresholdProvider {
             // cull polygons so we don't see the floor from below
             gl.enable(gl.CULL_FACE);
             gl.cullFace(gl.BACK);
-            uni.set('uShowContours', false);
+            uni.set('uUseContours', false);
 
             this.floor.draw();
 
-            uni.set('uShowFloor', false);
+            uni.set('uRenderingFloor', false);
          }
 
          gl.clear(gl.DEPTH_BUFFER_BIT);
@@ -476,8 +396,7 @@ export class Renderer implements IThresholdProvider {
       view.scale(this.miniSize);
       view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.y - this.miniSize, 0]));
       uni.set('view', view);
-      uni.set('uUseThresholds', this.miniViewUseThresholds ? 0 : 1, true);
-      uni.set('uShowContours', false);
+      uni.set('uUseContours', this.miniViewShowContours);
       this.obj.draw();
    }
 
@@ -504,21 +423,19 @@ export class Renderer implements IThresholdProvider {
 
       // stop using the shadowmap
       uni.set('uUseShadows', false);
-      uni.set('uShowContours', false);
+      uni.set('uUseContours', false);
 
       let view = Mat4.identity;
       view.scale(this.miniSize);
       view.translate(new Vec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
       uni.set('view', view);
-      uni.set('uUseThresholds', this.useThresholds ? 1 : 0, true);
       uni.set('uWhiteColor', this.ballColor);
       uni.set('uBlackColor', htmlColor.black.toGlColor());
-      uni.set('uShowContours', this.showContours);
+      uni.set('uUseContours', this.useContours);
       this.ball.draw();
 
       uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
-      uni.set('uUseThresholds', 0, true);
-      uni.set('uShowContours', false);
+      uni.set('uUseContours', false);
 
       // back out angles as if looking down the z-axis
       let x = this.uLightDirection.x;
@@ -559,7 +476,7 @@ export class Renderer implements IThresholdProvider {
       // TODO adjust for aspect ratio
       if (this.showMiniView) {
          if (x > (1 - this.miniSize) && y > (1 - this.miniSize)) {
-            this.useThresholds = !this.useThresholds;
+            this.useContours = !this.useContours;
             this.render();
             return true;
          }

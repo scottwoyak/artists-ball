@@ -1,25 +1,20 @@
-import { htmlColor } from "./htmlColor";
-import { toRad, isMobile } from "./Globals";
-import { Renderer } from "./Renderer";
+import { toRad, isMobile, Globals } from "./Globals";
+import { Renderer, Contour } from "./Renderer";
 import { Mat4 } from "./Mat";
 import { Vec4, Vec2 } from "./Vec";
-import { NormalType, TriangleObj } from "./TriangleObj";
+import { NormalType } from "./TriangleObj";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { saveAs } from 'file-saver';
 import { createModelsMenu } from "./ModelsMenu";
 import { ModelLoader } from "./ModelLoader";
-import { Profiler } from "./Profiler";
-import { BoundingBox } from "./BoundingBox";
 import { IApp } from "./IApp";
 import { Menubar, SubMenu } from "./Menu";
+import { glColor3 } from "./glColor";
 
 enum PointerMode {
    View,
    Light,
 }
-
-const WHITE_COLOR = new htmlColor([255, 250, 242]);
-const BLACK_COLOR = new htmlColor([0, 0, 0]);
 
 export class ViewerApp implements IApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -86,9 +81,18 @@ export class ViewerApp implements IApp {
       this.updateSize();
 
       this.renderer = new Renderer(this.gl);
-      this.renderer.whiteColor = WHITE_COLOR.toGlColor();
-      this.renderer.blackColor = BLACK_COLOR.toGlColor();
       this.renderer.showMiniView = false;
+      this.renderer.contours = [
+         new Contour(new glColor3([1.00, 0.20, 0.20]), 10), // red
+         new Contour(new glColor3([1.00, 0.55, 0.25]), 20), // orange
+         new Contour(new glColor3([1.00, 0.81, 0.25]), 30), // light orange
+         new Contour(new glColor3([1.00, 1.00, 0.00]), 40), // yellow
+         new Contour(new glColor3([0.30, 1.00, 0.10]), 50), // green
+         new Contour(new glColor3([0.25, 0.90, 0.90]), 60), // cyan
+         new Contour(new glColor3([0.50, 0.50, 1.00]), 70), // light blue
+         new Contour(new glColor3([0.20, 0.20, 1.00]), 80), // blue
+         new Contour(new glColor3([0.30, 0.11, 0.40]), 90), // purple
+      ]
 
       this.handler = new PointerEventHandler(canvas);
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
@@ -132,7 +136,7 @@ export class ViewerApp implements IApp {
                break;
 
             case 'c':
-               this.renderer.showContours = !this.renderer.showContours;
+               this.renderer.useContours = !this.renderer.useContours;
                this.dirty = true;
                break;
 
@@ -201,7 +205,7 @@ export class ViewerApp implements IApp {
          this.dirty = true;
       })
       subMenu.addItem('Toggle Contours', () => {
-         this.renderer.showContours = !this.renderer.showContours;
+         this.renderer.useContours = !this.renderer.useContours;
          this.dirty = true;
       })
       subMenu.addItem('Toggle Perspective', () => {
@@ -338,7 +342,7 @@ export class ViewerApp implements IApp {
 
          case PointerMode.Light:
             this.pointerMode = PointerMode.View;
-            this.renderer.ballColor = WHITE_COLOR.toGlColor();
+            this.renderer.ballColor = Globals.WHITE;
             break;
       }
       this.dirty = true;

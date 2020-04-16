@@ -13,30 +13,24 @@ uniform mat4 projection;
 uniform vec3 uEye;
 uniform bool uOrthographic;
 
+// these are value between 0-1
 uniform float uLightIntensity;
+uniform float uHighlight;
 uniform float uAmbientIntensity;
-uniform vec3 uLightDirection;
 
 // the colors we use to represent our lightest and darkest values
 uniform vec3 uWhiteColor;
 uniform vec3 uBlackColor;
 
-uniform bool uUseThresholds;
-uniform float uThreshold1;
-uniform float uThreshold2;
-uniform float uHighlight;
-uniform float uLightLight;
-uniform float uMidLight;
-uniform float uDarkLight;
-uniform float uShadow;
+uniform vec3 uLightDirection;
 
 uniform bool uUseShadows;
 uniform sampler2D uShadowTexture;
 
 uniform vec3 uFloorCenter;
 uniform float uFloorRadius;
-uniform bool uShowFloor;
-uniform bool uShowContours;
+uniform bool uRenderingFloor;
+uniform bool uUseContours;
 uniform int uNumContours;
 uniform vec3 uContourColors[9];
 uniform float uContourAngles[9];
@@ -44,7 +38,7 @@ uniform bool uShowHighlights;
 
 // For contour shading, the minimum specular contribution required to
 // show something as a highlight
-const float SPECULAR_THRESHOLD = 0.08;
+const float SPECULAR_THRESHOLD = 0.06;
 
 bool in_shadow()
 {
@@ -115,14 +109,12 @@ float getSpecular(vec3 normal, vec3 toLight, vec3 toEye)
    return specular;
 }
 
-float round(float val) { return floor(val + 0.5); }
-
 vec3 getContourColor(float vDot, vec3 normal, vec3 toLight, vec3 toEye)
 {
    float specular = getSpecular(normal, toLight, toEye);
    if (specular > SPECULAR_THRESHOLD)
    {
-      return vec3(1.0, 1.0, 1.0);
+      return vec3(uHighlight);
    }
 
    float angle = (180.0 / 3.1415926) * acos(vDot);
@@ -138,27 +130,6 @@ vec3 getContourColor(float vDot, vec3 normal, vec3 toLight, vec3 toEye)
    }
 }
 
-vec4 getColor(float valForLight, float vDot, bool inShadow, vec3 normal, vec3 toLight, vec3 toEye)
-{
-   float a = 1.0;
-   if (uShowFloor)
-   {
-      // gradiate out the background from half transparent to full transparency
-      vec3 center = (model * vec4(uFloorCenter, 1.0)).xyz;
-      float dist = length(center - vVertex);
-      a = 0.5 * (1.0 - dist / uFloorRadius);
-   }
-
-   if (uShowContours && vDot >= 0.0 && inShadow == false)
-   {
-      return vec4(getContourColor(vDot, normal, toLight, toEye), a);
-   }
-   else
-   {
-      return vec4(mix(uBlackColor, uWhiteColor, valForLight), a);
-   }
-}
-
 float getValueFromLight(vec3 normal, vec3 toLight, vec3 toEye)
 {
    float vDot = dot(normal, toLight);
@@ -166,41 +137,7 @@ float getValueFromLight(vec3 normal, vec3 toLight, vec3 toEye)
    float diffuse = diffuseFactor * uLightIntensity;
    float specular = getSpecular(normal, toLight, toEye);
 
-   float val;
-   if (uUseThresholds == false)
-   {
-      val = uAmbientIntensity + diffuse + specular;
-   }
-   else
-   {
-      float threshold = 1.0 - diffuseFactor;
-
-      float v1 = min(uThreshold1, uThreshold2);
-      float v2 = max(uThreshold1, uThreshold2);
-
-      if (threshold < v1)
-      {
-         val = uLightLight;
-      }
-      else if (threshold < v2)
-      {
-         val = uMidLight;
-      }
-      else if (threshold < 1.0)
-      {
-         val = uDarkLight;
-      }
-      else
-      {
-         val = uShadow;
-      }
-
-      if (specular > SPECULAR_THRESHOLD)
-      {
-         val = uHighlight;
-      }
-   }
-
+   float val = uAmbientIntensity + diffuse + specular;
    return val;
 }
 
@@ -231,29 +168,53 @@ void main()
    float vDot = dot(normal, toLight);
 
    vec4 fragColor;
-   if (inShadow)
+   if (uRenderingFloor)
    {
-      if (uUseThresholds == false)
+      // gradiate out the background from half transparent to full transparency
+      vec3 center = (model * vec4(uFloorCenter, 1.0)).xyz;
+      float dist = length(center - vVertex);
+      float a = 0.5 * (1.0 - dist / uFloorRadius);
+
+      if (inShadow)
       {
-         // when in shadow, apply slight shading as if the light
-         // were coming from the eye.
-         vec3 toShadowLight = vec3(0.0, 0.0, 1.0);
-         float val = getValueFromLight(normal, toShadowLight, toEye) / 20.0;
-         fragColor =
-             getColor(uAmbientIntensity + val, vDot, inShadow, normal, toShadowLight, toEye);
+         fragColor = vec4(vec3(mix(uBlackColor, uWhiteColor, uAmbientIntensity)), a);
       }
       else
       {
-         fragColor = getColor(uShadow, vDot, inShadow, normal, toLight, toEye);
+         float val = getValueFromLight(normal, toLight, toEye);
+         fragColor = vec4(vec3(mix(uBlackColor, uWhiteColor, val)), a);
       }
-      // useful for debugging - turn shadows red
-      // gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-      // return;
    }
    else
    {
-      float val = getValueFromLight(normal, toLight, toEye);
-      fragColor = getColor(val, vDot, inShadow, normal, toLight, toEye);
+      if (uUseContours)
+      {
+         if (inShadow)
+         {
+            fragColor = vec4(vec3(uAmbientIntensity), 1.0);
+         }
+         else
+         {
+            float val = getValueFromLight(normal, toLight, toEye);
+            fragColor = vec4(getContourColor(vDot, normal, toLight, toEye), 1.0);
+         }
+      }
+      else
+      {
+         if (inShadow)
+         {
+            // when in shadow, apply slight shading as if the light
+            // were coming from the eye.
+            vec3 toShadowLight = vec3(0.0, 0.0, 1.0);
+            float val = getValueFromLight(normal, toShadowLight, toEye) / 20.0;
+            fragColor = vec4(mix(uBlackColor, uWhiteColor, uAmbientIntensity + val), 1.0);
+         }
+         else
+         {
+            float val = getValueFromLight(normal, toLight, toEye);
+            fragColor = vec4(mix(uBlackColor, uWhiteColor, val), 1.0);
+         }
+      }
    }
 
    gl_FragColor = fragColor;

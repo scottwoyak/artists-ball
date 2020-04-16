@@ -10,7 +10,7 @@ enum AppType {
    Viewer
 }
 
-export class AppLauncher {
+export class Launcher {
    private div: HTMLDivElement;
    private app: IApp;
    private menubar: Menubar;

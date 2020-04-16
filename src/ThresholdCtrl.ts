@@ -11,11 +11,13 @@ import { glColor3 } from "./glColor";
 import { htmlColor } from "./htmlColor";
 import vertexSource from './shaders/ViewerVertex.glsl';
 import fragmentSource from './shaders/ViewerFragment.glsl';
-import { IThresholdProvider } from "./IThresholdProvider";
+import { ValuePlanes } from "./ValuePlanes";
 
 export type ThresholdChangeFunction = (value: number) => void;
 
 const BALL_RADIUS = 0.875;
+const BALL_CENTER = new Vec3([-0.6, -0.6, 0]);
+
 
 let CTRL_SIZE = 150;
 const NOMINAL_DISPLAY_SIZE = 150;
@@ -29,7 +31,7 @@ export class ThresholdCtrl {
    private mouseOffset = new Vec2();
    private hit = 0;
    private handler: PointerEventHandler;
-   private provider: IThresholdProvider;
+   private provider: ValuePlanes;
 
    private ball: glObject;
    private arrow: glObject;
@@ -42,7 +44,7 @@ export class ThresholdCtrl {
 
    public constructor(
       parent: HTMLElement,
-      provider: IThresholdProvider,
+      provider: ValuePlanes,
       onThreshold1Change: ThresholdChangeFunction,
       onThreshold2Change: ThresholdChangeFunction
    ) {
@@ -88,7 +90,7 @@ export class ThresholdCtrl {
       this.program = new glProgram(gl, vertexSource, fragmentSource);
 
       let tBall = new TriangleObjBuilder('Ball');
-      tBall.addSphere(50, BALL_RADIUS, new Vec3([0, 0, 0]));
+      tBall.addSphere(50, BALL_RADIUS, BALL_CENTER);
       tBall.optimize(NormalType.Smooth);
       this.ball = new glObject(gl, tBall, this.program);
 
@@ -128,12 +130,18 @@ export class ThresholdCtrl {
          let radius = this.ballCenter.distance(hitPt);
          let angle = clamp(toDeg(Math.asin((hitPt.x - this.ballCenter.x) / radius)), 0, 90);
          if (this.hit == 1) {
+            this.provider.threshold1 = angle;
             this.onThreshold1Change(angle);
          }
          else {
+            this.provider.threshold2 = angle;
             this.onThreshold2Change(angle);
          }
       }
+   }
+
+   private toGLColor(val: number): glColor3 {
+      return new glColor3([val, val, val]);
    }
 
    private setStdUniforms(): glUniform {
@@ -151,12 +159,23 @@ export class ThresholdCtrl {
       uni.set('uLightIntensity', this.provider.highlight - this.provider.shadow - HIGHLIGHT_DIFF);
       uni.set('uAmbientIntensity', this.provider.shadow);
       uni.set('uHighlight', this.provider.highlight);
-      uni.set('uLightLight', this.provider.lightLight);
-      uni.set('uMidLight', this.provider.midLight);
-      uni.set('uDarkLight', this.provider.darkLight);
-      uni.set('uShadow', this.provider.shadow);
-      uni.set('uWhiteColor', this.provider.whiteColor);
-      uni.set('uBlackColor', this.provider.blackColor);
+
+      uni.set('uWhiteColor', new glColor3([1.0, 1.0, 1.0]));
+      uni.set('uBlackColor', htmlColor.black.toGlColor());
+
+      let contourColors = [
+         this.toGLColor(this.provider.lightLight),
+         this.toGLColor(this.provider.midLight),
+         this.toGLColor(this.provider.darkLight),
+      ]
+      uni.seti('uNumContours', contourColors.length);
+      for (let i = 0; i < contourColors.length; i++) {
+         uni.set('uContourColors[' + i + ']', contourColors[i]);
+      }
+
+      uni.set('uContourAngles[0]', this.provider.threshold1);
+      uni.set('uContourAngles[1]', this.provider.threshold2);
+      uni.set('uContourAngles[2]', 90);
 
       return uni;
    }
@@ -174,7 +193,7 @@ export class ThresholdCtrl {
       let uni = this.setStdUniforms();
 
       // always render with bands
-      uni.set('uUseThresholds', true);
+      uni.set('uUseContours', true);
 
       // shoot the light straight down
       uni.set('uLightDirection', new Vec3([0, -1, 0]));
@@ -182,38 +201,30 @@ export class ThresholdCtrl {
       // don't cast shadows
       uni.set('uUseShadows', false);
 
-      // move the ball to the lower left and partially offscreen
-      const offset = new Vec3([-0.6, -0.6, 0]);
-      this.ball.clearTransforms();
-      this.ball.translate(offset);
-
       // render the ball
       this.ball.draw();
-      this.ball.clearTransforms();
 
       // draw the arrow
       uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
-      uni.set('uUseThresholds', false);
+      uni.set('uUseContours', false);
 
       // first reset things so that we're looking down the z-axis
       this.arrow.clearTransforms();
       this.arrow.scale(1.25)
-      this.arrow.translate(new Vec3([offset.x, offset.y + BALL_RADIUS + 0.1, 0.0]));
+      this.arrow.translate(new Vec3([BALL_CENTER.x, BALL_CENTER.y + BALL_RADIUS + 0.1, 0.0]));
 
       uni.set('uWhiteColor', new glColor3([1.0, 1.0, 0.5]));
       uni.set('uBlackColor', htmlColor.black.toGlColor());
       uni.set('uAmbientIntensity', 0.4);
+      uni.set('uLightIntensity', 0.6);
       this.arrow.draw();
    }
 
    private drawOverlay() {
       let ctx = this.overlay.getContext('2d');
-      let ballCenter = new Vec2([0.15, 0.15]);
-      let ballRadius = 0.5;
-      ctx.resetTransform();
       this.ballCenter = new Vec2([
-         CTRL_SIZE * ballCenter.x,
-         CTRL_SIZE * (1 - ballCenter.y)
+         CTRL_SIZE * (1 + BALL_CENTER.x) / 2,
+         CTRL_SIZE * (1 - BALL_CENTER.y) / 2
       ]);
 
       ctx.clearRect(0, 0, CTRL_SIZE, CTRL_SIZE);
@@ -222,7 +233,7 @@ export class ThresholdCtrl {
 
       const KNOB_LENGTH = NOMINAL_KNOB_LENGTH * (CTRL_SIZE / NOMINAL_DISPLAY_SIZE);
       const KNOB_RADIUS = NOMINAL_KNOB_RADIUS * (CTRL_SIZE / NOMINAL_DISPLAY_SIZE);
-      let r = CTRL_SIZE * ballRadius;
+      let r = CTRL_SIZE * BALL_RADIUS / 2;
       let s1 = this.getPt(this.ballCenter, this.provider.threshold1, r);
       this.p1 = this.getPt(this.ballCenter, this.provider.threshold1, r + KNOB_LENGTH);
       let s2 = this.getPt(this.ballCenter, this.provider.threshold2, r);

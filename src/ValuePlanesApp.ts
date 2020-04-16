@@ -1,7 +1,6 @@
 import { Slider } from "./Slider";
-import { htmlColor } from "./htmlColor";
-import { toRad, isMobile } from "./Globals";
-import { Renderer } from "./Renderer";
+import { toRad, isMobile, clamp, mix, Globals } from "./Globals";
+import { Renderer, Contour } from "./Renderer";
 import { Mat4 } from "./Mat";
 import { Vec4, Vec2 } from "./Vec";
 import { ThresholdCtrl } from "./ThresholdCtrl";
@@ -10,14 +9,12 @@ import { ModelLoader } from "./ModelLoader";
 import { IApp } from "./IApp";
 import { Menubar } from "./Menu";
 import { createModelsMenu } from "./ModelsMenu";
+import { ValuePlanes } from "./ValuePlanes";
 
 enum PointerMode {
    View,
    Light,
 }
-
-const WHITE_COLOR = new htmlColor([255, 250, 242]);
-const BLACK_COLOR = new htmlColor([0, 0, 0]);
 
 export class ValuePlanesApp implements IApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -31,6 +28,7 @@ export class ValuePlanesApp implements IApp {
 
    private query: string;
 
+   private valuePlanes: ValuePlanes;
    private highlightSlider: Slider
    private lightLightSlider: Slider;
    private midLightSlider: Slider;
@@ -42,6 +40,11 @@ export class ValuePlanesApp implements IApp {
    public constructor(query: string) {
       this.query = query;
    }
+
+
+
+
+
 
    public create(div: HTMLDivElement) {
 
@@ -102,10 +105,10 @@ export class ValuePlanesApp implements IApp {
       this.gl = context;
 
       this.renderer = new Renderer(this.gl);
-      this.renderer.whiteColor = WHITE_COLOR.toGlColor();
-      this.renderer.blackColor = BLACK_COLOR.toGlColor();
-      this.renderer.useThresholds = false;
-      this.renderer.miniViewUseThresholds = true;
+      this.renderer.useContours = false;
+      this.renderer.miniViewShowContours = true;
+
+      this.valuePlanes = new ValuePlanes(this.renderer.valueRange);
 
       this.handler = new PointerEventHandler(canvas);
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
@@ -118,14 +121,12 @@ export class ValuePlanesApp implements IApp {
    private createCtrlsElements(parent: HTMLElement) {
       this.thresholdCtrl = new ThresholdCtrl(
          parent,
-         this.renderer,
+         this.valuePlanes,
          (value: number) => {
-            this.renderer.threshold1 = value;
             this.updateSliders();
             this.dirty = true;
          },
          (value: number) => {
-            this.renderer.threshold2 = value;
             this.updateSliders();
             this.dirty = true;
          }
@@ -136,14 +137,14 @@ export class ValuePlanesApp implements IApp {
          label: 'Highlight',
          min: 0,
          max: 100,
-         value: this.renderer.highlight * 100,
-         colors: [BLACK_COLOR, WHITE_COLOR],
+         value: this.valuePlanes.highlight * 100,
+         colors: [Globals.BLACK.toHtmlColor(), Globals.WHITE.toHtmlColor()],
          oninput: () => {
-            this.renderer.highlight = this.highlightSlider.value / 100;
+            this.valuePlanes.highlight = this.highlightSlider.value / 100;
             this.updateSliders();
             this.dirty = true;
          },
-         getText: () => { return (100 * this.renderer.highlight).toFixed(0) + "%" }
+         getText: () => { return (100 * this.valuePlanes.highlight).toFixed(0) + "%" }
       });
 
       this.lightLightSlider = new Slider(parent, {
@@ -151,9 +152,9 @@ export class ValuePlanesApp implements IApp {
          label: 'Light Light',
          min: 0,
          max: 100,
-         value: this.renderer.lightLight * 100,
-         colors: [BLACK_COLOR, WHITE_COLOR],
-         getText: () => { return (100 * this.renderer.lightLight).toFixed(0) + "%" }
+         value: this.valuePlanes.lightLight * 100,
+         colors: [Globals.BLACK.toHtmlColor(), Globals.WHITE.toHtmlColor()],
+         getText: () => { return (100 * this.valuePlanes.lightLight).toFixed(0) + "%" }
       });
       this.lightLightSlider.range.disabled = true;
 
@@ -162,9 +163,9 @@ export class ValuePlanesApp implements IApp {
          label: 'Mid Light',
          min: 0,
          max: 100,
-         value: this.renderer.midLight * 100,
-         colors: [BLACK_COLOR, WHITE_COLOR],
-         getText: () => { return (100 * this.renderer.midLight).toFixed(0) + "%" }
+         value: this.valuePlanes.midLight * 100,
+         colors: [Globals.BLACK.toHtmlColor(), Globals.WHITE.toHtmlColor()],
+         getText: () => { return (100 * this.valuePlanes.midLight).toFixed(0) + "%" }
       });
       this.midLightSlider.range.disabled = true;
 
@@ -173,9 +174,9 @@ export class ValuePlanesApp implements IApp {
          label: 'Dark Light',
          min: 0,
          max: 100,
-         value: this.renderer.darkLight * 100,
-         colors: [BLACK_COLOR, WHITE_COLOR],
-         getText: () => { return (100 * this.renderer.darkLight).toFixed(0) + "%" }
+         value: this.valuePlanes.darkLight * 100,
+         colors: [Globals.BLACK.toHtmlColor(), Globals.WHITE.toHtmlColor()],
+         getText: () => { return (100 * this.valuePlanes.darkLight).toFixed(0) + "%" }
       });
       this.darkLightSlider.range.disabled = true;
 
@@ -184,14 +185,14 @@ export class ValuePlanesApp implements IApp {
          label: 'Shadow',
          min: 0,
          max: 100,
-         value: this.renderer.shadow * 100,
-         colors: [BLACK_COLOR, WHITE_COLOR],
+         value: this.valuePlanes.shadow * 100,
+         colors: [Globals.BLACK.toHtmlColor(), Globals.WHITE.toHtmlColor()],
          oninput: () => {
-            this.renderer.shadow = this.shadowSlider.value / 100;
+            this.valuePlanes.shadow = this.shadowSlider.value / 100;
             this.updateSliders();
             this.dirty = true;
          },
-         getText: () => { return (100 * this.renderer.shadow).toFixed(0) + "%" }
+         getText: () => { return (100 * this.valuePlanes.shadow).toFixed(0) + "%" }
       });
    }
 
@@ -228,11 +229,11 @@ export class ValuePlanesApp implements IApp {
    }
 
    private updateSliders() {
-      this.highlightSlider.value = 100 * this.renderer.highlight;
-      this.lightLightSlider.value = 100 * this.renderer.lightLight;
-      this.midLightSlider.value = 100 * this.renderer.midLight;
-      this.darkLightSlider.value = 100 * this.renderer.darkLight;
-      this.shadowSlider.value = 100 * this.renderer.shadow;
+      this.highlightSlider.value = 100 * this.valuePlanes.highlight;
+      this.lightLightSlider.value = 100 * this.valuePlanes.lightLight;
+      this.midLightSlider.value = 100 * this.valuePlanes.midLight;
+      this.darkLightSlider.value = 100 * this.valuePlanes.darkLight;
+      this.shadowSlider.value = 100 * this.valuePlanes.shadow;
    }
 
    private toggleMode() {
@@ -244,7 +245,7 @@ export class ValuePlanesApp implements IApp {
 
          case PointerMode.Light:
             this.pointerMode = PointerMode.View;
-            this.renderer.ballColor = WHITE_COLOR.toGlColor();
+            this.renderer.ballColor = Globals.WHITE;
             break;
       }
       this.dirty = true;
@@ -298,8 +299,8 @@ export class ValuePlanesApp implements IApp {
          return true;
       }
       else if (pos.x > canvasWidth - miniWidth && pos.y < miniWidth) {
-         this.renderer.useThresholds = !this.renderer.useThresholds;
-         this.renderer.miniViewUseThresholds = !this.renderer.miniViewUseThresholds;
+         this.renderer.useContours = !this.renderer.useContours;
+         this.renderer.miniViewShowContours = !this.renderer.miniViewShowContours;
          this.dirty = true;
          return true;
       }
@@ -335,7 +336,13 @@ export class ValuePlanesApp implements IApp {
    public tick() {
 
       if (this.dirty) {
-         // TODO only redraw the threshold ctrl if a slider changed
+
+         this.renderer.contours = [
+            new Contour(this.valuePlanes.lightLight, this.valuePlanes.threshold1),
+            new Contour(this.valuePlanes.midLight, this.valuePlanes.threshold2),
+            new Contour(this.valuePlanes.darkLight, 90)
+         ];
+
          this.renderer.render();
          this.thresholdCtrl.draw();
          this.dirty = false;
