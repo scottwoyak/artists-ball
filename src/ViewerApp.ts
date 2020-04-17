@@ -107,19 +107,19 @@ export class ViewerApp implements IApp {
          }
          switch (event.keyCode) {
             case 37: // left
-               this.doRotations(0, toRad(angle));
-               this.dirty = true;
-               break;
-            case 38: // up
                this.doRotations(toRad(angle), 0);
                this.dirty = true;
                break;
+            case 38: // up
+               this.doRotations(0, toRad(angle));
+               this.dirty = true;
+               break;
             case 39: // right
-               this.doRotations(0, toRad(-angle));
+               this.doRotations(toRad(-angle), 0);
                this.dirty = true;
                break;
             case 40: // down
-               this.doRotations(toRad(-angle), 0);
+               this.doRotations(0, toRad(-angle));
                this.dirty = true;
                break;
          }
