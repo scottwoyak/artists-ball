@@ -79,7 +79,6 @@ export class Renderer {
    public showContours = false;
    public miniViewShowContours = false;
    public showHighlights = true;
-   public onlyShowHighlights = false;
    public uShininess = 15;
    public lockFloor = false;
 
@@ -309,7 +308,7 @@ export class Renderer {
       uni.set('uLightDirection', this.uLightDirection);
       uni.set('uUseShadows', true);
       uni.set('uShowContours', this.showContours);
-      uni.set('uShowHighlights', this.showHighlights);
+      uni.set('uShowHighlights', this.showHighlights || this.emphasizeHighlights);
       uni.set('uShininess', this.uShininess);
 
       uni.set('uLightIntensity', this.valueRange.lightIntensity);
@@ -429,10 +428,7 @@ export class Renderer {
          this.emphasizeHighlights = oldEmphasizeHighlights;
 
          uni = this.setStdUniforms();
-         uni.set('uOnlyShowHighlights', this.onlyShowHighlights);
          this.obj.draw();
-
-         uni.set('uOnlyShowHighlights', false);
 
          gl.clear(gl.DEPTH_BUFFER_BIT);
 
