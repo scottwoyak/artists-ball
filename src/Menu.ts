@@ -1,6 +1,7 @@
 import { ISliderSetup, Slider } from "./Slider";
 import { Checkbox, ICheckboxSetup } from "./Checkbox";
 import { ICtrl } from "./ICtrl";
+import { isMobile } from "./Globals";
 
 export type MenuItemFunction = () => void;
 export type MenuItemFunctionBool = (value: boolean) => void;
@@ -129,8 +130,9 @@ class Menu {
       else if (location === MenuLocation.Right) {
          let rect = menuItem.getBoundingClientRect();
          let left = menuItem.offsetWidth;
-         if (rect.right + subMenu.div.offsetWidth > window.innerWidth) {
-            left -= ((rect.right + subMenu.div.offsetWidth) - window.innerWidth);
+         let innerWidth = window.innerWidth;
+         if (rect.right + subMenu.div.offsetWidth > innerWidth) {
+            left -= ((rect.right + subMenu.div.offsetWidth) - innerWidth);
          }
          subMenu.div.style.left = left + 'px';
          let top = menuItem.offsetTop;
