@@ -81,6 +81,8 @@ export class Renderer {
    public showHighlights = true;
    public onlyShowHighlights = false;
    public uShininess = 15;
+   public lockFloor = false;
+
 
    public get emphasizeHighlights() {
       return this.valueRange == ValueRange.EmphasizeHighlights;
@@ -194,6 +196,57 @@ export class Renderer {
    public translateView(delta: Vec2) {
       this.view.translate(new Vec3([delta.x, delta.y, 0]));
    }
+
+   public rotX(angle: number) {
+      this.obj.rotX(angle);
+      if (this.lockFloor == false) {
+         this.floor.rotX(angle);
+      }
+   }
+   public rotY(angle: number) {
+      this.obj.rotY(angle);
+      if (this.lockFloor == false) {
+         this.floor.rotY(angle);
+      }
+   }
+   public rotZ(angle: number) {
+      this.obj.rotZ(angle);
+      if (this.lockFloor == false) {
+         this.floor.rotZ(angle);
+      }
+   }
+   public preRotX(angle: number) {
+      this.obj.preRotX(angle);
+      if (this.lockFloor == false) {
+         this.floor.preRotX(angle);
+      }
+   }
+   public preRotY(angle: number) {
+      this.obj.preRotY(angle);
+      if (this.lockFloor == false) {
+         this.floor.preRotY(angle);
+      }
+   }
+   public preRotZ(angle: number) {
+      this.obj.preRotZ(angle);
+      if (this.lockFloor == false) {
+         this.floor.preRotZ(angle);
+      }
+   }
+   public scale(scale: number) {
+      this.obj.scale(scale);
+      if (this.lockFloor == false) {
+         this.floor.scale(scale);
+      }
+   }
+   public translate(offset: Vec3) {
+      this.obj.translate(offset);
+      if (this.lockFloor == false) {
+         this.floor.translate(offset);
+      }
+   }
+
+
 
    public get tObj(): TriangleObj {
       return this.obj.tObj;
@@ -359,9 +412,6 @@ export class Renderer {
          if (this.showFloor) {
 
             uni.set('uRenderingFloor', true);
-
-            // apply the same transform to the floor that exists for the object
-            this.floor.model = this.obj.model.clone();
 
             // cull polygons so we don't see the floor from below
             gl.enable(gl.CULL_FACE);

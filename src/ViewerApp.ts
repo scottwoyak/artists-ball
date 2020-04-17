@@ -12,7 +12,6 @@ import { Menubar, SubMenu } from "./Menu";
 import { glColor3 } from "./glColor";
 import { Slider } from "./Slider";
 import { Checkbox } from "./Checkbox";
-import { ValueRange } from "./ValueRange";
 
 enum PointerMode {
    View,
@@ -25,6 +24,7 @@ export class ViewerApp implements IApp {
    private pointerMode: PointerMode = PointerMode.View;
    private overlay: HTMLSpanElement;
    private handler: PointerEventHandler;
+   private rotateLightWithObject = false;
 
    private dirty: boolean = true;
    private animate: boolean = false;
@@ -107,19 +107,19 @@ export class ViewerApp implements IApp {
          }
          switch (event.keyCode) {
             case 37: // left
-               this.renderer.obj.rotY(toRad(angle));
+               this.doRotations(0, toRad(angle));
                this.dirty = true;
                break;
             case 38: // up
-               this.renderer.obj.rotX(toRad(angle));
+               this.doRotations(toRad(angle), 0);
                this.dirty = true;
                break;
             case 39: // right
-               this.renderer.obj.rotY(toRad(-angle));
+               this.doRotations(0, toRad(-angle));
                this.dirty = true;
                break;
             case 40: // down
-               this.renderer.obj.rotX(toRad(-angle));
+               this.doRotations(toRad(-angle), 0);
                this.dirty = true;
                break;
          }
@@ -262,6 +262,24 @@ export class ViewerApp implements IApp {
             this.dirty = true;
          },
       });
+
+      let rotateSubMenu = subMenu.addSubMenu('Rotation', 'Rotation');
+      rotateSubMenu.addCheckbox({
+         label: 'Sync Light and Object',
+         id: 'SyncLightAndObject',
+         checked: () => this.rotateLightWithObject,
+         oncheck: (checkbox: Checkbox) => {
+            this.rotateLightWithObject = checkbox.checked;
+         }
+      });
+      rotateSubMenu.addCheckbox({
+         label: 'Lock Floor',
+         id: 'LockFloor',
+         checked: () => this.renderer.lockFloor,
+         oncheck: (checkbox: Checkbox) => {
+            this.renderer.lockFloor = checkbox.checked;
+         }
+      });
    }
 
    private optimize(normalType: NormalType) {
@@ -369,9 +387,9 @@ export class ViewerApp implements IApp {
       this.dirty = true;
    }
 
-   private updateLight(deltaX: number, deltaY: number) {
-      let matY = Mat4.fromRotY(0.01 * -deltaX);
-      let matX = Mat4.fromRotX(0.01 * -deltaY);
+   private updateLight(xRad: number, yRad: number) {
+      let matY = Mat4.fromRotY(xRad);
+      let matX = Mat4.fromRotX(yRad);
       let vec = new Vec4([
          this.renderer.uLightDirection.x,
          this.renderer.uLightDirection.y,
@@ -387,22 +405,34 @@ export class ViewerApp implements IApp {
       this.dirty = true;
    }
 
+   private doRotations(xRad: number, yRad: number) {
+      if (this.renderer.lockFloor) {
+         // rotate in all directions if we're just rotating the object in space
+         this.renderer.rotX(yRad);
+         this.renderer.rotY(xRad);
+      }
+      else {
+         // if the floor moves with the object, then up-down movement tilts the
+         // whole scene while left-right movement only spins the model
+         this.renderer.rotX(yRad);
+         this.renderer.preRotY(xRad);
+
+         if (this.rotateLightWithObject == false) {
+            xRad = 0;
+         }
+
+         this.updateLight(xRad, yRad);
+      }
+   }
+
    private onDrag(pos: Vec2, delta: Vec2) {
       this.dirty = true;
 
       if (this.pointerMode === PointerMode.View) {
-         if (this.handler.ctrlKey) {
-            this.renderer.obj.rotX(-delta.y * 0.01);
-            this.renderer.obj.rotY(-delta.x * 0.01);
-         }
-         else {
-            this.renderer.obj.rotX(-delta.y * 0.01);
-            this.renderer.obj.preRotY(-delta.x * 0.01);
-            this.updateLight(0, delta.y);
-         }
+         this.doRotations(-delta.x * 0.01, -delta.y * 0.01);
       }
       else if (this.pointerMode === PointerMode.Light) {
-         this.updateLight(delta.x, delta.y);
+         this.updateLight(-delta.x * 0.01, -delta.y * 0.01);
       }
    }
 
@@ -441,7 +471,7 @@ export class ViewerApp implements IApp {
    }
 
    private onRotate(angle: number, delta: number) {
-      this.renderer.obj.rotZ(delta);
+      this.renderer.rotZ(delta);
       this.dirty = true;
    }
 
@@ -469,7 +499,10 @@ export class ViewerApp implements IApp {
       }
 
       if (this.animate) {
-         this.renderer.obj.preRotY(toRad(-1));
+         this.renderer.preRotY(toRad(-1));
+         if (this.rotateLightWithObject) {
+            this.updateLight(toRad(1), 0);
+         }
          this.dirty = true;
       }
 
