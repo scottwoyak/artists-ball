@@ -1,5 +1,5 @@
 import { Slider } from "./Slider";
-import { toRad, isMobile, clamp, mix, Globals } from "./Globals";
+import { toRad, isMobile } from "./Globals";
 import { Renderer, Contour } from "./Renderer";
 import { Mat4 } from "./Mat";
 import { Vec4, Vec2 } from "./Vec";
@@ -10,6 +10,7 @@ import { IApp } from "./IApp";
 import { Menubar } from "./Menu";
 import { createModelsMenu } from "./ModelsMenu";
 import { ValuePlanes } from "./ValuePlanes";
+import { glColor3 } from "./glColor";
 
 enum PointerMode {
    View,
@@ -105,7 +106,7 @@ export class ValuePlanesApp implements IApp {
       this.gl = context;
 
       this.renderer = new Renderer(this.gl);
-      this.renderer.useContours = false;
+      this.renderer.showContours = false;
       this.renderer.miniViewShowContours = true;
 
       this.valuePlanes = new ValuePlanes(this.renderer.valueRange);
@@ -138,7 +139,7 @@ export class ValuePlanesApp implements IApp {
          min: 0,
          max: 100,
          value: this.valuePlanes.highlight * 100,
-         colors: [Globals.BLACK.toHtmlColor(), Globals.WHITE.toHtmlColor()],
+         colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
          oninput: () => {
             this.valuePlanes.highlight = this.highlightSlider.value / 100;
             this.updateSliders();
@@ -153,7 +154,7 @@ export class ValuePlanesApp implements IApp {
          min: 0,
          max: 100,
          value: this.valuePlanes.lightLight * 100,
-         colors: [Globals.BLACK.toHtmlColor(), Globals.WHITE.toHtmlColor()],
+         colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
          getText: () => { return (100 * this.valuePlanes.lightLight).toFixed(0) + "%" }
       });
       this.lightLightSlider.range.disabled = true;
@@ -164,7 +165,7 @@ export class ValuePlanesApp implements IApp {
          min: 0,
          max: 100,
          value: this.valuePlanes.midLight * 100,
-         colors: [Globals.BLACK.toHtmlColor(), Globals.WHITE.toHtmlColor()],
+         colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
          getText: () => { return (100 * this.valuePlanes.midLight).toFixed(0) + "%" }
       });
       this.midLightSlider.range.disabled = true;
@@ -175,7 +176,7 @@ export class ValuePlanesApp implements IApp {
          min: 0,
          max: 100,
          value: this.valuePlanes.darkLight * 100,
-         colors: [Globals.BLACK.toHtmlColor(), Globals.WHITE.toHtmlColor()],
+         colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
          getText: () => { return (100 * this.valuePlanes.darkLight).toFixed(0) + "%" }
       });
       this.darkLightSlider.range.disabled = true;
@@ -186,7 +187,7 @@ export class ValuePlanesApp implements IApp {
          min: 0,
          max: 100,
          value: this.valuePlanes.shadow * 100,
-         colors: [Globals.BLACK.toHtmlColor(), Globals.WHITE.toHtmlColor()],
+         colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
          oninput: () => {
             this.valuePlanes.shadow = this.shadowSlider.value / 100;
             this.updateSliders();
@@ -245,7 +246,7 @@ export class ValuePlanesApp implements IApp {
 
          case PointerMode.Light:
             this.pointerMode = PointerMode.View;
-            this.renderer.ballColor = Globals.WHITE;
+            this.renderer.ballColor = glColor3.modelWhite;
             break;
       }
       this.dirty = true;
@@ -299,7 +300,7 @@ export class ValuePlanesApp implements IApp {
          return true;
       }
       else if (pos.x > canvasWidth - miniWidth && pos.y < miniWidth) {
-         this.renderer.useContours = !this.renderer.useContours;
+         this.renderer.showContours = !this.renderer.showContours;
          this.renderer.miniViewShowContours = !this.renderer.miniViewShowContours;
          this.dirty = true;
          return true;

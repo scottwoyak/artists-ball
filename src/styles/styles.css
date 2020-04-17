@@ -18,6 +18,7 @@ body {
 @import "Menu.css";
 @import "Slider.css";
 @import "Tabs.css";
+@import "Checkbox.css";
 
 @media only screen and (max-device-width: 800px) {
   * {

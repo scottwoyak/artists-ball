@@ -2,6 +2,7 @@ import { htmlColor } from "./htmlColor";
 import { ColorRange } from "./ColorRange";
 import { glColor3 } from "./glColor";
 import { htmlColorWithAlpha } from "./htmlColorWithAlpha";
+import { ICtrl } from "./ICtrl";
 
 /**
  * Interface for data passed to the Slider constructor
@@ -13,14 +14,14 @@ export interface ISliderSetup {
    max: number,
    value: number,
    colors?: htmlColor[],
-   oninput?: () => void,
+   oninput?: (slider: Slider) => void,
    getText?: (slider: Slider) => string,
 }
 
 /**
  * Class representing a slider composed of a label, input range, color span and value span
  */
-export class Slider {
+export class Slider implements ICtrl {
 
    private _range: HTMLInputElement;
    private _colorSpan: HTMLSpanElement;
@@ -44,7 +45,7 @@ export class Slider {
       let label = document.createElement('label');
       label.id = setup.id + 'Label';
       label.className = 'SliderLabel';
-      label.innerText = setup.label;
+      label.innerText = setup.label ?? '';
       div.appendChild(label);
 
       this._range = document.createElement('input');
@@ -58,6 +59,7 @@ export class Slider {
          this.updateSpanColor();
          this.updateSpanText()
       });
+      label.htmlFor = this._range.id;
       div.appendChild(this._range);
 
       if (setup.colors) {
@@ -79,7 +81,7 @@ export class Slider {
       // set the initial span text
       this.updateSpanText();
 
-      this._range.oninput = setup.oninput;
+      this._range.oninput = () => setup.oninput(this);
    }
 
    /**
@@ -196,5 +198,9 @@ export class Slider {
       else {
          return new glColor3([0, 0, 0]);
       }
+   }
+
+   public refresh() {
+      // TODO implement
    }
 }

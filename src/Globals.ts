@@ -1,4 +1,4 @@
-import { htmlColor } from "./htmlColor";
+import { glColor3 } from "./glColor";
 
 export type StatusFunction = (status: string) => void;
 
@@ -30,13 +30,4 @@ export function mix(v1: number, v2: number, mix: number): number {
 
 export function toCss(r: number, g: number, b: number, a?: number): string {
    return 'rgb(' + r + ',' + g + ',' + b + (a === undefined ? '' : ',' + a) + ')';
-}
-
-
-export class Globals {
-
-   // Values we use for white and black. White is warmer than pure white
-   static readonly WHITE = new htmlColor([255, 250, 242]).toGlColor();
-   static readonly BLACK = new htmlColor([0, 0, 0]).toGlColor();
-
 }

@@ -69,7 +69,7 @@ export class ValuePlanes {
 
    private colorAt(deg: number): number {
       deg = clamp(deg, 0, 90);
-      return mix(this.shadow, this.highlight - this.valueRange.highlightDifference, Math.cos(toRad(deg)));
+      return mix(this.shadow, this.highlight - this.valueRange.highlightDelta, Math.cos(toRad(deg)));
    }
 
    public computeColors() {

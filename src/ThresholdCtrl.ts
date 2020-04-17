@@ -193,7 +193,7 @@ export class ThresholdCtrl {
       let uni = this.setStdUniforms();
 
       // always render with bands
-      uni.set('uUseContours', true);
+      uni.set('uShowContours', true);
 
       // shoot the light straight down
       uni.set('uLightDirection', new Vec3([0, -1, 0]));
@@ -206,7 +206,7 @@ export class ThresholdCtrl {
 
       // draw the arrow
       uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
-      uni.set('uUseContours', false);
+      uni.set('uShowContours', false);
 
       // first reset things so that we're looking down the z-axis
       this.arrow.clearTransforms();

@@ -2,7 +2,7 @@ import { Mat4 } from './Mat';
 import { Vec3, Vec2 } from './Vec';
 import vertexSource from './shaders/ViewerVertex.glsl';
 import fragmentSource from './shaders/ViewerFragment.glsl';
-import { toRad, toDeg, Globals } from './Globals';
+import { toRad, toDeg } from './Globals';
 import { glUniform } from './glUniform';
 import { TriangleObj, NormalType } from './TriangleObj';
 import { glObject } from './glObject';
@@ -50,7 +50,7 @@ export class Renderer {
    private uEye = new Vec3([0, 0, 8]); // 4 times the max object dimension of 2. For a model, about 20 ft away
    public useOrthographic = false;
 
-   public valueRange = new ValueRange();
+   public valueRange = ValueRange.Standard;
 
    // size of the smaller view
    public readonly miniSize = 0.2;
@@ -76,9 +76,23 @@ export class Renderer {
    public showMiniView = true;
    public showFloor = true;
    public useCulling = true;
-   public useContours = false;
+   public showContours = false;
    public miniViewShowContours = false;
    public showHighlights = true;
+   public onlyShowHighlights = false;
+   public uShininess = 15;
+
+   public get emphasizeHighlights() {
+      return this.valueRange == ValueRange.EmphasizeHighlights;
+   }
+   public set emphasizeHighlights(val: boolean) {
+      if (val) {
+         this.valueRange = ValueRange.EmphasizeHighlights;
+      }
+      else {
+         this.valueRange = ValueRange.Standard;
+      }
+   }
 
    public constructor(glCtx: WebGLRenderingContext) {
 
@@ -189,7 +203,7 @@ export class Renderer {
       if (this.obj) {
          this.obj.delete();
       }
-      this.obj = new glObject(this.gl, tObj, this.program.get());
+      this.obj = new glObject(this.gl, tObj, this.program);
 
       // move the object so that the center is at [0,0,0] and it is scaled
       // so that it's diagonal is 2 units across
@@ -241,14 +255,15 @@ export class Renderer {
       uni.set('uOrthographic', this.useOrthographic);
       uni.set('uLightDirection', this.uLightDirection);
       uni.set('uUseShadows', true);
-      uni.set('uUseContours', this.useContours);
+      uni.set('uShowContours', this.showContours);
       uni.set('uShowHighlights', this.showHighlights);
+      uni.set('uShininess', this.uShininess);
 
       uni.set('uLightIntensity', this.valueRange.lightIntensity);
       uni.set('uAmbientIntensity', this.valueRange.shadow);
-      uni.set('uWhiteColor', Globals.WHITE);
-      uni.set('uBlackColor', Globals.BLACK);
       uni.set('uHighlight', this.valueRange.highlight);
+      uni.set('uWhiteColor', glColor3.modelWhite);
+      uni.set('uBlackColor', glColor3.modelBlack);
 
       uni.seti('uNumContours', this.contours.length);
       for (let i = 0; i < this.contours.length; i++) {
@@ -303,7 +318,7 @@ export class Renderer {
 
       // don't try to use the shadow texture while we're creating it
       uni.set('uUseShadows', false);
-      uni.set('uUseContours', false);
+      uni.set('uShowContours', false);
 
       gl.disable(gl.CULL_FACE);
 
@@ -337,14 +352,12 @@ export class Renderer {
 
          gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
-         // draw the main object
-         this.useCulling ? gl.enable(gl.CULL_FACE) : gl.disable(gl.CULL_FACE);
-         gl.cullFace(gl.BACK);
+         let oldEmphasizeHighlights = this.emphasizeHighlights;
+         this.emphasizeHighlights = false;
 
          let uni = this.setStdUniforms();
-         this.obj.draw();
-
          if (this.showFloor) {
+
             uni.set('uRenderingFloor', true);
 
             // apply the same transform to the floor that exists for the object
@@ -353,12 +366,23 @@ export class Renderer {
             // cull polygons so we don't see the floor from below
             gl.enable(gl.CULL_FACE);
             gl.cullFace(gl.BACK);
-            uni.set('uUseContours', false);
+            uni.set('uShowContours', false);
 
             this.floor.draw();
 
             uni.set('uRenderingFloor', false);
          }
+
+         // draw the main object
+         this.useCulling ? gl.enable(gl.CULL_FACE) : gl.disable(gl.CULL_FACE);
+         gl.cullFace(gl.BACK);
+         this.emphasizeHighlights = oldEmphasizeHighlights;
+
+         uni = this.setStdUniforms();
+         uni.set('uOnlyShowHighlights', this.onlyShowHighlights);
+         this.obj.draw();
+
+         uni.set('uOnlyShowHighlights', false);
 
          gl.clear(gl.DEPTH_BUFFER_BIT);
 
@@ -375,6 +399,9 @@ export class Renderer {
       let gl = this.gl;
       gl.enable(gl.CULL_FACE);
       gl.cullFace(gl.BACK);
+
+      let oldEmphasizeHighlights = this.emphasizeHighlights;
+      this.emphasizeHighlights = false;
 
       let uni = this.setStdUniforms();
 
@@ -396,8 +423,10 @@ export class Renderer {
       view.scale(this.miniSize);
       view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.y - this.miniSize, 0]));
       uni.set('view', view);
-      uni.set('uUseContours', this.miniViewShowContours);
+      uni.set('uShowContours', this.miniViewShowContours);
       this.obj.draw();
+
+      this.emphasizeHighlights = oldEmphasizeHighlights;
    }
 
    private drawBall() {
@@ -423,7 +452,7 @@ export class Renderer {
 
       // stop using the shadowmap
       uni.set('uUseShadows', false);
-      uni.set('uUseContours', false);
+      uni.set('uShowContours', false);
 
       let view = Mat4.identity;
       view.scale(this.miniSize);
@@ -431,11 +460,11 @@ export class Renderer {
       uni.set('view', view);
       uni.set('uWhiteColor', this.ballColor);
       uni.set('uBlackColor', htmlColor.black.toGlColor());
-      uni.set('uUseContours', this.useContours);
+      uni.set('uShowContours', this.showContours);
       this.ball.draw();
 
       uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
-      uni.set('uUseContours', false);
+      uni.set('uShowContours', false);
 
       // back out angles as if looking down the z-axis
       let x = this.uLightDirection.x;
@@ -458,6 +487,8 @@ export class Renderer {
 
       uni.set('uWhiteColor', this.yellow);
       uni.set('uBlackColor', htmlColor.black.toGlColor());
+      uni.set('uLightIntensity', ValueRange.Standard.lightIntensity);
+      uni.set('uHighlight', ValueRange.Standard.highlight);
       uni.set('uAmbientIntensity', 0.4);
       this.arrow.draw();
    }
@@ -476,7 +507,7 @@ export class Renderer {
       // TODO adjust for aspect ratio
       if (this.showMiniView) {
          if (x > (1 - this.miniSize) && y > (1 - this.miniSize)) {
-            this.useContours = !this.useContours;
+            this.showContours = !this.showContours;
             this.render();
             return true;
          }

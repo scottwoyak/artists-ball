@@ -1,0 +1,81 @@
+/* Customize the label (the CheckboxLabel) */
+.CheckboxLabel {
+  display: block;
+  position: relative;
+  padding-left: 25px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Hide the browser's default checkbox */
+.CheckboxLabel input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Create a custom checkbox */
+.Checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #f5f5f5;
+}
+
+/* When the checkbox is checked, add a blue background */
+.CheckboxLabel input:checked ~ .Checkmark {
+  background-color: #2196f3;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.Checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the checkmark when checked */
+.CheckboxLabel input:checked ~ .Checkmark:after {
+  display: block;
+}
+
+/* Style the checkmark/indicator */
+.CheckboxLabel .Checkmark:after {
+  left: 7px;
+  top: 3px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+
+@media only screen and (max-device-width: 800px) {
+  .CheckboxLabel {
+    padding-left: 50px;
+  }
+
+  /* Create a custom checkbox */
+  .Checkmark {
+    height: 40px;
+    width: 40px;
+  }
+
+  /* Style the checkmark/indicator */
+  .CheckboxLabel .Checkmark:after {
+    left: 14px;
+    top: 6px;
+    width: 8px;
+    height: 16px;
+    border-width: 0 6px 6px 0;
+  }
+}

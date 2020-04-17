@@ -1,8 +1,17 @@
+import { ISliderSetup, Slider } from "./Slider";
+import { Checkbox, ICheckboxSetup } from "./Checkbox";
+import { ICtrl } from "./ICtrl";
+
 export type MenuItemFunction = () => void;
+export type MenuItemFunctionBool = (value: boolean) => void;
 
 enum MenuLocation {
    Below,
    Right,
+}
+
+export interface IMenuItemOptions {
+   closeOnClick: boolean;
 }
 
 /**
@@ -11,10 +20,20 @@ enum MenuLocation {
 class Menu {
    private parent: Menu;
    private children: Menu[] = [];
+   private ctrls: ICtrl[] = [];
 
    // the div that is the container for menu items
    public div: HTMLDivElement;
 
+   protected isMenuItem(element: HTMLElement): boolean {
+      while (element) {
+         if (element.className === 'MenuItem') {
+            return true;
+         }
+         element = element.parentElement;
+      }
+      return false;
+   }
    protected constructor(parent: Menu, id: string, className: string) {
       this.parent = parent;
 
@@ -29,15 +48,13 @@ class Menu {
       if (!parent) {
          // if this is the root menu, add a global click handler for closing menus
          window.addEventListener('click', () => {
-            let className = (<any>event.target).className;
-            if (className !== 'Menu' && className !== 'MenuItem' && className != 'Menubar') {
+            if (!this.isMenuItem(event.target as HTMLElement)) {
                this.hideDown();
             }
          });
 
          window.addEventListener('touchstart', (event: TouchEvent) => {
-            let className = (<any>event.target).className;
-            if (className !== 'Menu' && className !== 'MenuItem' && className != 'Menubar') {
+            if (!this.isMenuItem(event.target as HTMLElement)) {
                this.hideDown();
             }
          });
@@ -46,6 +63,7 @@ class Menu {
    }
 
    public show() {
+      this.ctrls.forEach((ctrl) => ctrl.refresh());
       if (this.div.classList.contains('MenuShow') === false) {
          this.div.classList.add('MenuShow');
       }
@@ -109,7 +127,12 @@ class Menu {
          subMenu.div.style.top = (menuItem.offsetTop + menuItem.offsetHeight) + 'px'
       }
       else if (location === MenuLocation.Right) {
-         subMenu.div.style.left = (menuItem.offsetLeft + menuItem.offsetWidth) + 'px'
+         let rect = menuItem.getBoundingClientRect();
+         let left = menuItem.offsetWidth;
+         if (rect.right + subMenu.div.offsetWidth > window.innerWidth) {
+            left -= ((rect.right + subMenu.div.offsetWidth) - window.innerWidth);
+         }
+         subMenu.div.style.left = left + 'px';
          let top = menuItem.offsetTop;
          if (top + subMenu.div.clientHeight > window.innerHeight) {
             top = window.innerHeight - subMenu.div.clientHeight;
@@ -118,7 +141,7 @@ class Menu {
       }
    }
 
-   public addItem(text: string, callback: MenuItemFunction): HTMLDivElement {
+   public addItem(text: string, callback: MenuItemFunction, options?: IMenuItemOptions): HTMLDivElement {
 
       // create a div for this item
       let item = document.createElement('div');
@@ -127,7 +150,9 @@ class Menu {
       item.onclick = (event: Event) => {
 
          // hide open menus in our hierarchy
-         this.hideUp();
+         if (!(options && options.closeOnClick == false)) {
+            this.hideUp();
+         }
 
          // fire the event
          callback();
@@ -135,6 +160,35 @@ class Menu {
       this.div.appendChild(item);
 
       return item;
+   }
+
+   public addSlider(setup: ISliderSetup) {
+      let div = this.addItem(
+         setup.label,
+         () => { }, // do nothing on click
+         { closeOnClick: false }
+      );
+
+      let ctrl = new Slider(div, {
+         id: setup.id,
+         label: '',
+         min: setup.min,
+         max: setup.max,
+         value: setup.value,
+         oninput: setup.oninput,
+      });
+      this.ctrls.push(ctrl);
+   }
+
+   public addCheckbox(setup: ICheckboxSetup) {
+      let div = this.addItem(
+         '',
+         () => { }, // do nothing on click
+         { closeOnClick: false }
+      );
+
+      let ctrl = new Checkbox(div, setup);
+      this.ctrls.push(ctrl);
    }
 }
 

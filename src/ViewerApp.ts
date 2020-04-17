@@ -1,4 +1,4 @@
-import { toRad, isMobile, Globals } from "./Globals";
+import { toRad, isMobile } from "./Globals";
 import { Renderer, Contour } from "./Renderer";
 import { Mat4 } from "./Mat";
 import { Vec4, Vec2 } from "./Vec";
@@ -10,6 +10,9 @@ import { ModelLoader } from "./ModelLoader";
 import { IApp } from "./IApp";
 import { Menubar, SubMenu } from "./Menu";
 import { glColor3 } from "./glColor";
+import { Slider } from "./Slider";
+import { Checkbox } from "./Checkbox";
+import { ValueRange } from "./ValueRange";
 
 enum PointerMode {
    View,
@@ -44,12 +47,6 @@ export class ViewerApp implements IApp {
       viewContainer.className = 'container';
       div.appendChild(viewContainer);
       this.createViewElements(viewContainer);
-
-      const ctrlsContainer = document.createElement('div');
-      ctrlsContainer.className = 'container';
-      ctrlsContainer.id = 'CtrlsContainer';
-      div.appendChild(ctrlsContainer);
-      this.createCtrlsElements(ctrlsContainer);
 
       this.loadModel(this.query);
    }
@@ -136,7 +133,7 @@ export class ViewerApp implements IApp {
                break;
 
             case 'c':
-               this.renderer.useContours = !this.renderer.useContours;
+               this.renderer.showContours = !this.renderer.showContours;
                this.dirty = true;
                break;
 
@@ -200,27 +197,71 @@ export class ViewerApp implements IApp {
 
       let subMenu: SubMenu;
       subMenu = menubar.addSubMenu('Options', 'Options');
-      subMenu.addItem('Toggle Floor', () => {
-         this.renderer.showFloor = !this.renderer.showFloor;
-         this.dirty = true;
-      })
-      subMenu.addItem('Toggle Contours', () => {
-         this.renderer.useContours = !this.renderer.useContours;
-         this.dirty = true;
-      })
-      subMenu.addItem('Toggle Perspective', () => {
-         this.renderer.useOrthographic = !this.renderer.useOrthographic;
-         this.dirty = true;
-      })
-      subMenu.addItem('Toggle Highlights', () => {
-         this.renderer.showHighlights = !this.renderer.showHighlights;
-         this.dirty = true;
-      })
+      subMenu.addCheckbox({
+         label: 'Show Floor',
+         id: 'ShowFloor',
+         checked: () => this.renderer.showFloor,
+         oncheck: (checkbox: Checkbox) => {
+            this.renderer.showFloor = checkbox.checked;
+            this.dirty = true;
+         }
+      });
+      subMenu.addCheckbox({
+         label: 'Show Contours',
+         id: 'ShowContours',
+         checked: () => this.renderer.showContours,
+         oncheck: (checkbox: Checkbox) => {
+            this.renderer.showContours = checkbox.checked;
+            this.dirty = true;
+         }
+      });
+      subMenu.addCheckbox({
+         label: 'Use Perspective',
+         id: 'Use Perspective',
+         checked: () => !this.renderer.useOrthographic,
+         oncheck: (checkbox: Checkbox) => {
+            this.renderer.useOrthographic = !checkbox.checked;
+            this.dirty = true;
+         }
+      });
       subMenu.addItem('Reverse Object', () => {
          this.renderer.tObj.reverse();
          this.renderer.obj.uploadTriangles();
          this.dirty = true;
-      })
+      });
+
+      let highlightSubMenu = subMenu.addSubMenu('Highlights', 'Highlights');
+      highlightSubMenu.addCheckbox({
+         label: 'Show Highlights',
+         id: 'ShowHighlights',
+         checked: () => this.renderer.showHighlights,
+         oncheck: (checkbox: Checkbox) => {
+            this.renderer.showHighlights = checkbox.checked;
+            this.dirty = true;
+         }
+      });
+
+      highlightSubMenu.addCheckbox({
+         label: 'Emphasize Highlights',
+         id: 'Emphasizelights',
+         checked: () => this.renderer.emphasizeHighlights,
+         oncheck: (checkbox: Checkbox) => {
+            this.renderer.emphasizeHighlights = checkbox.checked;
+            this.dirty = true;
+         }
+      });
+
+      highlightSubMenu.addSlider({
+         id: 'Shininess',
+         label: 'Shininess',
+         min: 1,
+         max: 50,
+         value: this.renderer.uShininess,
+         oninput: (slider: Slider) => {
+            this.renderer.uShininess = slider.value;
+            this.dirty = true;
+         },
+      });
    }
 
    private optimize(normalType: NormalType) {
@@ -256,26 +297,6 @@ export class ViewerApp implements IApp {
       this.overlay.style.width = width + 'px';
       this.overlay.style.height = height + 'px';
       this.overlay.style.lineHeight = height + 'px'; // vertically center text
-   }
-
-   private createCtrlsElements(parent: HTMLElement) {
-
-      /*
-      this.highlightSlider = new Slider(parent, {
-         id: 'Highlight',
-         label: 'Highlight',
-         min: 0,
-         max: 100,
-         value: this.renderer.highlight * 100,
-         colors: [BLACK_COLOR, WHITE_COLOR],
-         oninput: () => {
-            this.renderer.highlight = this.highlightSlider.value / 100;
-            this.updateSliders();
-            this.dirty = true;
-         },
-         getText: () => { return (100 * this.renderer.highlight).toFixed(0) + "%" }
-      });
-      */
    }
 
    private loadModel(query: string) {
@@ -342,7 +363,7 @@ export class ViewerApp implements IApp {
 
          case PointerMode.Light:
             this.pointerMode = PointerMode.View;
-            this.renderer.ballColor = Globals.WHITE;
+            this.renderer.ballColor = glColor3.modelWhite;
             break;
       }
       this.dirty = true;

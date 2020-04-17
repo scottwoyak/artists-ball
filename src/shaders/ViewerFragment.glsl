@@ -30,11 +30,12 @@ uniform sampler2D uShadowTexture;
 uniform vec3 uFloorCenter;
 uniform float uFloorRadius;
 uniform bool uRenderingFloor;
-uniform bool uUseContours;
+uniform bool uShowContours;
 uniform int uNumContours;
 uniform vec3 uContourColors[9];
 uniform float uContourAngles[9];
 uniform bool uShowHighlights;
+uniform float uShininess;
 
 // For contour shading, the minimum specular contribution required to
 // show something as a highlight
@@ -94,37 +95,47 @@ bool in_shadow()
    }
 }
 
+vec4 val2Color(float val, float a) { return vec4(mix(uBlackColor, uWhiteColor, val), a); }
+
+float getSpecularRange() { return (uHighlight - uAmbientIntensity) - uLightIntensity; }
+
 float getSpecular(vec3 normal, vec3 toLight, vec3 toEye)
 {
    float specular = 0.0;
 
    if (uShowHighlights)
    {
-      float shininess = 15.0;
       vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
       float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
-      specular = 0.1 * pow(cosAngle, shininess);
+      specular = getSpecularRange() * (uShininess / 15.0) * pow(cosAngle, uShininess);
    }
 
    return specular;
 }
 
-vec3 getContourColor(float vDot, vec3 normal, vec3 toLight, vec3 toEye)
+vec4 getContourColor(float vDot, vec3 normal, vec3 toLight, vec3 toEye)
 {
    float specular = getSpecular(normal, toLight, toEye);
    if (specular > SPECULAR_THRESHOLD)
    {
-      return vec3(uHighlight);
+      return val2Color(uHighlight, 1.0);
    }
 
    float angle = (180.0 / 3.1415926) * acos(vDot);
-   for (int i = 0; i < 9; i++)
+   if (angle > 90.0)
    {
-      if (i < uNumContours)
+      return val2Color(uAmbientIntensity, 1.0);
+   }
+   else
+   {
+      for (int i = 0; i < 9; i++)
       {
-         if (angle < uContourAngles[i])
+         if (i < uNumContours)
          {
-            return uContourColors[i];
+            if (angle < uContourAngles[i])
+            {
+               return vec4(uContourColors[i], 1.0);
+            }
          }
       }
    }
@@ -137,8 +148,7 @@ float getValueFromLight(vec3 normal, vec3 toLight, vec3 toEye)
    float diffuse = diffuseFactor * uLightIntensity;
    float specular = getSpecular(normal, toLight, toEye);
 
-   float val = uAmbientIntensity + diffuse + specular;
-   return val;
+   return uAmbientIntensity + diffuse + specular;
 }
 
 void main()
@@ -177,26 +187,25 @@ void main()
 
       if (inShadow)
       {
-         fragColor = vec4(vec3(mix(uBlackColor, uWhiteColor, uAmbientIntensity)), a);
+         fragColor = val2Color(uAmbientIntensity, a);
       }
       else
       {
          float val = getValueFromLight(normal, toLight, toEye);
-         fragColor = vec4(vec3(mix(uBlackColor, uWhiteColor, val)), a);
+         fragColor = val2Color(val, a);
       }
    }
    else
    {
-      if (uUseContours)
+      if (uShowContours)
       {
          if (inShadow)
          {
-            fragColor = vec4(vec3(uAmbientIntensity), 1.0);
+            fragColor = val2Color(uAmbientIntensity, 1.0);
          }
          else
          {
-            float val = getValueFromLight(normal, toLight, toEye);
-            fragColor = vec4(getContourColor(vDot, normal, toLight, toEye), 1.0);
+            fragColor = getContourColor(vDot, normal, toLight, toEye);
          }
       }
       else
@@ -207,12 +216,12 @@ void main()
             // were coming from the eye.
             vec3 toShadowLight = vec3(0.0, 0.0, 1.0);
             float val = getValueFromLight(normal, toShadowLight, toEye) / 20.0;
-            fragColor = vec4(mix(uBlackColor, uWhiteColor, uAmbientIntensity + val), 1.0);
+            fragColor = val2Color(uAmbientIntensity + val, 1.0);
          }
          else
          {
             float val = getValueFromLight(normal, toLight, toEye);
-            fragColor = vec4(mix(uBlackColor, uWhiteColor, val), 1.0);
+            fragColor = val2Color(val, 1.0);
          }
       }
    }

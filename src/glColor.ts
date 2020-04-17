@@ -7,6 +7,9 @@ import { clamp } from "./Globals";
  */
 export class glColor3 extends Color {
 
+   static readonly modelWhite = new glColor3([255 / 255, 250 / 255, 242 / 255]);
+   static readonly modelBlack = new glColor3([0, 0, 0]);
+
    /**
     * @param color An RGB color array
     */
