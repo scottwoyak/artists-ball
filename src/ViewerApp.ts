@@ -107,19 +107,19 @@ export class ViewerApp implements IApp {
          }
          switch (event.keyCode) {
             case 37: // left
-               this.doRotations(toRad(angle), 0);
+               this.rotateObjects(toRad(angle), 0);
                this.dirty = true;
                break;
             case 38: // up
-               this.doRotations(0, toRad(angle));
+               this.rotateObjects(0, toRad(angle));
                this.dirty = true;
                break;
             case 39: // right
-               this.doRotations(toRad(-angle), 0);
+               this.rotateObjects(toRad(-angle), 0);
                this.dirty = true;
                break;
             case 40: // down
-               this.doRotations(0, toRad(-angle));
+               this.rotateObjects(0, toRad(-angle));
                this.dirty = true;
                break;
          }
@@ -265,7 +265,7 @@ export class ViewerApp implements IApp {
 
       let rotateSubMenu = subMenu.addSubMenu('Rotation', 'Rotation');
       rotateSubMenu.addCheckbox({
-         label: 'Sync Light and Object',
+         label: 'Keep the light pointing at the same spot on the model',
          id: 'SyncLightAndObject',
          checked: () => this.rotateLightWithObject,
          oncheck: (checkbox: Checkbox) => {
@@ -273,7 +273,7 @@ export class ViewerApp implements IApp {
          }
       });
       rotateSubMenu.addCheckbox({
-         label: 'Lock Floor',
+         label: 'Rotate model independent of the floor',
          id: 'LockFloor',
          checked: () => this.renderer.lockFloor,
          oncheck: (checkbox: Checkbox) => {
@@ -387,41 +387,52 @@ export class ViewerApp implements IApp {
       this.dirty = true;
    }
 
-   private updateLight(xRad: number, yRad: number) {
-      let matY = Mat4.fromRotY(xRad);
+   private rotateLight(xRad: number, yRad: number) {
       let matX = Mat4.fromRotX(yRad);
-      let vec = new Vec4([
-         this.renderer.uLightDirection.x,
-         this.renderer.uLightDirection.y,
-         this.renderer.uLightDirection.z,
-         1
-      ]);
+      let matY = Mat4.fromRotY(xRad);
+      let vec = Vec4.fromVec3(this.renderer.uLightDirection, 1);
       vec = matX.multV(vec);
       vec = matY.multV(vec);
-      this.renderer.uLightDirection.x = vec.values[0];
-      this.renderer.uLightDirection.y = vec.values[1];
-      this.renderer.uLightDirection.z = vec.values[2];
+      this.renderer.uLightDirection = vec.xyz;
 
       this.dirty = true;
    }
 
-   private doRotations(xRad: number, yRad: number) {
+   private rotateObjects(xRad: number, yRad: number) {
+
+      // get the light vector with model transformation undone
+      let vec = Vec4.fromVec3(this.renderer.uLightDirection, 1);
+      vec = this.renderer.obj.model.inverse().multV(vec);
+
       if (this.renderer.lockFloor) {
+
          // rotate in all directions if we're just rotating the object in space
          this.renderer.rotX(yRad);
          this.renderer.rotY(xRad);
+
+         if (this.rotateLightWithObject) {
+            // apply the changes to the light
+            vec = this.renderer.obj.model.multV(vec);
+            this.renderer.uLightDirection = vec.xyz;
+         }
       }
       else {
+
          // if the floor moves with the object, then up-down movement tilts the
          // whole scene while left-right movement only spins the model
          this.renderer.rotX(yRad);
-         this.renderer.preRotY(xRad);
 
-         if (this.rotateLightWithObject == false) {
-            xRad = 0;
+         if (this.rotateLightWithObject) {
+            this.renderer.preRotY(xRad);
+            vec = this.renderer.obj.model.multV(vec);
+         }
+         else {
+            vec = this.renderer.obj.model.multV(vec);
+            this.renderer.preRotY(xRad);
          }
 
-         this.updateLight(xRad, yRad);
+         // apply the changes to the light
+         this.renderer.uLightDirection = vec.xyz;
       }
    }
 
@@ -429,10 +440,10 @@ export class ViewerApp implements IApp {
       this.dirty = true;
 
       if (this.pointerMode === PointerMode.View) {
-         this.doRotations(-delta.x * 0.01, -delta.y * 0.01);
+         this.rotateObjects(-delta.x * 0.01, -delta.y * 0.01);
       }
       else if (this.pointerMode === PointerMode.Light) {
-         this.updateLight(-delta.x * 0.01, -delta.y * 0.01);
+         this.rotateLight(-delta.x * 0.01, -delta.y * 0.01);
       }
    }
 
@@ -471,7 +482,18 @@ export class ViewerApp implements IApp {
    }
 
    private onRotate(angle: number, delta: number) {
+      // get the light vector with model transformation undone
+      let vec = Vec4.fromVec3(this.renderer.uLightDirection, 1);
+      vec = this.renderer.obj.model.inverse().multV(vec);
+
       this.renderer.rotZ(delta);
+
+      // apply the updated transform 
+      if (this.rotateLightWithObject) {
+         vec = this.renderer.obj.model.multV(vec);
+         this.renderer.uLightDirection = vec.xyz;
+      }
+
       this.dirty = true;
    }
 
@@ -499,9 +521,17 @@ export class ViewerApp implements IApp {
       }
 
       if (this.animate) {
+         // get the light vector with model transformation undone
+         let vec = Vec4.fromVec3(this.renderer.uLightDirection, 1);
+         vec = this.renderer.obj.model.inverse().multV(vec);
+
+         // animate
          this.renderer.preRotY(toRad(-1));
+
+         // apply the updated transform 
          if (this.rotateLightWithObject) {
-            this.updateLight(toRad(1), 0);
+            vec = this.renderer.obj.model.multV(vec);
+            this.renderer.uLightDirection = vec.xyz;
          }
          this.dirty = true;
       }

@@ -48,7 +48,7 @@ class Menu {
 
       if (!parent) {
          // if this is the root menu, add a global click handler for closing menus
-         window.addEventListener('click', () => {
+         window.addEventListener('mousedown', () => {
             if (!this.isMenuItem(event.target as HTMLElement)) {
                this.hideDown();
             }

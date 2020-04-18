@@ -352,6 +352,15 @@ export class Vec4 extends Vec {
    }
 
    /**
+    * Gets the x-y-z components as a 3d vec
+    * 
+    * @return the Vec3
+    */
+   public get xyz(): Vec3 {
+      return new Vec3([this.x, this.y, this.z]);
+   }
+
+   /**
     * Creates a copy of the vector.
     * 
     * @returns A copy of the vector.
@@ -390,6 +399,16 @@ export class Vec4 extends Vec {
       }
 
       return ret;
+   }
+
+   /**
+    * Creates a Vec4 from a Vec3 object
+    * 
+    * @param vec The Vec3 object
+    * @param w The w value for the Vec4
+    */
+   public static fromVec3(vec: Vec3, w: number): Vec4 {
+      return new Vec4([vec.x, vec.y, vec.z, 1]);
    }
 }
 
