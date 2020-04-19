@@ -12,6 +12,7 @@ import { htmlColor } from "./htmlColor";
 import vertexSource from './shaders/ViewerVertex.glsl';
 import fragmentSource from './shaders/ViewerFragment.glsl';
 import { ValuePlanes } from "./ValuePlanes";
+import { RenderMode } from "./Renderer";
 
 export type ThresholdChangeFunction = (value: number) => void;
 
@@ -24,7 +25,7 @@ const NOMINAL_DISPLAY_SIZE = 150;
 const NOMINAL_KNOB_LENGTH = 25;
 const NOMINAL_KNOB_RADIUS = 10;
 
-export class ThresholdCtrl {
+export class ValuePlanesCtrl {
    private gl: WebGLRenderingContext;
    private program: glProgram;
    private overlay: HTMLCanvasElement;
@@ -193,7 +194,7 @@ export class ThresholdCtrl {
       let uni = this.setStdUniforms();
 
       // always render with bands
-      uni.set('uShowContours', true);
+      uni.seti('uRenderMode', RenderMode.Contours);
 
       // shoot the light straight down
       uni.set('uLightDirection', new Vec3([0, -1, 0]));
@@ -206,7 +207,7 @@ export class ThresholdCtrl {
 
       // draw the arrow
       uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
-      uni.set('uShowContours', false);
+      uni.seti('uRenderMode', RenderMode.Normal);
 
       // first reset things so that we're looking down the z-axis
       this.arrow.clearTransforms();

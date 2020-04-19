@@ -2,7 +2,7 @@ import { Mat4 } from './Mat';
 import { Vec3, Vec2 } from './Vec';
 import vertexSource from './shaders/ViewerVertex.glsl';
 import fragmentSource from './shaders/ViewerFragment.glsl';
-import { toRad, toDeg } from './Globals';
+import { toRad, toDeg, isMobile } from './Globals';
 import { glUniform } from './glUniform';
 import { TriangleObj, NormalType } from './TriangleObj';
 import { glObject } from './glObject';
@@ -35,6 +35,16 @@ export class Contour {
 
       this.angle = angle;
    }
+}
+
+// Rendering modes. Must match values in ViewerFragment.glsl
+export enum RenderMode {
+   Normal = 0,
+   Contours = 1,
+   LightAndShadow = 2,
+   HighlightTerminator = 3,
+   HighlightShadow = 4,
+   EmphasizeHighlights = 5,
 }
 
 /**
@@ -76,24 +86,12 @@ export class Renderer {
    public showMiniView = true;
    public showFloor = true;
    public useCulling = true;
-   public showContours = false;
    public miniViewShowContours = false;
    public showHighlights = true;
    public uShininess = 15;
    public lockFloor = false;
 
-
-   public get emphasizeHighlights() {
-      return this.valueRange == ValueRange.EmphasizeHighlights;
-   }
-   public set emphasizeHighlights(val: boolean) {
-      if (val) {
-         this.valueRange = ValueRange.EmphasizeHighlights;
-      }
-      else {
-         this.valueRange = ValueRange.Standard;
-      }
-   }
+   public renderMode = RenderMode.Normal;
 
    public constructor(glCtx: WebGLRenderingContext) {
 
@@ -124,6 +122,14 @@ export class Renderer {
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
    }
 
+   public renderModeCanToggleHighlights(): boolean {
+      if (this.renderMode === RenderMode.EmphasizeHighlights || this.renderMode === RenderMode.LightAndShadow) {
+         return false;
+      }
+      else {
+         return true;
+      }
+   }
    public getClipSpace(): glClipSpace {
 
       let gl = this.gl;
@@ -307,13 +313,21 @@ export class Renderer {
       uni.set('uOrthographic', this.useOrthographic);
       uni.set('uLightDirection', this.uLightDirection);
       uni.set('uUseShadows', true);
-      uni.set('uShowContours', this.showContours);
-      uni.set('uShowHighlights', this.showHighlights || this.emphasizeHighlights);
+      uni.seti('uRenderMode', this.renderMode);
+      uni.set('uShowHighlights', this.showHighlights || this.renderMode === RenderMode.EmphasizeHighlights);
       uni.set('uShininess', this.uShininess);
 
-      uni.set('uLightIntensity', this.valueRange.lightIntensity);
-      uni.set('uAmbientIntensity', this.valueRange.shadow);
-      uni.set('uHighlight', this.valueRange.highlight);
+      let valueRange;
+      if (this.renderMode === RenderMode.EmphasizeHighlights) {
+         valueRange = ValueRange.EmphasizeHighlights;
+      }
+      else {
+         valueRange = ValueRange.Standard;
+      }
+
+      uni.set('uLightIntensity', valueRange.lightIntensity);
+      uni.set('uAmbientIntensity', valueRange.shadow);
+      uni.set('uHighlight', valueRange.highlight);
       uni.set('uWhiteColor', glColor3.modelWhite);
       uni.set('uBlackColor', glColor3.modelBlack);
 
@@ -330,7 +344,7 @@ export class Renderer {
 
       let gl = this.gl;
       if (!this.shadowFrameBuffer) {
-         let size = 1024;
+         let size = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), 4096);
          this.shadowFrameBuffer = new glFrameBuffer(gl, size, size);
          this.shadowColorTexture = this.shadowFrameBuffer.createTexture(glTextureStyle.Color);
          this.shadowDepthTexture = this.shadowFrameBuffer.createTexture(glTextureStyle.Depth);
@@ -370,7 +384,7 @@ export class Renderer {
 
       // don't try to use the shadow texture while we're creating it
       uni.set('uUseShadows', false);
-      uni.set('uShowContours', false);
+      uni.seti('uRenderMode', RenderMode.Normal);
 
       gl.disable(gl.CULL_FACE);
 
@@ -404,9 +418,6 @@ export class Renderer {
 
          gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
-         let oldEmphasizeHighlights = this.emphasizeHighlights;
-         this.emphasizeHighlights = false;
-
          let uni = this.setStdUniforms();
          if (this.showFloor) {
 
@@ -415,7 +426,7 @@ export class Renderer {
             // cull polygons so we don't see the floor from below
             gl.enable(gl.CULL_FACE);
             gl.cullFace(gl.BACK);
-            uni.set('uShowContours', false);
+            uni.seti('uRenderMode', RenderMode.Normal);
 
             this.floor.draw();
 
@@ -425,7 +436,6 @@ export class Renderer {
          // draw the main object
          this.useCulling ? gl.enable(gl.CULL_FACE) : gl.disable(gl.CULL_FACE);
          gl.cullFace(gl.BACK);
-         this.emphasizeHighlights = oldEmphasizeHighlights;
 
          uni = this.setStdUniforms();
          this.obj.draw();
@@ -442,37 +452,34 @@ export class Renderer {
 
    private drawMiniView() {
 
-      let gl = this.gl;
-      gl.enable(gl.CULL_FACE);
-      gl.cullFace(gl.BACK);
+      if (this.showMiniView) {
+         let gl = this.gl;
+         gl.enable(gl.CULL_FACE);
+         gl.cullFace(gl.BACK);
 
-      let oldEmphasizeHighlights = this.emphasizeHighlights;
-      this.emphasizeHighlights = false;
+         let uni = this.setStdUniforms();
 
-      let uni = this.setStdUniforms();
+         let clipSpace = this.getClipSpace();
+         let projection = Mat4.makeOrtho(
+            clipSpace.left,
+            clipSpace.right,
+            clipSpace.bottom,
+            clipSpace.top,
+            clipSpace.near,
+            clipSpace.far
+         );
 
-      let clipSpace = this.getClipSpace();
-      let projection = Mat4.makeOrtho(
-         clipSpace.left,
-         clipSpace.right,
-         clipSpace.bottom,
-         clipSpace.top,
-         clipSpace.near,
-         clipSpace.far
-      );
+         uni.set('projection', projection);
+         uni.set('uOthrographic', true);
 
-      uni.set('projection', projection);
-      uni.set('uOthrographic', true);
-
-      // draw the object in the upper right at a reduced size
-      let view = Mat4.identity;
-      view.scale(this.miniSize);
-      view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.y - this.miniSize, 0]));
-      uni.set('view', view);
-      uni.set('uShowContours', this.miniViewShowContours);
-      this.obj.draw();
-
-      this.emphasizeHighlights = oldEmphasizeHighlights;
+         // draw the object in the upper right at a reduced size
+         let view = Mat4.identity;
+         view.scale(this.miniSize);
+         view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.y - this.miniSize, 0]));
+         uni.set('view', view);
+         uni.seti('uRenderMode', this.miniViewShowContours ? RenderMode.Contours : RenderMode.Normal);
+         this.obj.draw();
+      }
    }
 
    private drawBall() {
@@ -498,7 +505,6 @@ export class Renderer {
 
       // stop using the shadowmap
       uni.set('uUseShadows', false);
-      uni.set('uShowContours', false);
 
       let view = Mat4.identity;
       view.scale(this.miniSize);
@@ -506,11 +512,11 @@ export class Renderer {
       uni.set('view', view);
       uni.set('uWhiteColor', this.ballColor);
       uni.set('uBlackColor', htmlColor.black.toGlColor());
-      uni.set('uShowContours', this.showContours);
+      uni.seti('uRenderMode', this.renderMode);
       this.ball.draw();
 
       uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
-      uni.set('uShowContours', false);
+      uni.seti('uRenderMode', RenderMode.Normal);
 
       // back out angles as if looking down the z-axis
       let x = this.uLightDirection.x;
@@ -537,28 +543,5 @@ export class Renderer {
       uni.set('uHighlight', ValueRange.Standard.highlight);
       uni.set('uAmbientIntensity', 0.4);
       this.arrow.draw();
-   }
-
-   /**
-    * Processes a click/touch event at the designated coordinates. If a hit
-    * occurs, the clicked on view is swapped for the primary view and true
-    * is returned. If no hit occurs, false is returned.
-    * 
-    * @param x The x coordinate [0-1].
-    * @param y The y coordinate [0-1].
-    * @returns true if a hit on one of the views occurs.
-    */
-   public click(x: number, y: number): boolean {
-
-      // TODO adjust for aspect ratio
-      if (this.showMiniView) {
-         if (x > (1 - this.miniSize) && y > (1 - this.miniSize)) {
-            this.showContours = !this.showContours;
-            this.render();
-            return true;
-         }
-      }
-
-      return false;
    }
 }

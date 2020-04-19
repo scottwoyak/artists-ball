@@ -2,6 +2,7 @@ import { ISliderSetup, Slider } from "./Slider";
 import { Checkbox, ICheckboxSetup } from "./Checkbox";
 import { ICtrl } from "./ICtrl";
 import { isMobile } from "./Globals";
+import { IRadiobuttonSetup, Radiobutton } from "./Radiobutton";
 
 export type MenuItemFunction = () => void;
 export type MenuItemFunctionBool = (value: boolean) => void;
@@ -190,6 +191,17 @@ class Menu {
       );
 
       let ctrl = new Checkbox(div, setup);
+      this.ctrls.push(ctrl);
+   }
+
+   public addRadiobutton(setup: IRadiobuttonSetup) {
+      let div = this.addItem(
+         '',
+         () => { }, // do nothing on click
+         { closeOnClick: false }
+      );
+
+      let ctrl = new Radiobutton(div, setup);
       this.ctrls.push(ctrl);
    }
 }

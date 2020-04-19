@@ -1,9 +1,9 @@
 import { Slider } from "./Slider";
 import { toRad, isMobile } from "./Globals";
-import { Renderer, Contour } from "./Renderer";
+import { Renderer, Contour, RenderMode } from "./Renderer";
 import { Mat4 } from "./Mat";
 import { Vec4, Vec2 } from "./Vec";
-import { ThresholdCtrl } from "./ThresholdCtrl";
+import { ValuePlanesCtrl } from "./ValuePlanesCtrl";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { ModelLoader } from "./ModelLoader";
 import { IApp } from "./IApp";
@@ -35,7 +35,7 @@ export class ValuePlanesApp implements IApp {
    private midLightSlider: Slider;
    private darkLightSlider: Slider;
    private shadowSlider: Slider;
-   private thresholdCtrl: ThresholdCtrl;
+   private thresholdCtrl: ValuePlanesCtrl;
    private loader = new ModelLoader();
 
    public constructor(query: string) {
@@ -106,7 +106,7 @@ export class ValuePlanesApp implements IApp {
       this.gl = context;
 
       this.renderer = new Renderer(this.gl);
-      this.renderer.showContours = false;
+      this.renderer.renderMode = RenderMode.Normal;
       this.renderer.miniViewShowContours = true;
 
       this.valuePlanes = new ValuePlanes(this.renderer.valueRange);
@@ -120,7 +120,7 @@ export class ValuePlanesApp implements IApp {
    }
 
    private createCtrlsElements(parent: HTMLElement) {
-      this.thresholdCtrl = new ThresholdCtrl(
+      this.thresholdCtrl = new ValuePlanesCtrl(
          parent,
          this.valuePlanes,
          (value: number) => {
@@ -300,7 +300,7 @@ export class ValuePlanesApp implements IApp {
          return true;
       }
       else if (pos.x > canvasWidth - miniWidth && pos.y < miniWidth) {
-         this.renderer.showContours = !this.renderer.showContours;
+         this.renderer.renderMode = this.renderer.renderMode === RenderMode.Normal ? RenderMode.Contours : RenderMode.Normal;
          this.renderer.miniViewShowContours = !this.renderer.miniViewShowContours;
          this.dirty = true;
          return true;

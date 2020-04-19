@@ -1,5 +1,5 @@
 import { toRad, isMobile } from "./Globals";
-import { Renderer, Contour } from "./Renderer";
+import { Renderer, Contour, RenderMode } from "./Renderer";
 import { Mat4 } from "./Mat";
 import { Vec4, Vec2 } from "./Vec";
 import { NormalType } from "./TriangleObj";
@@ -12,6 +12,7 @@ import { Menubar, SubMenu } from "./Menu";
 import { glColor3 } from "./glColor";
 import { Slider } from "./Slider";
 import { Checkbox } from "./Checkbox";
+import { Radiobutton } from "./Radiobutton";
 
 enum PointerMode {
    View,
@@ -124,6 +125,7 @@ export class ViewerApp implements IApp {
                break;
          }
       }
+
       document.onkeypress = (event: KeyboardEvent) => {
          switch (event.key) {
 
@@ -133,7 +135,7 @@ export class ViewerApp implements IApp {
                break;
 
             case 'c':
-               this.renderer.showContours = !this.renderer.showContours;
+               this.renderer.renderMode = (this.renderer.renderMode === RenderMode.Contours ? RenderMode.Normal : RenderMode.Contours);
                this.dirty = true;
                break;
 
@@ -209,9 +211,9 @@ export class ViewerApp implements IApp {
       subMenu.addCheckbox({
          label: 'Show Contours',
          id: 'ShowContours',
-         checked: () => this.renderer.showContours,
+         checked: () => this.renderer.renderMode === RenderMode.Contours,
          oncheck: (checkbox: Checkbox) => {
-            this.renderer.showContours = checkbox.checked;
+            this.renderer.renderMode = checkbox.checked ? RenderMode.Contours : RenderMode.Normal;
             this.dirty = true;
          }
       });
@@ -231,22 +233,39 @@ export class ViewerApp implements IApp {
       });
 
       let highlightSubMenu = subMenu.addSubMenu('Highlights', 'Highlights');
-      highlightSubMenu.addCheckbox({
-         label: 'Show Highlights',
+
+      highlightSubMenu.addRadiobutton({
+         label: 'Show',
          id: 'ShowHighlights',
-         checked: () => this.renderer.showHighlights,
-         oncheck: (checkbox: Checkbox) => {
-            this.renderer.showHighlights = checkbox.checked;
+         name: 'HighlightsGroup',
+         checked: () => this.renderer.showHighlights && this.renderer.renderModeCanToggleHighlights(),
+         oncheck: (button: Radiobutton) => {
+            this.renderer.showHighlights = true;
+            this.renderer.renderMode = RenderMode.Normal;
             this.dirty = true;
          }
       });
 
-      highlightSubMenu.addCheckbox({
-         label: 'Emphasize Highlights',
-         id: 'Emphasizelights',
-         checked: () => this.renderer.emphasizeHighlights,
-         oncheck: (checkbox: Checkbox) => {
-            this.renderer.emphasizeHighlights = checkbox.checked;
+      highlightSubMenu.addRadiobutton({
+         label: 'Hide',
+         id: 'HideHighlights',
+         name: 'HighlightsGroup',
+         checked: () => !this.renderer.showHighlights && this.renderer.renderModeCanToggleHighlights(),
+         oncheck: (button: Radiobutton) => {
+            this.renderer.showHighlights = false;
+            this.renderer.renderMode = RenderMode.Normal;
+            this.dirty = true;
+         }
+      });
+
+      highlightSubMenu.addRadiobutton({
+         label: 'Emphasize',
+         id: 'EmphasizeHighlights',
+         name: 'HighlightsGroup',
+         checked: () => this.renderer.renderMode === RenderMode.EmphasizeHighlights,
+         oncheck: (button: Radiobutton) => {
+            this.renderer.showHighlights = true;
+            this.renderer.renderMode = RenderMode.EmphasizeHighlights;
             this.dirty = true;
          }
       });
@@ -261,6 +280,48 @@ export class ViewerApp implements IApp {
             this.renderer.uShininess = slider.value;
             this.dirty = true;
          },
+      });
+
+      let shadowsSubMenu = subMenu.addSubMenu('Shadows', 'Shadows');
+      shadowsSubMenu.addRadiobutton({
+         label: 'Normal',
+         id: 'NormalShadows',
+         name: 'ShadowGroup',
+         checked: () => this.renderer.renderMode == RenderMode.Normal,
+         oncheck: (button: Radiobutton) => {
+            this.renderer.renderMode = RenderMode.Normal;
+            this.dirty = true;
+         }
+      });
+      shadowsSubMenu.addRadiobutton({
+         label: 'Highlight Terminator',
+         id: 'HighlightTerminator',
+         name: 'ShadowGroup',
+         checked: () => this.renderer.renderMode == RenderMode.HighlightTerminator,
+         oncheck: (button: Radiobutton) => {
+            this.renderer.renderMode = RenderMode.HighlightTerminator;
+            this.dirty = true;
+         }
+      });
+      shadowsSubMenu.addRadiobutton({
+         label: 'Highlight Shadow',
+         id: 'HighlightShadow',
+         name: 'ShadowGroup',
+         checked: () => this.renderer.renderMode == RenderMode.HighlightShadow,
+         oncheck: (button: Radiobutton) => {
+            this.renderer.renderMode = RenderMode.HighlightShadow;
+            this.dirty = true;
+         }
+      });
+      shadowsSubMenu.addRadiobutton({
+         label: 'Light and Shadow Only',
+         id: 'LightAndShadowOnly',
+         name: 'ShadowGroup',
+         checked: () => this.renderer.renderMode == RenderMode.LightAndShadow,
+         oncheck: (button: Radiobutton) => {
+            this.renderer.renderMode = RenderMode.LightAndShadow;
+            this.dirty = true;
+         }
       });
 
       let rotateSubMenu = subMenu.addSubMenu('Rotation', 'Rotation');

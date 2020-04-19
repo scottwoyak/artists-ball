@@ -13,6 +13,15 @@ uniform mat4 projection;
 uniform vec3 uEye;
 uniform bool uOrthographic;
 
+#define NORMAL 0
+#define CONTOURS 1
+#define LIGHT_AND_SHADOW 2
+#define HIGHLIGHT_TERMINATOR 3
+#define HIGHLIGHT_SHADOW 4
+#define EMPHASIZE_HIGHLIGHTS 5
+
+uniform int uRenderMode;
+
 // these are value between 0-1
 uniform float uLightIntensity;
 uniform float uHighlight;
@@ -30,7 +39,6 @@ uniform sampler2D uShadowTexture;
 uniform vec3 uFloorCenter;
 uniform float uFloorRadius;
 uniform bool uRenderingFloor;
-uniform bool uShowContours;
 uniform int uNumContours;
 uniform vec3 uContourColors[9];
 uniform float uContourAngles[9];
@@ -40,6 +48,8 @@ uniform float uShininess;
 // For contour shading, the minimum specular contribution required to
 // show something as a highlight
 const float SPECULAR_THRESHOLD = 0.06;
+
+bool uShowTerminator = true;
 
 bool in_shadow()
 {
@@ -197,7 +207,7 @@ void main()
    }
    else
    {
-      if (uShowContours)
+      if (uRenderMode == CONTOURS)
       {
          if (inShadow)
          {
@@ -210,18 +220,74 @@ void main()
       }
       else
       {
+         vec4 highlightColor = vec4(0.0, 0.7, 0.7, 1.0);
+
          if (inShadow)
          {
-            // when in shadow, apply slight shading as if the light
-            // were coming from the eye.
-            vec3 toShadowLight = vec3(0.0, 0.0, 1.0);
-            float val = getValueFromLight(normal, toShadowLight, toEye) / 20.0;
-            fragColor = val2Color(uAmbientIntensity + val, 1.0);
+            if (uRenderMode == HIGHLIGHT_SHADOW)
+            {
+               fragColor = highlightColor;
+            }
+            else if (uRenderMode == LIGHT_AND_SHADOW)
+            {
+               fragColor = val2Color(uAmbientIntensity, 1.0);
+            }
+            else
+            {
+               // when in shadow, apply slight shading as if the light
+               // were coming from the eye.
+               vec3 toShadowLight = vec3(0.0, 0.0, 1.0);
+               float val = getValueFromLight(normal, toShadowLight, toEye) / 20.0;
+               fragColor = val2Color(uAmbientIntensity + val, 1.0);
+            }
          }
          else
          {
-            float val = getValueFromLight(normal, toLight, toEye);
-            fragColor = val2Color(val, 1.0);
+            if (uRenderMode == LIGHT_AND_SHADOW)
+            {
+               fragColor = val2Color(uAmbientIntensity + 0.75 * uLightIntensity, 1.0);
+               vec4 shadowColor = val2Color(uAmbientIntensity, 1.0);
+
+               float vDot = dot(normal, toLight);
+               float angle = (180.0 / 3.1415926) * acos(vDot);
+               float range = 8.0; // degrees
+               float percentTerminator = clamp((angle - (90.0 - range)) / (range / 2.0), 0.0, 1.0);
+               fragColor = mix(fragColor, shadowColor, percentTerminator);
+            }
+            else if (uRenderMode == HIGHLIGHT_SHADOW || uRenderMode == HIGHLIGHT_TERMINATOR)
+            {
+               // fade highlighting from terminator through the shadow
+               float val = getValueFromLight(normal, toLight, toEye);
+               fragColor = val2Color(val, 1.0);
+
+               float vDot = dot(normal, toLight);
+               float angle = (180.0 / 3.1415926) * acos(vDot);
+               float range = 8.0; // degrees
+               float percentTerminator;
+
+               if (uRenderMode == HIGHLIGHT_SHADOW)
+               {
+                  percentTerminator = clamp((angle - (90.0 - range)) / (range), 0.0, 1.0);
+               }
+               else
+               {
+                  if (angle > 90.0)
+                  {
+                     range = 2.0;
+                     percentTerminator = clamp(1.0 - (angle - 90.0) / range, 0.0, 1.0);
+                  }
+                  else
+                  {
+                     percentTerminator = clamp((angle - (90.0 - range)) / (range), 0.0, 1.0);
+                  }
+               }
+               fragColor = mix(fragColor, highlightColor, percentTerminator);
+            }
+            else
+            {
+               float val = getValueFromLight(normal, toLight, toEye);
+               fragColor = val2Color(val, 1.0);
+            }
          }
       }
    }
