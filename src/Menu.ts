@@ -1,7 +1,6 @@
 import { ISliderSetup, Slider } from "./Slider";
 import { Checkbox, ICheckboxSetup } from "./Checkbox";
 import { ICtrl } from "./ICtrl";
-import { isMobile } from "./Globals";
 import { IRadiobuttonSetup, Radiobutton } from "./Radiobutton";
 
 export type MenuItemFunction = () => void;
@@ -124,21 +123,24 @@ class Menu {
       subMenu.show();
 
       // position the new menu
+      let bodyRect = document.body.getBoundingClientRect();
+      let menuItemRect = menuItem.getBoundingClientRect();
+      let subMenuRect = subMenu.div.getBoundingClientRect();
       if (location === MenuLocation.Below) {
-         subMenu.div.style.left = menuItem.offsetLeft + 'px'
-         subMenu.div.style.top = (menuItem.offsetTop + menuItem.offsetHeight) + 'px'
+         subMenu.div.style.left = menuItemRect.left + 'px'
+         subMenu.div.style.top = menuItemRect.bottom + 'px'
       }
       else if (location === MenuLocation.Right) {
-         let rect = menuItem.getBoundingClientRect();
-         let left = menuItem.offsetWidth;
-         let innerWidth = window.innerWidth;
-         if (rect.right + subMenu.div.offsetWidth > innerWidth) {
-            left -= ((rect.right + subMenu.div.offsetWidth) - innerWidth);
+
+         let left = menuItemRect.left + 0.5 * menuItemRect.width;
+         if (left + subMenuRect.width > bodyRect.width) {
+            left = menuItemRect.left - subMenuRect.width;
          }
          subMenu.div.style.left = left + 'px';
-         let top = menuItem.offsetTop;
-         if (top + subMenu.div.clientHeight > window.innerHeight) {
-            top = window.innerHeight - subMenu.div.clientHeight;
+
+         let top = menuItemRect.top;
+         if (top + subMenuRect.height > bodyRect.height) {
+            top = bodyRect.height - subMenuRect.height;
          }
          subMenu.div.style.top = top + 'px'
       }
@@ -161,6 +163,10 @@ class Menu {
          callback();
       }
       this.div.appendChild(item);
+
+      item.onmouseenter = () => {
+         this.hideDown();
+      }
 
       return item;
    }
@@ -252,9 +258,8 @@ export class SubMenu extends Menu {
       let span = document.getElementById(spanId) as HTMLSpanElement;
       let div = span.parentElement as HTMLDivElement;
       div.onmouseenter = () => {
-         this.showSubMenu(div, subMenu, MenuLocation.Right);
          this.hideDown();
-         subMenu.show();
+         this.showSubMenu(div, subMenu, MenuLocation.Right);
       };
 
       return subMenu;
