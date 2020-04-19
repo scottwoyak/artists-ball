@@ -1,5 +1,5 @@
 import { toRad, isMobile } from "./Globals";
-import { Renderer, Contour, RenderMode } from "./Renderer";
+import { Renderer, Contour, RenderMode, Reset } from "./Renderer";
 import { Mat4 } from "./Mat";
 import { Vec4, Vec2 } from "./Vec";
 import { NormalType } from "./TriangleObj";
@@ -199,6 +199,25 @@ export class ViewerApp implements IApp {
 
       let subMenu: SubMenu;
       subMenu = menubar.addSubMenu('Options', 'Options');
+
+      let resetSubMenu = subMenu.addSubMenu('Reset', 'Reset');
+      resetSubMenu.addItem('All', () => {
+         this.renderer.reset(Reset.All);
+         this.dirty = true;
+      });
+      resetSubMenu.addItem('Lights', () => {
+         this.renderer.reset(Reset.Lights);
+         this.dirty = true;
+      });
+      resetSubMenu.addItem('View', () => {
+         this.renderer.reset(Reset.View);
+         this.dirty = true;
+      });
+      resetSubMenu.addItem('Rendering', () => {
+         this.renderer.reset(Reset.Rendering);
+         this.dirty = true;
+      });
+
       subMenu.addCheckbox({
          label: 'Show Floor',
          id: 'ShowFloor',
@@ -525,11 +544,6 @@ export class ViewerApp implements IApp {
 
       if (pos.x < miniWidth && pos.y < miniHeight) {
          this.toggleMode();
-         return true;
-      }
-      else if (pos.x > canvasWidth - miniWidth && pos.y < miniWidth) {
-         this.renderer.resetView();
-         this.dirty = true;
          return true;
       }
 

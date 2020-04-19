@@ -19,6 +19,7 @@ import { ValueRange } from './ValueRange';
 const BALL_RADIUS = 0.5;
 const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, -1.5];
 const INITIAL_VIEW = Mat4.identity;
+const INITIAL_SHININESS = 15;
 
 export class Contour {
    public color: glColor3;
@@ -45,6 +46,13 @@ export enum RenderMode {
    HighlightTerminator = 3,
    HighlightShadow = 4,
    EmphasizeHighlights = 5,
+}
+
+export enum Reset {
+   All,
+   View,
+   Lights,
+   Rendering
 }
 
 /**
@@ -88,7 +96,7 @@ export class Renderer {
    public useCulling = true;
    public miniViewShowContours = false;
    public showHighlights = true;
-   public uShininess = 15;
+   public uShininess = INITIAL_SHININESS;
    public lockFloor = false;
 
    public renderMode = RenderMode.Normal;
@@ -284,15 +292,34 @@ export class Renderer {
       uni.set('uFloorRadius', radius);
 
       // reset the view and the light
-      this.resetView();
+      this.reset(Reset.All);
       this.uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
    }
 
-   public resetView() {
-      this.view = INITIAL_VIEW.clone();
-      this.uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
-      this.obj.clearTransforms();
-      this.objScale = 1.0;
+   public reset(what: Reset) {
+      switch (what) {
+         case Reset.All:
+            this.reset(Reset.Lights);
+            this.reset(Reset.Rendering);
+            this.reset(Reset.View);
+
+            break;
+         case Reset.Lights:
+            this.uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
+            break;
+
+         case Reset.View:
+            this.view = INITIAL_VIEW.clone();
+            this.obj.clearTransforms();
+            this.objScale = 1.0;
+            break;
+
+         case Reset.Rendering:
+            this.renderMode = RenderMode.Normal;
+            this.showHighlights = true;
+            this.uShininess = INITIAL_SHININESS;
+            break;
+      }
    }
 
    public render(): void {
