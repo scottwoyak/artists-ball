@@ -126,7 +126,7 @@ export class ViewerApp implements IApp {
          }
       }
 
-      document.onkeypress = (event: KeyboardEvent) => {
+      document.onkeypress = async (event: KeyboardEvent) => {
          switch (event.key) {
 
             case 'a':
@@ -176,9 +176,59 @@ export class ViewerApp implements IApp {
                break;
 
             case 't':
-               this.renderer.tObj.mirror(62, false);
-               this.renderer.setModel(this.renderer.tObj);
-               this.dirty = true;
+               let files = [
+                  { label: 'Neutral', file: 'Male 02_01_Neutral.obj' },
+                  { label: 'Neutral, Eyes Closed', file: 'Male 02_02_Neutral Eyes Closed.obj' },
+                  { label: 'Neutral, Lips Parted', file: 'Male 02_038_Neutral Lips Parted.obj' },
+                  { label: 'Smile, Mouth Closed', file: 'Male 02_03_Smile Mouth Closed.obj' },
+                  { label: 'Smile, Mouth Open', file: 'Male 02_04_Smile Mouth Open.obj' },
+                  { label: 'Look Up', file: 'Male 02_05_Look Up.obj' },
+                  { label: 'Look Down', file: 'Male 02_06_Look Down.obj' },
+                  { label: 'Look Left', file: 'Male 02_07_Look Left.obj' },
+                  { label: 'Look Right', file: 'Male 02_08_Look Right.obj' },
+                  { label: 'Jaw, Wide Open', file: 'Male 02_09_Jaw Wide Open.obj' },
+                  { label: 'Jaw, Side Right', file: 'Male 02_018_Jaw Side Right.obj' },
+                  { label: 'Jaw, Side Left', file: 'Male 02_019_Jaw Side Left.obj' },
+                  { label: 'Jaw, Thrust', file: 'Male 02_020_Jaw Thrust.obj' },
+                  { label: 'Jaw, Clench', file: 'Male 02_021_Jaw Clench.obj' },
+                  { label: 'Tighten Lips', file: 'Male 02_010_Tighten Lips.obj' },
+                  { label: 'Face Compression', file: 'Male 02_011_Face Compression.obj' },
+                  { label: 'Pucker', file: 'Male 02_012_Pucker.obj' },
+                  { label: 'Neck Tighten', file: 'Male 02_015_Neck Tighten.obj' },
+                  { label: 'Brows Up', file: 'Male 02_016_Brows Up.obj' },
+                  { label: 'Brows Down', file: 'Male 02_017_Brows Down.obj' },
+                  { label: 'Cheek Puff', file: 'Male 02_022_Cheek Puff.obj' },
+                  { label: 'Cheek Suck', file: 'Male 02_023_Cheek Suck.obj' },
+                  { label: 'Cheeks, Dimple', file: 'Male 02_027_Dimple Cheeks.obj' },
+                  { label: 'Sounds: "CH"', file: 'Male 02_024_Phoneme CH.obj' },
+                  { label: 'Sounds: "FV"', file: 'Male 02_025_Phoneme FV.obj' },
+                  { label: 'Flare Lips', file: 'Male 02_026_Flare Libs.obj' },
+                  { label: 'Snarl', file: 'Male 02_013_Snarl.obj' },
+                  { label: 'Frown', file: 'Male 02_014_Frown.obj' },
+                  { label: 'Happy', file: 'Male 02_028_Happy.obj' },
+                  { label: 'Surpize', file: 'Male 02_029_Surprize.obj' },
+                  { label: 'Sad', file: 'Male 02_030_Sad.obj' },
+                  { label: 'Angry', file: 'Male 02_031_Angry.obj' },
+                  { label: 'Pain', file: 'Male 02_032_Pain.obj' },
+                  { label: 'Fear', file: 'Male 02_033_Fear.obj' },
+                  { label: 'Disgust', file: 'Male 02_034_Disgust.obj' },
+                  { label: 'Shock', file: 'Male 02_035_Shock.obj' },
+                  { label: 'Rage', file: 'Male 02_036_Rage.obj' },
+                  { label: 'Tongue', file: 'Male 02_037_Tongue.obj' },
+               ];
+
+
+               for (let i = 0; i < files.length; i++) {
+                  await this.loadModelPromise(files[i].file);
+
+                  this.renderer.obj.rotY(toRad(180));
+                  this.renderer.obj.optimize(NormalType.Smooth);
+                  this.renderer.obj.applyXForm();
+                  this.renderer.tObj.source = 'https://www.3dscanscore.com';
+                  this.save();
+                  this.dirty = true;
+               }
+
                break;
 
             case 'v':
@@ -452,6 +502,47 @@ export class ViewerApp implements IApp {
       }
    }
 
+   private loadModelPromise(query: string): Promise<void> {
+
+      // if nothing was specified, load an interesting model
+      if (!query) {
+         let num = Math.round(0.5 + 16 * Math.random());
+         query = 'Pose_0' + num + '.blob';
+      }
+
+      let lc = query.toLowerCase();
+      if (lc.endsWith('.obj') || lc.endsWith('.blob')) {
+
+         let statusFunc = (status: string) => {
+            this.overlay.innerText = status;
+         }
+
+         return this.loader.loadModelFile(query, statusFunc)
+            .then((tObj) => {
+
+               this.renderer.setModel(tObj);
+               this.loader.orient(this.renderer.obj);
+
+               if (query.startsWith('Head') || query.startsWith('Teapot')) {
+                  this.renderer.useCulling = false;
+               }
+
+               this.animate = false;
+               this.dirty = true;
+               this.pointerMode = PointerMode.View;
+               if (!this.animationFrame) {
+                  this.animationFrame = requestAnimationFrame(() => this.tick());
+               }
+            });
+      }
+      else {
+         // TODO multi line error messages not supported
+         let msg = 'Unknown Model:' + query;
+         this.overlay.innerText = msg;
+         return Promise.reject(msg)
+      }
+   }
+
    private toggleMode() {
       switch (this.pointerMode) {
          case PointerMode.View:
@@ -618,6 +709,8 @@ export class ViewerApp implements IApp {
       let tObj = this.renderer.tObj;
 
       let name = tObj.name.split('.')[0] + '.blob';
+      name = name.replace(' ', '_');
+      tObj.name = name;
       saveAs(tObj.toBlob(), name);
    }
 }

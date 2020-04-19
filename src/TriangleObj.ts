@@ -13,6 +13,7 @@ export enum NormalType {
 
 export class TriangleObjData {
    name: string;
+   source: string;
    vertices: Float32Array;
    normals: Float32Array;
    indices: Int32Array;
@@ -31,6 +32,7 @@ export class TriangleObj {
    public indices: number[] = [];
    public box = new BoundingBox();
    public name: string;
+   public source: string;
 
    public get numVertices() {
       return this.vertices.length / 3;
@@ -377,6 +379,7 @@ export class TriangleObj {
          FileType: 'Binary OBJ',
          Version: '1.0',
          Name: this.name,
+         Source: this.source,
       }
 
       // get the raw data
@@ -406,6 +409,7 @@ export class TriangleObj {
       let bFile = await BlobFile.extract(blob);
 
       data.name = bFile.info.Name;
+      data.source = bFile.info.Source;
       data.vertices = new Float32Array(await bFile.parts[0].arrayBuffer());
       data.normals = new Float32Array(await bFile.parts[1].arrayBuffer());
       data.indices = new Int32Array(await bFile.parts[2].arrayBuffer());

@@ -6,78 +6,205 @@ export function createModelsMenu(menubar: Menubar, loadModel: LoadModelFunction)
 
    let menu = menubar.addSubMenu('Models', 'Models');
 
-   let subMenu;
+   let subMenu: SubMenu;
    subMenu = menu.addSubMenu('Objects', 'ObjectsSubMenu');
-   subMenu.addItem('Football', () => loadModel('Football.blob'));
-   subMenu.addItem('Pill', () => loadModel('Pill.blob'));
-   subMenu.addItem('Pill Bottle', () => loadModel('PillBottle.blob'));
-   subMenu.addItem('Soda Can', () => loadModel('SodaCan.blob'));
-   subMenu.addItem('Soccer Ball', () => loadModel('SoccerBall.blob'));
-   subMenu.addItem('Spoon', () => loadModel('Spoon.blob'));
-   subMenu.addItem('Teapot', () => loadModel('Teapot.blob'));
-   subMenu.addItem('Torus (Donut)', () => loadModel('Torus.blob'));
-   subMenu.addItem('Torus Knot', () => loadModel('TorusKnot.blob'));
-   subMenu.addItem('Vase', () => loadModel('Vase.blob'));
-   subMenu.addItem('Vitamin', () => loadModel('Vitamin.blob'));
-   subMenu.addItem('Wine Bottle', () => loadModel('WineBottle.blob'));
+   let files = [
+      { label: 'Football', file: 'Football.blob' },
+      { label: 'Pill', file: 'Pill.blob' },
+      { label: 'Pill Bottle', file: 'PillBottle.blob' },
+      { label: 'Soda Can', file: 'SodaCan.blob' },
+      { label: 'Soccer Ball', file: 'SoccerBall.blob' },
+      { label: 'Spoon', file: 'Spoon.blob' },
+      { label: 'Teapot', file: 'Teapot.blob' },
+      { label: 'Torus (Donut)', file: 'Torus.blob' },
+      { label: 'Torus Knot', file: 'TorusKnot.blob' },
+      { label: 'Vase', file: 'Vase.blob' },
+      { label: 'Vitamin', file: 'Vitamin.blob' },
+      { label: 'Wine Bottle', file: 'WineBottle.blob' },
+   ];
+
+   files.forEach((item) => {
+      subMenu.addItem(item.label, () => { loadModel(item.file) });
+   });
 
    subMenu = menu.addSubMenu('Sculptures', 'SculpturesSubMenu');
-   subMenu.addItem('Belvedere Torso', () => loadModel('BelvedereTorso.blob'));
-   subMenu.addItem('David', () => loadModel('David.blob'));
-   subMenu.addItem('Head of David', () => loadModel('HeadOfDavid.blob'));
-   subMenu.addItem('Lacoon and His Sons', () => loadModel('LaocoonAndHisSons.blob'));
-   subMenu.addItem('Nefertiti', () => loadModel('Nefertiti.blob'));
-   subMenu.addItem('Thinker', () => loadModel('Thinker.blob'));
-   subMenu.addItem('Venus de Milo', () => loadModel('VenusDeMilo.blob'));
-   subMenu.addItem('Venus of Willendorf', () => loadModel('VenusOfWillendorf.blob'));
-   subMenu.addItem('Winged Victory of Samothrace', () => loadModel('WingedVictory.blob'));
-   subMenu.addItem('Winged Victory of Samothrace w/Base', () => loadModel('WingedVictoryWithBase.blob'));
+   files = [
+      { label: 'Belvedere Torso', file: 'BelvedereTorso.blob' },
+      { label: 'David', file: 'David.blob' },
+      { label: 'Head of David', file: 'HeadOfDavid.blob' },
+      { label: 'Lacoon and His Sons', file: 'LaocoonAndHisSons.blob' },
+      { label: 'Nefertiti', file: 'Nefertiti.blob' },
+      { label: 'Thinker', file: 'Thinker.blob' },
+      { label: 'Venus de Milo', file: 'VenusDeMilo.blob' },
+      { label: 'Venus of Willendorf', file: 'VenusOfWillendorf.blob' },
+      { label: 'Winged Victory of Samothrace', file: 'WingedVictory.blob' },
+      { label: 'Winged Victory of Samothrace w/Base', file: 'WingedVictoryWithBase.blob' },
+   ];
+
+   files.forEach((item) => {
+      subMenu.addItem(item.label, () => loadModel(item.file));
+   });
 
    subMenu = menu.addSubMenu('Anatomy', 'AnatomySubMenu');
-   subMenu.addItem('Skull 1', () => loadModel('Skull1.blob'));
-   subMenu.addItem('Skull 2', () => loadModel('Skull2.blob'));
-   subMenu.addItem('Skull 3', () => loadModel('Skull3.blob'));
-   subMenu.addItem('Skull 4', () => loadModel('Skull4.blob'));
-   subMenu.addItem('Pelvis', () => loadModel('Pelvis.blob'));
-   subMenu.addItem('Clavicle', () => loadModel('Clavicle.blob'));
-   subMenu.addItem('Scapula', () => loadModel('Scapula.blob'));
-   subMenu.addItem('Humerus', () => loadModel('Humerus.blob'));
-   subMenu.addItem('Head Ecorche', () => loadModel('HeadEcorche.blob'));
-   subMenu.addItem('Head Ecorche 2', () => loadModel('HeadEcorche2.blob'));
-   subMenu.addItem('Head Ecorche 3', () => loadModel('HeadEcorche3.blob'));
-   subMenu.addItem('Head Ecorche 4', () => loadModel('HeadEcorche4.blob'));
+   files = [
+      { label: 'Skull 1', file: 'Skull1.blob' },
+      { label: 'Skull 2', file: 'Skull2.blob' },
+      { label: 'Skull 3', file: 'Skull3.blob' },
+      { label: 'Skull 4', file: 'Skull4.blob' },
+      { label: 'Pelvis', file: 'Pelvis.blob' },
+      { label: 'Clavicle', file: 'Clavicle.blob' },
+      { label: 'Scapula', file: 'Scapula.blob' },
+      { label: 'Humerus', file: 'Humerus.blob' },
+      { label: 'Head Ecorche', file: 'HeadEcorche.blob' },
+      { label: 'Head Ecorche 2', file: 'HeadEcorche2.blob' },
+      { label: 'Head Ecorche 3', file: 'HeadEcorche3.blob' },
+      { label: 'Head Ecorche 4', file: 'HeadEcorche4.blob' },
+   ];
+
+   files.forEach((item) => {
+      subMenu.addItem(item.label, () => loadModel(item.file));
+   });
 
    subMenu = menu.addSubMenu('Poses', 'PosesSubMenu');
-   subMenu.addItem('Pose 1', () => loadModel('Pose_01.blob'));
-   subMenu.addItem('Pose 2', () => loadModel('Pose_02.blob'));
-   subMenu.addItem('Pose 3', () => loadModel('Pose_03.blob'));
-   subMenu.addItem('Pose 4', () => loadModel('Pose_04.blob'));
-   subMenu.addItem('Pose 5', () => loadModel('Pose_05.blob'));
-   subMenu.addItem('Pose 6', () => loadModel('Pose_06.blob'));
-   subMenu.addItem('Pose 7', () => loadModel('Pose_07.blob'));
-   subMenu.addItem('Pose 8', () => loadModel('Pose_08.blob'));
-   subMenu.addItem('Pose 9', () => loadModel('Pose_09.blob'));
-   subMenu.addItem('Pose 10', () => loadModel('Pose_010.blob'));
-   subMenu.addItem('Pose 11', () => loadModel('Pose_011.blob'));
-   subMenu.addItem('Pose 12', () => loadModel('Pose_012.blob'));
-   subMenu.addItem('Pose 13', () => loadModel('Pose_013.blob'));
-   subMenu.addItem('Pose 14', () => loadModel('Pose_014.blob'));
-   subMenu.addItem('Pose 15', () => loadModel('Pose_015.blob'));
-   subMenu.addItem('Pose 16', () => loadModel('Pose_016.blob'));
-   subMenu.addItem('Female Pose', () => loadModel('Pose1.blob'));
+   files = [
+      { label: 'Pose 1', file: 'Pose_01.blob' },
+      { label: 'Pose 2', file: 'Pose_02.blob' },
+      { label: 'Pose 3', file: 'Pose_03.blob' },
+      { label: 'Pose 4', file: 'Pose_04.blob' },
+      { label: 'Pose 5', file: 'Pose_05.blob' },
+      { label: 'Pose 6', file: 'Pose_06.blob' },
+      { label: 'Pose 7', file: 'Pose_07.blob' },
+      { label: 'Pose 8', file: 'Pose_08.blob' },
+      { label: 'Pose 9', file: 'Pose_09.blob' },
+      { label: 'Pose 10', file: 'Pose_010.blob' },
+      { label: 'Pose 11', file: 'Pose_011.blob' },
+      { label: 'Pose 12', file: 'Pose_012.blob' },
+      { label: 'Pose 13', file: 'Pose_013.blob' },
+      { label: 'Pose 14', file: 'Pose_014.blob' },
+      { label: 'Pose 15', file: 'Pose_015.blob' },
+      { label: 'Pose 16', file: 'Pose_016.blob' },
+      { label: 'Female Pose', file: 'Pose1.blob' },
+   ];
+
+   files.forEach((item) => {
+      subMenu.addItem(item.label, () => loadModel(item.file));
+   });
 
    subMenu = menu.addSubMenu('Heads', 'HeadsSubMenu');
-   subMenu.addItem('Head 1', () => loadModel('Head1.blob'));
-   subMenu.addItem('Head 2', () => loadModel('Head2.blob'));
-   subMenu.addItem('Head 3', () => loadModel('Head3.blob'));
-   subMenu.addItem('Head 4', () => loadModel('Head4.blob'));
-   subMenu.addItem('Head 5', () => loadModel('Head5.blob'));
-   subMenu.addItem('Head 6', () => loadModel('Head6.blob'));
-   subMenu.addItem('Head 7', () => loadModel('Head7.blob'));
-   subMenu.addItem('Head 8', () => loadModel('Head8.blob'));
-   subMenu.addItem('Head 9', () => loadModel('Head9.blob'));
-   subMenu.addItem('Head 10', () => loadModel('Head10.blob'));
-   subMenu.addItem('Head 11', () => loadModel('Head.blob'));
-   subMenu.addItem('Female Head', () => loadModel('FemaleHead.blob'));
-   subMenu.addItem('Arnold', () => loadModel('Arnold.blob'));
+   files = [
+      { label: 'Head 1', file: 'Head1.blob' },
+      { label: 'Head 2', file: 'Head2.blob' },
+      { label: 'Head 3', file: 'Head3.blob' },
+      { label: 'Head 4', file: 'Head4.blob' },
+      { label: 'Head 5', file: 'Head5.blob' },
+      { label: 'Head 6', file: 'Head6.blob' },
+      { label: 'Head 7', file: 'Head7.blob' },
+      { label: 'Head 8', file: 'Head8.blob' },
+      { label: 'Head 9', file: 'Head9.blob' },
+      { label: 'Head 10', file: 'Head10.blob' },
+      { label: 'Head 11', file: 'Head.blob' },
+      { label: 'Female Head', file: 'FemaleHead.blob' },
+      { label: 'Arnold', file: 'Arnold.blob' },
+   ];
+
+   files.forEach((item) => {
+      subMenu.addItem(item.label, () => loadModel(item.file));
+   });
+
+   let expressionsSubMenu = menu.addSubMenu('Expressions', 'ExpressionsSubMenu');
+
+   files = [
+      { label: 'Neutral', file: 'Male_02_01_Neutral.blob' },
+      { label: 'Neutral, Eyes Closed', file: 'Male_02_02_Neutral_Eyes_Closed.blob' },
+      { label: 'Neutral, Lips Parted', file: 'Male_02_038_Neutral_Lips_Parted.blob' },
+   ];
+
+   files.forEach((item) => {
+      expressionsSubMenu.addItem(item.label, () => loadModel(item.file));
+   });
+
+   let anatomySubMenu = expressionsSubMenu.addSubMenu('Anatomy', 'ExpressionAnatomySubMenu');
+
+   subMenu = anatomySubMenu.addSubMenu('Eyes', 'EyesSubMenu');
+   files = [
+      { label: 'Look Up', file: 'Male_02_05_Look_Up.blob' },
+      { label: 'Look Down', file: 'Male_02_06_Look_Down.blob' },
+      { label: 'Look Left', file: 'Male_02_07_Look_Left.blob' },
+      { label: 'Look Right', file: 'Male_02_08_Look_Right.blob' },
+      { label: 'Brows Up', file: 'Male_02_016_Brows_Up.blob' },
+      { label: 'Brows Down', file: 'Male_02_017_Brows_Down.blob' },
+   ];
+
+   files.forEach((item) => {
+      subMenu.addItem(item.label, () => loadModel(item.file));
+   });
+
+   subMenu = anatomySubMenu.addSubMenu('Jaw', 'JawSubMenu');
+   files = [
+      { label: 'Wide Open', file: 'Male_02_09_Jaw_Wide_Open.blob' },
+      { label: 'Side Right', file: 'Male_02_018_Jaw_Side_Right.blob' },
+      { label: 'Side Left', file: 'Male_02_019_Jaw_Side_Left.blob' },
+      { label: 'Thrust', file: 'Male_02_020_Jaw_Thrust.blob' },
+      { label: 'Clench', file: 'Male_02_021_Jaw_Clench.blob' },
+   ];
+
+   files.forEach((item) => {
+      subMenu.addItem(item.label, () => loadModel(item.file));
+   });
+
+   subMenu = anatomySubMenu.addSubMenu('Cheeks', 'CheeksSubMenu');
+   files = [
+      { label: 'Puff', file: 'Male_02_022_Cheek_Puff.blob' },
+      { label: 'Suck', file: 'Male_02_023_Cheek_Suck.blob' },
+      { label: 'Dimple', file: 'Male_02_027_Dimple_Cheeks.blob' },
+   ];
+
+   files.forEach((item) => {
+      subMenu.addItem(item.label, () => loadModel(item.file));
+   });
+
+   subMenu = anatomySubMenu.addSubMenu('Lips', 'LipsSubMenu');
+   files = [
+      { label: 'Tighten', file: 'Male_02_010_Tighten Lips.blob' },
+      { label: 'Pucker', file: 'Male_02_012_Pucker.blob' },
+      { label: 'Flare', file: 'Male_02_026_Flare_Lips.blob' },
+      { label: 'Sounds: "CH"', file: 'Male_02_024_Phoneme_CH.blob' },
+      { label: 'Sounds: "FV"', file: 'Male_02_025_Phoneme_FV.blob' },
+   ];
+
+   files.forEach((item) => {
+      subMenu.addItem(item.label, () => loadModel(item.file));
+   });
+
+   files = [
+      { label: 'Face Compression', file: 'Male_02_011_Face_Compression.blob' },
+      { label: 'Neck Tighten', file: 'Male_02_015_Neck_Tighten.blob' },
+      { label: 'Tongue', file: 'Male_02_037_Tongue.blob' },
+   ];
+
+   files.forEach((item) => {
+      anatomySubMenu.addItem(item.label, () => loadModel(item.file));
+   });
+
+   subMenu = expressionsSubMenu.addSubMenu('Emotion', 'EmotionSubMenu');
+
+   files = [
+      { label: 'Smile, Mouth Closed', file: 'Male_02_03_Smile_Mouth_Closed.blob' },
+      { label: 'Smile, Mouth Open', file: 'Male_02_04_Smile_Mouth_Open.blob' },
+      { label: 'Snarl', file: 'Male_02_013_Snarl.blob' },
+      { label: 'Frown', file: 'Male_02_014_Frown.blob' },
+      { label: 'Happy', file: 'Male_02_028_Happy.blob' },
+      { label: 'Surprise', file: 'Male_02_029_Surprise.blob' },
+      { label: 'Sad', file: 'Male_02_030_Sad.blob' },
+      { label: 'Angry', file: 'Male_02_031_Angry.blob' },
+      { label: 'Pain', file: 'Male_02_032_Pain.blob' },
+      { label: 'Fear', file: 'Male_02_033_Fear.blob' },
+      { label: 'Disgust', file: 'Male_02_034_Disgust.blob' },
+      { label: 'Shock', file: 'Male_02_035_Shock.blob' },
+      { label: 'Rage', file: 'Male_02_036_Rage.blob' },
+   ];
+
+   files.forEach((item) => {
+      subMenu.addItem(item.label, () => loadModel(item.file));
+   });
 }
