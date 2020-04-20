@@ -468,7 +468,7 @@ export class ViewerApp implements IApp {
                this.renderer.setModel(tObj);
                this.loader.orient(this.renderer.obj);
 
-               if (query.startsWith('Head') || query.startsWith('Teapot')) {
+               if (query.startsWith('Head') || query.startsWith('Teapot') || query.startsWith('Male_02')) {
                   this.renderer.useCulling = false;
                }
 
