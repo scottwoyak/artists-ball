@@ -5,14 +5,14 @@ type LoadModelFunction = (file: string) => void;
 interface iSubMenu {
    label: string,
    id: string,
-   menuItems: (iSubMenu | iMenuItem)[]
+   menuItems: (iSubMenu | IMenuItemSetup)[]
 }
-interface iMenuItem {
+interface IMenuItemSetup {
    label: string,
    file: string,
 }
 
-let menuItems: (iSubMenu | iMenuItem)[] = [
+let menuItems: (iSubMenu | IMenuItemSetup)[] = [
    {
       label: 'Objects', id: 'ObjectsSubMenu', menuItems: [
          { label: 'Football', file: 'Football.blob' },
@@ -186,7 +186,7 @@ let menuItems: (iSubMenu | iMenuItem)[] = [
 
 ];
 
-function addItems(menu: Menubar, items: (iMenuItem | iSubMenu)[], loadModel: LoadModelFunction) {
+function addItems(menu: Menubar, items: (IMenuItemSetup | iSubMenu)[], loadModel: LoadModelFunction) {
    items.forEach((item) => {
       if ('menuItems' in item) {
          let subMenu = menu.addSubMenu(item.label, item.id);

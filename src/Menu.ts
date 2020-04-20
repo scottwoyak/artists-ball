@@ -2,6 +2,7 @@ import { ISliderSetup, Slider } from "./Slider";
 import { Checkbox, ICheckboxSetup } from "./Checkbox";
 import { ICtrl } from "./ICtrl";
 import { IRadiobuttonSetup, Radiobutton } from "./Radiobutton";
+import { isMobile } from "./Globals";
 
 export type MenuItemFunction = () => void;
 export type MenuItemFunctionBool = (value: boolean) => void;
@@ -99,7 +100,6 @@ class Menu {
       item.innerHTML = innerHtml;
 
       item.onclick = () => {
-
          this.showSubMenu(item, subMenu, location);
       }
       this.div.appendChild(item);
@@ -258,8 +258,11 @@ export class SubMenu extends Menu {
       let span = document.getElementById(spanId) as HTMLSpanElement;
       let div = span.parentElement as HTMLDivElement;
       div.onmouseenter = () => {
-         this.hideDown();
-         this.showSubMenu(div, subMenu, MenuLocation.Right);
+         if (isMobile === false) {
+            // TODO this event is triggering on a touchscreen laptop when we don't want it to.
+            this.hideDown();
+            this.showSubMenu(div, subMenu, MenuLocation.Right);
+         }
       };
 
       return subMenu;

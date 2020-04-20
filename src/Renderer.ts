@@ -311,6 +311,7 @@ export class Renderer {
          case Reset.View:
             this.view = INITIAL_VIEW.clone();
             this.obj.clearTransforms();
+            this.floor.clearTransforms();
             this.objScale = 1.0;
             break;
 
