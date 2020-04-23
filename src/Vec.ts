@@ -182,6 +182,15 @@ export class Vec3 extends Vec implements IVec3 {
    }
 
    /**
+    * Gets the x-y components as a 2d vec
+    *
+    * @return the Vec3
+    */
+   public get xy(): Vec2 {
+      return new Vec2([this.x, this.y]);
+   }
+
+   /**
     * Creates a copy of the vector.
     * 
     * @returns A copy of the vector.
