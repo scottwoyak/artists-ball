@@ -250,7 +250,11 @@ export class SubMenu extends Menu {
       super(parent, id + 'Menu', 'Menu');
    }
 
-   public addSubMenu(text: string, id: string): SubMenu {
+   public addSubMenu(text: string, id?: string): SubMenu {
+
+      if (!id) {
+         id = text;
+      }
 
       let spanId = id + 'Span';
       let subMenu = this.internalAddSubMenu(text + '<span id="' + spanId + '" style="float:right">></span>', id, MenuLocation.Right);
