@@ -74,32 +74,6 @@ export class ModelLoader {
             model.normalize.rotY(toRad(20));
             break;
 
-         /*
-         case 'skull4':
-            model.rotX(toRad(80));
-            model.rotY(toRad(-22));
-            model.rotZ(toRad(-1));
-            break;
-
-         case 'skull1':
-            model.rotX(toRad(90));
-            break;
-
-         case 'pelvis':
-            model.rotX(toRad(11));
-            model.rotZ(toRad(-87));
-            model.rotY(toRad(180));
-            break;
-
-         case 'pose1':
-            model.rotY(toRad(180));
-            break;
-
-         case 'teapot':
-            model.rotY(toRad(90));
-            break;
-            */
-
          default:
             break;
       }
