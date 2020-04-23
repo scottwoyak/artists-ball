@@ -63,7 +63,7 @@ export class PathTracerApp implements IApp {
       div.className = 'PathTracerApp';
 
       const container = document.createElement('div');
-      container.className = 'container';
+      container.className = 'Container';
       div.appendChild(container);
 
       this.canvas = document.createElement('canvas');

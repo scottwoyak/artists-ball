@@ -13,6 +13,7 @@ import vertexSource from './shaders/ViewerVertex.glsl';
 import fragmentSource from './shaders/ViewerFragment.glsl';
 import { ValuePlanes } from "./ValuePlanes";
 import { RenderMode } from "./Renderer";
+import { ValueRange } from "./ValueRange";
 
 export type ThresholdChangeFunction = (value: number) => void;
 
@@ -59,7 +60,7 @@ export class ValuePlanesCtrl {
       this.onThreshold2Change = onThreshold2Change;
 
       let canvas = document.createElement('canvas');
-      canvas.id = 'ThresholdCtrlCanvas';
+      canvas.id = 'ValuePlanesCanvas';
       canvas.width = CTRL_SIZE;
       canvas.height = CTRL_SIZE;
       parent.appendChild(canvas);
@@ -75,7 +76,7 @@ export class ValuePlanesCtrl {
       this.gl = context;
 
       this.overlay = document.createElement('canvas');
-      this.overlay.id = 'ThresholdCtrlOverlayCanvas';
+      this.overlay.id = 'ValuePlanesOverlayCanvas';
       this.overlay.width = CTRL_SIZE;
       this.overlay.height = CTRL_SIZE;
 
@@ -153,16 +154,12 @@ export class ValuePlanesCtrl {
       uni.set('uEye', new Vec3([0, 0, 1]));
       uni.set('uOrthographic', true);
 
-      uni.set('uThreshold1', 1 - Math.sin(toRad(this.provider.threshold1 + 90)));
-      uni.set('uThreshold2', 1 - Math.sin(toRad(this.provider.threshold2 + 90)));
+      uni.set('uLightIntensity', ValueRange.Standard.lightIntensity);
+      uni.set('uAmbientIntensity', ValueRange.Standard.ambient);
+      uni.set('uHighlight', ValueRange.Standard.highlight);
 
-      let HIGHLIGHT_DIFF = 0.1;
-      uni.set('uLightIntensity', this.provider.highlight - this.provider.shadow - HIGHLIGHT_DIFF);
-      uni.set('uAmbientIntensity', this.provider.shadow);
-      uni.set('uHighlight', this.provider.highlight);
-
-      uni.set('uWhiteColor', new glColor3([1.0, 1.0, 1.0]));
-      uni.set('uBlackColor', htmlColor.black.toGlColor());
+      uni.set('uWhiteColor', glColor3.modelWhite);
+      uni.set('uBlackColor', glColor3.modelBlack);
 
       let contourColors = [
          this.toGLColor(this.provider.lightLight),

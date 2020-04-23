@@ -35,7 +35,7 @@ export class ValuePlanesApp implements IApp {
    private midLightSlider: Slider;
    private darkLightSlider: Slider;
    private shadowSlider: Slider;
-   private thresholdCtrl: ValuePlanesCtrl;
+   private valuePlanesCtrl: ValuePlanesCtrl;
    private loader = new ModelLoader();
 
    public constructor(query: string) {
@@ -53,13 +53,13 @@ export class ValuePlanesApp implements IApp {
 
       const viewContainer = document.createElement('div');
       viewContainer.id = 'ViewContainer';
-      viewContainer.className = 'container';
+      viewContainer.className = 'Container';
       div.appendChild(viewContainer);
       this.createViewElements(viewContainer);
       div.style.width = this.gl.canvas.width + 'px';
 
       const ctrlsContainer = document.createElement('div');
-      ctrlsContainer.className = 'container';
+      ctrlsContainer.className = 'Container';
       ctrlsContainer.id = 'CtrlsContainer';
       div.appendChild(ctrlsContainer);
       this.createCtrlsElements(ctrlsContainer);
@@ -120,7 +120,7 @@ export class ValuePlanesApp implements IApp {
    }
 
    private createCtrlsElements(parent: HTMLElement) {
-      this.thresholdCtrl = new ValuePlanesCtrl(
+      this.valuePlanesCtrl = new ValuePlanesCtrl(
          parent,
          this.valuePlanes,
          (value: number) => {
@@ -345,7 +345,7 @@ export class ValuePlanesApp implements IApp {
          ];
 
          this.renderer.render();
-         this.thresholdCtrl.draw();
+         this.valuePlanesCtrl.draw();
          this.dirty = false;
       }
 
