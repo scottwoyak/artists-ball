@@ -1,25 +1,26 @@
 import { Mat4 } from './Mat';
-import { Vec3, Vec2 } from './Vec';
+import { Vec3, Vec2, Vec4 } from './Vec';
 import vertexSource from './shaders/ViewerVertex.glsl';
 import fragmentSource from './shaders/ViewerFragment.glsl';
-import { toRad, toDeg, isMobile } from './Globals';
+import { toRad, toDeg } from './Globals';
 import { glUniform } from './glUniform';
 import { TriangleObj, NormalType } from './TriangleObj';
 import { glObject } from './glObject';
 import { glColor3 } from './glColor';
 import { TextureRenderer } from './TextureRenderer';
 import { htmlColor } from './htmlColor';
-import { glClipSpace } from './glClipSpace';
 import { TriangleObjBuilder } from './TriangleObjBuilder';
 import { glTexture, glTextureStyle } from './glTexture';
 import { glFrameBuffer } from './glFrameBuffer';
 import { glProgram } from './glProgram';
 import { ValueRange } from './ValueRange';
+import { Camera, ObjSizeProvider } from './Camera';
 
 const BALL_RADIUS = 0.5;
 const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, -1.5];
 const INITIAL_VIEW = Mat4.identity;
 const INITIAL_SHININESS = 15;
+export const INITIAL_EYE = [0, 0, 6]; // 3 times the max object dimension of 2. For a model, about 15 ft away
 
 export class Contour {
    public color: glColor3;
@@ -62,11 +63,8 @@ export class Renderer {
 
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private program: glProgram;
-   private view = INITIAL_VIEW;
+   public view = INITIAL_VIEW.clone();
    private lightView = new Mat4();
-   private projection = new Mat4();
-   private uEye = new Vec3([0, 0, 8]); // 4 times the max object dimension of 2. For a model, about 20 ft away
-   public useOrthographic = false;
 
    public valueRange = ValueRange.Standard;
 
@@ -75,9 +73,8 @@ export class Renderer {
 
    private ball: glObject;
    private arrow: glObject;
-   private floor: glObject;
+   public floor: glObject;
    public obj: glObject;
-   private objScale: number = 1;
 
    private shadowFrameBuffer: glFrameBuffer;
    private shadowColorTexture: glTexture;
@@ -92,12 +89,14 @@ export class Renderer {
 
    public showShadowMap = false;
    public showMiniView = true;
+   public showBall = true;
    public showFloor = true;
    public useCulling = true;
    public miniViewShowContours = false;
    public showHighlights = true;
    public uShininess = INITIAL_SHININESS;
    public lockFloor = false;
+   public camera: Camera;
 
    public renderMode = RenderMode.Normal;
 
@@ -105,6 +104,8 @@ export class Renderer {
 
       this.gl = glCtx;
       let gl = this.gl;
+
+      this.camera = new Camera(this.gl);
 
       // enable z-buffer
       gl.enable(gl.DEPTH_TEST);
@@ -137,77 +138,6 @@ export class Renderer {
       else {
          return true;
       }
-   }
-   public getClipSpace(): glClipSpace {
-
-      let gl = this.gl;
-      let ar = gl.canvas.width / gl.canvas.height;
-
-      if (ar > 1) {
-         return new glClipSpace(new Vec3([-ar, -1, 100]), new Vec3([ar, 1, -100]));
-      }
-      else {
-         return new glClipSpace(new Vec3([-1, -1 / ar, 100]), new Vec3([1, 1 / ar, -100]));
-      }
-   }
-
-   private updateProjectionMatrix() {
-
-      let gl = this.gl;
-      let clipSpace = this.getClipSpace();
-      let winAR = gl.canvas.width / this.gl.canvas.height;
-
-      let xBox = this.tObj.box.xForm(this.obj.normalize);
-      let objMaxHeight = 1.1 * Math.sqrt(xBox.height * xBox.height + xBox.depth * xBox.depth);
-      let objMaxWidth = 1.1 * Math.sqrt(xBox.width * xBox.width + xBox.depth * xBox.depth);
-      let objAR = objMaxWidth / objMaxHeight;
-
-      let desiredWidth;
-      let desiredHeight;
-      if (objAR < winAR) {
-         // make the object height fit
-         desiredHeight = objMaxHeight;
-         desiredWidth = objMaxHeight * winAR;
-      }
-      else {
-         // make the object width fit
-         desiredHeight = objMaxWidth / winAR;
-         desiredWidth = objMaxWidth;
-      }
-
-      if (this.useOrthographic) {
-         this.projection = Mat4.makeOrtho(
-            -desiredWidth / 2,
-            desiredWidth / 2,
-            -desiredHeight / 2,
-            desiredHeight / 2,
-            clipSpace.near,
-            clipSpace.far,
-         );
-      }
-      else {
-         let eye = this.uEye;
-         let center = new Vec3([0, 0, 0]);
-         let up = new Vec3([0, 1, 0]);
-         let mat = Mat4.makeLookAt(eye, center, up);
-
-
-         let fieldOfView = 2 * toDeg(Math.atan2(desiredHeight / 2, eye.z));
-         let near = 0.1;
-         let far = 20;
-         this.projection = Mat4.makePerspective(fieldOfView, winAR, near, far).multM(mat);
-      }
-   }
-
-   //
-   // The functions below change our view of the model
-   //
-   public zoom(zoom: number) {
-      this.view.scale(zoom);
-   }
-
-   public translateView(delta: Vec2) {
-      this.view.translate(new Vec3([delta.x, delta.y, 0]));
    }
 
    public rotX(angle: number) {
@@ -259,6 +189,14 @@ export class Renderer {
       }
    }
 
+   public rotateLight(xRad: number, yRad: number) {
+      let matX = Mat4.fromRotX(yRad);
+      let matY = Mat4.fromRotY(xRad);
+      let vec = Vec4.fromVec3(this.uLightDirection, 1);
+      vec = matX.multV(vec);
+      vec = matY.multV(vec);
+      this.uLightDirection = vec.xyz;
+   }
 
 
    public get tObj(): TriangleObj {
@@ -270,10 +208,11 @@ export class Renderer {
          this.obj.delete();
       }
       this.obj = new glObject(this.gl, tObj, this.program);
+      this.camera.sizeProvider = new ObjSizeProvider(this.obj);
 
       // move the object so that the center is at [0,0,0] and it is scaled
       // so that it's diagonal is 2 units across
-      this.objScale = 2.0 / tObj.diagonal;
+      let objScale = 2.0 / tObj.diagonal;
       this.obj.autoSize(new Vec3([0, 0, 0]), 2);
 
       if (this.floor) {
@@ -283,7 +222,7 @@ export class Renderer {
 
       // make the floor size slightly larger than the object, centered at the bottom
       let radius = 4;
-      let pos = new Vec3([0, -this.objScale * tObj.height / 2, 0]);
+      let pos = new Vec3([0, -objScale * tObj.height / 2, 0]);
       tFloor.addDisk(50, radius, pos);
       this.floor = new glObject(this.gl, tFloor, this.program);
 
@@ -312,7 +251,10 @@ export class Renderer {
             this.view = INITIAL_VIEW.clone();
             this.obj.clearTransforms();
             this.floor.clearTransforms();
-            this.objScale = 1.0;
+            this.camera.eye = new Vec3(INITIAL_EYE);
+            this.camera.lookAt = Vec3.origin;
+            this.camera.zoomFactor = 1;
+
             break;
 
          case Reset.Rendering:
@@ -325,20 +267,19 @@ export class Renderer {
 
    public render(): void {
 
-      this.updateProjectionMatrix();
       this.setStdUniforms();
       this.renderToShadowMap();
       this.renderToScreen();
    }
 
-   private setStdUniforms(): glUniform {
+   public setStdUniforms(): glUniform {
 
       let uni = new glUniform(this.gl, this.program);
       uni.set('view', this.view);
       uni.set('lightView', this.lightView);
-      uni.set('projection', this.projection);
-      uni.set('uEye', this.uEye);
-      uni.set('uOrthographic', this.useOrthographic);
+      uni.set('projection', this.camera.projection);
+      uni.set('uEye', this.camera.eye);
+      uni.set('uOrthographic', this.camera.useOrthographic);
       uni.set('uLightDirection', this.uLightDirection);
       uni.set('uUseShadows', true);
       uni.seti('uRenderMode', this.renderMode);
@@ -487,7 +428,7 @@ export class Renderer {
 
          let uni = this.setStdUniforms();
 
-         let clipSpace = this.getClipSpace();
+         let clipSpace = this.camera.getClipSpace();
          let projection = Mat4.makeOrtho(
             clipSpace.left,
             clipSpace.right,
@@ -512,13 +453,17 @@ export class Renderer {
 
    private drawBall() {
 
+      if (this.showBall === false) {
+         return;
+      }
+
       let gl = this.gl;
       gl.enable(gl.CULL_FACE);
       gl.cullFace(gl.BACK);
 
       let uni = this.setStdUniforms();
 
-      let clipSpace = this.getClipSpace();
+      let clipSpace = this.camera.getClipSpace();
       let projection = Mat4.makeOrtho(
          clipSpace.left,
          clipSpace.right,
@@ -529,7 +474,7 @@ export class Renderer {
       );
 
       uni.set('projection', projection);
-      uni.set('uOthrographic', true);
+      uni.set('uOrthographic', true);
 
       // stop using the shadowmap
       uni.set('uUseShadows', false);

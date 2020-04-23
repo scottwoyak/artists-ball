@@ -1,7 +1,6 @@
 import { toRad, isMobile } from "./Globals";
 import { Renderer, Contour, RenderMode, Reset } from "./Renderer";
-import { Mat4 } from "./Mat";
-import { Vec4, Vec2 } from "./Vec";
+import { Vec4, Vec2, Vec3 } from "./Vec";
 import { NormalType } from "./TriangleObj";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { saveAs } from 'file-saver';
@@ -13,6 +12,8 @@ import { glColor3 } from "./glColor";
 import { Slider } from "./Slider";
 import { Checkbox } from "./Checkbox";
 import { Radiobutton } from "./Radiobutton";
+import { PerspectiveCtrl } from "./PerspectiveCtrl";
+import { TriangleObjBuilder } from "./TriangleObjBuilder";
 
 enum PointerMode {
    View,
@@ -23,9 +24,10 @@ export class ViewerApp implements IApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private renderer: Renderer;
    private pointerMode: PointerMode = PointerMode.View;
-   private overlay: HTMLSpanElement;
+   private overlay: HTMLDivElement;
    private handler: PointerEventHandler;
    private rotateLightWithObject = false;
+   private perspectiveCtrl: PerspectiveCtrl;
 
    private dirty: boolean = true;
    private animate: boolean = false;
@@ -45,9 +47,11 @@ export class ViewerApp implements IApp {
 
       const viewContainer = document.createElement('div');
       viewContainer.id = 'ViewContainer';
-      viewContainer.className = 'container';
+      viewContainer.className = 'Container';
       div.appendChild(viewContainer);
       this.createViewElements(viewContainer);
+      this.createPerspectivePanel(div);
+      this.updateSize();
 
       this.loadModel(this.query);
    }
@@ -64,6 +68,7 @@ export class ViewerApp implements IApp {
 
       this.overlay = document.createElement('div');
       this.overlay.id = 'Overlay';
+      this.overlay.className = 'Overlay';
       parent.appendChild(this.overlay);
 
       // don't try to make the canvas transparent to the underlying html. This
@@ -75,8 +80,6 @@ export class ViewerApp implements IApp {
          console.log("Unable to get WebGL context");
       }
       this.gl = context;
-
-      this.updateSize();
 
       this.renderer = new Renderer(this.gl);
       this.renderer.showMiniView = false;
@@ -176,74 +179,46 @@ export class ViewerApp implements IApp {
                break;
 
             case 't':
-               let files = [
-                  { label: 'Neutral', file: 'Male 02_01_Neutral.obj' },
-                  { label: 'Neutral, Eyes Closed', file: 'Male 02_02_Neutral Eyes Closed.obj' },
-                  { label: 'Neutral, Lips Parted', file: 'Male 02_038_Neutral Lips Parted.obj' },
-                  { label: 'Smile, Mouth Closed', file: 'Male 02_03_Smile Mouth Closed.obj' },
-                  { label: 'Smile, Mouth Open', file: 'Male 02_04_Smile Mouth Open.obj' },
-                  { label: 'Look Up', file: 'Male 02_05_Look Up.obj' },
-                  { label: 'Look Down', file: 'Male 02_06_Look Down.obj' },
-                  { label: 'Look Left', file: 'Male 02_07_Look Left.obj' },
-                  { label: 'Look Right', file: 'Male 02_08_Look Right.obj' },
-                  { label: 'Jaw, Wide Open', file: 'Male 02_09_Jaw Wide Open.obj' },
-                  { label: 'Jaw, Side Right', file: 'Male 02_018_Jaw Side Right.obj' },
-                  { label: 'Jaw, Side Left', file: 'Male 02_019_Jaw Side Left.obj' },
-                  { label: 'Jaw, Thrust', file: 'Male 02_020_Jaw Thrust.obj' },
-                  { label: 'Jaw, Clench', file: 'Male 02_021_Jaw Clench.obj' },
-                  { label: 'Tighten Lips', file: 'Male 02_010_Tighten Lips.obj' },
-                  { label: 'Face Compression', file: 'Male 02_011_Face Compression.obj' },
-                  { label: 'Pucker', file: 'Male 02_012_Pucker.obj' },
-                  { label: 'Neck Tighten', file: 'Male 02_015_Neck Tighten.obj' },
-                  { label: 'Brows Up', file: 'Male 02_016_Brows Up.obj' },
-                  { label: 'Brows Down', file: 'Male 02_017_Brows Down.obj' },
-                  { label: 'Cheek Puff', file: 'Male 02_022_Cheek Puff.obj' },
-                  { label: 'Cheek Suck', file: 'Male 02_023_Cheek Suck.obj' },
-                  { label: 'Cheeks, Dimple', file: 'Male 02_027_Dimple Cheeks.obj' },
-                  { label: 'Sounds: "CH"', file: 'Male 02_024_Phoneme CH.obj' },
-                  { label: 'Sounds: "FV"', file: 'Male 02_025_Phoneme FV.obj' },
-                  { label: 'Flare Lips', file: 'Male 02_026_Flare Libs.obj' },
-                  { label: 'Snarl', file: 'Male 02_013_Snarl.obj' },
-                  { label: 'Frown', file: 'Male 02_014_Frown.obj' },
-                  { label: 'Happy', file: 'Male 02_028_Happy.obj' },
-                  { label: 'Surpize', file: 'Male 02_029_Surprize.obj' },
-                  { label: 'Sad', file: 'Male 02_030_Sad.obj' },
-                  { label: 'Angry', file: 'Male 02_031_Angry.obj' },
-                  { label: 'Pain', file: 'Male 02_032_Pain.obj' },
-                  { label: 'Fear', file: 'Male 02_033_Fear.obj' },
-                  { label: 'Disgust', file: 'Male 02_034_Disgust.obj' },
-                  { label: 'Shock', file: 'Male 02_035_Shock.obj' },
-                  { label: 'Rage', file: 'Male 02_036_Rage.obj' },
-                  { label: 'Tongue', file: 'Male 02_037_Tongue.obj' },
-               ];
-
-
-               for (let i = 0; i < files.length; i++) {
-                  await this.loadModelPromise(files[i].file);
-
-                  this.renderer.obj.rotY(toRad(180));
-                  this.renderer.obj.optimize(NormalType.Smooth);
-                  this.renderer.obj.applyXForm();
-                  this.renderer.tObj.source = 'https://www.3dscanscore.com';
-                  this.save();
-                  this.dirty = true;
-               }
-
                break;
 
             case 'v':
-               this.renderer.useOrthographic = !this.renderer.useOrthographic;
+               this.renderer.camera.useOrthographic = !this.renderer.camera.useOrthographic;
                this.dirty = true;
                break;
          }
       }
-      window.onresize = () => {
+      window.addEventListener('resize', () => {
 
          this.updateSize();
          this.dirty = true;
-      }
+      });
    }
 
+   private createPerspectivePanel(div: HTMLDivElement) {
+      let panel = document.createElement('div');
+      panel.id = 'PerspectivePanel';
+      panel.className = 'Panel';
+      panel.classList.add('Container');
+
+      div.appendChild(panel);
+
+      let exitButton = document.createElement('div');
+      exitButton.id = 'ExitButton';
+      exitButton.className = 'DivButton';
+      exitButton.innerText = 'X';
+      exitButton.onclick = () => {
+         panel.style.display = 'none';
+         this.updateSize();
+         this.pointerMode = PointerMode.View;
+         this.dirty = true;
+      }
+      panel.appendChild(exitButton);
+
+      this.perspectiveCtrl = new PerspectiveCtrl(panel, this.renderer.camera);
+      this.perspectiveCtrl.onChange = () => {
+         this.dirty = true;
+      }
+   }
    public buildMenu(menubar: Menubar) {
       createModelsMenu(menubar, (file) => this.loadModel(file));
 
@@ -286,22 +261,13 @@ export class ViewerApp implements IApp {
             this.dirty = true;
          }
       });
-      subMenu.addCheckbox({
-         label: 'Use Perspective',
-         id: 'Use Perspective',
-         checked: () => !this.renderer.useOrthographic,
-         oncheck: (checkbox: Checkbox) => {
-            this.renderer.useOrthographic = !checkbox.checked;
-            this.dirty = true;
-         }
-      });
       subMenu.addItem('Reverse Object', () => {
          this.renderer.tObj.reverse();
          this.renderer.obj.uploadTriangles();
          this.dirty = true;
       });
 
-      let highlightSubMenu = subMenu.addSubMenu('Highlights', 'Highlights');
+      let highlightSubMenu = subMenu.addSubMenu('Highlights');
 
       highlightSubMenu.addRadiobutton({
          label: 'Show',
@@ -351,7 +317,7 @@ export class ViewerApp implements IApp {
          },
       });
 
-      let shadowsSubMenu = subMenu.addSubMenu('Shadows', 'Shadows');
+      let shadowsSubMenu = subMenu.addSubMenu('Shadows');
       shadowsSubMenu.addRadiobutton({
          label: 'Normal',
          id: 'NormalShadows',
@@ -393,7 +359,7 @@ export class ViewerApp implements IApp {
          }
       });
 
-      let rotateSubMenu = subMenu.addSubMenu('Rotation', 'Rotation');
+      let rotateSubMenu = subMenu.addSubMenu('Rotation');
       rotateSubMenu.addCheckbox({
          label: 'Keep the light pointing at the same spot on the model',
          id: 'SyncLightAndObject',
@@ -409,6 +375,13 @@ export class ViewerApp implements IApp {
          oncheck: (checkbox: Checkbox) => {
             this.renderer.lockFloor = checkbox.checked;
          }
+      });
+
+      subMenu.addItem('Perspective...', () => {
+         document.getElementById('PerspectivePanel').style.display = 'block';
+         this.perspectiveCtrl.refresh();
+         this.updateSize();
+         this.dirty = true;
       });
    }
 
@@ -434,17 +407,22 @@ export class ViewerApp implements IApp {
    }
 
    private updateSize() {
+
       let gl = this.gl;
 
-      let menubarHeight = document.getElementById('Menubar').clientHeight;
       let width = window.innerWidth;
       let height = window.innerHeight;
+      let menubarHeight = document.getElementById('Menubar').clientHeight;
+
+      let panel = document.getElementById('PerspectivePanel');
+      let panelHeight = 0;
+      if (panel && getComputedStyle(panel).display === 'block') {
+         panelHeight = panel.clientHeight;
+      }
 
       gl.canvas.width = width;
-      gl.canvas.height = height - menubarHeight;
-      this.overlay.style.width = width + 'px';
-      this.overlay.style.height = height + 'px';
-      this.overlay.style.lineHeight = height + 'px'; // vertically center text
+      gl.canvas.height = height - menubarHeight - panelHeight;
+      this.overlay.style.lineHeight = gl.canvas.height + 'px'; // vertically center text
    }
 
    private loadModel(query: string) {
@@ -465,7 +443,11 @@ export class ViewerApp implements IApp {
          this.loader.loadModelFile(query, statusFunc)
             .then((tObj) => {
 
+               let builder = new TriangleObjBuilder('Scott');
+               builder.addSphere(10, 0.2, new Vec3([0, 0, 0]));
+               //tObj = builder;
                this.renderer.setModel(tObj);
+               this.perspectiveCtrl.setModel(tObj);
                this.loader.orient(this.renderer.obj);
 
                if (query.startsWith('Head') || query.startsWith('Teapot') || query.startsWith('Male_02')) {
@@ -502,47 +484,6 @@ export class ViewerApp implements IApp {
       }
    }
 
-   private loadModelPromise(query: string): Promise<void> {
-
-      // if nothing was specified, load an interesting model
-      if (!query) {
-         let num = Math.round(0.5 + 16 * Math.random());
-         query = 'Pose_0' + num + '.blob';
-      }
-
-      let lc = query.toLowerCase();
-      if (lc.endsWith('.obj') || lc.endsWith('.blob')) {
-
-         let statusFunc = (status: string) => {
-            this.overlay.innerText = status;
-         }
-
-         return this.loader.loadModelFile(query, statusFunc)
-            .then((tObj) => {
-
-               this.renderer.setModel(tObj);
-               this.loader.orient(this.renderer.obj);
-
-               if (query.startsWith('Head') || query.startsWith('Teapot')) {
-                  this.renderer.useCulling = false;
-               }
-
-               this.animate = false;
-               this.dirty = true;
-               this.pointerMode = PointerMode.View;
-               if (!this.animationFrame) {
-                  this.animationFrame = requestAnimationFrame(() => this.tick());
-               }
-            });
-      }
-      else {
-         // TODO multi line error messages not supported
-         let msg = 'Unknown Model:' + query;
-         this.overlay.innerText = msg;
-         return Promise.reject(msg)
-      }
-   }
-
    private toggleMode() {
       switch (this.pointerMode) {
          case PointerMode.View:
@@ -559,12 +500,7 @@ export class ViewerApp implements IApp {
    }
 
    private rotateLight(xRad: number, yRad: number) {
-      let matX = Mat4.fromRotX(yRad);
-      let matY = Mat4.fromRotY(xRad);
-      let vec = Vec4.fromVec3(this.renderer.uLightDirection, 1);
-      vec = matX.multV(vec);
-      vec = matY.multV(vec);
-      this.renderer.uLightDirection = vec.xyz;
+      this.renderer.rotateLight(xRad, yRad);
 
       this.dirty = true;
    }
@@ -618,6 +554,10 @@ export class ViewerApp implements IApp {
       }
    }
 
+   private syncPerspectiveCtrl() {
+      this.perspectiveCtrl.model = this.renderer.obj.model.clone();
+   }
+
    /**
     * Processes a click/touch event at the designated coordinates.
     * 
@@ -629,7 +569,7 @@ export class ViewerApp implements IApp {
 
       let canvasWidth = this.gl.canvas.width;
       let canvasHeight = this.gl.canvas.height;
-      let clipSpace = this.renderer.getClipSpace();
+      let clipSpace = this.renderer.camera.getClipSpace();
       let miniWidth = this.renderer.miniSize * (2 / clipSpace.width) * canvasWidth;
       let miniHeight = this.renderer.miniSize * (2 / clipSpace.height) * canvasHeight;
 
@@ -643,7 +583,7 @@ export class ViewerApp implements IApp {
    }
 
    private onScale(scale: number, change: number) {
-      this.renderer.zoom(change);
+      this.renderer.camera.zoom(change);
       this.dirty = true;
    }
 
@@ -671,8 +611,8 @@ export class ViewerApp implements IApp {
          factor = 2;
       }
 
-      let clipSpace = this.renderer.getClipSpace();
-      this.renderer.translateView(new Vec2([
+      let clipSpace = this.renderer.camera.getClipSpace();
+      this.renderer.camera.translate(new Vec2([
          factor * clipSpace.width * delta.x / this.gl.canvas.width,
          factor * clipSpace.height * delta.y / this.gl.canvas.height
       ]));
@@ -683,6 +623,11 @@ export class ViewerApp implements IApp {
 
       if (this.dirty) {
          this.renderer.render();
+         let panel = document.getElementById('PerspectivePanel');
+         if (panel && getComputedStyle(panel).display === 'block') {
+            this.syncPerspectiveCtrl();
+            this.perspectiveCtrl.render();
+         }
          this.dirty = false;
       }
 
@@ -699,6 +644,7 @@ export class ViewerApp implements IApp {
             vec = this.renderer.obj.model.multV(vec);
             this.renderer.uLightDirection = vec.xyz;
          }
+
          this.dirty = true;
       }
 
@@ -709,7 +655,6 @@ export class ViewerApp implements IApp {
       let tObj = this.renderer.tObj;
 
       let name = tObj.name.split('.')[0] + '.blob';
-      name = name.replace(' ', '_');
       tObj.name = name;
       saveAs(tObj.toBlob(), name);
    }

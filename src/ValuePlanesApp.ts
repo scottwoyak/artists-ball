@@ -291,7 +291,7 @@ export class ValuePlanesApp implements IApp {
 
       let canvasWidth = this.gl.canvas.width;
       let canvasHeight = this.gl.canvas.height;
-      let clipSpace = this.renderer.getClipSpace();
+      let clipSpace = this.renderer.camera.getClipSpace();
       let miniWidth = this.renderer.miniSize * (2 / clipSpace.width) * canvasWidth;
       let miniHeight = this.renderer.miniSize * (2 / clipSpace.height) * canvasHeight;
 
@@ -311,7 +311,7 @@ export class ValuePlanesApp implements IApp {
    }
 
    private onScale(scale: number, change: number) {
-      this.renderer.zoom(change);
+      this.renderer.camera.zoom(change);
       this.dirty = true;
    }
 
@@ -327,7 +327,7 @@ export class ValuePlanesApp implements IApp {
          factor = 2;
       }
 
-      this.renderer.translateView(new Vec2([
+      this.renderer.camera.translate(new Vec2([
          factor * 2 * delta.x / this.gl.canvas.width,
          factor * 2 * delta.y / this.gl.canvas.height
       ]));

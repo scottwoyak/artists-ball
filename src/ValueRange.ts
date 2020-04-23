@@ -29,6 +29,13 @@ export class ValueRange {
       this._shadow = Math.min(this._shadow, this._highlight - this._highlightDelta);
    }
 
+   public get ambient(): number {
+      return this.shadow;
+   }
+   public set ambient(val: number) {
+      this.shadow = val;
+   }
+
    public get shadow(): number {
       return this._shadow;
    }

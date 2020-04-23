@@ -4,6 +4,7 @@ import { Vec3, Vec4 } from "./Vec";
 import { glUniform } from "./glUniform";
 import { glIndexBuffer } from "./glIndexBuffer";
 import { Mat4 } from "./Mat";
+import { BoundingBox } from "./BoundingBox";
 
 export class glObject {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
@@ -22,6 +23,10 @@ export class glObject {
 
    public get name(): string {
       return this.tObj.name;
+   }
+
+   public get box(): BoundingBox {
+      return this.tObj.box.multM(this.normalize);
    }
 
    public constructor(

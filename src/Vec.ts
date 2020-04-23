@@ -115,6 +115,10 @@ export class Vec2 extends Vec {
  */
 export class Vec3 extends Vec implements IVec3 {
 
+   public static get origin() {
+      return new Vec3([0, 0, 0]);
+   }
+
    /**
     * @param vals If supplied, the initial values for the vector
     */

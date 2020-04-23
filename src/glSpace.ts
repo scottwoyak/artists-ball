@@ -1,9 +1,10 @@
 import { Vec3 } from "./Vec";
 
 /**
- * Utility for holding a clip space. Default is values from -1 to 1.
+ * Utility for holding a clip space. Can be used to hold the viewing space
+ * or clip space.
  */
-export class glClipSpace {
+export class glSpace {
    public min: Vec3;
    public max: Vec3;
 

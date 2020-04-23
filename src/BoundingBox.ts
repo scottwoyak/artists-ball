@@ -84,7 +84,7 @@ export class BoundingBox {
       this.max.z = Math.max(this.max.z, other.max.z);
    }
 
-   public xForm(mat: Mat4): BoundingBox {
+   public multM(mat: Mat4): BoundingBox {
       let ret = new BoundingBox();
       let v1 = mat.multV(new Vec4([this.min.x, this.min.y, this.min.z, 1]));
       let v2 = mat.multV(new Vec4([this.max.x, this.max.y, this.max.z, 1]));
