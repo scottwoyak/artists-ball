@@ -60,22 +60,6 @@ let menuItems: (iSubMenu | IMenuItemSetup)[] = [
       ]
    },
    {
-      label: 'Anatomy', id: 'AnatomySubMenu', menuItems: [
-         { label: 'Skull 1', file: 'Skull1.blob' },
-         { label: 'Skull 2', file: 'Skull2.blob' },
-         { label: 'Skull 3', file: 'Skull3.blob' },
-         { label: 'Skull 4', file: 'Skull4.blob' },
-         { label: 'Pelvis', file: 'Pelvis.blob' },
-         { label: 'Clavicle', file: 'Clavicle.blob' },
-         { label: 'Scapula', file: 'Scapula.blob' },
-         { label: 'Humerus', file: 'Humerus.blob' },
-         { label: 'Head Ecorche', file: 'HeadEcorche.blob' },
-         { label: 'Head Ecorche 2', file: 'HeadEcorche2.blob' },
-         { label: 'Head Ecorche 3', file: 'HeadEcorche3.blob' },
-         { label: 'Head Ecorche 4', file: 'HeadEcorche4.blob' },
-      ]
-   },
-   {
       label: 'Poses', id: 'PosesSubMenu', menuItems: [
          { label: 'Pose 1', file: 'Pose_01.blob' },
          { label: 'Pose 2', file: 'Pose_02.blob' },
