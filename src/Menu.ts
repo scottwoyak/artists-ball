@@ -253,7 +253,7 @@ export class SubMenu extends Menu {
    public addSubMenu(text: string, id?: string): SubMenu {
 
       if (!id) {
-         id = text;
+         id = text.replace(/\s+/g, '');
       }
 
       let spanId = id + 'Span';
