@@ -15,6 +15,8 @@ import { Radiobutton } from "./Radiobutton";
 import { PerspectiveCtrl } from "./PerspectiveCtrl";
 import { TriangleObjBuilder } from "./TriangleObjBuilder";
 import { Panel } from "./Panel";
+import { FPS } from "./FPS";
+import { OverlayCanvas, TextLocation } from "./OverlayCanvas";
 
 enum PointerMode {
    View,
@@ -25,7 +27,7 @@ export class ViewerApp implements IApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private renderer: Renderer;
    private pointerMode: PointerMode = PointerMode.View;
-   private overlay: HTMLDivElement;
+   private overlay: OverlayCanvas;
    private handler: PointerEventHandler;
    private rotateLightWithObject = false;
    private perspectiveCtrl: PerspectiveCtrl;
@@ -34,6 +36,7 @@ export class ViewerApp implements IApp {
    private dirty: boolean = true;
    private animate: boolean = false;
    private animationFrame: number;
+   private fps = new FPS();
 
    private query: string;
 
@@ -68,10 +71,7 @@ export class ViewerApp implements IApp {
       canvas.id = 'MainCanvas';
       parent.appendChild(canvas);
 
-      this.overlay = document.createElement('div');
-      this.overlay.id = 'Overlay';
-      this.overlay.className = 'Overlay';
-      parent.appendChild(this.overlay);
+      this.overlay = new OverlayCanvas(parent);
 
       // don't try to make the canvas transparent to the underlying html. This
       // seems to limit the alpha values we can use in our scene.
@@ -99,9 +99,16 @@ export class ViewerApp implements IApp {
 
       this.handler = new PointerEventHandler(canvas);
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
-      this.handler.onDown = () => this.animate = false;
+      this.handler.onDown = () => {
+         this.animate = false;
+         this.overlay.clear();
+      }
       this.handler.onClick = (pos: Vec2) => this.onClick(pos);
-      this.handler.onDblClick = () => this.animate = true;
+      this.handler.onDblClick = () => {
+         this.animate = true;
+         this.fps = new FPS();
+         return false;
+      }
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
       this.handler.onRotate = (angle: number, delta: number) => this.onRotate(angle, delta);
       this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
@@ -414,7 +421,8 @@ export class ViewerApp implements IApp {
 
       gl.canvas.width = width;
       gl.canvas.height = height - menubarHeight - panelHeight;
-      this.overlay.style.lineHeight = gl.canvas.height + 'px'; // vertically center text
+      this.overlay.width = gl.canvas.width;
+      this.overlay.height = gl.canvas.height;
    }
 
    private loadModel(query: string) {
@@ -429,7 +437,8 @@ export class ViewerApp implements IApp {
       if (lc.endsWith('.obj') || lc.endsWith('.blob')) {
 
          let statusFunc = (status: string) => {
-            this.overlay.innerText = status;
+            this.overlay.clear();
+            this.overlay.fillText(status);
          }
 
          this.loader.loadModelFile(query, statusFunc)
@@ -472,7 +481,8 @@ export class ViewerApp implements IApp {
       }
       else {
          // TODO multi line error messages not supported
-         this.overlay.innerText = 'Unknown Model:' + query;
+         this.overlay.clear();
+         this.overlay.fillText('Unknown Model:' + query);
       }
    }
 
@@ -546,10 +556,6 @@ export class ViewerApp implements IApp {
       }
    }
 
-   private syncPerspectiveCtrl() {
-      this.perspectiveCtrl.model = this.renderer.obj.model.clone();
-   }
-
    /**
     * Processes a click/touch event at the designated coordinates.
     * 
@@ -613,16 +619,24 @@ export class ViewerApp implements IApp {
 
    public tick() {
 
+      this.fps.tick();
+
       if (this.dirty) {
          this.renderer.render();
          if (this.perspectivePanel.visible) {
-            this.syncPerspectiveCtrl();
+            // synchronize the rotation matrices
+            this.perspectiveCtrl.model = this.renderer.obj.model.clone();
             this.perspectiveCtrl.render();
          }
          this.dirty = false;
       }
 
       if (this.animate) {
+         if (this.loader.loading === false) {
+            this.overlay.clear();
+            this.overlay.fillText(this.fps.rate.toFixed() + ' fps ' + this.fps.ms.toFixed(1) + ' ms', TextLocation.BottomLeft);
+         }
+
          // get the light vector with model transformation undone
          let vec = Vec4.fromVec3(this.renderer.uLightDirection, 1);
          vec = this.renderer.obj.model.inverse().multV(vec);

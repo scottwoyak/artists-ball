@@ -2,7 +2,7 @@
   background-color: rgb(128, 128, 150);
 }
 
-.ValuePlanesApp #Overlay {
+.ValuePlanesApp .Overlay {
   position: absolute;
   left: 0;
   top: 0;

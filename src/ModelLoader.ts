@@ -11,6 +11,15 @@ import { glObject } from './glObject';
  */
 export class ModelLoader {
 
+   private _loading = false;
+
+   /**
+    * Returns true if a file is currently being loaded
+    */
+   public get loading() {
+      return this._loading;
+   }
+
    /**
     * The WebWorker that does the download and processing
     */
@@ -24,6 +33,8 @@ export class ModelLoader {
     * @returns TriangleObj promise
     */
    public loadModelFile(file: string, updateStatus: StatusFunction): Promise<TriangleObj> {
+
+      this._loading = true;
 
       return new Promise<TriangleObj>((resolve, reject) => {
 
@@ -44,6 +55,8 @@ export class ModelLoader {
                }
             }
             else {
+               this._loading = false;
+
                let tObj = TriangleObj.fromData(data);
 
                updateStatus('');

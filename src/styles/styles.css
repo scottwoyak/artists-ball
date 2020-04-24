@@ -15,6 +15,43 @@ body {
   position: relative;
 }
 
+#MainCanvas {
+  background-color: rgb(114, 117, 134);
+}
+
+.Overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  font-size: 40px;
+  text-align: center;
+  color: white;
+  background-color: transparent;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* hide panels by default - users show them via menus */
+.Panel {
+  display: none;
+}
+
+.Panel #ExitButton {
+  position: absolute;
+  display: inline-block;
+  width: 20px;
+  right: 0;
+  top: 0;
+  cursor: pointer;
+  color: lightgray;
+}
+
+.ViewerApp #ExitButton:hover {
+  color: red;
+}
+
 @import "Menu.css";
 @import "Slider.css";
 @import "Tabs.css";
@@ -24,6 +61,14 @@ body {
 @media only screen and (max-device-width: 800px) {
   * {
     font-size: 40px;
+  }
+
+  .Panel #ExitButton {
+    width: 40px;
+  }
+
+  .OverlayAnnotation {
+    font-size: 20pt;
   }
 }
 

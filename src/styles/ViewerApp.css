@@ -1,51 +1,10 @@
-.ViewerApp #MainCanvas {
-  background-color: rgb(114, 117, 134);
-}
-
-.ViewerApp .Overlay {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  font-size: 40px;
-  text-align: center;
-  color: white;
-  background-color: transparent;
-  user-select: none;
-  pointer-events: none;
-}
-
-/* hide panels by default - users show them via menus */
-.ViewerApp #PerspectivePanel {
-  display: none;
-}
-
 .ViewerApp #PerspectiveCanvas {
   background-color: rgb(114, 117, 134);
   height: 100px;
   width: 100%;
 }
 
-.ViewerApp #ExitButton {
-  position: absolute;
-  display: inline-block;
-  width: 20px;
-  right: 0;
-  top: 0;
-  cursor: pointer;
-  color: lightgray;
-}
-
-.ViewerApp #ExitButton:hover {
-  color: red;
-}
-
 @media only screen and (max-device-width: 800px) {
-  .ViewerApp #ExitButton {
-    width: 40px;
-  }
-
   .ViewerApp #PerspectiveCanvas {
     height: 200px;
   }

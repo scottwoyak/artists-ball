@@ -6,6 +6,7 @@ import { Mat4 } from "./Mat";
 import { Renderer } from "./Renderer";
 import { glSpace } from "./glSpace";
 import { Camera, FixedSizeProvider } from "./Camera";
+import { OverlayCanvas } from "./OverlayCanvas";
 
 export type PerspectiveChangeFunction = () => void;
 
@@ -17,7 +18,7 @@ export interface IPerspectiveProvider {
 
 export class PerspectiveCtrl {
    private gl: WebGLRenderingContext;
-   private overlay: HTMLCanvasElement;
+   private overlay: OverlayCanvas;
    private handler: PointerEventHandler;
    public renderer: Renderer;
    public model: Mat4;
@@ -51,11 +52,7 @@ export class PerspectiveCtrl {
       this.renderer.camera.useOrthographic = true;
       this.renderer.showFloor = false;
 
-      this.overlay = document.createElement('canvas');
-      this.overlay.id = 'PerspectiveOverlayCanvas';
-      this.overlay.className = 'Overlay';
-
-      parent.appendChild(this.overlay);
+      this.overlay = new OverlayCanvas(parent, 'PerspectiveOverlayCanvas');
 
       this.handler = new PointerEventHandler(canvas);
       this.handler.onDown = (pos: Vec2) => this.onDown(pos);
@@ -96,7 +93,6 @@ export class PerspectiveCtrl {
 
       gl.canvas.width = panel.clientWidth;
       gl.canvas.height = panel.clientHeight;
-      this.overlay.style.lineHeight = gl.canvas.height + 'px'; // vertically center text
    }
 
    public render() {
@@ -153,9 +149,10 @@ export class PerspectiveCtrl {
 
    private drawEye() {
       let gl = this.gl;
-      let ctx = this.overlay.getContext('2d');
+      let ctx = this.overlay.context;
       ctx.canvas.width = gl.canvas.width;
       ctx.canvas.height = gl.canvas.height;
+      ctx.lineWidth = 2;
 
       if (isMobile) {
          ctx.lineWidth = 2 * ctx.lineWidth;
