@@ -14,6 +14,7 @@ import { Checkbox } from "./Checkbox";
 import { Radiobutton } from "./Radiobutton";
 import { PerspectiveCtrl } from "./PerspectiveCtrl";
 import { TriangleObjBuilder } from "./TriangleObjBuilder";
+import { Panel } from "./Panel";
 
 enum PointerMode {
    View,
@@ -28,6 +29,7 @@ export class ViewerApp implements IApp {
    private handler: PointerEventHandler;
    private rotateLightWithObject = false;
    private perspectiveCtrl: PerspectiveCtrl;
+   private perspectivePanel: Panel;
 
    private dirty: boolean = true;
    private animate: boolean = false;
@@ -195,26 +197,20 @@ export class ViewerApp implements IApp {
    }
 
    private createPerspectivePanel(div: HTMLDivElement) {
-      let panel = document.createElement('div');
-      panel.id = 'PerspectivePanel';
-      panel.className = 'Panel';
-      panel.classList.add('Container');
 
-      div.appendChild(panel);
-
-      let exitButton = document.createElement('div');
-      exitButton.id = 'ExitButton';
-      exitButton.className = 'DivButton';
-      exitButton.innerText = 'X';
-      exitButton.onclick = () => {
-         panel.style.display = 'none';
+      this.perspectivePanel = new Panel(div, 'PerspectivePanel');
+      this.perspectivePanel.onShow = (panel: Panel) => {
+         this.perspectiveCtrl.refresh();
+         this.updateSize();
+         this.dirty = true;
+      }
+      this.perspectivePanel.onHide = () => {
          this.updateSize();
          this.pointerMode = PointerMode.View;
          this.dirty = true;
       }
-      panel.appendChild(exitButton);
 
-      this.perspectiveCtrl = new PerspectiveCtrl(panel, this.renderer.camera);
+      this.perspectiveCtrl = new PerspectiveCtrl(this.perspectivePanel.div, this.renderer.camera);
       this.perspectiveCtrl.onChange = () => {
          this.dirty = true;
       }
@@ -378,10 +374,7 @@ export class ViewerApp implements IApp {
       });
 
       subMenu.addItem('Perspective...', () => {
-         document.getElementById('PerspectivePanel').style.display = 'block';
-         this.perspectiveCtrl.refresh();
-         this.updateSize();
-         this.dirty = true;
+         this.perspectivePanel.visible = true;
       });
    }
 
@@ -414,10 +407,9 @@ export class ViewerApp implements IApp {
       let height = window.innerHeight;
       let menubarHeight = document.getElementById('Menubar').clientHeight;
 
-      let panel = document.getElementById('PerspectivePanel');
       let panelHeight = 0;
-      if (panel && getComputedStyle(panel).display === 'block') {
-         panelHeight = panel.clientHeight;
+      if (this.perspectivePanel.visible) {
+         panelHeight = this.perspectivePanel.div.clientHeight;
       }
 
       gl.canvas.width = width;
@@ -623,8 +615,7 @@ export class ViewerApp implements IApp {
 
       if (this.dirty) {
          this.renderer.render();
-         let panel = document.getElementById('PerspectivePanel');
-         if (panel && getComputedStyle(panel).display === 'block') {
+         if (this.perspectivePanel.visible) {
             this.syncPerspectiveCtrl();
             this.perspectiveCtrl.render();
          }

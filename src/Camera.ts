@@ -42,11 +42,7 @@ export class FixedSizeProvider implements ISizeProvider {
    }
 }
 
-export interface ICamera {
-
-}
-
-export class Camera implements ICamera, IPerspectiveProvider {
+export class Camera implements IPerspectiveProvider {
 
    protected gl: WebGLRenderingContext;
    public eye = new Vec3(INITIAL_EYE);

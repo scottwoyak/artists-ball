@@ -1,5 +1,5 @@
 import { toRad, clamp, toDeg, isMobile } from "./Globals";
-import { Vec2, Vec3, Vec4 } from "./Vec";
+import { Vec2, Vec3 } from "./Vec";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { TriangleObj } from "./TriangleObj";
 import { Mat4 } from "./Mat";
