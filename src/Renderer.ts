@@ -312,8 +312,21 @@ export class Renderer {
    private renderToShadowMap(): void {
 
       let gl = this.gl;
-      if (!this.shadowFrameBuffer) {
-         let size = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), 4096);
+      let maxTextureSize = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE));
+      let desiredSize = this.camera.zoomFactor * Math.min(gl.canvas.width, gl.canvas.height);
+      let size = 256;
+      while (size < desiredSize && size * 2 <= maxTextureSize) {
+         size *= 2;
+      }
+
+      if (!this.shadowFrameBuffer || size !== this.shadowFrameBuffer.size) {
+
+         if (this.shadowFrameBuffer) {
+            this.shadowFrameBuffer.delete();
+            this.shadowColorTexture.delete();
+            this.shadowDepthTexture.delete();
+         }
+
          this.shadowFrameBuffer = new glFrameBuffer(gl, size, size);
          this.shadowColorTexture = this.shadowFrameBuffer.createTexture(glTextureStyle.Color);
          this.shadowDepthTexture = this.shadowFrameBuffer.createTexture(glTextureStyle.Depth);

@@ -11,6 +11,13 @@ export class glFrameBuffer {
    public readonly height: number;
 
    /**
+    * Gets the larger of the width or height
+    */
+   public get size(): number {
+      return Math.max(this.width, this.height);
+   }
+
+   /**
     * Create a frame buffer
     * 
     * @param glCtx The WebGL context
