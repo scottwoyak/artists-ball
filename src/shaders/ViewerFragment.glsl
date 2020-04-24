@@ -4,7 +4,6 @@ precision highp float;
 varying vec3 vNormal;
 varying vec3 vVertex;
 varying vec3 vShadowVertex;
-varying vec3 vObjVertex;
 
 uniform mat4 model;
 uniform mat4 view;
