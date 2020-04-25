@@ -2,11 +2,9 @@ import { SubMenu, Menubar } from "./Menu";
 import { ViewerApp } from "./ViewerApp";
 import { IApp } from "./IApp";
 import { PathTracerApp } from "./PathTracerApp";
-import { ValuePlanesApp } from "./ValuePlanesApp";
 
 enum AppType {
    ArtistsBall,
-   ValuePlanes,
    Viewer
 }
 
@@ -46,11 +44,6 @@ export class Launcher {
             this.app = new PathTracerApp(query);
             break;
 
-         case AppType.ValuePlanes:
-            document.title = 'Artist\'s Tools: Value Planes';
-            this.app = new ValuePlanesApp(query ?? 'Pose_02.blob');
-            break;
-
          case AppType.Viewer:
             document.title = 'Artist\'s Tools: Viewer';
             this.app = new ViewerApp(query);
@@ -66,7 +59,5 @@ export class Launcher {
       subMenu = this.menubar.addSubMenu('Apps', 'Apps');
       subMenu.addItem('Viewer', () => this.launch(AppType.Viewer));
       subMenu.addItem('Artist\'s Ball', () => this.launch(AppType.ArtistsBall));
-      subMenu.addItem('Value Planes', () => this.launch(AppType.ValuePlanes));
-
    }
 }

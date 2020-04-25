@@ -99,6 +99,8 @@ export class ValuePlanesCtrl {
       let tArrow = new TriangleObjBuilder('Light Arrow');
       tArrow.addArrow();
       this.arrow = new glObject(gl, tArrow, this.program);
+
+      this.draw();
    }
 
    private onDown(pos: Vec2) {
@@ -139,6 +141,8 @@ export class ValuePlanesCtrl {
             this.provider.threshold2 = angle;
             this.onThreshold2Change(angle);
          }
+
+         this.draw();
       }
    }
 

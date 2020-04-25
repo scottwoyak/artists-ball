@@ -20,9 +20,9 @@ export class PerspectiveCtrl {
    private gl: WebGLRenderingContext;
    private overlay: OverlayCanvas;
    private handler: PointerEventHandler;
-   public renderer: Renderer;
-   public model: Mat4;
+   private renderer: Renderer;
    private provider: IPerspectiveProvider;
+
    public onChange: PerspectiveChangeFunction;
 
    public constructor(
@@ -57,13 +57,13 @@ export class PerspectiveCtrl {
       this.handler = new PointerEventHandler(canvas);
       this.handler.onDown = (pos: Vec2) => this.onDown(pos);
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
+   }
 
-      this.onResize();
-      window.addEventListener('resize', () => { this.onResize(); });
+   public delete() {
+      this.renderer.delete();
    }
 
    private setEyePos(pos: Vec2) {
-      let gl = this.gl;
 
       // convert to model space
       this.provider.eye = this.fromScreen(pos);
@@ -81,27 +81,22 @@ export class PerspectiveCtrl {
       this.setEyePos(pos);
    }
 
-   public refresh() {
-      this.onResize();
-      this.renderer.setModel(this.renderer.tObj);
-   }
-
-   private onResize() {
+   public setSize(width: number, height: number) {
       let gl = this.gl;
-
-      let panel = document.getElementById('PerspectivePanel');
-
-      gl.canvas.width = panel.clientWidth;
-      gl.canvas.height = panel.clientHeight;
+      gl.canvas.width = width;
+      gl.canvas.height = height;
    }
 
-   public render() {
-      this.renderer.obj.model = this.model.clone().rotY(toRad(90));
+   public render(modelMat: Mat4) {
+      // set the model matrix of the object to that of the primary
+      // obj with an additional 90 deg rotation
+      this.renderer.obj.model = modelMat.clone().rotY(toRad(90));
 
       // shift the view so that the object is on the far right. Far enough that there is
       // a square space on the end that contains the origin (center of object we're viewing)
       let viewSpace = this.renderer.camera.getViewSpace();
       this.renderer.camera.lookAt = new Vec3([-viewSpace.width / 2 + viewSpace.height / 2, 0, 0]);
+
       this.renderer.render();
 
       this.drawEye();

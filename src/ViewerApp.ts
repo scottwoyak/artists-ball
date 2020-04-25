@@ -12,11 +12,12 @@ import { glColor3 } from "./glColor";
 import { Slider } from "./Slider";
 import { Checkbox } from "./Checkbox";
 import { Radiobutton } from "./Radiobutton";
-import { PerspectiveCtrl } from "./PerspectiveCtrl";
-import { TriangleObjBuilder } from "./TriangleObjBuilder";
 import { Panel } from "./Panel";
 import { FPS } from "./FPS";
 import { OverlayCanvas, TextLocation } from "./OverlayCanvas";
+import { ValuePlanesPanel } from "./ValuePlanesPanel";
+import { ValueRange } from "./ValueRange";
+import { PerspectivePanel } from "./PerspectivePanel";
 
 enum PointerMode {
    View,
@@ -30,8 +31,8 @@ export class ViewerApp implements IApp {
    private overlay: OverlayCanvas;
    private handler: PointerEventHandler;
    private rotateLightWithObject = false;
-   private perspectiveCtrl: PerspectiveCtrl;
-   private perspectivePanel: Panel;
+   private perspectivePanel: PerspectivePanel;
+   private valuePlanesPanel: ValuePlanesPanel;
 
    private dirty: boolean = true;
    private animate: boolean = false;
@@ -48,7 +49,7 @@ export class ViewerApp implements IApp {
 
    public create(div: HTMLDivElement) {
 
-      div.className = 'ViewerApp';
+      div.id = 'ViewerApp';
 
       const viewContainer = document.createElement('div');
       viewContainer.id = 'ViewContainer';
@@ -56,6 +57,7 @@ export class ViewerApp implements IApp {
       div.appendChild(viewContainer);
       this.createViewElements(viewContainer);
       this.createPerspectivePanel(div);
+      this.createValuePlanesPanel(div);
       this.updateSize();
 
       this.loadModel(this.query);
@@ -63,6 +65,8 @@ export class ViewerApp implements IApp {
 
    public delete() {
       cancelAnimationFrame(this.animationFrame);
+      this.perspectivePanel.delete();
+      this.valuePlanesPanel.delete();
    }
 
    private createViewElements(parent: HTMLElement) {
@@ -205,9 +209,9 @@ export class ViewerApp implements IApp {
 
    private createPerspectivePanel(div: HTMLDivElement) {
 
-      this.perspectivePanel = new Panel(div, 'PerspectivePanel');
+      this.perspectivePanel = new PerspectivePanel(div, 'PerspectivePanel', this.renderer.camera);
       this.perspectivePanel.onShow = (panel: Panel) => {
-         this.perspectiveCtrl.refresh();
+         this.valuePlanesPanel.visible = false;
          this.updateSize();
          this.dirty = true;
       }
@@ -217,57 +221,49 @@ export class ViewerApp implements IApp {
          this.dirty = true;
       }
 
-      this.perspectiveCtrl = new PerspectiveCtrl(this.perspectivePanel.div, this.renderer.camera);
-      this.perspectiveCtrl.onChange = () => {
+      this.perspectivePanel.onChange = () => {
          this.dirty = true;
       }
    }
+
+   private createValuePlanesPanel(div: HTMLDivElement) {
+
+      this.valuePlanesPanel = new ValuePlanesPanel(div, 'ValuePlanesPanel', this.renderer.valueRange);
+      this.valuePlanesPanel.onShow = (panel: Panel) => {
+         this.perspectivePanel.visible = false;
+
+         this.updateSize();
+         this.renderer.renderMode = RenderMode.Contours;
+         this.valuePlanesPanel.toRenderer(this.renderer);
+
+         this.dirty = true;
+      }
+      this.valuePlanesPanel.onHide = () => {
+         this.updateSize();
+         this.renderer.renderMode = RenderMode.Normal;
+         this.renderer.valueRange = ValueRange.Standard;
+         this.dirty = true;
+      }
+      this.valuePlanesPanel.onChange = () => {
+         this.valuePlanesPanel.toRenderer(this.renderer);
+         this.dirty = true;
+      }
+   }
+
    public buildMenu(menubar: Menubar) {
       createModelsMenu(menubar, (file) => this.loadModel(file));
 
       let subMenu: SubMenu;
-      subMenu = menubar.addSubMenu('Options', 'Options');
-
-      let resetSubMenu = subMenu.addSubMenu('Reset', 'Reset');
-      resetSubMenu.addItem('All', () => {
-         this.renderer.reset(Reset.All);
-         this.dirty = true;
-      });
-      resetSubMenu.addItem('Lights', () => {
-         this.renderer.reset(Reset.Lights);
-         this.dirty = true;
-      });
-      resetSubMenu.addItem('View', () => {
-         this.renderer.reset(Reset.View);
-         this.dirty = true;
-      });
-      resetSubMenu.addItem('Rendering', () => {
-         this.renderer.reset(Reset.Rendering);
-         this.dirty = true;
-      });
+      subMenu = menubar.addSubMenu('Tools', 'Tools');
 
       subMenu.addCheckbox({
-         label: 'Show Floor',
-         id: 'ShowFloor',
-         checked: () => this.renderer.showFloor,
-         oncheck: (checkbox: Checkbox) => {
-            this.renderer.showFloor = checkbox.checked;
-            this.dirty = true;
-         }
-      });
-      subMenu.addCheckbox({
-         label: 'Show Contours',
-         id: 'ShowContours',
+         label: 'Show Contours using Color',
+         id: 'ColorContours',
          checked: () => this.renderer.renderMode === RenderMode.Contours,
          oncheck: (checkbox: Checkbox) => {
             this.renderer.renderMode = checkbox.checked ? RenderMode.Contours : RenderMode.Normal;
             this.dirty = true;
          }
-      });
-      subMenu.addItem('Reverse Object', () => {
-         this.renderer.tObj.reverse();
-         this.renderer.obj.uploadTriangles();
-         this.dirty = true;
       });
 
       let highlightSubMenu = subMenu.addSubMenu('Highlights');
@@ -313,9 +309,9 @@ export class ViewerApp implements IApp {
          label: 'Shininess',
          min: 1,
          max: 50,
-         value: this.renderer.uShininess,
+         value: this.renderer.shininess,
          oninput: (slider: Slider) => {
-            this.renderer.uShininess = slider.value;
+            this.renderer.shininess = slider.value;
             this.dirty = true;
          },
       });
@@ -362,6 +358,49 @@ export class ViewerApp implements IApp {
          }
       });
 
+      subMenu.addItem('Perspective...', () => {
+         this.perspectivePanel.visible = true;
+      });
+
+      subMenu.addItem('Value Planes...', () => {
+         this.valuePlanesPanel.visible = true;
+      });
+
+      subMenu = menubar.addSubMenu('Options', 'Options');
+
+      let resetSubMenu = subMenu.addSubMenu('Reset', 'Reset');
+      resetSubMenu.addItem('All', () => {
+         this.renderer.reset(Reset.All);
+         this.dirty = true;
+      });
+      resetSubMenu.addItem('Lights', () => {
+         this.renderer.reset(Reset.Lights);
+         this.dirty = true;
+      });
+      resetSubMenu.addItem('View', () => {
+         this.renderer.reset(Reset.View);
+         this.dirty = true;
+      });
+      resetSubMenu.addItem('Rendering', () => {
+         this.renderer.reset(Reset.Rendering);
+         this.dirty = true;
+      });
+
+      subMenu.addCheckbox({
+         label: 'Show Floor',
+         id: 'ShowFloor',
+         checked: () => this.renderer.showFloor,
+         oncheck: (checkbox: Checkbox) => {
+            this.renderer.showFloor = checkbox.checked;
+            this.dirty = true;
+         }
+      });
+      subMenu.addItem('Reverse Object', () => {
+         this.renderer.tObj.reverse();
+         this.renderer.obj.uploadTriangles();
+         this.dirty = true;
+      });
+
       let rotateSubMenu = subMenu.addSubMenu('Rotation');
       rotateSubMenu.addCheckbox({
          label: 'Keep the light pointing at the same spot on the model',
@@ -378,10 +417,6 @@ export class ViewerApp implements IApp {
          oncheck: (checkbox: Checkbox) => {
             this.renderer.lockFloor = checkbox.checked;
          }
-      });
-
-      subMenu.addItem('Perspective...', () => {
-         this.perspectivePanel.visible = true;
       });
    }
 
@@ -418,6 +453,9 @@ export class ViewerApp implements IApp {
       if (this.perspectivePanel.visible) {
          panelHeight = this.perspectivePanel.div.clientHeight;
       }
+      else if (this.valuePlanesPanel.visible) {
+         panelHeight = this.valuePlanesPanel.div.clientHeight;
+      }
 
       gl.canvas.width = width;
       gl.canvas.height = height - menubarHeight - panelHeight;
@@ -444,11 +482,8 @@ export class ViewerApp implements IApp {
          this.loader.loadModelFile(query, statusFunc)
             .then((tObj) => {
 
-               let builder = new TriangleObjBuilder('Scott');
-               builder.addSphere(10, 0.2, new Vec3([0, 0, 0]));
-               //tObj = builder;
                this.renderer.setModel(tObj);
-               this.perspectiveCtrl.setModel(tObj);
+               this.perspectivePanel.setModel(tObj);
                this.loader.orient(this.renderer.obj);
 
                if (query.startsWith('Head') || query.startsWith('Teapot') || query.startsWith('Male_02')) {
@@ -510,7 +545,7 @@ export class ViewerApp implements IApp {
    private rotateObjects(xRad: number, yRad: number) {
 
       // get the light vector with model transformation undone
-      let vec = Vec4.fromVec3(this.renderer.uLightDirection, 1);
+      let vec = Vec4.fromVec3(this.renderer.lightDirection, 1);
       vec = this.renderer.obj.model.inverse().multV(vec);
 
       if (this.renderer.lockFloor) {
@@ -522,7 +557,7 @@ export class ViewerApp implements IApp {
          if (this.rotateLightWithObject) {
             // apply the changes to the light
             vec = this.renderer.obj.model.multV(vec);
-            this.renderer.uLightDirection = vec.xyz;
+            this.renderer.lightDirection = vec.xyz;
          }
       }
       else {
@@ -541,7 +576,7 @@ export class ViewerApp implements IApp {
          }
 
          // apply the changes to the light
-         this.renderer.uLightDirection = vec.xyz;
+         this.renderer.lightDirection = vec.xyz;
       }
    }
 
@@ -587,7 +622,7 @@ export class ViewerApp implements IApp {
 
    private onRotate(angle: number, delta: number) {
       // get the light vector with model transformation undone
-      let vec = Vec4.fromVec3(this.renderer.uLightDirection, 1);
+      let vec = Vec4.fromVec3(this.renderer.lightDirection, 1);
       vec = this.renderer.obj.model.inverse().multV(vec);
 
       this.renderer.rotZ(delta);
@@ -595,7 +630,7 @@ export class ViewerApp implements IApp {
       // apply the updated transform 
       if (this.rotateLightWithObject) {
          vec = this.renderer.obj.model.multV(vec);
-         this.renderer.uLightDirection = vec.xyz;
+         this.renderer.lightDirection = vec.xyz;
       }
 
       this.dirty = true;
@@ -625,8 +660,7 @@ export class ViewerApp implements IApp {
          this.renderer.render();
          if (this.perspectivePanel.visible) {
             // synchronize the rotation matrices
-            this.perspectiveCtrl.model = this.renderer.obj.model.clone();
-            this.perspectiveCtrl.render();
+            this.perspectivePanel.render(this.renderer.obj.model.clone());
          }
          this.dirty = false;
       }
@@ -638,7 +672,7 @@ export class ViewerApp implements IApp {
          }
 
          // get the light vector with model transformation undone
-         let vec = Vec4.fromVec3(this.renderer.uLightDirection, 1);
+         let vec = Vec4.fromVec3(this.renderer.lightDirection, 1);
          vec = this.renderer.obj.model.inverse().multV(vec);
 
          // animate
@@ -647,7 +681,7 @@ export class ViewerApp implements IApp {
          // apply the updated transform 
          if (this.rotateLightWithObject) {
             vec = this.renderer.obj.model.multV(vec);
-            this.renderer.uLightDirection = vec.xyz;
+            this.renderer.lightDirection = vec.xyz;
          }
 
          this.dirty = true;

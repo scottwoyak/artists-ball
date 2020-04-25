@@ -1,4 +1,4 @@
-.PathTracerApp #description {
+#PathTracerApp #description {
   position: absolute;
   bottom: 5px;
   left: 2px;
@@ -13,7 +13,7 @@
   user-select: none;
 }
 
-.PathTracerApp #drawTime {
+#PathTracerApp #drawTime {
   position: absolute;
   top: 5px;
   left: 2px;
@@ -27,7 +27,7 @@
   user-select: none;
 }
 
-.PathTracerApp #progressBar {
+#PathTracerApp #progressBar {
   position: absolute;
   bottom: 0px;
   left: 0px;
@@ -36,7 +36,7 @@
   background-color: rgba(50, 205, 50, 0.75);
 }
 
-.PathTracerApp #modeButton {
+#PathTracerApp #modeButton {
   position: absolute;
   bottom: 5px;
   right: 5px;
@@ -53,21 +53,37 @@
   display: inline-block;
 }
 
+#PathTracerApp .SliderLabel {
+  flex: 0 0 150px;
+}
+
+#PathTracerApp .SliderValueSpan {
+  flex: 0 0 80px;
+}
+
 @media only screen and (max-device-width: 800px) {
-  .PathTracerApp #drawTime {
+  #PathTracerApp #drawTime {
     left: 4px;
     top: 10px;
     font-size: 16pt;
     font-weight: darker;
   }
 
-  .PathTracerApp #modeButton {
+  #PathTracerApp #modeButton {
     font-size: 20pt;
     font-weight: darker;
   }
 
-  .PathTracerApp #description {
+  #PathTracerApp #description {
     font-size: 20pt;
     font-weight: darker;
+  }
+
+  #PathTracerApp .SliderLabel {
+    flex: 0 0 300px;
+  }
+
+  #PathTracerApp .SliderValueSpan {
+    flex: 0 0 160px;
   }
 }

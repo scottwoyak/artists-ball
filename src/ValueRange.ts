@@ -4,8 +4,13 @@
  */
 export class ValueRange {
 
-   public static Standard = new ValueRange(1.0, 0.2, 0.1)
-   public static EmphasizeHighlights = new ValueRange(1.0, 0.2, 0.75);
+   public static get Standard() {
+      return new ValueRange(1.0, 0.2, 0.1);
+   }
+
+   public static get EmphasizeHighlights() {
+      return new ValueRange(1.0, 0.2, 0.75);
+   }
 
    private _highlight: number;
    private _shadow: number;

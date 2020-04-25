@@ -1,18 +1,22 @@
+.SliderDiv {
+  display: flex;
+  align-items: stretch;
+  margin-top: 7px;
+  margin-bottom: 7px;
+}
+
 .SliderLabel {
-  display: inline-block;
-  width: 25%;
+  flex: 0 0 125px;
   text-align: right;
-  padding-bottom: 9px;
 }
 
 .SliderRange {
-  width: 50%;
+  flex: 1 1 200px;
   -webkit-appearance: none;
   outline: none;
   border-radius: 15px;
   height: 15px;
-  margin-top: 5px;
-  margin-bottom: 10px;
+  margin-top: 3px;
   margin-left: 5px;
   margin-right: 5px;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3) inset;
@@ -48,51 +52,69 @@
 }
 
 .SliderColorSpan {
-  display: inline-block;
   vertical-align: text-bottom;
+  flex: 0 0 15px;
   width: 15px;
   height: 15px;
   margin-right: 5px;
-  margin-bottom: 1px;
+  margin-top: 2px;
   border-radius: 50%;
   border: gray;
   border-style: solid;
   border-width: 1px;
 }
 
+.SliderValueSpan {
+  flex: 0 0 60px;
+}
+
 @media only screen and (max-device-width: 800px) {
+  .SliderDiv {
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+
   .SliderLabel {
-    width: 30%;
-    padding-bottom: 18px;
+    flex: 0 0 250px;
   }
 
   .SliderRange {
-    width: 45%;
+    flex: 1 1 400px;
+    border-radius: 30px;
     height: 30px;
-    border-radius: 15px;
-    margin-top: 0px;
-    margin-bottom: 24px;
+    margin-top: 6px;
     margin-left: 10px;
-    margin-right: 20px;
+    margin-right: 10px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.3) inset;
+    border-width: 1px;
   }
 
   .SliderRange::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    box-shadow: 2px 2px 2px #000000, 0px 0px 2px #0d0d0d;
     width: 40px;
     height: 40px;
+    border-width: 1px;
   }
 
   .SliderRange::-moz-range-thumb {
+    box-shadow: 2px 2px 2px #000000, 0px 0px 1px #0d0d0d;
     width: 40px;
     height: 40px;
+    border-width: 1px;
   }
 
   .SliderColorSpan {
-    width: 34px;
-    height: 34px;
-    margin-bottom: 4px;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    margin-top: 4px;
+    border-width: 2px;
   }
 
   .SliderValueSpan {
-    margin-left: 10px;
+    flex: 0 0 120px;
   }
 }

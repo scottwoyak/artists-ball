@@ -1,11 +1,77 @@
-.ViewerApp #PerspectiveCanvas {
+#ViewerApp #PerspectiveCanvas {
   background-color: rgb(114, 117, 134);
   height: 100px;
   width: 100%;
 }
 
+#ViewerApp #ValuePlanesPanel {
+  height: 154px;
+  width: 100%;
+}
+
+#ValuePlanesPanel .SlidersDiv {
+  position: absolute;
+  left: 0px;
+  right: 154px;
+}
+
+#ValuePlanesPanel #LightLightRange::-webkit-slider-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+#ValuePlanesPanel #LightLightSliderRange::-moz-range-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+
+#ValuePlanesPanel #MidLightRange::-webkit-slider-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+#ValuePlanesPanel #MidLightSliderRange::-moz-range-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+
+#ValuePlanesPanel #DarkLightRange::-webkit-slider-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+#ValuePlanesPanel #DarkLightSliderRange::-moz-range-thumb {
+  background: linear-gradient(135deg, lightgray, darkgray);
+}
+
+#ValuePlanesPanel #ValuePlanesCanvas {
+  position: absolute;
+  right: 0px;
+  width: 150px;
+  height: 150px;
+  background-color: rgb(128, 128, 150);
+}
+
+#ValuePlanesPanel #ValuePlanesOverlayCanvas {
+  position: absolute;
+  right: 0px;
+  width: 150px;
+  height: 150px;
+  background-color: transparent;
+}
+
 @media only screen and (max-device-width: 800px) {
-  .ViewerApp #PerspectiveCanvas {
+  #ViewerApp #PerspectiveCanvas {
     height: 200px;
+  }
+
+  #ViewerApp #ValuePlanesPanel {
+    height: 308px;
+  }
+
+  #ValuePlanesPanel .SlidersDiv {
+    right: 308px;
+  }
+
+  #ValuePlanesPanel #ValuePlanesCanvas {
+    width: 300px;
+    height: 300px;
+  }
+
+  #ValuePlanesPanel #ValuePlanesOverlayCanvas {
+    width: 300px;
+    height: 300px;
   }
 }

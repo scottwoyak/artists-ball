@@ -60,7 +60,7 @@ export class PathTracerApp implements IApp {
 
    public create(div: HTMLDivElement) {
 
-      div.className = 'PathTracerApp';
+      div.id = 'PathTracerApp';
 
       const container = document.createElement('div');
       container.className = 'Container';

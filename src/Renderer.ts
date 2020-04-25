@@ -80,7 +80,7 @@ export class Renderer {
    private shadowColorTexture: glTexture;
    private shadowDepthTexture: glTexture;
 
-   public uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
+   public lightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
 
    public ballColor = new glColor3([1, 1, 1]);
    public readonly yellow = new glColor3([1.0, 0.9, 0.7]);
@@ -94,7 +94,7 @@ export class Renderer {
    public useCulling = true;
    public miniViewShowContours = false;
    public showHighlights = true;
-   public uShininess = INITIAL_SHININESS;
+   public shininess = INITIAL_SHININESS;
    public lockFloor = false;
    public camera: Camera;
 
@@ -129,6 +129,27 @@ export class Renderer {
       let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
       gl.clearColor(color.r, color.g, color.b, 1);
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+   }
+
+   public delete() {
+      this.obj.delete();
+      this.floor.delete();
+      this.ball.delete();
+      this.arrow.delete();
+
+      if (this.shadowFrameBuffer) {
+         this.shadowFrameBuffer.delete();
+         this.shadowColorTexture.delete();
+         this.shadowDepthTexture.delete();
+      }
+
+      this.obj = null;
+      this.floor = null;
+      this.ball = null;
+      this.arrow = null;
+      this.shadowFrameBuffer = null;
+      this.shadowColorTexture = null;
+      this.shadowDepthTexture = null;
    }
 
    public renderModeCanToggleHighlights(): boolean {
@@ -192,10 +213,10 @@ export class Renderer {
    public rotateLight(xRad: number, yRad: number) {
       let matX = Mat4.fromRotX(yRad);
       let matY = Mat4.fromRotY(xRad);
-      let vec = Vec4.fromVec3(this.uLightDirection, 1);
+      let vec = Vec4.fromVec3(this.lightDirection, 1);
       vec = matX.multV(vec);
       vec = matY.multV(vec);
-      this.uLightDirection = vec.xyz;
+      this.lightDirection = vec.xyz;
    }
 
 
@@ -232,7 +253,7 @@ export class Renderer {
 
       // reset the view and the light
       this.reset(Reset.All);
-      this.uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
+      this.lightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
    }
 
    public reset(what: Reset) {
@@ -244,7 +265,7 @@ export class Renderer {
 
             break;
          case Reset.Lights:
-            this.uLightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
+            this.lightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
             break;
 
          case Reset.View:
@@ -260,7 +281,8 @@ export class Renderer {
          case Reset.Rendering:
             this.renderMode = RenderMode.Normal;
             this.showHighlights = true;
-            this.uShininess = INITIAL_SHININESS;
+            this.shininess = INITIAL_SHININESS;
+            this.valueRange = ValueRange.Standard;
             break;
       }
    }
@@ -272,6 +294,13 @@ export class Renderer {
       this.renderToScreen();
    }
 
+   private setValueRangeUniforms(valueRange: ValueRange) {
+      let uni = new glUniform(this.gl, this.program);
+      uni.set('uLightIntensity', valueRange.lightIntensity);
+      uni.set('uAmbientIntensity', valueRange.shadow);
+      uni.set('uHighlight', valueRange.highlight);
+   }
+
    public setStdUniforms(): glUniform {
 
       let uni = new glUniform(this.gl, this.program);
@@ -280,23 +309,21 @@ export class Renderer {
       uni.set('projection', this.camera.projection);
       uni.set('uEye', this.camera.eye);
       uni.set('uOrthographic', this.camera.useOrthographic);
-      uni.set('uLightDirection', this.uLightDirection);
+      uni.set('uLightDirection', this.lightDirection);
       uni.set('uUseShadows', true);
       uni.seti('uRenderMode', this.renderMode);
       uni.set('uShowHighlights', this.showHighlights || this.renderMode === RenderMode.EmphasizeHighlights);
-      uni.set('uShininess', this.uShininess);
+      uni.set('uShininess', this.shininess);
 
       let valueRange;
       if (this.renderMode === RenderMode.EmphasizeHighlights) {
          valueRange = ValueRange.EmphasizeHighlights;
       }
       else {
-         valueRange = ValueRange.Standard;
+         valueRange = this.valueRange;
       }
+      this.setValueRangeUniforms(valueRange);
 
-      uni.set('uLightIntensity', valueRange.lightIntensity);
-      uni.set('uAmbientIntensity', valueRange.shadow);
-      uni.set('uHighlight', valueRange.highlight);
       uni.set('uWhiteColor', glColor3.modelWhite);
       uni.set('uBlackColor', glColor3.modelBlack);
 
@@ -347,7 +374,7 @@ export class Renderer {
 
       let center = new Vec3([0, 0, 0]);
       let up = new Vec3([0, 1, 0]);
-      let eye = new Vec3([-this.uLightDirection.x, -this.uLightDirection.y, -this.uLightDirection.z]);
+      let eye = new Vec3([-this.lightDirection.x, -this.lightDirection.y, -this.lightDirection.z]);
       let mat = Mat4.makeLookAt(eye, center, up);
       mat.set(0, 3, 0);
       mat.set(1, 3, 0);
@@ -409,6 +436,7 @@ export class Renderer {
             gl.enable(gl.CULL_FACE);
             gl.cullFace(gl.BACK);
             uni.seti('uRenderMode', RenderMode.Normal);
+            this.setValueRangeUniforms(ValueRange.Standard);
 
             this.floor.draw();
 
@@ -505,9 +533,9 @@ export class Renderer {
       uni.seti('uRenderMode', RenderMode.Normal);
 
       // back out angles as if looking down the z-axis
-      let x = this.uLightDirection.x;
-      let y = this.uLightDirection.y;
-      let z = this.uLightDirection.z;
+      let x = this.lightDirection.x;
+      let y = this.lightDirection.y;
+      let z = this.lightDirection.z;
 
       // start by looking down from the Z direction
       let radius = Math.sqrt(x * x + y * y + z * z);

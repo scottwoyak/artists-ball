@@ -6,6 +6,9 @@ export class Panel {
    public onShow: PanelShowHideFunction;
    public onHide: PanelShowHideFunction;
 
+   protected show(value: boolean) {
+   }
+
    public get visible(): boolean {
       return getComputedStyle(this.div).display === 'block';
    }
@@ -13,6 +16,9 @@ export class Panel {
    public set visible(value: boolean) {
       if (value !== this.visible) {
          this.div.style.display = value ? 'block' : 'none';
+
+         // let derived classes know
+         this.show(value);
 
          if (value) {
             if (this.onShow) {
@@ -43,5 +49,9 @@ export class Panel {
          this.visible = false;
       }
       this.div.appendChild(exitButton);
+   }
+
+   public delete() {
+      // override this function in derived classes if needed
    }
 }

@@ -46,6 +46,7 @@ body {
   top: 0;
   cursor: pointer;
   color: lightgray;
+  z-index: 1;
 }
 
 .ViewerApp #ExitButton:hover {
@@ -73,5 +74,4 @@ body {
 }
 
 @import "PathTracerApp.css";
-@import "ValuePlanesApp.css";
 @import "ViewerApp.css";
