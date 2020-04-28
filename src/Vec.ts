@@ -215,20 +215,40 @@ export class Vec3 extends Vec implements IVec3 {
    }
 
    /** 
-    * Normalizes this vector, and stores and returns the result.
+    * Returns a normalized version of this vector.
     * 
     * @returns The resulting normalized vector.
     */
    public normalize(): Vec3 {
       let mag = this.magnitude();
-      let ret = this.clone();
-      if (mag !== 0) {
-         for (let i = 0; i < this.values.length; i++) {
-            ret.values[i] /= mag;
-         }
+      if (mag === 0) {
+         return new Vec3();
       }
+      else {
+         return this.mult(1 / mag);
+      }
+   }
 
-      return ret;
+   /**
+    * Multiplies members by a value and returns the new vector
+    * 
+    * @param value The multiplication value.
+    */
+   public mult(value: number): Vec3 {
+      return new Vec3([
+         this.x * value,
+         this.y * value,
+         this.z * value,
+      ]);
+   }
+
+   /**
+    * Returns the vector pointing in the opposite direction.
+    * 
+    * @returns The negated vector.
+    */
+   public negate(): Vec3 {
+      return new Vec3([-this.x, -this.y, -this.z]);
    }
 
    /**
@@ -272,6 +292,31 @@ export class Vec3 extends Vec implements IVec3 {
          A[2] * B[0] - A[0] * B[2],
          A[0] * B[1] - A[1] * B[0]
       ]);
+   }
+
+   /**
+    * Computes the distance from this point to a specified point.
+    * 
+    * @param pt The point.
+    * @returns The distance to the point.
+    */
+   public distanceToPt(pt: Vec3): number {
+      return this.subtract(pt).magnitude();
+   }
+
+   /**
+    * Computes the distance from this point to a plane defined as a*x + b*y + c*z = d
+    * 
+    * @param plane The plane coefficients.
+    * @returns The distance to the plane.
+    */
+   public distanceToPlane(plane: Vec3): number {
+      let a = plane.x;
+      let b = plane.y;
+      let c = plane.z;
+      let d = -(a * a + b * b + c * c);
+
+      return Math.abs(a * this.x + b * this.y + c * this.z + d) / Math.sqrt(a * a + b * b + c * c);
    }
 }
 
