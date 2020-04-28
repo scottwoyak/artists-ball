@@ -2,6 +2,11 @@ import { Vec3, Vec4 } from "./Vec";
 import { IVec3 } from "./IVec3";
 import { Mat4 } from "./Mat";
 
+export interface IMinMax {
+   readonly min: number;
+   readonly max: number;
+}
+
 export class BoundingBox {
    public min: Vec3;
    public max: Vec3;
@@ -31,6 +36,19 @@ export class BoundingBox {
          (this.min.y + this.max.y) / 2,
          (this.min.z + this.max.z) / 2,
       ]);
+   }
+
+   public get corners(): Vec3[] {
+      let corners: Vec3[] = [];
+      corners.push(new Vec3([this.min.x, this.min.y, this.min.z]));
+      corners.push(new Vec3([this.min.x, this.min.y, this.max.z]));
+      corners.push(new Vec3([this.min.x, this.max.y, this.min.z]));
+      corners.push(new Vec3([this.min.x, this.max.y, this.max.z]));
+      corners.push(new Vec3([this.max.x, this.min.y, this.min.z]));
+      corners.push(new Vec3([this.max.x, this.min.y, this.max.z]));
+      corners.push(new Vec3([this.max.x, this.max.y, this.min.z]));
+      corners.push(new Vec3([this.max.x, this.max.y, this.max.z]));
+      return corners;
    }
 
    public constructor(min: Vec3 = new Vec3([Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE]),
@@ -94,6 +112,38 @@ export class BoundingBox {
       ret.max.x = Math.max(v1.x, v2.x);
       ret.max.y = Math.max(v1.y, v2.y);
       ret.max.z = Math.max(v1.z, v2.z);
+
+      return ret;
+   }
+
+   public distToPoint(pt: Vec3): IMinMax {
+      let ret = {
+         min: Number.MAX_VALUE,
+         max: -Number.MAX_VALUE,
+      }
+
+      let corners = this.corners;
+      corners.forEach((corner: Vec3) => {
+         let d = corner.distanceToPt(pt);
+         ret.min = Math.min(d, ret.min);
+         ret.max = Math.min(d, ret.max);
+      });
+
+      return ret;
+   }
+
+   public distToPlane(plane: Vec3): IMinMax {
+      let ret = {
+         min: Number.MAX_VALUE,
+         max: -Number.MAX_VALUE,
+      }
+
+      let corners = this.corners;
+      corners.forEach((corner: Vec3) => {
+         let d = corner.distanceToPlane(plane);
+         ret.min = Math.min(d, ret.min);
+         ret.max = Math.max(d, ret.max);
+      });
 
       return ret;
    }
