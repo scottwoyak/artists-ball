@@ -14,12 +14,15 @@ import { glTexture, glTextureStyle } from './glTexture';
 import { glFrameBuffer } from './glFrameBuffer';
 import { glProgram } from './glProgram';
 import { ValueRange } from './ValueRange';
-import { Camera, ObjSizeProvider } from './Camera';
+import { Camera, ObjSizeProvider, FixedSizeProvider } from './Camera';
+import { IMinMax } from './BoundingBox';
 
 const BALL_RADIUS = 0.5;
-const INITIAL_LIGHT_DIRECTION = [1.0, -1.0, -1.5];
+const INITIAL_LIGHT_POS = new Vec3([-1.0, 1.0, 1.5]);
 const INITIAL_VIEW = Mat4.identity;
 const INITIAL_SHININESS = 15;
+const INITIAL_LIGHT_INTENSITY = 1.0;
+const INITIAL_FALLOFF = 0.5;
 export const INITIAL_EYE = [0, 0, 6]; // 3 times the max object dimension of 2. For a model, about 15 ft away
 
 export class Contour {
@@ -56,6 +59,29 @@ export enum Reset {
    Rendering
 }
 
+export enum LightType {
+   Point,
+   Directional
+}
+
+export interface IRenderOptions {
+   view: Mat4;
+   valueRange: ValueRange;
+   lightPos: Vec3;
+   lightType: LightType;
+   falloff: number;
+   lightIntensity: number;
+   contours: Contour[];
+   useCulling: boolean;
+   showHighlights: boolean;
+   shininess: number;
+   camera: Camera;
+   renderMode: RenderMode;
+   whiteColor: glColor3;
+   blackColor: glColor3;
+   useShadows: boolean;
+}
+
 /**
  * Class that renders triangles and a light source
  */
@@ -63,10 +89,75 @@ export class Renderer {
 
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private program: glProgram;
-   public view = INITIAL_VIEW.clone();
-   private lightView = new Mat4();
+   public readonly yellow = new glColor3([1.0, 0.9, 0.7]);
 
-   public valueRange = ValueRange.Standard;
+   public options: IRenderOptions = {
+      view: Mat4.identity,
+      valueRange: ValueRange.Standard,
+      lightPos: INITIAL_LIGHT_POS.clone(),
+      lightType: LightType.Directional,
+      falloff: INITIAL_FALLOFF,
+      lightIntensity: INITIAL_LIGHT_INTENSITY,
+      contours: [],
+
+      useCulling: true,
+      showHighlights: true,
+      shininess: INITIAL_SHININESS,
+      camera: new Camera(),
+      whiteColor: glColor3.modelWhite,
+      blackColor: glColor3.modelBlack,
+      useShadows: true,
+
+      renderMode: RenderMode.Normal,
+   }
+
+   private arrowOptions: IRenderOptions = {
+      view: Mat4.identity,
+      valueRange: new ValueRange(1.0, 0.4, 0.1),
+      lightPos: new Vec3([-1, 0.5, 0.5]),
+      lightType: LightType.Directional,
+      falloff: 0.0,
+      lightIntensity: INITIAL_LIGHT_INTENSITY,
+      contours: [],
+      useCulling: true,
+      showHighlights: false,
+      shininess: INITIAL_SHININESS,
+      camera: new Camera({
+         sizeProvider: new FixedSizeProvider(2, 2),
+         useOrthographic: true,
+      }),
+      whiteColor: this.yellow,
+      blackColor: htmlColor.black.toGlColor(),
+      useShadows: false,
+
+      renderMode: RenderMode.Normal,
+   }
+
+   private ballOptions: IRenderOptions = {
+      view: Mat4.identity,
+      valueRange: ValueRange.Standard,
+      lightPos: new Vec3([-1, 0.5, 0.5]),
+      lightType: LightType.Directional,
+      falloff: 0.0,
+      lightIntensity: INITIAL_LIGHT_INTENSITY,
+      contours: [],
+      useCulling: true,
+      showHighlights: false,
+      shininess: INITIAL_SHININESS,
+      camera: new Camera({
+         sizeProvider: new FixedSizeProvider(2, 2),
+         useOrthographic: true,
+      }),
+      whiteColor: glColor3.modelWhite,
+      blackColor: glColor3.modelBlack,
+      useShadows: false,
+
+      renderMode: RenderMode.Normal,
+   }
+
+   public set ballColor(color: glColor3) {
+      this.ballOptions.whiteColor = color;
+   }
 
    // size of the smaller view
    public readonly miniSize = 0.2;
@@ -76,36 +167,24 @@ export class Renderer {
    public floor: glObject;
    public obj: glObject;
 
+   private lightView: Mat4;
    private shadowFrameBuffer: glFrameBuffer;
    private shadowColorTexture: glTexture;
    private shadowDepthTexture: glTexture;
-
-   public lightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
-
-   public ballColor = new glColor3([1, 1, 1]);
-   public readonly yellow = new glColor3([1.0, 0.9, 0.7]);
-
-   public contours: Contour[] = [];
 
    public showShadowMap = false;
    public showMiniView = true;
    public showBall = true;
    public showFloor = true;
-   public useCulling = true;
+   public showGrid = false;
    public miniViewShowContours = false;
-   public showHighlights = true;
-   public shininess = INITIAL_SHININESS;
    public lockFloor = false;
-   public camera: Camera;
 
-   public renderMode = RenderMode.Normal;
 
    public constructor(glCtx: WebGLRenderingContext) {
 
       this.gl = glCtx;
       let gl = this.gl;
-
-      this.camera = new Camera(this.gl);
 
       // enable z-buffer
       gl.enable(gl.DEPTH_TEST);
@@ -124,6 +203,7 @@ export class Renderer {
       let tArrow = new TriangleObjBuilder('Light Arrow');
       tArrow.addArrow();
       this.arrow = new glObject(gl, tArrow, this.program);
+      this.arrowOptions.camera.useOrthographic = true;
 
       let style = getComputedStyle(<Element>gl.canvas);
       let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
@@ -153,7 +233,7 @@ export class Renderer {
    }
 
    public renderModeCanToggleHighlights(): boolean {
-      if (this.renderMode === RenderMode.EmphasizeHighlights || this.renderMode === RenderMode.LightAndShadow) {
+      if (this.options.renderMode === RenderMode.EmphasizeHighlights || this.options.renderMode === RenderMode.LightAndShadow) {
          return false;
       }
       else {
@@ -213,12 +293,11 @@ export class Renderer {
    public rotateLight(xRad: number, yRad: number) {
       let matX = Mat4.fromRotX(yRad);
       let matY = Mat4.fromRotY(xRad);
-      let vec = Vec4.fromVec3(this.lightDirection, 1);
+      let vec = Vec4.fromVec3(this.options.lightPos, 1);
       vec = matX.multV(vec);
       vec = matY.multV(vec);
-      this.lightDirection = vec.xyz;
+      this.options.lightPos = vec.xyz;
    }
-
 
    public get tObj(): TriangleObj {
       return this.obj.tObj;
@@ -229,7 +308,7 @@ export class Renderer {
          this.obj.delete();
       }
       this.obj = new glObject(this.gl, tObj, this.program);
-      this.camera.sizeProvider = new ObjSizeProvider(this.obj);
+      this.options.camera.sizeProvider = new ObjSizeProvider(this.obj);
 
       // move the object so that the center is at [0,0,0] and it is scaled
       // so that it's diagonal is 2 units across
@@ -253,7 +332,6 @@ export class Renderer {
 
       // reset the view and the light
       this.reset(Reset.All);
-      this.lightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
    }
 
    public reset(what: Reset) {
@@ -265,72 +343,100 @@ export class Renderer {
 
             break;
          case Reset.Lights:
-            this.lightDirection = new Vec3(INITIAL_LIGHT_DIRECTION);
+            this.options.lightPos = INITIAL_LIGHT_POS.clone();
+            this.options.falloff = INITIAL_FALLOFF;
+            this.options.lightIntensity = INITIAL_LIGHT_INTENSITY;
+            this.options.valueRange.ambientIntensity = ValueRange.Standard.ambientIntensity;
             break;
 
          case Reset.View:
-            this.view = INITIAL_VIEW.clone();
+            this.options.view = INITIAL_VIEW.clone();
             this.obj.clearTransforms();
             this.floor.clearTransforms();
-            this.camera.eye = new Vec3(INITIAL_EYE);
-            this.camera.lookAt = Vec3.origin;
-            this.camera.zoomFactor = 1;
+            this.options.camera.eye = new Vec3(INITIAL_EYE);
+            this.options.camera.lookAt = Vec3.origin;
+            this.options.camera.zoomFactor = 1;
 
             break;
 
          case Reset.Rendering:
-            this.renderMode = RenderMode.Normal;
-            this.showHighlights = true;
-            this.shininess = INITIAL_SHININESS;
-            this.valueRange = ValueRange.Standard;
+            this.options.renderMode = RenderMode.Normal;
+            this.options.showHighlights = true;
+            this.options.shininess = INITIAL_SHININESS;
+            this.options.valueRange = ValueRange.Standard;
             break;
       }
    }
 
    public render(): void {
 
-      this.setStdUniforms();
+      this.program.use();
       this.renderToShadowMap();
       this.renderToScreen();
    }
 
    private setValueRangeUniforms(valueRange: ValueRange) {
       let uni = new glUniform(this.gl, this.program);
-      uni.set('uLightIntensity', valueRange.lightIntensity);
+      uni.set('uDiffuseIntensity', valueRange.diffuseIntensity);
       uni.set('uAmbientIntensity', valueRange.shadow);
-      uni.set('uHighlight', valueRange.highlight);
+      uni.set('uSpecularIntensity', valueRange.specularIntensity);
    }
 
-   public setStdUniforms(): glUniform {
+   private setOptions(options: IRenderOptions): glUniform {
+
+      let gl = this.gl;
+      options.useCulling ? gl.enable(gl.CULL_FACE) : gl.disable(gl.CULL_FACE);
+      gl.cullFace(gl.BACK);
 
       let uni = new glUniform(this.gl, this.program);
-      uni.set('view', this.view);
+      uni.set('view', options.view);
       uni.set('lightView', this.lightView);
-      uni.set('projection', this.camera.projection);
-      uni.set('uEye', this.camera.eye);
-      uni.set('uOrthographic', this.camera.useOrthographic);
-      uni.set('uLightDirection', this.lightDirection);
-      uni.set('uUseShadows', true);
-      uni.seti('uRenderMode', this.renderMode);
-      uni.set('uShowHighlights', this.showHighlights || this.renderMode === RenderMode.EmphasizeHighlights);
-      uni.set('uShininess', this.shininess);
+      uni.set('projection', options.camera.getProjection(this.gl));
+      uni.set('uEye', options.camera.eye);
+      uni.set('uOrthographic', options.camera.useOrthographic);
+      uni.set('uUseShadows', options.useShadows);
+      uni.seti('uRenderMode', options.renderMode);
+      uni.set('uShowHighlights', options.showHighlights || options.renderMode === RenderMode.EmphasizeHighlights);
+      uni.set('uShininess', options.shininess);
 
       let valueRange;
-      if (this.renderMode === RenderMode.EmphasizeHighlights) {
+      if (options.renderMode === RenderMode.EmphasizeHighlights) {
          valueRange = ValueRange.EmphasizeHighlights;
       }
       else {
-         valueRange = this.valueRange;
+         valueRange = options.valueRange;
       }
       this.setValueRangeUniforms(valueRange);
 
-      uni.set('uWhiteColor', glColor3.modelWhite);
-      uni.set('uBlackColor', glColor3.modelBlack);
+      uni.set('uWhiteColor', options.whiteColor);
+      uni.set('uBlackColor', options.blackColor);
 
-      uni.seti('uNumContours', this.contours.length);
-      for (let i = 0; i < this.contours.length; i++) {
-         uni.set('uContourColors[' + i + ']', this.contours[i].color);
-         uni.set('uContourAngles[' + i + ']', this.contours[i].angle);
+      uni.seti('uNumContours', options.contours.length);
+      for (let i = 0; i < options.contours.length; i++) {
+         uni.set('uContourColors[' + i + ']', options.contours[i].color);
+         uni.set('uContourAngles[' + i + ']', options.contours[i].angle);
+      }
+
+      uni.set('uPointLight', options.lightType === LightType.Point);
+      uni.set('uFalloff', options.falloff);
+      uni.set('uLightIntensity', options.lightIntensity);
+      if (options.falloff === 0) {
+         uni.set('uLightPos', options.lightPos);
+      }
+      else {
+         let dist: IMinMax;
+         let boundingPts = this.obj.getBoundingPts();
+         if (options.lightType === LightType.Point) {
+            dist = boundingPts.distToPoint(options.lightPos);
+         }
+         else {
+            dist = boundingPts.distToPlane(options.lightPos);
+         }
+         let maxObjSize = dist.max - dist.min;
+         let d = (maxObjSize * Math.sqrt(1.0 - this.options.falloff)) / (1.0 - Math.sqrt(1.0 - this.options.falloff));
+         let lightIntensityAtSource = d * d;
+         uni.set('uLightIntensityAtSource', lightIntensityAtSource);
+         uni.set('uLightPos', options.lightPos.normalize().mult(d + maxObjSize / 2.0));
       }
 
       return uni;
@@ -340,7 +446,7 @@ export class Renderer {
 
       let gl = this.gl;
       let maxTextureSize = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE));
-      let desiredSize = this.camera.zoomFactor * Math.min(gl.canvas.width, gl.canvas.height);
+      let desiredSize = this.options.camera.zoomFactor * Math.min(gl.canvas.width, gl.canvas.height);
       let size = 256;
       while (size < desiredSize && size * 2 <= maxTextureSize) {
          size *= 2;
@@ -368,24 +474,36 @@ export class Renderer {
       gl.viewport(0, 0, this.shadowFrameBuffer.width, this.shadowFrameBuffer.height);
       this.shadowFrameBuffer.bind();
 
-      this.program.use();
-
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
       let center = new Vec3([0, 0, 0]);
       let up = new Vec3([0, 1, 0]);
-      let eye = new Vec3([-this.lightDirection.x, -this.lightDirection.y, -this.lightDirection.z]);
+      let eye = this.options.lightPos;
       let mat = Mat4.makeLookAt(eye, center, up);
       mat.set(0, 3, 0);
       mat.set(1, 3, 0);
       mat.set(2, 3, 0);
-      // to avoid clipping, expand the z range to allow full projation of
-      // anything in a 3-3-3 cube.
-      let maxSize = Math.sqrt(27);
-      mat = Mat4.makeOrtho(-1, 1, -1, 1, maxSize, -maxSize).multM(mat);
-      this.lightView = mat;
+      if (this.options.lightType === LightType.Directional) {
+         // to avoid clipping, expand the z range to allow full rotation of
+         // anything in a 3-3-3 cube.
+         let maxSize = Math.sqrt(27);
+         mat = Mat4.makeOrtho(-1, 1, -1, 1, maxSize, -maxSize).multM(mat);
+         this.lightView = mat;
+      }
+      else {
+         // TODO make point light sources work for shadow maps
+         /*
+         let fov = 2 * toDeg(Math.atan2(3 / 2, eye.z));
+         console.log('fov=' + fov);
+         mat = Mat4.makePerspective(fov, 1, 0.1, 20).multM(mat);
+         this.lightView = mat;
+         */
+         let maxSize = Math.sqrt(27);
+         mat = Mat4.makeOrtho(-1, 1, -1, 1, maxSize, -maxSize).multM(mat);
+         this.lightView = mat;
+      }
 
-      let uni = this.setStdUniforms();
+      let uni = this.setOptions(this.options);
 
       // change the view matrix so that our view is from the light
       uni.set('view', this.lightView);
@@ -421,33 +539,14 @@ export class Renderer {
          gl.bindTexture(gl.TEXTURE_2D, null);
       }
       else {
-         this.program.use();
-
          this.shadowDepthTexture.bind();
 
          gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
-         let uni = this.setStdUniforms();
-         if (this.showFloor) {
-
-            uni.set('uRenderingFloor', true);
-
-            // cull polygons so we don't see the floor from below
-            gl.enable(gl.CULL_FACE);
-            gl.cullFace(gl.BACK);
-            uni.seti('uRenderMode', RenderMode.Normal);
-            this.setValueRangeUniforms(ValueRange.Standard);
-
-            this.floor.draw();
-
-            uni.set('uRenderingFloor', false);
-         }
+         this.drawFloor();
 
          // draw the main object
-         this.useCulling ? gl.enable(gl.CULL_FACE) : gl.disable(gl.CULL_FACE);
-         gl.cullFace(gl.BACK);
-
-         uni = this.setStdUniforms();
+         this.setOptions(this.options);
          this.obj.draw();
 
          gl.clear(gl.DEPTH_BUFFER_BIT);
@@ -460,16 +559,37 @@ export class Renderer {
       }
    }
 
+   private drawFloor() {
+      if (this.showFloor) {
+
+         let gl = this.gl;
+         let uni = this.setOptions(this.options);
+
+         // set the special mode for the floor
+         uni.set('uRenderingFloor', true);
+         uni.set('uShowGrid', this.showGrid);
+
+         // cull polygons so we don't see the floor from below
+         gl.enable(gl.CULL_FACE);
+         gl.cullFace(gl.BACK);
+         uni.seti('uRenderMode', RenderMode.Normal);
+         //this.setValueRangeUniforms(ValueRange.Standard);
+
+         this.floor.draw();
+
+         uni.set('uRenderingFloor', false);
+      }
+   }
+
    private drawMiniView() {
 
       if (this.showMiniView) {
          let gl = this.gl;
          gl.enable(gl.CULL_FACE);
-         gl.cullFace(gl.BACK);
 
-         let uni = this.setStdUniforms();
+         let uni = this.setOptions(this.options);
 
-         let clipSpace = this.camera.getClipSpace();
+         let clipSpace = this.options.camera.getClipSpace(gl);
          let projection = Mat4.makeOrtho(
             clipSpace.left,
             clipSpace.right,
@@ -499,43 +619,22 @@ export class Renderer {
       }
 
       let gl = this.gl;
-      gl.enable(gl.CULL_FACE);
-      gl.cullFace(gl.BACK);
 
-      let uni = this.setStdUniforms();
-
-      let clipSpace = this.camera.getClipSpace();
-      let projection = Mat4.makeOrtho(
-         clipSpace.left,
-         clipSpace.right,
-         clipSpace.bottom,
-         clipSpace.top,
-         clipSpace.near,
-         clipSpace.far
-      );
-
-      uni.set('projection', projection);
-      uni.set('uOrthographic', true);
-
-      // stop using the shadowmap
-      uni.set('uUseShadows', false);
-
+      // create a view matrix that renders in the upper left
+      let clipSpace = this.options.camera.getClipSpace(gl);
       let view = Mat4.identity;
       view.scale(this.miniSize);
       view.translate(new Vec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
-      uni.set('view', view);
-      uni.set('uWhiteColor', this.ballColor);
-      uni.set('uBlackColor', htmlColor.black.toGlColor());
-      uni.seti('uRenderMode', this.renderMode);
+
+      this.ballOptions.lightPos = this.options.lightPos.clone();
+      this.ballOptions.view = view.clone();
+      this.setOptions(this.ballOptions);
       this.ball.draw();
 
-      uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
-      uni.seti('uRenderMode', RenderMode.Normal);
-
       // back out angles as if looking down the z-axis
-      let x = this.lightDirection.x;
-      let y = this.lightDirection.y;
-      let z = this.lightDirection.z;
+      let x = -this.options.lightPos.x;
+      let y = -this.options.lightPos.y;
+      let z = -this.options.lightPos.z;
 
       // start by looking down from the Z direction
       let radius = Math.sqrt(x * x + y * y + z * z);
@@ -551,11 +650,8 @@ export class Renderer {
       this.arrow.rotY(-elevationAngle);
       this.arrow.rotZ(-rotationAngle);
 
-      uni.set('uWhiteColor', this.yellow);
-      uni.set('uBlackColor', htmlColor.black.toGlColor());
-      uni.set('uLightIntensity', ValueRange.Standard.lightIntensity);
-      uni.set('uHighlight', ValueRange.Standard.highlight);
-      uni.set('uAmbientIntensity', 0.4);
+      this.arrowOptions.view = view.clone();
+      this.setOptions(this.arrowOptions);
       this.arrow.draw();
    }
 }

@@ -48,8 +48,10 @@ export class PerspectiveCtrl {
       this.renderer = new Renderer(context);
       this.renderer.showMiniView = false;
       this.renderer.showBall = false;
-      this.renderer.camera = new Camera(this.gl, new FixedSizeProvider(2, 2));
-      this.renderer.camera.useOrthographic = true;
+      this.renderer.options.camera = new Camera({
+         sizeProvider: new FixedSizeProvider(2, 2)
+      });
+      this.renderer.options.camera.useOrthographic = true;
       this.renderer.showFloor = false;
 
       this.overlay = new OverlayCanvas(parent, 'PerspectiveOverlayCanvas');
@@ -94,8 +96,8 @@ export class PerspectiveCtrl {
 
       // shift the view so that the object is on the far right. Far enough that there is
       // a square space on the end that contains the origin (center of object we're viewing)
-      let viewSpace = this.renderer.camera.getViewSpace();
-      this.renderer.camera.lookAt = new Vec3([-viewSpace.width / 2 + viewSpace.height / 2, 0, 0]);
+      let viewSpace = this.renderer.options.camera.getViewSpace(this.gl);
+      this.renderer.options.camera.lookAt = new Vec3([-viewSpace.width / 2 + viewSpace.height / 2, 0, 0]);
 
       this.renderer.render();
 
@@ -155,7 +157,7 @@ export class PerspectiveCtrl {
 
       ctx.clearRect(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
-      let space = this.renderer.camera.getViewSpace();
+      let space = this.renderer.options.camera.getViewSpace(this.gl);
       // draw the front 'view' line
       ctx.strokeStyle = 'rgba(255,255,255,0.2)';
       this.drawLine(ctx, new Vec3([0, space.top, space.height / 2]), new Vec3([0, space.bottom, space.height / 2]));

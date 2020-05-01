@@ -4,11 +4,9 @@ precision highp float;
 varying vec3 vNormal;
 varying vec3 vVertex;
 varying vec3 vShadowVertex;
+varying vec3 vModelVertex;
 
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 lightView;
-uniform mat4 projection;
 uniform vec3 uEye;
 uniform bool uOrthographic;
 
@@ -22,15 +20,19 @@ uniform bool uOrthographic;
 uniform int uRenderMode;
 
 // these are value between 0-1
-uniform float uLightIntensity;
-uniform float uHighlight;
+uniform float uDiffuseIntensity;
 uniform float uAmbientIntensity;
+uniform float uSpecularIntensity;
 
 // the colors we use to represent our lightest and darkest values
 uniform vec3 uWhiteColor;
 uniform vec3 uBlackColor;
 
-uniform vec3 uLightDirection;
+uniform vec3 uLightPos;
+uniform bool uPointLight;
+uniform float uFalloff;
+uniform float uLightIntensity;
+uniform float uLightIntensityAtSource;
 
 uniform bool uUseShadows;
 uniform sampler2D uShadowTexture;
@@ -38,6 +40,7 @@ uniform sampler2D uShadowTexture;
 uniform vec3 uFloorCenter;
 uniform float uFloorRadius;
 uniform bool uRenderingFloor;
+uniform bool uShowGrid;
 uniform int uNumContours;
 uniform vec3 uContourColors[9];
 uniform float uContourAngles[9];
@@ -104,9 +107,14 @@ bool in_shadow()
    }
 }
 
-vec4 val2Color(float val, float a) { return vec4(mix(uBlackColor, uWhiteColor, val), a); }
+vec4 val2Color(float val) { return vec4(mix(uBlackColor, uWhiteColor, val), 1.0); }
 
-float getSpecularRange() { return (uHighlight - uAmbientIntensity) - uLightIntensity; }
+float getDiffuse(vec3 normal, vec3 toLight)
+{
+   float vDot = clamp(dot(normal, toLight), 0.0, 1.0);
+   float diffuse = uDiffuseIntensity * vDot;
+   return diffuse;
+}
 
 float getSpecular(vec3 normal, vec3 toLight, vec3 toEye)
 {
@@ -116,7 +124,7 @@ float getSpecular(vec3 normal, vec3 toLight, vec3 toEye)
    {
       vec3 reflection = normalize(2.0 * dot(normal, toLight) * normal - toLight);
       float cosAngle = clamp(dot(reflection, toEye), 0.0, 1.0); // clamp to avoid values > 90 deg
-      specular = getSpecularRange() * (uShininess / 15.0) * pow(cosAngle, uShininess);
+      specular = uSpecularIntensity * (uShininess / 15.0) * pow(cosAngle, uShininess);
    }
 
    return specular;
@@ -127,13 +135,13 @@ vec4 getContourColor(float vDot, vec3 normal, vec3 toLight, vec3 toEye)
    float specular = getSpecular(normal, toLight, toEye);
    if (specular > SPECULAR_THRESHOLD)
    {
-      return val2Color(uHighlight, 1.0);
+      return val2Color(uAmbientIntensity + uDiffuseIntensity + uSpecularIntensity);
    }
 
    float angle = (180.0 / 3.1415926) * acos(vDot);
    if (angle > 90.0)
    {
-      return val2Color(uAmbientIntensity, 1.0);
+      return val2Color(uAmbientIntensity);
    }
    else
    {
@@ -150,19 +158,123 @@ vec4 getContourColor(float vDot, vec3 normal, vec3 toLight, vec3 toEye)
    }
 }
 
+float getDistancePtToPlane(vec3 pt, vec3 plane)
+{
+   float a = plane.x;
+   float b = plane.y;
+   float c = plane.z;
+   float d = -(a * a + b * b + c * c);
+
+   return -(a * pt.x + b * pt.y + c * pt.z + d) / sqrt(a * a + b * b + c * c);
+}
+
+float getLightDistance(vec3 lightPos)
+{
+   if (uPointLight)
+   {
+      return length(lightPos - vVertex);
+   }
+   else
+   {
+      return getDistancePtToPlane(vVertex, lightPos);
+   }
+}
+
 float getValueFromLight(vec3 normal, vec3 toLight, vec3 toEye)
 {
-   float vDot = dot(normal, toLight);
-   float diffuseFactor = clamp(vDot, 0.0, 1.0);
-   float diffuse = diffuseFactor * uLightIntensity;
+   float diffuse = getDiffuse(normal, toLight);
    float specular = getSpecular(normal, toLight, toEye);
 
-   return uAmbientIntensity + diffuse + specular;
+   float falloff = 1.0;
+   if (uFalloff > 0.0)
+   {
+      float vDot = dot(normal, toLight);
+
+      float vDistance = getLightDistance(uLightPos);
+      falloff = uLightIntensityAtSource / (vDistance * vDistance);
+
+      // the light only shines one way
+      if (vDistance < 0.0)
+      {
+         diffuse = 0.0;
+         specular = 0.0;
+      }
+   }
+
+   return uAmbientIntensity + uLightIntensity * falloff * (diffuse + specular);
+}
+
+float round(float val) { return floor(val + 0.5); }
+
+float getFloorGridAdjustment(float dist)
+{
+   float thickness = 0.001;
+   float alias = 0.005;
+
+   if (dist < (thickness + alias))
+   {
+      if (dist < thickness)
+      {
+         return 0.5;
+      }
+      else
+      {
+         return 0.5 * (1.0 + (dist - thickness) / alias);
+      }
+   }
+   else
+   {
+      return 1.0;
+   }
+}
+
+vec4 getFloorColor(bool inShadow, vec3 normal, vec3 toLight, vec3 toEye)
+{
+   vec4 fragColor;
+
+   // gradiate out the background from half transparent to full transparency
+   vec3 center = (model * vec4(uFloorCenter, 1.0)).xyz;
+   float dist = length(center - vVertex);
+   float a = 0.5 * (1.0 - dist / uFloorRadius);
+
+   float gridFactor = 1.0;
+   if (uShowGrid)
+   {
+      float circle = getFloorGridAdjustment(abs(dist - round(dist)));
+      float x = getFloorGridAdjustment(abs(vModelVertex.x - round(vModelVertex.x)));
+      float z = getFloorGridAdjustment(abs(vModelVertex.z - round(vModelVertex.z)));
+
+      gridFactor = min(circle, min(x, z));
+   }
+
+   float val = 0.0;
+   if (inShadow)
+   {
+      val = uAmbientIntensity;
+   }
+   else
+   {
+      val = getValueFromLight(normal, toLight, toEye);
+   }
+
+   fragColor = val2Color(gridFactor * val);
+   fragColor.a = a;
+
+   return fragColor;
 }
 
 void main()
 {
-   vec3 toLight = normalize(-uLightDirection);
+   vec3 toLight;
+   if (uPointLight)
+   {
+      toLight = normalize(uLightPos - vVertex);
+   }
+   else
+   {
+      toLight = normalize(uLightPos);
+   }
+
    bool inShadow = in_shadow();
 
    vec3 toEye;
@@ -189,20 +301,7 @@ void main()
    vec4 fragColor;
    if (uRenderingFloor)
    {
-      // gradiate out the background from half transparent to full transparency
-      vec3 center = (model * vec4(uFloorCenter, 1.0)).xyz;
-      float dist = length(center - vVertex);
-      float a = 0.5 * (1.0 - dist / uFloorRadius);
-
-      if (inShadow)
-      {
-         fragColor = val2Color(uAmbientIntensity, a);
-      }
-      else
-      {
-         float val = getValueFromLight(normal, toLight, toEye);
-         fragColor = val2Color(val, a);
-      }
+      fragColor = getFloorColor(inShadow, normal, toLight, toEye);
    }
    else
    {
@@ -210,7 +309,7 @@ void main()
       {
          if (inShadow)
          {
-            fragColor = val2Color(uAmbientIntensity, 1.0);
+            fragColor = val2Color(uAmbientIntensity);
          }
          else
          {
@@ -229,7 +328,7 @@ void main()
             }
             else if (uRenderMode == LIGHT_AND_SHADOW)
             {
-               fragColor = val2Color(uAmbientIntensity, 1.0);
+               fragColor = val2Color(uAmbientIntensity);
             }
             else
             {
@@ -237,15 +336,15 @@ void main()
                // were coming from the eye.
                vec3 toShadowLight = vec3(0.0, 0.0, 1.0);
                float val = getValueFromLight(normal, toShadowLight, toEye) / 20.0;
-               fragColor = val2Color(uAmbientIntensity + val, 1.0);
+               fragColor = val2Color(uAmbientIntensity + val);
             }
          }
          else
          {
             if (uRenderMode == LIGHT_AND_SHADOW)
             {
-               fragColor = val2Color(uAmbientIntensity + 0.75 * uLightIntensity, 1.0);
-               vec4 shadowColor = val2Color(uAmbientIntensity, 1.0);
+               fragColor = val2Color(uAmbientIntensity + 0.75 * uDiffuseIntensity);
+               vec4 shadowColor = val2Color(uAmbientIntensity);
 
                float vDot = dot(normal, toLight);
                float angle = (180.0 / 3.1415926) * acos(vDot);
@@ -257,7 +356,7 @@ void main()
             {
                // fade highlighting from terminator through the shadow
                float val = getValueFromLight(normal, toLight, toEye);
-               fragColor = val2Color(val, 1.0);
+               fragColor = val2Color(val);
 
                float vDot = dot(normal, toLight);
                float angle = (180.0 / 3.1415926) * acos(vDot);
@@ -285,7 +384,7 @@ void main()
             else
             {
                float val = getValueFromLight(normal, toLight, toEye);
-               fragColor = val2Color(val, 1.0);
+               fragColor = val2Color(val);
             }
          }
       }

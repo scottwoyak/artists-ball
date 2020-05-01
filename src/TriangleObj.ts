@@ -22,9 +22,7 @@ export class TriangleObjData {
 }
 
 /**
- * Base class for representing an object from a bunch of triangles. The class
- * efficiently manages the triangles by storing them in volumes and by
- * passing them to WebGL using Uniform Buffers
+ * Base class for representing an object from a bunch of triangles.
  */
 export class TriangleObj {
    public vertices: number[] = [];

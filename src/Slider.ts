@@ -18,6 +18,34 @@ export interface ISliderSetup {
    getText?: (slider: Slider) => string,
 }
 
+class RangeMapper {
+   public readonly sliderMin = 0;
+   public readonly sliderMax = 1000;
+   public readonly realMin: number;
+   public readonly realMax: number;
+
+   public get realRange(): number {
+      return this.realMax - this.realMin;
+   }
+
+   public get sliderRange(): number {
+      return this.sliderMax - this.sliderMin;
+   }
+
+   public constructor(realMin: number, realMax: number) {
+      this.realMin = realMin;
+      this.realMax = realMax;
+   }
+
+   public sliderToReal(sliderValue: number): number {
+      return this.realMin + ((sliderValue - this.sliderMin) / this.sliderRange) * this.realRange;
+   }
+
+   public realToSlider(realValue: number): number {
+      return this.sliderMin + ((realValue - this.realMin) / this.realRange) * this.sliderRange;
+   }
+}
+
 /**
  * Class representing a slider composed of a label, input range, color span and value span
  */
@@ -28,6 +56,7 @@ export class Slider implements ICtrl {
    private _valueSpan: HTMLSpanElement;
    private _colors: ColorRange;
    private _getText: (slider: Slider) => string;
+   private _rangeMapper: RangeMapper;
 
    /**
     * @param parent The parent html object.
@@ -48,13 +77,15 @@ export class Slider implements ICtrl {
       label.innerText = setup.label ?? '';
       div.appendChild(label);
 
+      this._rangeMapper = new RangeMapper(setup.min, setup.max);
+
       this._range = document.createElement('input');
       this._range.type = 'range';
       this._range.id = setup.id + 'Range';
       this._range.className = 'SliderRange';
-      this._range.min = setup.min.toString();
-      this._range.max = setup.max.toString();
-      this._range.value = setup.value.toString();
+      this._range.min = this._rangeMapper.sliderMin.toString();
+      this._range.max = this._rangeMapper.sliderMax.toString();
+      this._range.value = this._rangeMapper.realToSlider(setup.value).toString();
       this._range.addEventListener('input', () => {
          this.updateSpanColor();
          this.updateSpanText()
@@ -119,7 +150,7 @@ export class Slider implements ICtrl {
     * @returns the current slider value
     */
    public get value(): number {
-      return this._range.valueAsNumber;
+      return this._rangeMapper.sliderToReal(this._range.valueAsNumber);
    }
 
    /**
@@ -128,7 +159,7 @@ export class Slider implements ICtrl {
     * @param val the desired slider value
     */
    public set value(val: number) {
-      this._range.valueAsNumber = val;
+      this._range.valueAsNumber = this._rangeMapper.realToSlider(val);
       this.updateSpanColor();
       this.updateSpanText();
    }
@@ -139,7 +170,7 @@ export class Slider implements ICtrl {
     * @returns The min slider value.
     */
    public get min(): number {
-      return parseFloat(this._range.min);
+      return this._rangeMapper.realMin;
    }
 
    /**
@@ -148,7 +179,7 @@ export class Slider implements ICtrl {
     * @returns The max slider value.
     */
    public get max(): number {
-      return parseFloat(this._range.max);
+      return this._rangeMapper.realMax;
    }
 
    /**

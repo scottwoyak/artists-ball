@@ -116,6 +116,17 @@ export class BoundingBox {
       return ret;
    }
 
+   /*
+   public multM(mat: Mat4): BoundingBox {
+      let ret = new BoundingBox();
+      this.corners.forEach((corner) => {
+         let v = mat.multV(corner.toVec4(1));
+         ret.update(v);
+      })
+
+      return ret;
+   }
+
    public distToPoint(pt: Vec3): IMinMax {
       let ret = {
          min: Number.MAX_VALUE,
@@ -124,7 +135,7 @@ export class BoundingBox {
 
       let corners = this.corners;
       corners.forEach((corner: Vec3) => {
-         let d = corner.distanceToPt(pt);
+         let d = corner.distToPoint(pt);
          ret.min = Math.min(d, ret.min);
          ret.max = Math.min(d, ret.max);
       });
@@ -136,15 +147,19 @@ export class BoundingBox {
       let ret = {
          min: Number.MAX_VALUE,
          max: -Number.MAX_VALUE,
+         d: [0]
       }
+      ret.d = [];
 
       let corners = this.corners;
       corners.forEach((corner: Vec3) => {
-         let d = corner.distanceToPlane(plane);
+         let d = corner.distToPlane(plane);
+         ret.d.push(d);
          ret.min = Math.min(d, ret.min);
          ret.max = Math.max(d, ret.max);
       });
 
       return ret;
    }
+   */
 }

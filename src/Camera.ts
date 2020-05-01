@@ -18,12 +18,13 @@ export class ObjSizeProvider implements ISizeProvider {
    private obj: glObject;
 
    public get maxWidth() {
-      let xBox = this.obj.box;
+      //let xBox = this.obj.getBoundingPts();
+      let xBox = this.obj.getBoundingBox();
       return BUFFER_FACTOR * Math.sqrt(xBox.width * xBox.width + xBox.depth * xBox.depth);
    }
 
    public get maxHeight() {
-      let xBox = this.obj.tObj.box.multM(this.obj.normalize);
+      let xBox = this.obj.getBoundingBox();
       return BUFFER_FACTOR * Math.sqrt(xBox.height * xBox.height + xBox.depth * xBox.depth);
    }
 
@@ -42,9 +43,17 @@ export class FixedSizeProvider implements ISizeProvider {
    }
 }
 
+export interface ICameraSettings {
+   sizeProvider?: ISizeProvider,
+   eye?: Vec3,
+   lookAt?: Vec3,
+   zoomFactor?: number,
+   useOrthographic?: boolean,
+   fov?: number,
+}
+
 export class Camera implements IPerspectiveProvider {
 
-   protected gl: WebGLRenderingContext;
    public eye = new Vec3(INITIAL_EYE);
    public lookAt = Vec3.origin;
    public zoomFactor = 1;
@@ -52,10 +61,21 @@ export class Camera implements IPerspectiveProvider {
    public fov: number;
    public sizeProvider: ISizeProvider;
 
-   public get projection(): Mat4 {
+   public constructor(settings?: ICameraSettings) {
+      if (settings) {
+         this.sizeProvider = settings.sizeProvider ?? this.sizeProvider;
+         this.eye = settings.eye ?? this.eye;
+         this.lookAt = settings.lookAt ?? this.lookAt;
+         this.zoomFactor = settings.zoomFactor ?? this.zoomFactor;
+         this.useOrthographic = settings.useOrthographic ?? this.useOrthographic;
+         this.fov = settings.fov ?? this.fov;
+      }
+   }
+
+   public getProjection(gl: WebGLRenderingContext): Mat4 {
 
       let projection: Mat4;
-      let space = this.getViewSpace();
+      let space = this.getViewSpace(gl);
 
       if (this.useOrthographic) {
          projection = Mat4.makeOrtho(
@@ -82,11 +102,6 @@ export class Camera implements IPerspectiveProvider {
       return projection;
    }
 
-   public constructor(gl: WebGLRenderingContext, sizeProvider?: ISizeProvider) {
-      this.gl = gl;
-      this.sizeProvider = sizeProvider;
-   }
-
    //
    // The functions below change our view of the model
    //
@@ -105,9 +120,8 @@ export class Camera implements IPerspectiveProvider {
     * Clipspace is defined as a range of [-1,1] in the smaller of the width and height.
     * The other dimensions is scaled to match the aspect ratio of the canvas
     */
-   public getClipSpace(): glSpace {
+   public getClipSpace(gl: WebGLRenderingContext): glSpace {
 
-      let gl = this.gl;
       let ar = gl.canvas.width / gl.canvas.height;
 
       if (ar > 1) {
@@ -121,8 +135,8 @@ export class Camera implements IPerspectiveProvider {
    /**
     * View space is the world coordinate space of what can be currently viewed.
     */
-   public getViewSpace(): glSpace {
-      let winAR = this.gl.canvas.width / this.gl.canvas.height;
+   public getViewSpace(gl: WebGLRenderingContext): glSpace {
+      let winAR = gl.canvas.width / gl.canvas.height;
 
       let objMaxWidth = this.sizeProvider.maxWidth;
       let objMaxHeight = this.sizeProvider.maxHeight;
@@ -143,7 +157,7 @@ export class Camera implements IPerspectiveProvider {
       desiredHeight /= this.zoomFactor;
       desiredWidth /= this.zoomFactor;
 
-      let clipSpace = this.getClipSpace();
+      let clipSpace = this.getClipSpace(gl);
       let min = new Vec3([
          -desiredWidth / 2 - this.lookAt.x,
          -desiredHeight / 2 - this.lookAt.y,
@@ -156,5 +170,4 @@ export class Camera implements IPerspectiveProvider {
       ])
       return new glSpace(min, max);
    }
-
 }

@@ -9,6 +9,7 @@ uniform mat4 projection;
 varying vec3 vNormal;
 varying vec3 vVertex;
 varying vec3 vShadowVertex;
+varying vec3 vModelVertex;
 
 void main()
 {
@@ -16,4 +17,5 @@ void main()
    vNormal = (model * vec4(aNormal, 0.0)).xyz;
    vVertex = (model * vec4(aVertex, 1.0)).xyz;
    vShadowVertex = (lightView * model * vec4(aVertex, 1.0)).xyz;
+   vModelVertex = aVertex;
 }

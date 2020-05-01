@@ -54,28 +54,28 @@ export class ValuePlanesPanel extends Panel {
          id: 'Highlight',
          label: 'Highlight',
          min: 0,
-         max: 100,
-         value: this.valuePlanes.highlight * 100,
+         max: 1,
+         value: this.valuePlanes.highlight,
          colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
          oninput: () => {
-            this.valuePlanes.highlight = this.highlightSlider.value / 100;
+            this.valuePlanes.highlight = this.highlightSlider.value;
             this.updateSliders();
             this.valuePlanesCtrl.draw();
             if (this.onChange) {
                this.onChange(this);
             }
          },
-         getText: () => { return (100 * this.valuePlanes.highlight).toFixed(0) + "%" }
+         getText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
       });
 
       this.lightLightSlider = new Slider(parent, {
          id: 'LightLight',
          label: 'Light Light',
          min: 0,
-         max: 100,
-         value: this.valuePlanes.lightLight * 100,
+         max: 1,
+         value: this.valuePlanes.lightLight,
          colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
-         getText: () => { return (100 * this.valuePlanes.lightLight).toFixed(0) + "%" }
+         getText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
       });
       this.lightLightSlider.range.disabled = true;
 
@@ -83,10 +83,10 @@ export class ValuePlanesPanel extends Panel {
          id: 'MidLight',
          label: 'Mid Light',
          min: 0,
-         max: 100,
-         value: this.valuePlanes.midLight * 100,
+         max: 1,
+         value: this.valuePlanes.midLight,
          colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
-         getText: () => { return (100 * this.valuePlanes.midLight).toFixed(0) + "%" }
+         getText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
       });
       this.midLightSlider.range.disabled = true;
 
@@ -94,10 +94,10 @@ export class ValuePlanesPanel extends Panel {
          id: 'DarkLight',
          label: 'Dark Light',
          min: 0,
-         max: 100,
-         value: this.valuePlanes.darkLight * 100,
+         max: 1,
+         value: this.valuePlanes.darkLight,
          colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
-         getText: () => { return (100 * this.valuePlanes.darkLight).toFixed(0) + "%" }
+         getText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
       });
       this.darkLightSlider.range.disabled = true;
 
@@ -105,36 +105,36 @@ export class ValuePlanesPanel extends Panel {
          id: 'Shadow',
          label: 'Shadow',
          min: 0,
-         max: 100,
-         value: this.valuePlanes.shadow * 100,
+         max: 1,
+         value: this.valuePlanes.shadow,
          colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
          oninput: () => {
-            this.valuePlanes.shadow = this.shadowSlider.value / 100;
+            this.valuePlanes.shadow = this.shadowSlider.value;
             this.updateSliders();
             this.valuePlanesCtrl.draw();
             if (this.onChange) {
                this.onChange(this);
             }
          },
-         getText: () => { return (100 * this.valuePlanes.shadow).toFixed(0) + "%" }
+         getText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
       });
    }
 
    private updateSliders() {
-      this.highlightSlider.value = 100 * this.valuePlanes.highlight;
-      this.lightLightSlider.value = 100 * this.valuePlanes.lightLight;
-      this.midLightSlider.value = 100 * this.valuePlanes.midLight;
-      this.darkLightSlider.value = 100 * this.valuePlanes.darkLight;
-      this.shadowSlider.value = 100 * this.valuePlanes.shadow;
+      this.highlightSlider.value = this.valuePlanes.highlight;
+      this.lightLightSlider.value = this.valuePlanes.lightLight;
+      this.midLightSlider.value = this.valuePlanes.midLight;
+      this.darkLightSlider.value = this.valuePlanes.darkLight;
+      this.shadowSlider.value = this.valuePlanes.shadow;
    }
 
    public toRenderer(renderer: Renderer) {
-      renderer.contours = [
+      renderer.options.contours = [
          new Contour(this.valuePlanes.lightLight, this.valuePlanes.threshold1),
          new Contour(this.valuePlanes.midLight, this.valuePlanes.threshold2),
          new Contour(this.valuePlanes.darkLight, 90)
       ];
-      renderer.valueRange = new ValueRange(
+      renderer.options.valueRange = new ValueRange(
          this.valuePlanes.highlight,
          this.valuePlanes.shadow,
          this.valuePlanes.highlight - this.valuePlanes.lightLight

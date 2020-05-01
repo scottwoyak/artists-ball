@@ -4,6 +4,7 @@ import { Vec3, Vec4 } from "./Vec";
 import { glUniform } from "./glUniform";
 import { glIndexBuffer } from "./glIndexBuffer";
 import { Mat4 } from "./Mat";
+import { BoundingPts } from "./BoundingPts";
 import { BoundingBox } from "./BoundingBox";
 
 export class glObject {
@@ -25,8 +26,14 @@ export class glObject {
       return this.tObj.name;
    }
 
-   public get box(): BoundingBox {
+   public getBoundingPts(): BoundingPts {
+      let pts = new BoundingPts(this.tObj.box.corners);
+      return pts.multM(this.normalize).multM(this.model);
+   }
+
+   public getBoundingBox(): BoundingBox {
       return this.tObj.box.multM(this.normalize);
+      //return pts.multM(this.normalize).multM(this.model);
    }
 
    public constructor(

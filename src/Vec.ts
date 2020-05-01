@@ -300,7 +300,7 @@ export class Vec3 extends Vec implements IVec3 {
     * @param pt The point.
     * @returns The distance to the point.
     */
-   public distanceToPt(pt: Vec3): number {
+   public distToPoint(pt: Vec3): number {
       return this.subtract(pt).magnitude();
    }
 
@@ -310,13 +310,23 @@ export class Vec3 extends Vec implements IVec3 {
     * @param plane The plane coefficients.
     * @returns The distance to the plane.
     */
-   public distanceToPlane(plane: Vec3): number {
+   public distToPlane(plane: Vec3): number {
       let a = plane.x;
       let b = plane.y;
       let c = plane.z;
       let d = -(a * a + b * b + c * c);
 
       return Math.abs(a * this.x + b * this.y + c * this.z + d) / Math.sqrt(a * a + b * b + c * c);
+   }
+
+   /**
+    * Builds a Vec4 from this Vec3
+    * 
+    * @param w The w component of the new vector.
+    * @returns The new vector.
+    */
+   public toVec4(w: number): Vec4 {
+      return new Vec4([this.x, this.y, this.z, w]);
    }
 }
 
@@ -326,7 +336,7 @@ export class Vec3 extends Vec implements IVec3 {
 export class Vec4 extends Vec {
 
    /**
-    * @param vals If supplied, the initial values for the vector
+    * @param vals If supplied, the initial values for the vector.
     */
    public constructor(vals?: number[]) {
       if (vals) {

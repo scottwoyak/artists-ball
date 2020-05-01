@@ -12,44 +12,44 @@ export class ValueRange {
       return new ValueRange(1.0, 0.2, 0.75);
    }
 
-   private _highlight: number;
-   private _shadow: number;
-   private _highlightDelta: number;
+   private _maxIntensity: number;
+   private _ambientIntensity: number;
+   private _specularIntensity: number;
 
-   public constructor(highlight: number, shadow: number, highlightDelta: number) {
-      this._highlight = highlight;
-      this._shadow = shadow;
-      this._highlightDelta = highlightDelta;
-   }
-
-   public get highlightDelta(): number {
-      return this._highlightDelta;
+   public constructor(maxIntensity: number, ambientIntensity: number, specularIntensity: number) {
+      this._maxIntensity = maxIntensity;
+      this._ambientIntensity = ambientIntensity;
+      this._specularIntensity = specularIntensity;
    }
 
-   public get highlight(): number {
-      return this._highlight;
-   }
-   public set highlight(val: number) {
-      this._highlight = Math.min(Math.max(val, this._highlightDelta), 1.0);
-      this._shadow = Math.min(this._shadow, this._highlight - this._highlightDelta);
+   public get specularIntensity(): number {
+      return this._specularIntensity;
    }
 
-   public get ambient(): number {
-      return this.shadow;
+   public get maxIntensity(): number {
+      return this._maxIntensity;
    }
-   public set ambient(val: number) {
+   public set maxIntensity(val: number) {
+      this._maxIntensity = Math.min(Math.max(val, this._specularIntensity), 1.0);
+      this._ambientIntensity = Math.min(this._ambientIntensity, this._maxIntensity - this._specularIntensity);
+   }
+
+   public get ambientIntensity(): number {
+      return this._ambientIntensity;
+   }
+   public set ambientIntensity(val: number) {
       this.shadow = val;
    }
 
    public get shadow(): number {
-      return this._shadow;
+      return this._ambientIntensity;
    }
    public set shadow(val: number) {
-      this._shadow = Math.max(Math.min(val, 1 - this._highlightDelta), 0);
-      this._highlight = Math.max(this._highlight, this._shadow + this._highlightDelta);
+      this._ambientIntensity = Math.max(Math.min(val, 1 - this._specularIntensity), 0);
+      this._maxIntensity = Math.max(this._maxIntensity, this._ambientIntensity + this._specularIntensity);
    }
 
-   public get lightIntensity(): number {
-      return this.highlight - this.shadow - this._highlightDelta;
+   public get diffuseIntensity(): number {
+      return this.maxIntensity - this._ambientIntensity - this._specularIntensity;
    }
 }

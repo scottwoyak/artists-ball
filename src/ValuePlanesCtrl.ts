@@ -158,9 +158,9 @@ export class ValuePlanesCtrl {
       uni.set('uEye', new Vec3([0, 0, 1]));
       uni.set('uOrthographic', true);
 
-      uni.set('uLightIntensity', ValueRange.Standard.lightIntensity);
-      uni.set('uAmbientIntensity', ValueRange.Standard.ambient);
-      uni.set('uHighlight', ValueRange.Standard.highlight);
+      uni.set('uLightIntensity', ValueRange.Standard.diffuseIntensity);
+      uni.set('uAmbientIntensity', ValueRange.Standard.ambientIntensity);
+      uni.set('uHighlight', ValueRange.Standard.maxIntensity);
 
       uni.set('uWhiteColor', glColor3.modelWhite);
       uni.set('uBlackColor', glColor3.modelBlack);

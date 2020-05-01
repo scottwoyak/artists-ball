@@ -42,18 +42,18 @@ export class ValuePlanes {
    }
 
    public get highlight(): number {
-      return this.valueRange.highlight;
+      return this.valueRange.maxIntensity;
    }
    public set highlight(val: number) {
-      this.valueRange.highlight = val;
+      this.valueRange.maxIntensity = val;
       this.computeColors();
    }
 
    public get shadow(): number {
-      return this.valueRange.shadow;
+      return this.valueRange.ambientIntensity;
    }
    public set shadow(val: number) {
-      this.valueRange.shadow = val;
+      this.valueRange.ambientIntensity = val;
       this.computeColors();
    }
 
@@ -69,7 +69,7 @@ export class ValuePlanes {
 
    private colorAt(deg: number): number {
       deg = clamp(deg, 0, 90);
-      return mix(this.shadow, this.highlight - this.valueRange.highlightDelta, Math.cos(toRad(deg)));
+      return mix(this.shadow, this.highlight - this.valueRange.specularIntensity, Math.cos(toRad(deg)));
    }
 
    public computeColors() {

@@ -1,5 +1,5 @@
 import { toRad, isMobile } from "./Globals";
-import { Renderer, Contour, RenderMode, Reset } from "./Renderer";
+import { Renderer, Contour, RenderMode, Reset, LightType } from "./Renderer";
 import { Vec4, Vec2, Vec3 } from "./Vec";
 import { NormalType } from "./TriangleObj";
 import { PointerEventHandler } from "./PointerEventHandler";
@@ -89,7 +89,7 @@ export class ViewerApp implements IApp {
 
       this.renderer = new Renderer(this.gl);
       this.renderer.showMiniView = false;
-      this.renderer.contours = [
+      this.renderer.options.contours = [
          new Contour(new glColor3([1.00, 0.20, 0.20]), 10), // red
          new Contour(new glColor3([1.00, 0.55, 0.25]), 20), // orange
          new Contour(new glColor3([1.00, 0.81, 0.25]), 30), // light orange
@@ -151,7 +151,7 @@ export class ViewerApp implements IApp {
                break;
 
             case 'c':
-               this.renderer.renderMode = (this.renderer.renderMode === RenderMode.Contours ? RenderMode.Normal : RenderMode.Contours);
+               this.renderer.options.renderMode = (this.renderer.options.renderMode === RenderMode.Contours ? RenderMode.Normal : RenderMode.Contours);
                this.dirty = true;
                break;
 
@@ -160,8 +160,13 @@ export class ViewerApp implements IApp {
                this.dirty = true;
                break;
 
+            case 'g':
+               this.renderer.showGrid = !this.renderer.showGrid;
+               this.dirty = true;
+               break;
+
             case 'h':
-               this.renderer.showHighlights = !this.renderer.showHighlights;
+               this.renderer.options.showHighlights = !this.renderer.options.showHighlights;
                this.dirty = true;
                break;
 
@@ -191,11 +196,18 @@ export class ViewerApp implements IApp {
                this.save();
                break;
 
+            case 'f':
+               //this.renderer.enableLightFalloff = !this.renderer.enableLightFalloff;
+               this.dirty = true;
+               break;
+
             case 't':
+               this.renderer.options.lightType = this.renderer.options.lightType === LightType.Point ? LightType.Directional : LightType.Point;
+               this.dirty = true;
                break;
 
             case 'v':
-               this.renderer.camera.useOrthographic = !this.renderer.camera.useOrthographic;
+               this.renderer.options.camera.useOrthographic = !this.renderer.options.camera.useOrthographic;
                this.dirty = true;
                break;
          }
@@ -209,7 +221,7 @@ export class ViewerApp implements IApp {
 
    private createPerspectivePanel(div: HTMLDivElement) {
 
-      this.perspectivePanel = new PerspectivePanel(div, 'PerspectivePanel', this.renderer.camera);
+      this.perspectivePanel = new PerspectivePanel(div, 'PerspectivePanel', this.renderer.options.camera);
       this.perspectivePanel.onShow = (panel: Panel) => {
          this.valuePlanesPanel.visible = false;
          this.updateSize();
@@ -228,20 +240,20 @@ export class ViewerApp implements IApp {
 
    private createValuePlanesPanel(div: HTMLDivElement) {
 
-      this.valuePlanesPanel = new ValuePlanesPanel(div, 'ValuePlanesPanel', this.renderer.valueRange);
+      this.valuePlanesPanel = new ValuePlanesPanel(div, 'ValuePlanesPanel', this.renderer.options.valueRange);
       this.valuePlanesPanel.onShow = (panel: Panel) => {
          this.perspectivePanel.visible = false;
 
          this.updateSize();
-         this.renderer.renderMode = RenderMode.Contours;
+         this.renderer.options.renderMode = RenderMode.Contours;
          this.valuePlanesPanel.toRenderer(this.renderer);
 
          this.dirty = true;
       }
       this.valuePlanesPanel.onHide = () => {
          this.updateSize();
-         this.renderer.renderMode = RenderMode.Normal;
-         this.renderer.valueRange = ValueRange.Standard;
+         this.renderer.options.renderMode = RenderMode.Normal;
+         this.renderer.options.valueRange = ValueRange.Standard;
          this.dirty = true;
       }
       this.valuePlanesPanel.onChange = () => {
@@ -259,9 +271,9 @@ export class ViewerApp implements IApp {
       subMenu.addCheckbox({
          label: 'Show Contours using Color',
          id: 'ColorContours',
-         checked: () => this.renderer.renderMode === RenderMode.Contours,
+         checked: () => this.renderer.options.renderMode === RenderMode.Contours,
          oncheck: (checkbox: Checkbox) => {
-            this.renderer.renderMode = checkbox.checked ? RenderMode.Contours : RenderMode.Normal;
+            this.renderer.options.renderMode = checkbox.checked ? RenderMode.Contours : RenderMode.Normal;
             this.dirty = true;
          }
       });
@@ -272,10 +284,12 @@ export class ViewerApp implements IApp {
          label: 'Show',
          id: 'ShowHighlights',
          name: 'HighlightsGroup',
-         checked: () => this.renderer.showHighlights && this.renderer.renderModeCanToggleHighlights(),
+         checked: () => this.renderer.options.showHighlights && this.renderer.renderModeCanToggleHighlights(),
          oncheck: (button: Radiobutton) => {
-            this.renderer.showHighlights = true;
-            this.renderer.renderMode = RenderMode.Normal;
+            this.renderer.options.showHighlights = true;
+            if (this.renderer.options.renderMode === RenderMode.EmphasizeHighlights) {
+               this.renderer.options.renderMode = RenderMode.Normal;
+            }
             this.dirty = true;
          }
       });
@@ -284,10 +298,12 @@ export class ViewerApp implements IApp {
          label: 'Hide',
          id: 'HideHighlights',
          name: 'HighlightsGroup',
-         checked: () => !this.renderer.showHighlights && this.renderer.renderModeCanToggleHighlights(),
+         checked: () => !this.renderer.options.showHighlights && this.renderer.renderModeCanToggleHighlights(),
          oncheck: (button: Radiobutton) => {
-            this.renderer.showHighlights = false;
-            this.renderer.renderMode = RenderMode.Normal;
+            this.renderer.options.showHighlights = false;
+            if (this.renderer.options.renderMode === RenderMode.EmphasizeHighlights) {
+               this.renderer.options.renderMode = RenderMode.Normal;
+            }
             this.dirty = true;
          }
       });
@@ -296,10 +312,10 @@ export class ViewerApp implements IApp {
          label: 'Emphasize',
          id: 'EmphasizeHighlights',
          name: 'HighlightsGroup',
-         checked: () => this.renderer.renderMode === RenderMode.EmphasizeHighlights,
+         checked: () => this.renderer.options.renderMode === RenderMode.EmphasizeHighlights,
          oncheck: (button: Radiobutton) => {
-            this.renderer.showHighlights = true;
-            this.renderer.renderMode = RenderMode.EmphasizeHighlights;
+            this.renderer.options.showHighlights = true;
+            this.renderer.options.renderMode = RenderMode.EmphasizeHighlights;
             this.dirty = true;
          }
       });
@@ -309,9 +325,9 @@ export class ViewerApp implements IApp {
          label: 'Shininess',
          min: 1,
          max: 50,
-         value: this.renderer.shininess,
+         value: this.renderer.options.shininess,
          oninput: (slider: Slider) => {
-            this.renderer.shininess = slider.value;
+            this.renderer.options.shininess = slider.value;
             this.dirty = true;
          },
       });
@@ -321,9 +337,9 @@ export class ViewerApp implements IApp {
          label: 'Normal',
          id: 'NormalShadows',
          name: 'ShadowGroup',
-         checked: () => this.renderer.renderMode == RenderMode.Normal,
+         checked: () => this.renderer.options.renderMode == RenderMode.Normal,
          oncheck: (button: Radiobutton) => {
-            this.renderer.renderMode = RenderMode.Normal;
+            this.renderer.options.renderMode = RenderMode.Normal;
             this.dirty = true;
          }
       });
@@ -331,9 +347,9 @@ export class ViewerApp implements IApp {
          label: 'Highlight Terminator',
          id: 'HighlightTerminator',
          name: 'ShadowGroup',
-         checked: () => this.renderer.renderMode == RenderMode.HighlightTerminator,
+         checked: () => this.renderer.options.renderMode == RenderMode.HighlightTerminator,
          oncheck: (button: Radiobutton) => {
-            this.renderer.renderMode = RenderMode.HighlightTerminator;
+            this.renderer.options.renderMode = RenderMode.HighlightTerminator;
             this.dirty = true;
          }
       });
@@ -341,9 +357,9 @@ export class ViewerApp implements IApp {
          label: 'Highlight Shadow',
          id: 'HighlightShadow',
          name: 'ShadowGroup',
-         checked: () => this.renderer.renderMode == RenderMode.HighlightShadow,
+         checked: () => this.renderer.options.renderMode == RenderMode.HighlightShadow,
          oncheck: (button: Radiobutton) => {
-            this.renderer.renderMode = RenderMode.HighlightShadow;
+            this.renderer.options.renderMode = RenderMode.HighlightShadow;
             this.dirty = true;
          }
       });
@@ -351,9 +367,9 @@ export class ViewerApp implements IApp {
          label: 'Light and Shadow Only',
          id: 'LightAndShadowOnly',
          name: 'ShadowGroup',
-         checked: () => this.renderer.renderMode == RenderMode.LightAndShadow,
+         checked: () => this.renderer.options.renderMode == RenderMode.LightAndShadow,
          oncheck: (button: Radiobutton) => {
-            this.renderer.renderMode = RenderMode.LightAndShadow;
+            this.renderer.options.renderMode = RenderMode.LightAndShadow;
             this.dirty = true;
          }
       });
@@ -364,6 +380,43 @@ export class ViewerApp implements IApp {
 
       subMenu.addItem('Value Planes...', () => {
          this.valuePlanesPanel.visible = true;
+      });
+
+      let lightSubMenu = subMenu.addSubMenu('Light');
+      lightSubMenu.addSlider({
+         id: 'Falloff',
+         label: 'Falloff',
+         min: 0,
+         max: 0.9,
+         value: this.renderer.options.falloff,
+         oninput: (slider: Slider) => {
+            this.renderer.options.falloff = slider.value;
+            this.dirty = true;
+         },
+      });
+
+      lightSubMenu.addSlider({
+         id: 'Intensity',
+         label: 'Intensity',
+         min: 0.5,
+         max: 2.0,
+         value: this.renderer.options.lightIntensity,
+         oninput: (slider: Slider) => {
+            this.renderer.options.lightIntensity = slider.value;
+            this.dirty = true;
+         },
+      });
+
+      lightSubMenu.addSlider({
+         id: 'AmbientIntensity',
+         label: 'Ambient Intensity',
+         min: 0.0,
+         max: 0.4,
+         value: this.renderer.options.valueRange.ambientIntensity,
+         oninput: (slider: Slider) => {
+            this.renderer.options.valueRange.ambientIntensity = slider.value;
+            this.dirty = true;
+         },
       });
 
       subMenu = menubar.addSubMenu('Options', 'Options');
@@ -487,7 +540,7 @@ export class ViewerApp implements IApp {
                this.loader.orient(this.renderer.obj);
 
                if (query.startsWith('Head') || query.startsWith('Teapot') || query.startsWith('Male_02')) {
-                  this.renderer.useCulling = false;
+                  this.renderer.options.useCulling = false;
                }
 
                this.animate = false;
@@ -545,7 +598,7 @@ export class ViewerApp implements IApp {
    private rotateObjects(xRad: number, yRad: number) {
 
       // get the light vector with model transformation undone
-      let vec = Vec4.fromVec3(this.renderer.lightDirection, 1);
+      let vec = Vec4.fromVec3(this.renderer.options.lightPos, 1);
       vec = this.renderer.obj.model.inverse().multV(vec);
 
       if (this.renderer.lockFloor) {
@@ -557,7 +610,7 @@ export class ViewerApp implements IApp {
          if (this.rotateLightWithObject) {
             // apply the changes to the light
             vec = this.renderer.obj.model.multV(vec);
-            this.renderer.lightDirection = vec.xyz;
+            this.renderer.options.lightPos = vec.xyz;
          }
       }
       else {
@@ -576,7 +629,7 @@ export class ViewerApp implements IApp {
          }
 
          // apply the changes to the light
-         this.renderer.lightDirection = vec.xyz;
+         this.renderer.options.lightPos = vec.xyz;
       }
    }
 
@@ -602,7 +655,7 @@ export class ViewerApp implements IApp {
 
       let canvasWidth = this.gl.canvas.width;
       let canvasHeight = this.gl.canvas.height;
-      let clipSpace = this.renderer.camera.getClipSpace();
+      let clipSpace = this.renderer.options.camera.getClipSpace(this.gl);
       let miniWidth = this.renderer.miniSize * (2 / clipSpace.width) * canvasWidth;
       let miniHeight = this.renderer.miniSize * (2 / clipSpace.height) * canvasHeight;
 
@@ -616,13 +669,13 @@ export class ViewerApp implements IApp {
    }
 
    private onScale(scale: number, change: number) {
-      this.renderer.camera.zoom(change);
+      this.renderer.options.camera.zoom(change);
       this.dirty = true;
    }
 
    private onRotate(angle: number, delta: number) {
       // get the light vector with model transformation undone
-      let vec = Vec4.fromVec3(this.renderer.lightDirection, 1);
+      let vec = Vec4.fromVec3(this.renderer.options.lightPos, 1);
       vec = this.renderer.obj.model.inverse().multV(vec);
 
       this.renderer.rotZ(delta);
@@ -630,7 +683,7 @@ export class ViewerApp implements IApp {
       // apply the updated transform 
       if (this.rotateLightWithObject) {
          vec = this.renderer.obj.model.multV(vec);
-         this.renderer.lightDirection = vec.xyz;
+         this.renderer.options.lightPos = vec.xyz;
       }
 
       this.dirty = true;
@@ -644,8 +697,8 @@ export class ViewerApp implements IApp {
          factor = 2;
       }
 
-      let clipSpace = this.renderer.camera.getClipSpace();
-      this.renderer.camera.translate(new Vec2([
+      let clipSpace = this.renderer.options.camera.getClipSpace(this.gl);
+      this.renderer.options.camera.translate(new Vec2([
          factor * clipSpace.width * delta.x / this.gl.canvas.width,
          factor * clipSpace.height * delta.y / this.gl.canvas.height
       ]));
@@ -672,7 +725,7 @@ export class ViewerApp implements IApp {
          }
 
          // get the light vector with model transformation undone
-         let vec = Vec4.fromVec3(this.renderer.lightDirection, 1);
+         let vec = Vec4.fromVec3(this.renderer.options.lightPos, 1);
          vec = this.renderer.obj.model.inverse().multV(vec);
 
          // animate
@@ -681,7 +734,7 @@ export class ViewerApp implements IApp {
          // apply the updated transform 
          if (this.rotateLightWithObject) {
             vec = this.renderer.obj.model.multV(vec);
-            this.renderer.lightDirection = vec.xyz;
+            this.renderer.options.lightPos = vec.xyz;
          }
 
          this.dirty = true;

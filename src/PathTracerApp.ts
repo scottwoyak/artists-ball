@@ -138,11 +138,11 @@ export class PathTracerApp implements IApp {
          id: 'LightIntensity',
          label: 'Light Intensity',
          min: 0,
-         max: 100,
-         value: this.renderer.uniforms.uLightIntensity * 100,
+         max: 1,
+         value: this.renderer.uniforms.uLightIntensity,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            this.renderer.uniforms.uLightIntensity = this.intensitySlider.value / 100;
+            this.renderer.uniforms.uLightIntensity = this.intensitySlider.value;
             this.restart();
          }
       });
@@ -191,11 +191,11 @@ export class PathTracerApp implements IApp {
          id: 'AmbientIntensity',
          label: 'Ambient Light',
          min: 0,
-         max: 100,
-         value: this.renderer.uniforms.uAmbientLightIntensity * 100,
+         max: 1,
+         value: this.renderer.uniforms.uAmbientLightIntensity,
          colors: [htmlColor.black, htmlColor.white],
          oninput: () => {
-            this.renderer.uniforms.uAmbientLightIntensity = this.ambientIntensitySlider.value / 100;
+            this.renderer.uniforms.uAmbientLightIntensity = this.ambientIntensitySlider.value;
             this.restart();
          }
       });
