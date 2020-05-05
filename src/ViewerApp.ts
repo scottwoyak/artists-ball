@@ -448,6 +448,15 @@ export class ViewerApp implements IApp {
             this.dirty = true;
          }
       });
+      subMenu.addCheckbox({
+         label: 'Show Grid',
+         id: 'ShowGrid',
+         checked: () => this.renderer.showGrid,
+         oncheck: (checkbox: Checkbox) => {
+            this.renderer.showGrid = checkbox.checked;
+            this.dirty = true;
+         }
+      });
       subMenu.addItem('Reverse Object', () => {
          this.renderer.tObj.reverse();
          this.renderer.obj.uploadTriangles();
