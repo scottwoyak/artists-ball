@@ -4,9 +4,16 @@ import { Vec4, Vec3 } from "./Vec";
  * An x-y-z-w matrix for use in WebGL applications.
  */
 export class Mat4 {
+
    /** The matrix value stored as a 16 element array */
    public values: number[];
 
+   public get scaleFactors(): Vec3 {
+      let sX = (new Vec3([this.get(0, 0), this.get(1, 0), this.get(2, 0)])).magnitude();
+      let sY = (new Vec3([this.get(0, 0), this.get(1, 0), this.get(2, 0)])).magnitude();
+      let sZ = (new Vec3([this.get(0, 0), this.get(1, 0), this.get(2, 0)])).magnitude();
+      return new Vec3([sX, sY, sZ]);
+   }
    /**
     * @param values If supplied, the initial matrix values. If not supplied, the matrix is 
     * initialized as an identity matrix.
@@ -91,6 +98,17 @@ export class Mat4 {
          vals.push(sum);
       }
       return new Vec4(vals);
+   }
+
+   /**
+    * Transforms a 3d vec by this matrix.
+    * 
+    * @param vec A 3d vec.
+    * @param w The value to use for w. 0 = ignore translation. 1 = include.
+    * @returns The new 3d vec.
+    */
+   public multVec3(vec: Vec3, w: number = 1): Vec3 {
+      return this.multV(vec.toVec4(w)).xyz;
    }
 
    /**

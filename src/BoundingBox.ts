@@ -77,14 +77,16 @@ export class BoundingBox {
 
    }
 
-   public log(msg: string) {
-      console.log(msg + ' ' +
-         '[' + this.min.x + ', ' + this.min.y + ', ' + this.min.z + ']' +
-         '[' + this.max.x + ', ' + this.max.y + ', ' + this.max.z + ']'
-      );
+   public toString(digits: number) {
+      return '[' + this.min.toString(digits) + ']' +
+         '[' + this.max.toString(digits) + ']';
    }
 
    public update(v: IVec3) {
+      if (isNaN(v.x) || isNaN(v.y) || isNaN(v.z)) {
+         //console.log('----------------------------------------------NaN');
+         return;
+      }
       this.min.x = Math.min(this.min.x, v.x);
       this.min.y = Math.min(this.min.y, v.y);
       this.min.z = Math.min(this.min.z, v.z);
@@ -115,51 +117,4 @@ export class BoundingBox {
 
       return ret;
    }
-
-   /*
-   public multM(mat: Mat4): BoundingBox {
-      let ret = new BoundingBox();
-      this.corners.forEach((corner) => {
-         let v = mat.multV(corner.toVec4(1));
-         ret.update(v);
-      })
-
-      return ret;
-   }
-
-   public distToPoint(pt: Vec3): IMinMax {
-      let ret = {
-         min: Number.MAX_VALUE,
-         max: -Number.MAX_VALUE,
-      }
-
-      let corners = this.corners;
-      corners.forEach((corner: Vec3) => {
-         let d = corner.distToPoint(pt);
-         ret.min = Math.min(d, ret.min);
-         ret.max = Math.min(d, ret.max);
-      });
-
-      return ret;
-   }
-
-   public distToPlane(plane: Vec3): IMinMax {
-      let ret = {
-         min: Number.MAX_VALUE,
-         max: -Number.MAX_VALUE,
-         d: [0]
-      }
-      ret.d = [];
-
-      let corners = this.corners;
-      corners.forEach((corner: Vec3) => {
-         let d = corner.distToPlane(plane);
-         ret.d.push(d);
-         ret.min = Math.min(d, ret.min);
-         ret.max = Math.max(d, ret.max);
-      });
-
-      return ret;
-   }
-   */
 }

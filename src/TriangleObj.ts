@@ -5,6 +5,8 @@ import { BlobFile } from "./BlobFile";
 import { IndexedVec3 } from "./IndexedVec3";
 import { IVec3 } from "./IVec3";
 import { BoundingBox } from "./BoundingBox";
+import { BoundingPts } from "./BoundingPts";
+import { clamp } from "./Globals";
 
 export enum NormalType {
    Smooth,
@@ -31,6 +33,7 @@ export class TriangleObj {
    public box = new BoundingBox();
    public name: string;
    public source: string;
+   private boundingPts: BoundingPts;
 
    public get numVertices() {
       return this.vertices.length / 3;
@@ -101,8 +104,6 @@ export class TriangleObj {
 
    public computeNormals(type: NormalType) {
 
-      let p = new Profiler();
-
       if (type === NormalType.Smooth) {
          let multiNormVertices: MultiNormVertex[] = [];
          for (let i = 0; i < this.numVertices; i++) {
@@ -143,8 +144,6 @@ export class TriangleObj {
             this.pushTriangle(v1, v2, v3);
          }
       }
-
-      p.log('computeNormals');
    }
 
    private x(i: number): number {
@@ -158,6 +157,7 @@ export class TriangleObj {
    }
 
    public findBounds() {
+      console.log('finding bounds');
       let box = new BoundingBox();
 
       for (let i = 0; i < this.numTriangles; i++) {
@@ -168,6 +168,83 @@ export class TriangleObj {
       }
 
       this.box = box;
+   }
+
+   /**
+    * Breaks the object into evenly spaced volumes. The number of volumes is automatically
+    * determined based on the number of triangles.
+    */
+   public getBoundingPts(): BoundingPts {
+
+      if (this.boundingPts) {
+         return this.boundingPts;
+      }
+
+      let numSteps = 15;
+
+      let boxes: BoundingBox[] = [];
+      for (let i = 0; i < Math.pow(numSteps, 3); i++) {
+         boxes.push(new BoundingBox());
+      }
+
+      let v = new Vec3();
+      for (let i = 0; i < this.numVertices; i++) {
+         v.x = this.vertices[3 * i + 0];
+         v.y = this.vertices[3 * i + 1];
+         v.z = this.vertices[3 * i + 2];
+         let x = Math.floor(numSteps * (v.x - this.box.min.x) / (this.box.width));
+         let y = Math.floor(numSteps * (v.y - this.box.min.y) / (this.box.height));
+         let z = Math.floor(numSteps * (v.z - this.box.min.z) / (this.box.depth));
+         x = clamp(x, 0, numSteps - 1);
+         y = clamp(y, 0, numSteps - 1);
+         z = clamp(z, 0, numSteps - 1);
+         let index = x + y * numSteps + z * numSteps * numSteps;
+         boxes[index].update(v);
+      }
+
+      let boxMap = new Map<number, BoundingBox>();
+      let boxCount = 0;
+      for (let x = 0; x < numSteps; x++) {
+         for (let y = 0; y < numSteps; y++) {
+            let first: {
+               index: number,
+               box: BoundingBox,
+            };
+            let last: {
+               index: number,
+               box: BoundingBox,
+            };
+            for (let z = 0; z < numSteps; z++) {
+               let index = x + y * numSteps + z * numSteps * numSteps;
+               let box = boxes[index];
+               if (box.min.x === Number.MAX_VALUE) {
+                  continue;
+               }
+               boxCount++;
+               if (!first) {
+                  first = { index: index, box: box };
+               }
+               last = { index: index, box: box };
+            }
+
+            if (first && boxMap.has(first.index) === false) {
+               boxMap.set(first.index, first.box);
+            }
+            if (last && boxMap.has(last.index) === false) {
+               boxMap.set(last.index, last.box);
+            }
+         }
+      }
+
+      let pts: Vec3[] = [];
+      boxes.forEach((box) => {
+         if (box.min.x !== Number.MAX_VALUE) {
+            pts.push(...box.corners);
+         }
+      });
+
+      this.boundingPts = new BoundingPts(pts);
+      return this.boundingPts;
    }
 
    /**
@@ -267,7 +344,7 @@ export class TriangleObj {
       console.log('trimmed ' + (this.indices.length - indices.length) + ' triangles');
       this.indices = indices;
       this.findBounds();
-      p.log('Trip Complete');
+      p.log('Trim Complete');
    }
 
    public mirror(x: number, add: boolean) {

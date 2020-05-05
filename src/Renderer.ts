@@ -16,6 +16,7 @@ import { glProgram } from './glProgram';
 import { ValueRange } from './ValueRange';
 import { Camera, ObjSizeProvider, FixedSizeProvider } from './Camera';
 import { IMinMax } from './BoundingBox';
+import { Plane } from './Plane';
 
 const BALL_RADIUS = 0.5;
 const INITIAL_LIGHT_POS = new Vec3([-1.0, 1.0, 1.5]);
@@ -209,6 +210,27 @@ export class Renderer {
       let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
       gl.clearColor(color.r, color.g, color.b, 1);
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+
+
+      // tests
+      /*
+      let light = new Vec3([0, 10, 0]);
+      let pt = new Vec3([2, 0, 0]);
+      let mat = new Mat4();
+      mat.translate(new Vec3([0, -100, 0]));
+      mat.scale(0.5);
+      mat.rotZ(toRad(-90));
+      mat.rotY(toRad(45));
+      let xpt = mat.multVec3(pt);
+      let xLight = mat.inverse().multVec3(light);
+      let xOrigin = mat.inverse().multVec3(new Vec3([0, 0, 0]));
+      let plane = new Plane(light);
+      let plane2 = new Plane(xLight, xOrigin);
+      console.log('\n\n----------------------');
+      console.log('pt: ' + pt.toString(2) + '      xlight: ' + xLight.toString(2) + '   ' + (plane2.distToPt(pt) * mat.scaleFactors.x));
+      console.log('xpt: ' + xpt.toString(2) + '    light: ' + light.toString(2) + '   ' + plane.distToPt(xpt));
+      console.log('xOrigin: ' + xOrigin.toString(2));
+      */
    }
 
    public delete() {
@@ -424,19 +446,64 @@ export class Renderer {
          uni.set('uLightPos', options.lightPos);
       }
       else {
+         // compute the minimum distance to the light. We'll use this value to auto-adjust
+         // the light
          let dist: IMinMax;
-         let boundingPts = this.obj.getBoundingPts();
+
+         // We can get the distance in two ways. 1: transform all the points by the model
+         // matrix and compute distances. This is expensive since we have to transform each
+         // point so we instead, 2: do the inverse transform to the light and compute the
+         // distance to the untransformed points.
+         let boundingPts = this.obj.tObj.getBoundingPts();
+
+         // get the inverse transform of the light position
+         let obj = this.obj;
+         let mat = obj.model.multM(obj.normalize);
+         let inverse = mat.inverse();
+         let xLightPos = inverse.multVec3(options.lightPos);
+
          if (options.lightType === LightType.Point) {
+
+            // TODO use the inverse light
             dist = boundingPts.distToPoint(options.lightPos);
          }
          else {
-            dist = boundingPts.distToPlane(options.lightPos);
+            // figure out the light plane for the inverse light
+            let xOrigin = inverse.multVec3(Vec3.origin);
+            let plane = new Plane(xLightPos, xOrigin);
+
+            // distance to the raw object points
+            dist = boundingPts.distToPlane(plane);
          }
-         let maxObjSize = dist.max - dist.min;
-         let d = (maxObjSize * Math.sqrt(1.0 - this.options.falloff)) / (1.0 - Math.sqrt(1.0 - this.options.falloff));
+
+         // to get the actual distance, we now need to reapply the scale factor to
+         // get the true distance. The scale factor is the same in all directions
+         // so just use the x value
+         let s = obj.model.multM(obj.normalize).scaleFactors.x;
+
+         dist = {
+            min: dist.min * s,
+            max: dist.max * s,
+         }
+
+         // we need to compute the distance to the light and the light intensity such that
+         // the closes point gets lit with value 1 and the furthese point matches the
+         // target falloff.
+         //
+         // - d is the distance the light needs to be from the closest point. Light falls off
+         // with the square of distance.
+         // - falloffDistance is the size of the object
+         let falloffDistance = dist.max - dist.min;
+         let d = (falloffDistance * Math.sqrt(1.0 - options.falloff)) / (1.0 - Math.sqrt(1.0 - options.falloff));
+
+         // intensity = d^2 so that intensity at d (1/d^2) = 1.0
          let lightIntensityAtSource = d * d;
          uni.set('uLightIntensityAtSource', lightIntensityAtSource);
-         uni.set('uLightPos', options.lightPos.normalize().mult(d + maxObjSize / 2.0));
+
+         // actual light position is measured from the object, not the origin. Shift 
+         // it back
+         let objToOrigin = options.lightPos.magnitude() - dist.min;
+         uni.set('uLightPos', options.lightPos.normalize().mult(d + objToOrigin));
       }
 
       return uni;

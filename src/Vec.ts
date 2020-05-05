@@ -305,21 +305,6 @@ export class Vec3 extends Vec implements IVec3 {
    }
 
    /**
-    * Computes the distance from this point to a plane defined as a*x + b*y + c*z = d
-    * 
-    * @param plane The plane coefficients.
-    * @returns The distance to the plane.
-    */
-   public distToPlane(plane: Vec3): number {
-      let a = plane.x;
-      let b = plane.y;
-      let c = plane.z;
-      let d = -(a * a + b * b + c * c);
-
-      return Math.abs(a * this.x + b * this.y + c * this.z + d) / Math.sqrt(a * a + b * b + c * c);
-   }
-
-   /**
     * Builds a Vec4 from this Vec3
     * 
     * @param w The w component of the new vector.
