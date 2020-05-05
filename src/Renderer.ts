@@ -608,6 +608,9 @@ export class Renderer {
       else {
          this.shadowDepthTexture.bind();
 
+         let style = getComputedStyle(<Element>gl.canvas);
+         let color = htmlColor.fromCss(style.backgroundColor).toGlColor();
+         gl.clearColor(color.r, color.g, color.b, 1);
          gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
          this.drawFloor();

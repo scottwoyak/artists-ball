@@ -18,6 +18,8 @@ import { OverlayCanvas, TextLocation } from "./OverlayCanvas";
 import { ValuePlanesPanel } from "./ValuePlanesPanel";
 import { ValueRange } from "./ValueRange";
 import { PerspectivePanel } from "./PerspectivePanel";
+import { hsvColor } from "./hsvColor";
+import { htmlColor } from "./htmlColor";
 
 enum PointerMode {
    View,
@@ -33,6 +35,7 @@ export class ViewerApp implements IApp {
    private rotateLightWithObject = false;
    private perspectivePanel: PerspectivePanel;
    private valuePlanesPanel: ValuePlanesPanel;
+   private baseBackgroundColor: hsvColor;
 
    private dirty: boolean = true;
    private animate: boolean = false;
@@ -74,6 +77,9 @@ export class ViewerApp implements IApp {
       let canvas = document.createElement('canvas');
       canvas.id = 'MainCanvas';
       parent.appendChild(canvas);
+
+      let style = getComputedStyle(canvas);
+      this.baseBackgroundColor = hsvColor.fromHtmlColor(htmlColor.fromCss(style.backgroundColor));
 
       this.overlay = new OverlayCanvas(parent);
 
@@ -415,6 +421,13 @@ export class ViewerApp implements IApp {
          value: this.renderer.options.valueRange.ambientIntensity,
          oninput: (slider: Slider) => {
             this.renderer.options.valueRange.ambientIntensity = slider.value;
+
+            let range = 0.6;
+            let baseVal = this.baseBackgroundColor.v;
+            let newVal = (baseVal - range / 2) + range * slider.valueAsPercent;
+            let newColor = new hsvColor([this.baseBackgroundColor.h, this.baseBackgroundColor.s, newVal]);
+            (<HTMLCanvasElement>this.gl.canvas).style.backgroundColor = newColor.toHtmlColor().toCss();
+
             this.dirty = true;
          },
       });

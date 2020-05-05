@@ -165,6 +165,15 @@ export class Slider implements ICtrl {
    }
 
    /**
+    * Gets the value of the slider as a percent [0-1] of the range
+    * 
+    * @returns the value of the slider as a percent
+    */
+   public get valueAsPercent(): number {
+      return this.value / (this.max - this.min);
+   }
+
+   /**
     * Gets the min slider value.
     * 
     * @returns The min slider value.
