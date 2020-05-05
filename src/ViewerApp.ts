@@ -399,7 +399,7 @@ export class ViewerApp implements IApp {
          id: 'Intensity',
          label: 'Intensity',
          min: 0.5,
-         max: 2.0,
+         max: 1.5,
          value: this.renderer.options.lightIntensity,
          oninput: (slider: Slider) => {
             this.renderer.options.lightIntensity = slider.value;

@@ -692,9 +692,13 @@ export class Renderer {
       let view = Mat4.identity;
       view.scale(this.miniSize);
       view.translate(new Vec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
+      this.ballOptions.view = view.clone();
 
       this.ballOptions.lightPos = this.options.lightPos.clone();
-      this.ballOptions.view = view.clone();
+      this.ballOptions.falloff = this.options.falloff;
+      this.ballOptions.lightIntensity = this.options.lightIntensity;
+      this.ballOptions.valueRange = this.options.valueRange.clone();
+
       this.setOptions(this.ballOptions);
       this.ball.draw();
 

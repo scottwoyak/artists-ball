@@ -16,10 +16,22 @@ export class ValueRange {
    private _ambientIntensity: number;
    private _specularIntensity: number;
 
-   public constructor(maxIntensity: number, ambientIntensity: number, specularIntensity: number) {
+   public constructor(
+      maxIntensity: number,
+      ambientIntensity: number,
+      specularIntensity: number
+   ) {
       this._maxIntensity = maxIntensity;
       this._ambientIntensity = ambientIntensity;
       this._specularIntensity = specularIntensity;
+   }
+
+   public clone(): ValueRange {
+      return new ValueRange(
+         this.maxIntensity,
+         this.ambientIntensity,
+         this.specularIntensity
+      );
    }
 
    public get specularIntensity(): number {
