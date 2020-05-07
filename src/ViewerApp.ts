@@ -1,6 +1,6 @@
 import { toRad, isMobile } from "./Globals";
 import { Renderer, Contour, RenderMode, Reset, LightType } from "./Renderer";
-import { Vec4, Vec2, Vec3 } from "./Vec";
+import { Vec4, Vec2 } from "./Vec";
 import { NormalType } from "./TriangleObj";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { saveAs } from 'file-saver';
@@ -58,6 +58,7 @@ export class ViewerApp implements IApp {
       viewContainer.id = 'ViewContainer';
       viewContainer.className = 'Container';
       div.appendChild(viewContainer);
+
       this.createViewElements(viewContainer);
       this.createPerspectivePanel(div);
       this.createValuePlanesPanel(div);
@@ -184,6 +185,16 @@ export class ViewerApp implements IApp {
                );
                break;
 
+            case 'l':
+               if (this.renderer.options.lightType === LightType.Point) {
+                  this.renderer.options.lightType = LightType.Directional;
+               }
+               else {
+                  this.renderer.options.lightType = LightType.Point;
+               }
+               this.dirty = true;
+               break;
+
             case 'o':
                this.optimize(NormalType.Smooth);
                break;
@@ -202,13 +213,7 @@ export class ViewerApp implements IApp {
                this.save();
                break;
 
-            case 'f':
-               //this.renderer.enableLightFalloff = !this.renderer.enableLightFalloff;
-               this.dirty = true;
-               break;
-
             case 't':
-               this.renderer.options.lightType = this.renderer.options.lightType === LightType.Point ? LightType.Directional : LightType.Point;
                this.dirty = true;
                break;
 

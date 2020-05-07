@@ -697,11 +697,17 @@ export class Renderer {
       view.translate(new Vec3([clipSpace.min.x + this.miniSize, clipSpace.max.y - this.miniSize, 0]));
       this.ballOptions.view = view.clone();
 
-      this.ballOptions.lightPos = this.options.lightPos.clone();
-      this.ballOptions.falloff = this.options.falloff;
-      this.ballOptions.lightIntensity = this.options.lightIntensity;
       this.ballOptions.valueRange = this.options.valueRange.clone();
+      this.ballOptions.lightPos = this.options.lightPos.clone();
+      this.ballOptions.lightType = this.options.lightType;
+      this.ballOptions.falloff = this.options.falloff;
 
+      // TODO compute distance and intensity for light for the ball
+      this.ballOptions.lightIntensity = this.options.lightIntensity;
+
+      this.ballOptions.showHighlights = this.options.showHighlights;
+      this.ballOptions.shininess = this.options.shininess;
+      this.ballOptions.renderMode = this.options.renderMode;
       this.setOptions(this.ballOptions);
       this.ball.draw();
 
