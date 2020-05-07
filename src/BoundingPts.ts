@@ -27,7 +27,7 @@ export class BoundingPts {
       this.pts.forEach((pts: Vec3) => {
          let d = pts.distToPoint(pt);
          ret.min = Math.min(d, ret.min);
-         ret.max = Math.min(d, ret.max);
+         ret.max = Math.max(d, ret.max);
       });
 
       return ret;
