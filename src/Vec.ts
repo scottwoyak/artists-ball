@@ -210,7 +210,7 @@ export class Vec3 extends Vec implements IVec3 {
     * @param divider The string to separate each number.
     * @returns A string representation.
     */
-   public toString(digits: number, divider = ','): string {
+   public toString(digits: number = 2, divider = ','): string {
       return this.x.toFixed(digits) + divider + this.y.toFixed(digits) + divider + this.z.toFixed(digits);
    }
 
