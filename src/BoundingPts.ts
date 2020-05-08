@@ -1,5 +1,4 @@
 import { Vec3 } from "./Vec";
-import { Mat4 } from "./Mat";
 import { IMinMax } from "./BoundingBox";
 import { Plane } from "./Plane";
 
@@ -24,11 +23,18 @@ export class BoundingPts {
          max: -Number.MAX_VALUE,
       }
 
-      this.pts.forEach((pts: Vec3) => {
-         let d = pts.distToPoint(pt);
+      this.pts.forEach((pt2: Vec3) => {
+         let x = pt2.x - pt.x;
+         let y = pt2.y - pt.y;
+         let z = pt2.z - pt.z;
+         let d = x * x + y * y + z * z;
          ret.min = Math.min(d, ret.min);
          ret.max = Math.max(d, ret.max);
       });
+
+      // don't bother getting the square root of every calculation, just the min and max
+      ret.min = Math.sqrt(ret.min);
+      ret.max = Math.sqrt(ret.max);
 
       return ret;
    }
