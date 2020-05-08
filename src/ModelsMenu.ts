@@ -15,6 +15,7 @@ interface IMenuItemSetup {
 let menuItems: (iSubMenu | IMenuItemSetup)[] = [
    {
       label: 'Objects', id: 'ObjectsSubMenu', menuItems: [
+         { label: 'Sphere', file: 'Sphere' },
          { label: 'Football', file: 'Football.blob' },
          { label: 'Pill', file: 'Pill.blob' },
          { label: 'Pill Bottle', file: 'PillBottle.blob' },

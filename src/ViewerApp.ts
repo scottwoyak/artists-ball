@@ -1,6 +1,6 @@
 import { toRad, isMobile } from "./Globals";
 import { Renderer, Contour, RenderMode, Reset, LightType } from "./Renderer";
-import { Vec4, Vec2 } from "./Vec";
+import { Vec4, Vec2, Vec3 } from "./Vec";
 import { NormalType } from "./TriangleObj";
 import { PointerEventHandler } from "./PointerEventHandler";
 import { saveAs } from 'file-saver';
@@ -20,6 +20,7 @@ import { ValueRange } from "./ValueRange";
 import { PerspectivePanel } from "./PerspectivePanel";
 import { hsvColor } from "./hsvColor";
 import { htmlColor } from "./htmlColor";
+import { TriangleObjBuilder } from "./TriangleObjBuilder";
 
 enum PointerMode {
    View,
@@ -593,6 +594,20 @@ export class ViewerApp implements IApp {
                });
                */
             });
+      }
+      else if (lc === 'sphere') {
+         let tObj = new TriangleObjBuilder();
+         tObj.addSphere(200, 1, new Vec3([0, 0, 0]));
+         tObj.optimize(NormalType.Smooth);
+         this.renderer.setModel(tObj);
+         this.perspectivePanel.setModel(tObj);
+         this.animate = false;
+         this.dirty = true;
+         this.pointerMode = PointerMode.View;
+         if (!this.animationFrame) {
+            this.animationFrame = requestAnimationFrame(() => this.tick());
+         }
+
       }
       else {
          // TODO multi line error messages not supported
