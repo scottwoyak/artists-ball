@@ -465,7 +465,7 @@ export class Renderer {
          if (options.lightType === LightType.Point) {
 
             // TODO use the inverse light
-            dist = boundingPts.distToPoint(options.lightPos);
+            dist = boundingPts.distToPoint(xLightPos);
          }
          else {
             // figure out the light plane for the inverse light
@@ -486,6 +486,10 @@ export class Renderer {
             max: dist.max * s,
          }
 
+         if (options === this.options) {
+            console.log('min: ' + dist.min + 'max: ' + dist.max);
+         }
+
          // we need to compute the distance to the light and the light intensity such that
          // the closes point gets lit with value 1 and the furthese point matches the
          // target falloff.
@@ -504,6 +508,7 @@ export class Renderer {
          // it back
          let objToOrigin = options.lightPos.magnitude() - dist.min;
          uni.set('uLightPos', options.lightPos.normalize().mult(d + objToOrigin));
+         console.log('using: ' + options.lightPos.magnitude() + ' actual: ' + (d + objToOrigin));
       }
 
       return uni;
@@ -708,6 +713,7 @@ export class Renderer {
       this.ballOptions.showHighlights = this.options.showHighlights;
       this.ballOptions.shininess = this.options.shininess;
       this.ballOptions.renderMode = this.options.renderMode;
+      this.ballOptions.contours = this.options.contours;
       this.setOptions(this.ballOptions);
       this.ball.draw();
 

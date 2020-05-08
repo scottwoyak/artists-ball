@@ -158,9 +158,11 @@ export class ValuePlanesCtrl {
       uni.set('uEye', new Vec3([0, 0, 1]));
       uni.set('uOrthographic', true);
 
-      uni.set('uLightIntensity', ValueRange.Standard.diffuseIntensity);
-      uni.set('uAmbientIntensity', ValueRange.Standard.ambientIntensity);
-      uni.set('uHighlight', ValueRange.Standard.maxIntensity);
+      uni.set('uDiffuseIntensity', ValueRange.Standard.diffuseIntensity);
+      uni.set('uAmbientIntensity', ValueRange.Standard.shadow);
+      uni.set('uSpecularIntensity', ValueRange.Standard.specularIntensity);
+      uni.set('uLightIntensity', 1.0);
+      uni.set('uFalloff', 0);
 
       uni.set('uWhiteColor', glColor3.modelWhite);
       uni.set('uBlackColor', glColor3.modelBlack);
@@ -198,7 +200,7 @@ export class ValuePlanesCtrl {
       uni.seti('uRenderMode', RenderMode.Contours);
 
       // shoot the light straight down
-      uni.set('uLightDirection', new Vec3([0, -1, 0]));
+      uni.set('uLightPos', new Vec3([0, 1, 0]));
 
       // don't cast shadows
       uni.set('uUseShadows', false);
@@ -207,7 +209,7 @@ export class ValuePlanesCtrl {
       this.ball.draw();
 
       // draw the arrow
-      uni.set('uLightDirection', new Vec3([1, -0.5, -0.5]));
+      uni.set('uLightPos', new Vec3([-1, -0.5, 0.5]));
       uni.seti('uRenderMode', RenderMode.Normal);
 
       // first reset things so that we're looking down the z-axis
@@ -218,7 +220,7 @@ export class ValuePlanesCtrl {
       uni.set('uWhiteColor', new glColor3([1.0, 1.0, 0.5]));
       uni.set('uBlackColor', htmlColor.black.toGlColor());
       uni.set('uAmbientIntensity', 0.4);
-      uni.set('uLightIntensity', 0.6);
+      uni.set('uDiffuseIntensity', 0.6);
       this.arrow.draw();
    }
 
