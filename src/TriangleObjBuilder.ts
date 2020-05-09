@@ -27,8 +27,8 @@ export class TriangleObjBuilder extends TriangleObj {
 
          let p1 = new Vec3([x1, y1, z1]);
          let p2 = new Vec3([x2, y2, z2]);
-         this.pushTriangle(TIP, p1, p2);
-         this.pushTriangle(TIP_BASE, p2, p1);
+         this.pushTriangle(TIP, p2, p1);
+         this.pushTriangle(TIP_BASE, p1, p2);
       }
 
       // build the arrow shaft
