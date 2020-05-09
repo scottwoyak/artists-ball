@@ -384,6 +384,24 @@ export class ViewerApp implements IApp {
       });
 
       let lightSubMenu = subMenu.addSubMenu('Light');
+      lightSubMenu.addRadiobutton({
+         label: 'Directional Light',
+         name: 'LightTypeGroup',
+         checked: () => this.renderer.options.lightType === LightType.Directional,
+         oncheck: (button: Radiobutton) => {
+            this.renderer.options.lightType = LightType.Directional;
+            this.dirty = true;
+         }
+      });
+      lightSubMenu.addRadiobutton({
+         label: 'Point Light',
+         name: 'LightTypeGroup',
+         checked: () => this.renderer.options.lightType === LightType.Point,
+         oncheck: (button: Radiobutton) => {
+            this.renderer.options.lightType = LightType.Point;
+            this.dirty = true;
+         }
+      });
       lightSubMenu.addSlider({
          label: 'Falloff',
          min: 0,

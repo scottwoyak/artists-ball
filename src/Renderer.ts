@@ -96,7 +96,7 @@ export class Renderer {
       view: Mat4.identity,
       valueRange: ValueRange.Standard,
       lightPos: INITIAL_LIGHT_POS.clone(),
-      lightType: LightType.Directional,
+      lightType: LightType.Point,
       falloff: INITIAL_FALLOFF,
       lightIntensity: INITIAL_LIGHT_INTENSITY,
       contours: [],
@@ -470,28 +470,23 @@ export class Renderer {
          else {
             // figure out the light plane for the inverse light
             let xOrigin = inverse.multVec3(Vec3.origin);
-            let plane = new Plane(xLightPos, xOrigin);
+            let xPlane = new Plane(xLightPos, xOrigin);
 
             // distance to the raw object points
-            dist = boundingPts.distToPlane(plane);
+            dist = boundingPts.distToPlane(xPlane);
          }
 
          // to get the actual distance, we now need to reapply the scale factor to
          // get the true distance. The scale factor is the same in all directions
          // so just use the x value
          let s = obj.model.multM(obj.normalize).scaleFactors.x;
-
          dist = {
             min: dist.min * s,
             max: dist.max * s,
          }
 
-         if (options === this.options) {
-            console.log('min: ' + dist.min + 'max: ' + dist.max);
-         }
-
          // we need to compute the distance to the light and the light intensity such that
-         // the closes point gets lit with value 1 and the furthese point matches the
+         // the closest point gets lit with value 1 and the furthest point matches the
          // target falloff.
          //
          // - d is the distance the light needs to be from the closest point. Light falls off
@@ -507,8 +502,8 @@ export class Renderer {
          // actual light position is measured from the object, not the origin. Shift 
          // it back
          let objToOrigin = options.lightPos.magnitude() - dist.min;
-         uni.set('uLightPos', options.lightPos.normalize().mult(d + objToOrigin));
-         console.log('using: ' + options.lightPos.magnitude() + ' actual: ' + (d + objToOrigin));
+         options.lightPos = options.lightPos.normalize().mult(d + objToOrigin);
+         uni.set('uLightPos', options.lightPos);
       }
 
       return uni;
