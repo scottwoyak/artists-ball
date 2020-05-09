@@ -4,7 +4,7 @@ import { ICtrl } from "./ICtrl";
  * Interface for data passed to the Checkbox constructor
  */
 export interface ICheckboxSetup {
-   id: string,
+   id?: string,
    label: string,
    checked?: () => boolean,
    oncheck?: (checkbox: Checkbox) => void,

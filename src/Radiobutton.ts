@@ -4,7 +4,7 @@ import { ICtrl } from "./ICtrl";
  * Interface for data passed to the Radiobutton constructor
  */
 export interface IRadiobuttonSetup {
-   id: string,
+   id?: string,
    label: string,
    name: string,
    checked?: () => boolean,

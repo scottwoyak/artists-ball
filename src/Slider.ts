@@ -8,7 +8,7 @@ import { ICtrl } from "./ICtrl";
  * Interface for data passed to the Slider constructor
  */
 export interface ISliderSetup {
-   id: string,
+   id?: string,
    label: string,
    min: number,
    max: number,
@@ -64,15 +64,16 @@ export class Slider implements ICtrl {
     */
    public constructor(parent: HTMLElement, setup: ISliderSetup) {
 
+      let id = setup.id ?? 'Slider';
       this._getText = setup.getText;
 
       let div = document.createElement('div');
-      div.id = setup.id;
+      div.id = id;
       div.className = 'SliderDiv';
       parent.appendChild(div);
 
       let label = document.createElement('label');
-      label.id = setup.id + 'Label';
+      label.id = id + 'Label';
       label.className = 'SliderLabel';
       label.innerText = setup.label ?? '';
       div.appendChild(label);
@@ -81,7 +82,7 @@ export class Slider implements ICtrl {
 
       this._range = document.createElement('input');
       this._range.type = 'range';
-      this._range.id = setup.id + 'Range';
+      this._range.id = id + 'Range';
       this._range.className = 'SliderRange';
       this._range.min = this._rangeMapper.sliderMin.toString();
       this._range.max = this._rangeMapper.sliderMax.toString();
@@ -95,7 +96,7 @@ export class Slider implements ICtrl {
 
       if (setup.colors) {
          this._colorSpan = document.createElement('span');
-         this._colorSpan.id = setup.id + 'ColorSpan';
+         this._colorSpan.id = id + 'ColorSpan';
          this._colorSpan.className = 'SliderColorSpan';
          div.appendChild(this._colorSpan);
 
@@ -104,7 +105,7 @@ export class Slider implements ICtrl {
       }
 
       this._valueSpan = document.createElement('span');
-      this._valueSpan.id = setup.id + 'ValueSpan';
+      this._valueSpan.id = id + 'ValueSpan';
       this._valueSpan.className = 'SliderValueSpan';
       //      this._valueSpan.innerText = setup.value.toString();
       div.appendChild(this._valueSpan);

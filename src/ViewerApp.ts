@@ -97,17 +97,6 @@ export class ViewerApp implements IApp {
 
       this.renderer = new Renderer(this.gl);
       this.renderer.showMiniView = false;
-      this.renderer.options.contours = [
-         new Contour(new glColor3([1.00, 0.20, 0.20]), 10), // red
-         new Contour(new glColor3([1.00, 0.55, 0.25]), 20), // orange
-         new Contour(new glColor3([1.00, 0.81, 0.25]), 30), // light orange
-         new Contour(new glColor3([1.00, 1.00, 0.00]), 40), // yellow
-         new Contour(new glColor3([0.30, 1.00, 0.10]), 50), // green
-         new Contour(new glColor3([0.25, 0.90, 0.90]), 60), // cyan
-         new Contour(new glColor3([0.50, 0.50, 1.00]), 70), // light blue
-         new Contour(new glColor3([0.20, 0.20, 1.00]), 80), // blue
-         new Contour(new glColor3([0.30, 0.11, 0.40]), 90), // purple
-      ]
 
       this.handler = new PointerEventHandler(canvas);
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
@@ -155,11 +144,6 @@ export class ViewerApp implements IApp {
 
             case 'a':
                this.renderer.obj.applyXForm();
-               this.dirty = true;
-               break;
-
-            case 'c':
-               this.renderer.options.renderMode = (this.renderer.options.renderMode === RenderMode.Contours ? RenderMode.Normal : RenderMode.Contours);
                this.dirty = true;
                break;
 
@@ -282,9 +266,22 @@ export class ViewerApp implements IApp {
 
       subMenu.addCheckbox({
          label: 'Show Contours using Color',
-         id: 'ColorContours',
-         checked: () => this.renderer.options.renderMode === RenderMode.Contours,
+         checked: () => {
+            return (this.renderer.options.renderMode === RenderMode.Contours && this.valuePlanesPanel.visible === false);
+         },
          oncheck: (checkbox: Checkbox) => {
+            this.valuePlanesPanel.visible = false;
+            this.renderer.options.contours = [
+               new Contour(new glColor3([1.00, 0.20, 0.20]), 10), // red
+               new Contour(new glColor3([1.00, 0.55, 0.25]), 20), // orange
+               new Contour(new glColor3([1.00, 0.81, 0.25]), 30), // light orange
+               new Contour(new glColor3([1.00, 1.00, 0.00]), 40), // yellow
+               new Contour(new glColor3([0.30, 1.00, 0.10]), 50), // green
+               new Contour(new glColor3([0.25, 0.90, 0.90]), 60), // cyan
+               new Contour(new glColor3([0.50, 0.50, 1.00]), 70), // light blue
+               new Contour(new glColor3([0.20, 0.20, 1.00]), 80), // blue
+               new Contour(new glColor3([0.30, 0.11, 0.40]), 90), // purple
+            ]
             this.renderer.options.renderMode = checkbox.checked ? RenderMode.Contours : RenderMode.Normal;
             this.dirty = true;
          }
@@ -294,7 +291,6 @@ export class ViewerApp implements IApp {
 
       highlightSubMenu.addRadiobutton({
          label: 'Show',
-         id: 'ShowHighlights',
          name: 'HighlightsGroup',
          checked: () => this.renderer.options.showHighlights && this.renderer.renderModeCanToggleHighlights(),
          oncheck: (button: Radiobutton) => {
@@ -308,7 +304,6 @@ export class ViewerApp implements IApp {
 
       highlightSubMenu.addRadiobutton({
          label: 'Hide',
-         id: 'HideHighlights',
          name: 'HighlightsGroup',
          checked: () => !this.renderer.options.showHighlights && this.renderer.renderModeCanToggleHighlights(),
          oncheck: (button: Radiobutton) => {
@@ -322,7 +317,6 @@ export class ViewerApp implements IApp {
 
       highlightSubMenu.addRadiobutton({
          label: 'Emphasize',
-         id: 'EmphasizeHighlights',
          name: 'HighlightsGroup',
          checked: () => this.renderer.options.renderMode === RenderMode.EmphasizeHighlights,
          oncheck: (button: Radiobutton) => {
@@ -333,7 +327,6 @@ export class ViewerApp implements IApp {
       });
 
       highlightSubMenu.addSlider({
-         id: 'Shininess',
          label: 'Shininess',
          min: 1,
          max: 50,
@@ -347,7 +340,6 @@ export class ViewerApp implements IApp {
       let shadowsSubMenu = subMenu.addSubMenu('Shadows');
       shadowsSubMenu.addRadiobutton({
          label: 'Normal',
-         id: 'NormalShadows',
          name: 'ShadowGroup',
          checked: () => this.renderer.options.renderMode == RenderMode.Normal,
          oncheck: (button: Radiobutton) => {
@@ -357,7 +349,6 @@ export class ViewerApp implements IApp {
       });
       shadowsSubMenu.addRadiobutton({
          label: 'Highlight Terminator',
-         id: 'HighlightTerminator',
          name: 'ShadowGroup',
          checked: () => this.renderer.options.renderMode == RenderMode.HighlightTerminator,
          oncheck: (button: Radiobutton) => {
@@ -367,7 +358,6 @@ export class ViewerApp implements IApp {
       });
       shadowsSubMenu.addRadiobutton({
          label: 'Highlight Shadow',
-         id: 'HighlightShadow',
          name: 'ShadowGroup',
          checked: () => this.renderer.options.renderMode == RenderMode.HighlightShadow,
          oncheck: (button: Radiobutton) => {
@@ -377,7 +367,6 @@ export class ViewerApp implements IApp {
       });
       shadowsSubMenu.addRadiobutton({
          label: 'Light and Shadow Only',
-         id: 'LightAndShadowOnly',
          name: 'ShadowGroup',
          checked: () => this.renderer.options.renderMode == RenderMode.LightAndShadow,
          oncheck: (button: Radiobutton) => {
@@ -396,7 +385,6 @@ export class ViewerApp implements IApp {
 
       let lightSubMenu = subMenu.addSubMenu('Light');
       lightSubMenu.addSlider({
-         id: 'Falloff',
          label: 'Falloff',
          min: 0,
          max: 0.9,
@@ -408,7 +396,6 @@ export class ViewerApp implements IApp {
       });
 
       lightSubMenu.addSlider({
-         id: 'Intensity',
          label: 'Intensity',
          min: 0.5,
          max: 1.5,
@@ -420,7 +407,6 @@ export class ViewerApp implements IApp {
       });
 
       lightSubMenu.addSlider({
-         id: 'AmbientIntensity',
          label: 'Ambient Intensity',
          min: 0.0,
          max: 0.4,
@@ -440,7 +426,7 @@ export class ViewerApp implements IApp {
 
       subMenu = menubar.addSubMenu('Options', 'Options');
 
-      let resetSubMenu = subMenu.addSubMenu('Reset', 'Reset');
+      let resetSubMenu = subMenu.addSubMenu('Reset');
       resetSubMenu.addItem('All', () => {
          this.renderer.reset(Reset.All);
          this.dirty = true;
@@ -458,18 +444,17 @@ export class ViewerApp implements IApp {
          this.dirty = true;
       });
 
-      subMenu.addCheckbox({
+      let floorSubMenu = subMenu.addSubMenu('Floor');
+      floorSubMenu.addCheckbox({
          label: 'Show Floor',
-         id: 'ShowFloor',
          checked: () => this.renderer.showFloor,
          oncheck: (checkbox: Checkbox) => {
             this.renderer.showFloor = checkbox.checked;
             this.dirty = true;
          }
       });
-      subMenu.addCheckbox({
+      floorSubMenu.addCheckbox({
          label: 'Show Grid',
-         id: 'ShowGrid',
          checked: () => this.renderer.showGrid,
          oncheck: (checkbox: Checkbox) => {
             this.renderer.showGrid = checkbox.checked;
@@ -485,7 +470,6 @@ export class ViewerApp implements IApp {
       let rotateSubMenu = subMenu.addSubMenu('Rotation');
       rotateSubMenu.addCheckbox({
          label: 'Keep the light pointing at the same spot on the model',
-         id: 'SyncLightAndObject',
          checked: () => this.rotateLightWithObject,
          oncheck: (checkbox: Checkbox) => {
             this.rotateLightWithObject = checkbox.checked;
@@ -493,7 +477,6 @@ export class ViewerApp implements IApp {
       });
       rotateSubMenu.addCheckbox({
          label: 'Rotate model independent of the floor',
-         id: 'LockFloor',
          checked: () => this.renderer.lockFloor,
          oncheck: (checkbox: Checkbox) => {
             this.renderer.lockFloor = checkbox.checked;
@@ -563,6 +546,9 @@ export class ViewerApp implements IApp {
          this.loader.loadModelFile(query, statusFunc)
             .then((tObj) => {
 
+               this.perspectivePanel.visible = false;
+               this.valuePlanesPanel.visible = false;
+
                this.renderer.setModel(tObj);
                this.perspectivePanel.setModel(tObj);
                this.loader.orient(this.renderer.obj);
@@ -597,7 +583,7 @@ export class ViewerApp implements IApp {
       }
       else if (lc === 'sphere') {
          let tObj = new TriangleObjBuilder();
-         tObj.addSphere(200, 1, new Vec3([0, 0, 0]));
+         tObj.addSphere(100, 1, new Vec3([0, 0, 0]));
          tObj.optimize(NormalType.Smooth);
          this.renderer.setModel(tObj);
          this.perspectivePanel.setModel(tObj);
