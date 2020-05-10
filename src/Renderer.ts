@@ -46,11 +46,12 @@ export class Contour {
 // Rendering modes. Must match values in ViewerFragment.glsl
 export enum RenderMode {
    Normal = 0,
-   Contours = 1,
-   LightAndShadow = 2,
-   HighlightTerminator = 3,
-   HighlightShadow = 4,
-   EmphasizeHighlights = 5,
+   ContourPlanes = 1,
+   ContourValues = 2,
+   LightAndShadow = 3,
+   HighlightTerminator = 4,
+   HighlightShadow = 5,
+   EmphasizeHighlights = 6,
 }
 
 export enum Reset {
@@ -464,7 +465,6 @@ export class Renderer {
 
          if (options.lightType === LightType.Point) {
 
-            // TODO use the inverse light
             dist = boundingPts.distToPoint(xLightPos);
          }
          else {
@@ -677,7 +677,7 @@ export class Renderer {
          view.scale(this.miniSize);
          view.translate(new Vec3([clipSpace.max.x - this.miniSize, clipSpace.max.y - this.miniSize, 0]));
          uni.set('view', view);
-         uni.seti('uRenderMode', this.miniViewShowContours ? RenderMode.Contours : RenderMode.Normal);
+         uni.seti('uRenderMode', this.miniViewShowContours ? RenderMode.ContourPlanes : RenderMode.Normal);
          this.obj.draw();
       }
    }
@@ -709,7 +709,24 @@ export class Renderer {
       this.ballOptions.shininess = this.options.shininess;
       this.ballOptions.renderMode = this.options.renderMode;
       this.ballOptions.contours = this.options.contours;
-      this.setOptions(this.ballOptions);
+      let uni = this.setOptions(this.ballOptions);
+
+      if (this.ballOptions.falloff > 0) {
+         // TODO this code is similar to the code in setOptions. Combine it.
+         let falloffDistance = 1.0; // ball diameter
+         let d = (falloffDistance * Math.sqrt(1.0 - this.ballOptions.falloff)) / (1.0 - Math.sqrt(1.0 - this.ballOptions.falloff));
+
+         // intensity = d^2 so that intensity at d (1/d^2) = 1.0
+         let lightIntensityAtSource = d * d;
+         uni.set('uLightIntensityAtSource', lightIntensityAtSource);
+
+         // actual light position is measured from the object, not the origin. Shift 
+         // it back
+         let objToOrigin = 0.5;
+         this.ballOptions.lightPos = this.ballOptions.lightPos.normalize().mult(d + objToOrigin);
+         uni.set('uLightPos', this.ballOptions.lightPos);
+      }
+
       this.ball.draw();
 
       // back out angles as if looking down the z-axis

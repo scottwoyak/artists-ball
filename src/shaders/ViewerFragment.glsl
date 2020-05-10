@@ -11,11 +11,12 @@ uniform vec3 uEye;
 uniform bool uOrthographic;
 
 #define NORMAL 0
-#define CONTOURS 1
-#define LIGHT_AND_SHADOW 2
-#define HIGHLIGHT_TERMINATOR 3
-#define HIGHLIGHT_SHADOW 4
-#define EMPHASIZE_HIGHLIGHTS 5
+#define CONTOUR_PLANES 1
+#define CONTOUR_VALUES 2
+#define LIGHT_AND_SHADOW 3
+#define HIGHLIGHT_TERMINATOR 4
+#define HIGHLIGHT_SHADOW 5
+#define EMPHASIZE_HIGHLIGHTS 6
 
 uniform int uRenderMode;
 
@@ -41,6 +42,7 @@ uniform vec3 uFloorCenter;
 uniform float uFloorRadius;
 uniform bool uRenderingFloor;
 uniform bool uShowGrid;
+#define MAX_CONTOURS 9
 uniform int uNumContours;
 uniform vec3 uContourColors[9];
 uniform float uContourAngles[9];
@@ -109,6 +111,19 @@ bool in_shadow()
 
 vec4 val2Color(float val) { return vec4(mix(uBlackColor, uWhiteColor, val), 1.0); }
 
+vec4 val2ContourColor(float val)
+{
+   val = clamp(val, 0.0, 1.0);
+   for (int i = 0; i < MAX_CONTOURS; i++)
+   {
+      float max = (float(i) + 1.0) / float(uNumContours);
+      if (val <= max)
+      {
+         return vec4(uContourColors[(MAX_CONTOURS - 1) - i], 1.0);
+      }
+   }
+}
+
 float getDiffuse(vec3 normal, vec3 toLight)
 {
    float vDot = clamp(dot(normal, toLight), 0.0, 1.0);
@@ -128,34 +143,6 @@ float getSpecular(vec3 normal, vec3 toLight, vec3 toEye)
    }
 
    return specular;
-}
-
-vec4 getContourColor(float vDot, vec3 normal, vec3 toLight, vec3 toEye)
-{
-   float specular = getSpecular(normal, toLight, toEye);
-   if (specular > SPECULAR_THRESHOLD)
-   {
-      return val2Color(uAmbientIntensity + uDiffuseIntensity + uSpecularIntensity);
-   }
-
-   float angle = (180.0 / 3.1415926) * acos(vDot);
-   if (angle > 90.0)
-   {
-      return val2Color(uAmbientIntensity);
-   }
-   else
-   {
-      for (int i = 0; i < 9; i++)
-      {
-         if (i < uNumContours)
-         {
-            if (angle < uContourAngles[i])
-            {
-               return vec4(uContourColors[i], 1.0);
-            }
-         }
-      }
-   }
 }
 
 float getDistancePtToPlane(vec3 pt, vec3 plane)
@@ -202,6 +189,46 @@ float getValueFromLight(vec3 normal, vec3 toLight, vec3 toEye)
    }
 
    return uAmbientIntensity + uLightIntensity * falloff * (diffuse + specular);
+}
+
+vec4 getContourPlaneColor(float vDot, vec3 normal, vec3 toLight, vec3 toEye)
+{
+   float specular = getSpecular(normal, toLight, toEye);
+   if (specular > SPECULAR_THRESHOLD)
+   {
+      return val2Color(uAmbientIntensity + uDiffuseIntensity + uSpecularIntensity);
+   }
+
+   float angle = (180.0 / 3.1415926) * acos(vDot);
+   if (angle > 90.0)
+   {
+      return val2Color(uAmbientIntensity);
+   }
+   else
+   {
+      for (int i = 0; i < MAX_CONTOURS; i++)
+      {
+         if (i < uNumContours)
+         {
+            if (angle < uContourAngles[i])
+            {
+               return vec4(uContourColors[i], 1.0);
+            }
+         }
+      }
+   }
+}
+
+vec4 getContourValueColor(float vDot, vec3 normal, vec3 toLight, vec3 toEye)
+{
+   float specular = getSpecular(normal, toLight, toEye);
+   if (specular > SPECULAR_THRESHOLD)
+   {
+      return vec4(1.0, 1.0, 1.0, 1.0);
+   }
+
+   float val = getValueFromLight(normal, toLight, toEye);
+   return val2ContourColor(val);
 }
 
 float round(float val) { return floor(val + 0.5); }
@@ -305,7 +332,7 @@ void main()
    }
    else
    {
-      if (uRenderMode == CONTOURS)
+      if (uRenderMode == CONTOUR_PLANES)
       {
          if (inShadow)
          {
@@ -313,7 +340,18 @@ void main()
          }
          else
          {
-            fragColor = getContourColor(vDot, normal, toLight, toEye);
+            fragColor = getContourPlaneColor(vDot, normal, toLight, toEye);
+         }
+      }
+      else if (uRenderMode == CONTOUR_VALUES)
+      {
+         if (inShadow)
+         {
+            fragColor = val2ContourColor(uAmbientIntensity);
+         }
+         else
+         {
+            fragColor = getContourValueColor(vDot, normal, toLight, toEye);
          }
       }
       else

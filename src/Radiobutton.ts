@@ -6,7 +6,7 @@ import { ICtrl } from "./ICtrl";
 export interface IRadiobuttonSetup {
    id?: string,
    label: string,
-   name: string,
+   group: string,
    checked?: () => boolean,
    oncheck?: (radio: Radiobutton) => void,
    onuncheck?: (radio: Radiobutton) => void,
@@ -43,7 +43,7 @@ export class Radiobutton implements ICtrl {
       this.box = document.createElement('input');
       this.box.className = 'Radiobutton';
       this.box.type = 'radio';
-      this.box.name = setup.name;
+      this.box.name = setup.group;
       this.box.id = setup.id + 'Radiobutton';
       this.box.checked = setup.checked ? setup.checked() : false;
       this.box.onchange = () => {

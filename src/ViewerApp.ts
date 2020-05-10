@@ -27,6 +27,19 @@ enum PointerMode {
    Light,
 }
 
+const COLOR_CONTOURS = [
+   new Contour(new glColor3([1.00, 0.20, 0.20]), 10), // red
+   new Contour(new glColor3([1.00, 0.55, 0.25]), 20), // orange
+   new Contour(new glColor3([1.00, 0.81, 0.25]), 30), // light orange
+   new Contour(new glColor3([1.00, 1.00, 0.00]), 40), // yellow
+   new Contour(new glColor3([0.30, 1.00, 0.10]), 50), // green
+   new Contour(new glColor3([0.25, 0.90, 0.90]), 60), // cyan
+   new Contour(new glColor3([0.50, 0.50, 1.00]), 70), // light blue
+   new Contour(new glColor3([0.20, 0.20, 1.00]), 80), // blue
+   new Contour(new glColor3([0.30, 0.11, 0.40]), 90), // purple
+]
+
+
 export class ViewerApp implements IApp {
    private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
    private renderer: Renderer;
@@ -241,7 +254,7 @@ export class ViewerApp implements IApp {
          this.perspectivePanel.visible = false;
 
          this.updateSize();
-         this.renderer.options.renderMode = RenderMode.Contours;
+         this.renderer.options.renderMode = RenderMode.ContourPlanes;
          this.valuePlanesPanel.toRenderer(this.renderer);
 
          this.dirty = true;
@@ -264,25 +277,48 @@ export class ViewerApp implements IApp {
       let subMenu: SubMenu;
       subMenu = menubar.addSubMenu('Tools', 'Tools');
 
-      subMenu.addCheckbox({
-         label: 'Show Contours using Color',
+      let contoursSubMenu = subMenu.addSubMenu('Color Contours');
+      contoursSubMenu.addRadiobutton({
+         label: 'None',
+         group: 'ContourGroup',
          checked: () => {
-            return (this.renderer.options.renderMode === RenderMode.Contours && this.valuePlanesPanel.visible === false);
+            if (this.renderer.options.renderMode === RenderMode.ContourPlanes ||
+               this.renderer.options.renderMode === RenderMode.ContourValues) {
+               return false;
+            }
+            else {
+               return true;
+            }
          },
-         oncheck: (checkbox: Checkbox) => {
+         oncheck: (button: Radiobutton) => {
             this.valuePlanesPanel.visible = false;
-            this.renderer.options.contours = [
-               new Contour(new glColor3([1.00, 0.20, 0.20]), 10), // red
-               new Contour(new glColor3([1.00, 0.55, 0.25]), 20), // orange
-               new Contour(new glColor3([1.00, 0.81, 0.25]), 30), // light orange
-               new Contour(new glColor3([1.00, 1.00, 0.00]), 40), // yellow
-               new Contour(new glColor3([0.30, 1.00, 0.10]), 50), // green
-               new Contour(new glColor3([0.25, 0.90, 0.90]), 60), // cyan
-               new Contour(new glColor3([0.50, 0.50, 1.00]), 70), // light blue
-               new Contour(new glColor3([0.20, 0.20, 1.00]), 80), // blue
-               new Contour(new glColor3([0.30, 0.11, 0.40]), 90), // purple
-            ]
-            this.renderer.options.renderMode = checkbox.checked ? RenderMode.Contours : RenderMode.Normal;
+            this.renderer.options.renderMode = RenderMode.Normal;
+            this.dirty = true;
+         }
+      });
+      contoursSubMenu.addRadiobutton({
+         label: 'Planes',
+         group: 'ContourGroup',
+         checked: () => {
+            return (this.renderer.options.renderMode === RenderMode.ContourPlanes && this.valuePlanesPanel.visible === false);
+         },
+         oncheck: (button: Radiobutton) => {
+            this.valuePlanesPanel.visible = false;
+            this.renderer.options.contours = COLOR_CONTOURS;
+            this.renderer.options.renderMode = button.checked ? RenderMode.ContourPlanes : RenderMode.Normal;
+            this.dirty = true;
+         }
+      });
+      contoursSubMenu.addRadiobutton({
+         label: 'Values',
+         group: 'ContourGroup',
+         checked: () => {
+            return (this.renderer.options.renderMode === RenderMode.ContourValues && this.valuePlanesPanel.visible === false);
+         },
+         oncheck: (button: Radiobutton) => {
+            this.valuePlanesPanel.visible = false;
+            this.renderer.options.contours = COLOR_CONTOURS;
+            this.renderer.options.renderMode = button.checked ? RenderMode.ContourValues : RenderMode.Normal;
             this.dirty = true;
          }
       });
@@ -291,7 +327,7 @@ export class ViewerApp implements IApp {
 
       highlightSubMenu.addRadiobutton({
          label: 'Show',
-         name: 'HighlightsGroup',
+         group: 'HighlightsGroup',
          checked: () => this.renderer.options.showHighlights && this.renderer.renderModeCanToggleHighlights(),
          oncheck: (button: Radiobutton) => {
             this.renderer.options.showHighlights = true;
@@ -304,7 +340,7 @@ export class ViewerApp implements IApp {
 
       highlightSubMenu.addRadiobutton({
          label: 'Hide',
-         name: 'HighlightsGroup',
+         group: 'HighlightsGroup',
          checked: () => !this.renderer.options.showHighlights && this.renderer.renderModeCanToggleHighlights(),
          oncheck: (button: Radiobutton) => {
             this.renderer.options.showHighlights = false;
@@ -317,7 +353,7 @@ export class ViewerApp implements IApp {
 
       highlightSubMenu.addRadiobutton({
          label: 'Emphasize',
-         name: 'HighlightsGroup',
+         group: 'HighlightsGroup',
          checked: () => this.renderer.options.renderMode === RenderMode.EmphasizeHighlights,
          oncheck: (button: Radiobutton) => {
             this.renderer.options.showHighlights = true;
@@ -340,7 +376,7 @@ export class ViewerApp implements IApp {
       let shadowsSubMenu = subMenu.addSubMenu('Shadows');
       shadowsSubMenu.addRadiobutton({
          label: 'Normal',
-         name: 'ShadowGroup',
+         group: 'ShadowGroup',
          checked: () => this.renderer.options.renderMode == RenderMode.Normal,
          oncheck: (button: Radiobutton) => {
             this.renderer.options.renderMode = RenderMode.Normal;
@@ -349,7 +385,7 @@ export class ViewerApp implements IApp {
       });
       shadowsSubMenu.addRadiobutton({
          label: 'Highlight Terminator',
-         name: 'ShadowGroup',
+         group: 'ShadowGroup',
          checked: () => this.renderer.options.renderMode == RenderMode.HighlightTerminator,
          oncheck: (button: Radiobutton) => {
             this.renderer.options.renderMode = RenderMode.HighlightTerminator;
@@ -358,7 +394,7 @@ export class ViewerApp implements IApp {
       });
       shadowsSubMenu.addRadiobutton({
          label: 'Highlight Shadow',
-         name: 'ShadowGroup',
+         group: 'ShadowGroup',
          checked: () => this.renderer.options.renderMode == RenderMode.HighlightShadow,
          oncheck: (button: Radiobutton) => {
             this.renderer.options.renderMode = RenderMode.HighlightShadow;
@@ -367,7 +403,7 @@ export class ViewerApp implements IApp {
       });
       shadowsSubMenu.addRadiobutton({
          label: 'Light and Shadow Only',
-         name: 'ShadowGroup',
+         group: 'ShadowGroup',
          checked: () => this.renderer.options.renderMode == RenderMode.LightAndShadow,
          oncheck: (button: Radiobutton) => {
             this.renderer.options.renderMode = RenderMode.LightAndShadow;
@@ -386,7 +422,7 @@ export class ViewerApp implements IApp {
       let lightSubMenu = subMenu.addSubMenu('Light');
       lightSubMenu.addRadiobutton({
          label: 'Directional Light',
-         name: 'LightTypeGroup',
+         group: 'LightTypeGroup',
          checked: () => this.renderer.options.lightType === LightType.Directional,
          oncheck: (button: Radiobutton) => {
             this.renderer.options.lightType = LightType.Directional;
@@ -395,7 +431,7 @@ export class ViewerApp implements IApp {
       });
       lightSubMenu.addRadiobutton({
          label: 'Point Light',
-         name: 'LightTypeGroup',
+         group: 'LightTypeGroup',
          checked: () => this.renderer.options.lightType === LightType.Point,
          oncheck: (button: Radiobutton) => {
             this.renderer.options.lightType = LightType.Point;

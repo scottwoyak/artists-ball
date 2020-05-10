@@ -197,7 +197,7 @@ export class ValuePlanesCtrl {
       let uni = this.setStdUniforms();
 
       // always render with bands
-      uni.seti('uRenderMode', RenderMode.Contours);
+      uni.seti('uRenderMode', RenderMode.ContourPlanes);
 
       // shoot the light straight down
       uni.set('uLightPos', new Vec3([0, 1, 0]));
