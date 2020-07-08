@@ -55,6 +55,7 @@ export class SquintApp implements IApp {
       this.div.appendChild(this.video);
 
       this.video.onplay = (event) => {
+         alert('video size: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
          this.onTakePicture();
       };
 
@@ -163,7 +164,7 @@ export class SquintApp implements IApp {
       fetch(this.host,
          {
             method: 'get',
-            //mode: 'no-cors', // needed for development on localhost
+            mode: 'cors', // needed for development on localhost
          })
          .then(response => {
             return response.blob();
@@ -251,7 +252,7 @@ export class SquintApp implements IApp {
          fetch(this.host,
             {
                method: 'post',
-               //mode: 'no-cors', // needed for development on localhost
+               mode: 'cors', // needed for development on localhost
                body: fd
             })
             .then((response) => {
