@@ -15,6 +15,10 @@ body {
   position: relative;
 }
 
+.FlexContainer {
+  display: flex;
+}
+
 #MainCanvas {
   background-color: rgb(114, 117, 134);
 }
@@ -75,3 +79,4 @@ body {
 
 @import "PathTracerApp.css";
 @import "ViewerApp.css";
+@import "SquintApp.css";

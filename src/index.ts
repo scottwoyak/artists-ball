@@ -1,4 +1,3 @@
-import { PathTracerApp } from "./PathTracerApp";
 import './styles/styles.css';
 import { Launcher } from "./Launcher";
 

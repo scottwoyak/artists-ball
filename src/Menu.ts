@@ -171,7 +171,7 @@ class Menu {
       return item;
    }
 
-   public addSlider(setup: ISliderSetup) {
+   public addSlider(setup: ISliderSetup): Slider {
       let div = this.addItem(
          setup.label,
          () => { }, // do nothing on click
@@ -187,9 +187,11 @@ class Menu {
          oninput: setup.oninput,
       });
       this.ctrls.push(ctrl);
+
+      return ctrl;
    }
 
-   public addCheckbox(setup: ICheckboxSetup) {
+   public addCheckbox(setup: ICheckboxSetup): Checkbox {
       let div = this.addItem(
          '',
          () => { }, // do nothing on click
@@ -198,9 +200,11 @@ class Menu {
 
       let ctrl = new Checkbox(div, setup);
       this.ctrls.push(ctrl);
+
+      return ctrl;
    }
 
-   public addRadiobutton(setup: IRadiobuttonSetup) {
+   public addRadiobutton(setup: IRadiobuttonSetup): Radiobutton {
       let div = this.addItem(
          '',
          () => { }, // do nothing on click
@@ -209,6 +213,8 @@ class Menu {
 
       let ctrl = new Radiobutton(div, setup);
       this.ctrls.push(ctrl);
+
+      return ctrl;
    }
 }
 

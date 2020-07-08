@@ -2,10 +2,12 @@ import { SubMenu, Menubar } from "./Menu";
 import { ViewerApp } from "./ViewerApp";
 import { IApp } from "./IApp";
 import { PathTracerApp } from "./PathTracerApp";
+import { SquintApp } from "./SquintApp";
 
 enum AppType {
    ArtistsBall,
-   Viewer
+   Viewer,
+   Squint
 }
 
 export class Launcher {
@@ -38,6 +40,10 @@ export class Launcher {
          query = window.location.search.substr(1);
       }
 
+      if (window.location.search.indexOf('squint') >= 0) {
+         type = AppType.Squint;
+      }
+
       switch (type) {
          case AppType.ArtistsBall:
             document.title = 'Artist\'s Tools: Artist\'s Ball';
@@ -47,6 +53,12 @@ export class Launcher {
          case AppType.Viewer:
             document.title = 'Artist\'s Tools: Viewer';
             this.app = new ViewerApp(query);
+            break;
+
+         case AppType.Squint:
+            document.title = 'Squint';
+            this.app = new SquintApp();
+            break;
       }
       this.app.create(this.div);
       this.app.buildMenu(this.menubar);
@@ -57,7 +69,8 @@ export class Launcher {
       let subMenu: SubMenu;
       this.menubar = new Menubar(this.div);
       subMenu = this.menubar.addSubMenu('Apps', 'Apps');
-      subMenu.addItem('Viewer', () => this.launch(AppType.Viewer));
+      subMenu.addItem('3D Viewer', () => this.launch(AppType.Viewer));
+      //subMenu.addItem('Squint', () => this.launch(AppType.Squint));
       subMenu.addItem('Artist\'s Ball', () => this.launch(AppType.ArtistsBall));
    }
 }

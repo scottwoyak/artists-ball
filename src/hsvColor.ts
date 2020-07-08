@@ -5,9 +5,9 @@ import { glColor3 } from "./glColor";
  * Class for representing color values. Values are on a 0-1 scale.
  */
 export class hsvColor {
-   public readonly h: number;
-   public readonly s: number;
-   public readonly v: number;
+   public h: number;
+   public s: number;
+   public v: number;
 
    /**
     * @param color HSV values to store in this object

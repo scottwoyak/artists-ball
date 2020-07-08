@@ -1,0 +1,9 @@
+#SquintApp #Panel {
+  flex: 0 0 400px;
+  display: block;
+  background-color: lightgray;
+}
+
+#SquintApp #Canvas {
+  flex-grow: 1;
+}
