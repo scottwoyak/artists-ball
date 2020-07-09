@@ -2,27 +2,23 @@
  * Utility class for logging timing messages for profile code
  */
 export class Profiler {
-   // the last time stamp
-   private t = performance.now();
 
-   public get elapsedMs() {
-      return (performance.now() - this.t);
-   }
+   private startTime = performance.now();
+
    /**
-    * Prints a message to console of the elapsed time since the last mark
+    * The elapsed time in milliseconds
+    */
+   public get elapsedMs() {
+      return (performance.now() - this.startTime);
+   }
+
+   /**
+    * Prints a message to console of the elapsed time
     * 
     * @param msg The message to print with the time
     */
    public log(msg: string) {
       console.log(msg + ' ' + this.elapsedMs.toFixed(1) + ' ms');
-      this.mark();
+      this.startTime = performance.now();
    }
-
-   /**
-    * Updates the timestamp to now
-    */
-   public mark() {
-      this.t = performance.now();
-   }
-
 }

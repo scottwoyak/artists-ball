@@ -6,6 +6,7 @@ import { Vec2 } from "./Vec";
 import { Button } from "./Button";
 import { Checkbox } from "./Checkbox";
 import { FPS } from "./FPS";
+import { Stopwatch } from "./Stopwatch";
 
 export class SquintApp implements IApp {
    private handler: PointerEventHandler;
@@ -28,6 +29,8 @@ export class SquintApp implements IApp {
 
    private fps = new FPS();
    private fps2 = new FPS();
+   private downloadSW = new Stopwatch();
+   private uploadSW = new Stopwatch();
 
    private host = 'https://woyaktest.ue.r.appspot.com/';
    //private host = 'http://' + location.hostname + ':8080/';
@@ -64,13 +67,6 @@ export class SquintApp implements IApp {
       this.canvas.id = 'Canvas';
       this.div.appendChild(this.canvas);
 
-      /*
-      this.img = document.createElement('img');
-      this.img.style.display = 'none';
-      this.img.onload = () => {
-         this.drawImg();
-      }
-      */
       this.download();
 
       /*
@@ -152,7 +148,7 @@ export class SquintApp implements IApp {
       });
 
       this.uploadCheckbox = new Checkbox(this.panelDiv, {
-         label: 'Use my video',
+         label: 'Use my video X',
          oncheck: (checkbox: Checkbox) => {
             this.enableVideo();
             this.download();
@@ -161,12 +157,26 @@ export class SquintApp implements IApp {
    }
 
    private download() {
+
+      let delay = 3000;
+      if (this.downloadSW.elapsedMs < delay) {
+         setTimeout(() => {
+            this.download();
+         }, delay - this.downloadSW.elapsedMs + 100);
+         return;
+      }
+
+      this.downloadSW.restart();
+      /*
       fetch(this.host,
          {
             method: 'get',
-            mode: 'cors', // needed for development on localhost
+            //mode: 'cors', // needed for development on localhost
          })
+         */
+      fetch(this.host)
          .then(response => {
+            console.log(response);
             return response.blob();
          })
          .then((blob) => {
@@ -195,18 +205,17 @@ export class SquintApp implements IApp {
          })
          .catch((reason) => {
             alert(reason);
-            console.log(reason);
+            console.log('download: ' + reason);
          });
 
    }
 
    private enableVideo() {
       if (this.uploadCheckbox.checked) {
-         alert('enabling video');
          const constraints = {
             video: {
                width: 4096,
-               height: 2048,
+               height: 4096,
             }
          };
 
@@ -236,6 +245,15 @@ export class SquintApp implements IApp {
          return;
       }
 
+      let delay = 3000
+      if (this.uploadSW.elapsedMs < delay) {
+         setTimeout(() => {
+            this.onTakePicture();
+         }, delay - this.uploadSW.elapsedMs + 100);
+         return;
+      }
+      this.uploadSW.restart();
+
       let canvas = document.createElement('canvas');
       canvas.width = this.video.videoWidth;
       canvas.height = this.video.videoHeight;
@@ -249,13 +267,16 @@ export class SquintApp implements IApp {
          let fd = new FormData();
          fd.append('file', blob, 'myBlob');
 
+         let sw = new Stopwatch();
+         console.log('XXX starting post');
          fetch(this.host,
             {
                method: 'post',
-               mode: 'cors', // needed for development on localhost
+               //mode: 'cors', // needed for development on localhost
                body: fd
             })
             .then((response) => {
+               console.log('XXX posted: ' + sw.elapsedMs.toFixed(1));
                URL.revokeObjectURL(url);
                this.fps2.tick();
                console.log('upload to ' + this.host + ': ' + this.fps2.rate);
@@ -265,6 +286,7 @@ export class SquintApp implements IApp {
                return response;
             })
             .catch(function (err) {
+               alert('post error: ' + err);
                console.log(err);
             });
       });
