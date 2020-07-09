@@ -148,7 +148,7 @@ export class SquintApp implements IApp {
       });
 
       this.uploadCheckbox = new Checkbox(this.panelDiv, {
-         label: 'Use my video X',
+         label: 'Use my video A',
          oncheck: (checkbox: Checkbox) => {
             this.enableVideo();
             this.download();
@@ -214,8 +214,8 @@ export class SquintApp implements IApp {
       if (this.uploadCheckbox.checked) {
          const constraints = {
             video: {
-               width: 4096,
-               height: 4096,
+               width: 8 * 1024,
+               height: 8 * 1024,
             }
          };
 
@@ -263,6 +263,7 @@ export class SquintApp implements IApp {
 
       // upload
       canvas.toBlob((blob) => {
+         alert('upload size: ' + blob.size / (1024 * 1024));
          let url = URL.createObjectURL(blob);
          let fd = new FormData();
          fd.append('file', blob, 'myBlob');
