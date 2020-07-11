@@ -7,6 +7,8 @@ import { Button } from "./Button";
 import { Checkbox } from "./Checkbox";
 import { FPS } from "./FPS";
 import { Stopwatch } from "./Stopwatch";
+import { Video, IVideoResolution } from "./Video";
+import { Radiobutton } from "./Radiobutton";
 
 export class SquintApp implements IApp {
    private handler: PointerEventHandler;
@@ -15,25 +17,27 @@ export class SquintApp implements IApp {
    private img: HTMLImageElement;
    private canvas: HTMLCanvasElement;
    private video: HTMLVideoElement;
+   private desiredWidth: number;
+   private desiredHeight: number;
 
    private brightness: Slider;
    private contrast: Slider;
    private saturate: Slider;
    private blur: Slider;
    private zoom: Slider;
+   private quality: Slider;
 
    private xOffset = 0;
    private yOffset = 0;
 
-   private uploadCheckbox: Checkbox;
-
-   private fps = new FPS();
-   private fps2 = new FPS();
-   private downloadSW = new Stopwatch();
+   private imgSize = 0;
+   private sw: Stopwatch;
    private uploadSW = new Stopwatch();
 
-   private host = 'https://woyaktest.ue.r.appspot.com/';
-   //private host = 'http://' + location.hostname + ':8080/';
+   private uploadCheckbox: Checkbox;
+
+   //private host = 'https://woyaktest.ue.r.appspot.com/';
+   private host = 'http://' + location.hostname + ':8080/';
 
    public constructor() {
    }
@@ -50,37 +54,41 @@ export class SquintApp implements IApp {
       this.panelDiv.id = 'Panel';
       this.panelDiv.className = 'Panel';
       this.div.appendChild(this.panelDiv);
-      this.buildPanel();
+      this.buildPanel()
+         .then(() => {
 
-      this.video = document.createElement('video');
-      this.video.autoplay = true;
-      this.video.style.display = 'none';
-      this.div.appendChild(this.video);
+            /*
+            this.video = document.createElement('video');
+            //this.video.autoplay = true;
+            this.video.style.display = 'none';
+            this.div.appendChild(this.video);
 
-      this.video.onplay = (event) => {
-         alert('video size: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
-         this.onTakePicture();
-      };
+            this.video.onloadedmetadata = () => {
+               console.log('video size: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
+               this.video.play();
+               this.onTakePicture();
+            };
+            */
 
 
-      this.canvas = document.createElement('canvas');
-      this.canvas.id = 'Canvas';
-      this.div.appendChild(this.canvas);
+            this.canvas = document.createElement('canvas');
+            this.canvas.id = 'Canvas';
+            this.div.appendChild(this.canvas);
 
-      this.download();
+            this.download();
 
-      /*
-      'https://static.wixstatic.com/media/6f1353_883709beb9fc4db2b8e0b882dc7b7792~mv2.jpg'
-         */
+            /*
+            'https://static.wixstatic.com/media/6f1353_883709beb9fc4db2b8e0b882dc7b7792~mv2.jpg'
+               */
 
-      this.handler = new PointerEventHandler(this.canvas);
-      this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
-      this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
-      this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
+            this.handler = new PointerEventHandler(this.canvas);
+            this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
+            this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
+            this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
 
-      window.addEventListener('resize', () => this.onResize());
-      this.updateSizes();
-
+            window.addEventListener('resize', () => this.onResize());
+            this.updateSizes();
+         });
    }
 
    public delete() {
@@ -89,75 +97,112 @@ export class SquintApp implements IApp {
    public buildMenu(menubar: Menubar) {
    }
 
-   private buildPanel() {
+   private buildPanel(): Promise<void> {
 
-      new Button(this.panelDiv, {
-         label: 'Reset',
-         onclick: () => {
-            this.brightness.value = 100;
-            this.contrast.value = 100;
-            this.saturate.value = 100;
-            this.blur.value = 0;
-            this.drawImg();
-         }
-      });
+      return Video.getResolutions()
+         .then((resolutions) => {
+            new Button(this.panelDiv, {
+               label: 'Reset',
+               onclick: () => {
+                  this.brightness.value = 100;
+                  this.contrast.value = 100;
+                  this.saturate.value = 100;
+                  this.blur.value = 0;
+                  this.drawImg();
+               }
+            });
 
-      this.brightness = new Slider(this.panelDiv, {
-         label: 'Brightness',
-         min: 0,
-         max: 200,
-         value: 100,
-         oninput: () => this.drawImg(),
-         getText: (slider) => slider.value.toFixed(0) + '%',
-      })
+            this.brightness = new Slider(this.panelDiv, {
+               label: 'Brightness',
+               min: 0,
+               max: 200,
+               value: 100,
+               oninput: () => this.drawImg(),
+               getText: (slider) => slider.value.toFixed(0) + '%',
+            })
 
-      this.contrast = new Slider(this.panelDiv, {
-         label: 'Contrast',
-         min: 0,
-         max: 200,
-         value: 100,
-         oninput: () => this.drawImg(),
-         getText: (slider) => slider.value.toFixed(0) + '%',
-      });
+            this.contrast = new Slider(this.panelDiv, {
+               label: 'Contrast',
+               min: 0,
+               max: 200,
+               value: 100,
+               oninput: () => this.drawImg(),
+               getText: (slider) => slider.value.toFixed(0) + '%',
+            });
 
-      this.saturate = new Slider(this.panelDiv, {
-         label: 'Chroma',
-         min: 0,
-         max: 200,
-         value: 100,
-         oninput: () => this.drawImg(),
-         getText: (slider) => slider.value.toFixed(0) + '%',
-      });
+            this.saturate = new Slider(this.panelDiv, {
+               label: 'Chroma',
+               min: 0,
+               max: 200,
+               value: 100,
+               oninput: () => this.drawImg(),
+               getText: (slider) => slider.value.toFixed(0) + '%',
+            });
 
-      this.blur = new Slider(this.panelDiv, {
-         label: 'Blur',
-         min: 0,
-         max: 10,
-         value: 0,
-         oninput: () => this.drawImg(),
-         getText: (slider) => slider.value.toFixed(0),
-      });
+            this.blur = new Slider(this.panelDiv, {
+               label: 'Blur',
+               min: 0,
+               max: 10,
+               value: 0,
+               oninput: () => this.drawImg(),
+               getText: (slider) => slider.value.toFixed(0),
+            });
 
-      this.zoom = new Slider(this.panelDiv, {
-         label: 'Zoom',
-         min: 0.5,
-         max: 50,
-         value: 1,
-         oninput: () => this.drawImg(),
-         getText: (slider) => (100 * slider.value).toFixed(0) + '%',
-      });
+            this.zoom = new Slider(this.panelDiv, {
+               label: 'Zoom',
+               min: 0.1,
+               max: 5,
+               value: 1,
+               oninput: () => this.drawImg(),
+               getText: (slider) => (100 * slider.value).toFixed(0) + '%',
+            });
 
-      this.uploadCheckbox = new Checkbox(this.panelDiv, {
-         label: 'Use my video A',
-         oncheck: (checkbox: Checkbox) => {
-            this.enableVideo();
-            this.download();
-         }
-      })
+            let videoDiv = document.createElement('div');
+            videoDiv.id = 'VideoDiv';
+            this.panelDiv.appendChild(videoDiv);
+
+            this.uploadCheckbox = new Checkbox(videoDiv, {
+               label: 'Use my video',
+               oncheck: (checkbox: Checkbox) => {
+                  this.enableVideo();
+                  this.download();
+               }
+            });
+
+            let rb: Radiobutton;
+            let res: IVideoResolution;
+            resolutions.forEach((resolution) => {
+               res = resolution;
+               rb = new Radiobutton(videoDiv, {
+                  label: resolution.label,
+                  group: 'ResolutionGroup',
+                  //checked: () => { return true },
+                  oncheck: () => {
+                     this.desiredWidth = resolution.width;
+                     this.desiredHeight = resolution.height;
+                     this.enableVideo();
+                  }
+               });
+
+               // select the last resolution
+               rb.check(true);
+               this.desiredWidth = res.width;
+               this.desiredHeight = res.height;
+            });
+
+            this.quality = new Slider(videoDiv, {
+               label: 'Quality',
+               min: 0.1,
+               max: 1,
+               value: 0.92,
+               getText: (slider) => slider.value.toFixed(2),
+            })
+         });
    }
 
    private download() {
 
+      /*
       let delay = 3000;
       if (this.downloadSW.elapsedMs < delay) {
          setTimeout(() => {
@@ -165,21 +210,15 @@ export class SquintApp implements IApp {
          }, delay - this.downloadSW.elapsedMs + 100);
          return;
       }
-
       this.downloadSW.restart();
-      /*
-      fetch(this.host,
-         {
-            method: 'get',
-            //mode: 'cors', // needed for development on localhost
-         })
-         */
+      */
+
       fetch(this.host)
          .then(response => {
-            console.log(response);
             return response.blob();
          })
          .then((blob) => {
+            this.imgSize = blob.size;
             if (blob.type === 'text/plain') {
                blob.text()
                   .then((txt) => {
@@ -211,17 +250,45 @@ export class SquintApp implements IApp {
    }
 
    private enableVideo() {
+      // remove the old video element. This avoids issues with dynamically
+      // resizing the video stream - just start with a fresh one
+      /*
+      if (this.video) {
+         this.video.pause();
+         this.video.srcObject = null;
+         this.video.parentElement.removeChild(this.video);
+         this.video.load();
+         this.video = null;
+      }
+      */
+
       if (this.uploadCheckbox.checked) {
+
          const constraints = {
             video: {
-               width: 8 * 1024,
-               height: 8 * 1024,
+               width: this.desiredWidth,
+               height: this.desiredHeight,
             }
          };
 
+         if (this.video) {
+            let stream = this.video.srcObject as MediaStream;
+            stream.getVideoTracks()[0].applyConstraints(constraints.video);
+         }
+
+         this.video = document.createElement('video');
+         this.video.autoplay = true;
+         this.video.style.display = 'none';
+         this.div.appendChild(this.video);
+
+         this.video.onplay = () => {
+            console.log('video size: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
+            this.onTakePicture();
+         };
+
+
          try {
 
-            // Attach the video stream to the video element and autoplay.
             navigator.mediaDevices.getUserMedia(constraints)
                .then((stream) => {
                   this.video.srcObject = stream;
@@ -235,7 +302,11 @@ export class SquintApp implements IApp {
          }
       }
       else {
+         this.video.pause();
          this.video.srcObject = null;
+         this.video.parentElement.removeChild(this.video);
+         this.video.load();
+         this.video = null;
       }
    }
 
@@ -263,13 +334,16 @@ export class SquintApp implements IApp {
 
       // upload
       canvas.toBlob((blob) => {
-         alert('upload size: ' + blob.size / (1024 * 1024));
+         if (blob === null) {
+            console.log('XXX blob is null');
+            return; // TODO when does this happen?
+         }
+
+         //console.log('upload size: ' + blob.size / (1024 * 1024));
          let url = URL.createObjectURL(blob);
          let fd = new FormData();
          fd.append('file', blob, 'myBlob');
 
-         let sw = new Stopwatch();
-         console.log('XXX starting post');
          fetch(this.host,
             {
                method: 'post',
@@ -277,10 +351,7 @@ export class SquintApp implements IApp {
                body: fd
             })
             .then((response) => {
-               console.log('XXX posted: ' + sw.elapsedMs.toFixed(1));
                URL.revokeObjectURL(url);
-               this.fps2.tick();
-               console.log('upload to ' + this.host + ': ' + this.fps2.rate);
                if (this.uploadCheckbox.checked) {
                   this.onTakePicture();
                }
@@ -290,7 +361,9 @@ export class SquintApp implements IApp {
                alert('post error: ' + err);
                console.log(err);
             });
-      });
+      },
+         'image/jpeg',
+         this.quality.value);
    }
 
    private onResize() {
@@ -326,12 +399,22 @@ export class SquintApp implements IApp {
 
       let width: number;
       let height: number;
+      /*
       if (canvasAR > imgAR) {
          height = this.zoom.value * canvasHeight;
          width = height * imgAR;
       }
       else {
          width = this.zoom.value * canvasWidth;
+         height = width / imgAR;
+      }
+      */
+      if (canvasAR > imgAR) {
+         height = this.zoom.value * this.img.height;
+         width = height * imgAR;
+      }
+      else {
+         width = this.zoom.value * this.img.width;
          height = width / imgAR;
       }
 
@@ -352,8 +435,41 @@ export class SquintApp implements IApp {
 
       ctx.drawImage(this.img, x, y, width, height);
 
-      this.fps.tick();
-      //console.log('animation ' + this.fps.rate);
+      if (!this.sw) {
+         this.sw = new Stopwatch();
+      }
+      else {
+         let msg = this.getTimeStr(this.sw.elapsedMs);
+         this.sw.restart();
+         let extents = ctx.measureText(msg);
+
+         ctx.fillText(msg, 5, canvasHeight - extents.actualBoundingBoxAscent - 5);
+      }
+
+      let msg = this.getSizeStr(this.imgSize);
+      let extents = ctx.measureText(msg);
+      ctx.fillText(msg, 5, canvasHeight - 2 * extents.actualBoundingBoxAscent - 10);
+   }
+
+   private getSizeStr(val: number): string {
+      if (val < 1024) {
+         return val + ' bytes';
+      }
+      else if (val < 1024 * 1024) {
+         return (val / 1024).toFixed(1) + ' kb';
+      }
+      else {
+         return (val / (1024 * 1024)).toFixed(1) + ' mb';
+      }
+   }
+
+   private getTimeStr(val: number): string {
+      if (val < 1000) {
+         return val.toFixed(0) + ' ms';
+      }
+      else {
+         return (val / 1000).toFixed(1) + ' s';
+      }
    }
 
    private onScale(scale: number, change: number) {

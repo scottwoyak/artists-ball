@@ -7,3 +7,16 @@
 #SquintApp #Canvas {
   flex-grow: 1;
 }
+
+#SquintApp #VideoDiv {
+  background-color: darkgray;
+  padding: 10px;
+}
+
+#SquintApp .CheckboxDiv {
+  padding-bottom: 10px;
+}
+
+#SquintApp .RadiobuttonDiv {
+  padding-bottom: 10px;
+}
