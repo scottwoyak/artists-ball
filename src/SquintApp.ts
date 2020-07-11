@@ -192,7 +192,7 @@ export class SquintApp implements IApp {
             });
 
             this.quality = new Slider(videoDiv, {
-               label: 'Quality',
+               label: 'Quality A',
                min: 0.1,
                max: 1,
                value: 0.92,
@@ -449,7 +449,7 @@ export class SquintApp implements IApp {
       extents = ctx.measureText(msg);
       ctx.fillText(msg, 5, canvasHeight - 3 * (extents.actualBoundingBoxAscent + 5));
 
-      msg = 'download: ' + this.getTimeStr(this.uploadTime);
+      msg = 'download: ' + this.getTimeStr(this.downloadTime);
       extents = ctx.measureText(msg);
       ctx.fillText(msg, 5, canvasHeight - 2 * (extents.actualBoundingBoxAscent + 5));
 
