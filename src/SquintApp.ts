@@ -31,13 +31,15 @@ export class SquintApp implements IApp {
    private yOffset = 0;
 
    private imgSize = 0;
-   private sw: Stopwatch;
+   private downloadTime: number;
+   private uploadTime: number;
+
    private uploadSW = new Stopwatch();
 
    private uploadCheckbox: Checkbox;
 
-   //private host = 'https://woyaktest.ue.r.appspot.com/';
-   private host = 'http://' + location.hostname + ':8080/';
+   private host = 'https://woyaktest.ue.r.appspot.com/';
+   //private host = 'http://' + location.hostname + ':8080/';
 
    public constructor() {
    }
@@ -212,11 +214,13 @@ export class SquintApp implements IApp {
       this.downloadSW.restart();
       */
 
+      let sw = new Stopwatch();
       fetch(this.host)
          .then(response => {
             return response.blob();
          })
          .then((blob) => {
+            this.downloadTime = sw.elapsedMs;
             this.imgSize = blob.size;
             if (blob.type === 'text/plain') {
                blob.text()
@@ -345,6 +349,7 @@ export class SquintApp implements IApp {
          let fd = new FormData();
          fd.append('file', blob, 'myBlob');
 
+         let sw = new Stopwatch();
          fetch(this.host,
             {
                method: 'post',
@@ -352,6 +357,7 @@ export class SquintApp implements IApp {
                body: fd
             })
             .then((response) => {
+               this.uploadTime = sw.elapsedMs;
                URL.revokeObjectURL(url);
                if (this.uploadCheckbox.checked) {
                   this.onTakePicture();
@@ -436,20 +442,20 @@ export class SquintApp implements IApp {
 
       ctx.drawImage(this.img, x, y, width, height);
 
-      if (!this.sw) {
-         this.sw = new Stopwatch();
-      }
-      else {
-         let msg = this.getTimeStr(this.sw.elapsedMs);
-         this.sw.restart();
-         let extents = ctx.measureText(msg);
+      let msg: string;
+      let extents: TextMetrics;
 
-         ctx.fillText(msg, 5, canvasHeight - extents.actualBoundingBoxAscent - 5);
-      }
+      msg = 'upload: ' + this.getTimeStr(this.uploadTime);
+      extents = ctx.measureText(msg);
+      ctx.fillText(msg, 5, canvasHeight - 3 * (extents.actualBoundingBoxAscent + 5));
 
-      let msg = this.getSizeStr(this.imgSize);
-      let extents = ctx.measureText(msg);
-      ctx.fillText(msg, 5, canvasHeight - 2 * extents.actualBoundingBoxAscent - 10);
+      msg = 'download: ' + this.getTimeStr(this.uploadTime);
+      extents = ctx.measureText(msg);
+      ctx.fillText(msg, 5, canvasHeight - 2 * (extents.actualBoundingBoxAscent + 5));
+
+      msg = this.getSizeStr(this.imgSize);
+      extents = ctx.measureText(msg);
+      ctx.fillText(msg, 5, canvasHeight - 1 * (extents.actualBoundingBoxAscent + 5));
    }
 
    private getSizeStr(val: number): string {
