@@ -90,7 +90,7 @@ export class SquintApp implements IApp {
    private buildPanel(): Promise<void> {
 
       this.brightness = new Slider(this.panelDiv, {
-         label: 'Brightness E',
+         label: 'Brightness F',
          min: 0,
          max: 200,
          value: 100,
@@ -134,9 +134,6 @@ export class SquintApp implements IApp {
          getText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
 
-      return Promise.resolve();
-
-      /*
       return Video.getResolutions()
          .then((resolutions) => {
             let videoDiv = document.createElement('div');
@@ -182,7 +179,6 @@ export class SquintApp implements IApp {
          .catch((err) => {
             alert('Can query video element: ' + err);
          });
-         */
    }
 
    private download() {

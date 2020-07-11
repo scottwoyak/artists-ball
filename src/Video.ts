@@ -57,54 +57,66 @@ export class Video {
 
    public static getResolutions(): Promise<IVideoResolution[]> {
 
-      if (!navigator.mediaDevices) {
-         return Promise.reject('Host server must be https');
-      }
+      try {
+         if (!navigator.mediaDevices) {
+            return Promise.reject('Host server must be https');
+         }
 
-      let promises: Promise<IVideoResolution>[] = [];
+         let promises: Promise<IVideoResolution>[] = [];
 
-      testResolutions.forEach((desired: IVideoResolution) => {
+         testResolutions.forEach((desired: IVideoResolution) => {
 
-         let promise = new Promise<IVideoResolution>((resolve) => {
-            let video = document.createElement('video');
+            try {
+               let promise = new Promise<IVideoResolution>((resolve) => {
+                  let video = document.createElement('video');
 
-            video.onloadedmetadata = () => {
-               let actual = new VideoResolution(desired,
-                  video.videoWidth,
-                  video.videoHeight);
-               video.pause();
-               video.srcObject = null;
-               video.load();
-               video = null;
+                  video.onloadedmetadata = () => {
+                     let actual = new VideoResolution(desired,
+                        video.videoWidth,
+                        video.videoHeight);
+                     video.pause();
+                     video.srcObject = null;
+                     video.load();
+                     video = null;
 
-               resolve(actual);
-            };
+                     resolve(actual);
+                  };
 
-            const constraints = {
-               video: desired,
-            };
+                  const constraints = {
+                     video: desired,
+                  };
 
-            // Attach the video stream to trigger the onloadedmetadata event
-            navigator.mediaDevices.getUserMedia(constraints)
-               .then((stream) => {
-                  video.srcObject = stream;
-               })
+                  // Attach the video stream to trigger the onloadedmetadata event
+                  navigator.mediaDevices.getUserMedia(constraints)
+                     .then((stream) => {
+                        video.srcObject = stream;
+                     })
+               });
+               promises.push(promise);
+            }
+            catch (err) {
+               alert('foreach exception ' + err);
+            }
          });
-         promises.push(promise);
-      });
 
-      return Promise.all(promises)
-         .then((resolutions) => {
-            let uniqueResolutions: IVideoResolution[] = [];
+         return Promise.all(promises)
+            .then((resolutions) => {
+               let uniqueResolutions: IVideoResolution[] = [];
 
-            resolutions.forEach((resolution) => {
-               // TODO sort
-               if (Video.isUnique(uniqueResolutions, resolution)) {
-                  uniqueResolutions.push(resolution);
-               }
+               resolutions.forEach((resolution) => {
+                  // TODO sort
+                  if (Video.isUnique(uniqueResolutions, resolution)) {
+                     uniqueResolutions.push(resolution);
+                  }
+               });
+               return uniqueResolutions;
             });
-            return uniqueResolutions;
-         });
+
+      }
+      catch (err) {
+         alert('getResolutions exception: ' + err);
+         return null;
+      }
    }
 
    private static isUnique(array: IVideoResolution[], item: IVideoResolution) {
