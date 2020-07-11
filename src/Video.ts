@@ -57,7 +57,10 @@ export class Video {
 
    public static getResolutions(): Promise<IVideoResolution[]> {
 
-      // TODO test that navigator.mediaDevices exists
+      if (!navigator.mediaDevices) {
+         return Promise.reject('Host server must be https');
+      }
+
       let promises: Promise<IVideoResolution>[] = [];
 
       testResolutions.forEach((desired: IVideoResolution) => {

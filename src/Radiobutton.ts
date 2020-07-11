@@ -12,7 +12,6 @@ export interface IRadiobuttonSetup {
    onuncheck?: (radio: Radiobutton) => void,
 }
 
-
 export class Radiobutton implements ICtrl {
    private box: HTMLInputElement;
    private getState: () => boolean;
@@ -27,15 +26,16 @@ export class Radiobutton implements ICtrl {
     */
    public constructor(parent: HTMLElement, setup: IRadiobuttonSetup) {
 
+      let id = setup.id ?? 'Radiobutton';
       this.getState = setup.checked;
 
       let div = document.createElement('div');
-      div.id = setup.id;
+      div.id = id;
       div.className = 'RadiobuttonDiv';
       parent.appendChild(div);
 
       let label = document.createElement('label');
-      label.id = setup.id + 'Label';
+      label.id = id + 'Label';
       label.className = 'RadiobuttonLabel';
       label.innerText = setup.label ?? '';
       div.appendChild(label);
@@ -44,7 +44,7 @@ export class Radiobutton implements ICtrl {
       this.box.className = 'Radiobutton';
       this.box.type = 'radio';
       this.box.name = setup.group;
-      this.box.id = setup.id + 'Radiobutton';
+      this.box.id = id + 'Radiobutton';
       this.box.checked = setup.checked ? setup.checked() : false;
       this.box.onchange = () => {
          if (this.box.checked) {
@@ -62,8 +62,12 @@ export class Radiobutton implements ICtrl {
 
       let mark = document.createElement('span');
       mark.className = 'RadioCheckmark';
-      mark.id = setup.id + 'RadioCheckmark';
+      mark.id = id + 'RadioCheckmark';
       label.appendChild(mark);
+   }
+
+   public check(value: boolean = true) {
+      this.box.checked = value;
    }
 
    public refresh() {

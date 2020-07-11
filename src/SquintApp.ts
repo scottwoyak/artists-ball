@@ -5,7 +5,6 @@ import { Slider } from "./Slider";
 import { Vec2 } from "./Vec";
 import { Button } from "./Button";
 import { Checkbox } from "./Checkbox";
-import { FPS } from "./FPS";
 import { Stopwatch } from "./Stopwatch";
 import { Video, IVideoResolution } from "./Video";
 import { Radiobutton } from "./Radiobutton";
@@ -34,11 +33,10 @@ export class SquintApp implements IApp {
    private downloadTime: number;
    private uploadTime: number;
 
-   private uploadSW = new Stopwatch();
-
    private uploadCheckbox: Checkbox;
 
-   private host = 'https://woyaktest.ue.r.appspot.com/';
+   //private host = 'https://woyaktest.ue.r.appspot.com/';
+   private host = 'http://192.168.86.23:8080/';
    //private host = 'http://' + location.hostname + ':8080/';
 
    public constructor() {
@@ -58,20 +56,6 @@ export class SquintApp implements IApp {
       this.div.appendChild(this.panelDiv);
       this.buildPanel()
          .then(() => {
-
-            /*
-            this.video = document.createElement('video');
-            //this.video.autoplay = true;
-            this.video.style.display = 'none';
-            this.div.appendChild(this.video);
-
-            this.video.onloadedmetadata = () => {
-               console.log('video size: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
-               this.video.play();
-               this.onTakePicture();
-            };
-            */
-
 
             this.canvas = document.createElement('canvas');
             this.canvas.id = 'Canvas';
@@ -101,64 +85,53 @@ export class SquintApp implements IApp {
 
    private buildPanel(): Promise<void> {
 
+      this.brightness = new Slider(this.panelDiv, {
+         label: 'Brightness C',
+         min: 0,
+         max: 200,
+         value: 100,
+         oninput: () => this.drawImg(),
+         getText: (slider) => slider.value.toFixed(0) + '%',
+      })
+
+      this.contrast = new Slider(this.panelDiv, {
+         label: 'Contrast',
+         min: 0,
+         max: 200,
+         value: 100,
+         oninput: () => this.drawImg(),
+         getText: (slider) => slider.value.toFixed(0) + '%',
+      });
+
+      this.saturate = new Slider(this.panelDiv, {
+         label: 'Chroma',
+         min: 0,
+         max: 200,
+         value: 100,
+         oninput: () => this.drawImg(),
+         getText: (slider) => slider.value.toFixed(0) + '%',
+      });
+
+      this.blur = new Slider(this.panelDiv, {
+         label: 'Blur',
+         min: 0,
+         max: 10,
+         value: 0,
+         oninput: () => this.drawImg(),
+         getText: (slider) => slider.value.toFixed(0),
+      });
+
+      this.zoom = new Slider(this.panelDiv, {
+         label: 'Zoom',
+         min: 0.1,
+         max: 5,
+         value: 1,
+         oninput: () => this.drawImg(),
+         getText: (slider) => (100 * slider.value).toFixed(0) + '%',
+      });
+
       return Video.getResolutions()
          .then((resolutions) => {
-            new Button(this.panelDiv, {
-               label: 'Reset',
-               onclick: () => {
-                  this.brightness.value = 100;
-                  this.contrast.value = 100;
-                  this.saturate.value = 100;
-                  this.blur.value = 0;
-                  this.drawImg();
-               }
-            });
-
-            this.brightness = new Slider(this.panelDiv, {
-               label: 'Brightness',
-               min: 0,
-               max: 200,
-               value: 100,
-               oninput: () => this.drawImg(),
-               getText: (slider) => slider.value.toFixed(0) + '%',
-            })
-
-            this.contrast = new Slider(this.panelDiv, {
-               label: 'Contrast',
-               min: 0,
-               max: 200,
-               value: 100,
-               oninput: () => this.drawImg(),
-               getText: (slider) => slider.value.toFixed(0) + '%',
-            });
-
-            this.saturate = new Slider(this.panelDiv, {
-               label: 'Chroma',
-               min: 0,
-               max: 200,
-               value: 100,
-               oninput: () => this.drawImg(),
-               getText: (slider) => slider.value.toFixed(0) + '%',
-            });
-
-            this.blur = new Slider(this.panelDiv, {
-               label: 'Blur',
-               min: 0,
-               max: 10,
-               value: 0,
-               oninput: () => this.drawImg(),
-               getText: (slider) => slider.value.toFixed(0),
-            });
-
-            this.zoom = new Slider(this.panelDiv, {
-               label: 'Zoom',
-               min: 0.1,
-               max: 5,
-               value: 1,
-               oninput: () => this.drawImg(),
-               getText: (slider) => (100 * slider.value).toFixed(0) + '%',
-            });
-
             let videoDiv = document.createElement('div');
             videoDiv.id = 'VideoDiv';
             this.panelDiv.appendChild(videoDiv);
@@ -186,7 +159,7 @@ export class SquintApp implements IApp {
                });
 
                // select the last resolution
-               rb.check(true);
+               rb.check();
                this.desiredWidth = res.width;
                this.desiredHeight = res.height;
             });
@@ -198,6 +171,9 @@ export class SquintApp implements IApp {
                value: 0.92,
                getText: (slider) => slider.value.toFixed(2),
             })
+         })
+         .catch((err) => {
+            alert('Can create video element: ' + err);
          });
    }
 
@@ -253,17 +229,6 @@ export class SquintApp implements IApp {
    }
 
    private enableVideo() {
-      // remove the old video element. This avoids issues with dynamically
-      // resizing the video stream - just start with a fresh one
-      /*
-      if (this.video) {
-         this.video.pause();
-         this.video.srcObject = null;
-         this.video.parentElement.removeChild(this.video);
-         this.video.load();
-         this.video = null;
-      }
-      */
 
       if (this.uploadCheckbox.checked) {
 
@@ -305,11 +270,13 @@ export class SquintApp implements IApp {
          }
       }
       else {
-         this.video.pause();
-         this.video.srcObject = null;
-         this.video.parentElement.removeChild(this.video);
-         this.video.load();
-         this.video = null;
+         if (this.video) {
+            this.video.pause();
+            this.video.srcObject = null;
+            this.video.parentElement.removeChild(this.video);
+            this.video.load();
+            this.video = null;
+         }
       }
    }
 
