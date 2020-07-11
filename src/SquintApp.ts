@@ -165,7 +165,6 @@ export class SquintApp implements IApp {
                label: 'Use my video',
                oncheck: (checkbox: Checkbox) => {
                   this.enableVideo();
-                  this.download();
                }
             });
 
@@ -316,6 +315,7 @@ export class SquintApp implements IApp {
          return;
       }
 
+      /*
       let delay = 3000
       if (this.uploadSW.elapsedMs < delay) {
          setTimeout(() => {
@@ -324,6 +324,7 @@ export class SquintApp implements IApp {
          return;
       }
       this.uploadSW.restart();
+      */
 
       let canvas = document.createElement('canvas');
       canvas.width = this.video.videoWidth;
