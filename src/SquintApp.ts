@@ -3,7 +3,6 @@ import { IApp } from "./IApp";
 import { Menubar } from "./Menu";
 import { Slider } from "./Slider";
 import { Vec2 } from "./Vec";
-import { Button } from "./Button";
 import { Checkbox } from "./Checkbox";
 import { Stopwatch } from "./Stopwatch";
 import { Video, IVideoResolution } from "./Video";
@@ -36,7 +35,8 @@ export class SquintApp implements IApp {
    private uploadCheckbox: Checkbox;
 
    //private host = 'https://woyaktest.ue.r.appspot.com/';
-   private host = 'http://192.168.86.23:8080/';
+   //private host = 'http://192.168.86.23:8080/';
+   private host = 'http://localhost:8080/';
    //private host = 'http://' + location.hostname + ':8080/';
 
    public constructor() {
@@ -193,6 +193,9 @@ export class SquintApp implements IApp {
       let sw = new Stopwatch();
       fetch(this.host)
          .then(response => {
+            if (response.status !== 200) {
+               alert(response.statusText);
+            }
             return response.blob();
          })
          .then((blob) => {
@@ -412,17 +415,21 @@ export class SquintApp implements IApp {
       let msg: string;
       let extents: TextMetrics;
 
+      msg = this.host;
+      extents = ctx.measureText(msg);
+      ctx.fillText(msg, 0, extents.actualBoundingBoxAscent + extents.actualBoundingBoxDescent);
+
       msg = 'upload: ' + this.getTimeStr(this.uploadTime);
       extents = ctx.measureText(msg);
-      ctx.fillText(msg, 5, canvasHeight - 3 * (extents.actualBoundingBoxAscent + 5));
+      ctx.fillText(msg, 0, canvasHeight - 25);
 
       msg = 'download: ' + this.getTimeStr(this.downloadTime);
       extents = ctx.measureText(msg);
-      ctx.fillText(msg, 5, canvasHeight - 2 * (extents.actualBoundingBoxAscent + 5));
+      ctx.fillText(msg, 0, canvasHeight - 15);
 
       msg = this.getSizeStr(this.imgSize);
       extents = ctx.measureText(msg);
-      ctx.fillText(msg, 5, canvasHeight - 1 * (extents.actualBoundingBoxAscent + 5));
+      ctx.fillText(msg, 0, canvasHeight - 5);
    }
 
    private getSizeStr(val: number): string {
