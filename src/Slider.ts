@@ -113,7 +113,9 @@ export class Slider implements ICtrl {
       // set the initial span text
       this.updateSpanText();
 
-      this._range.oninput = () => setup.oninput(this);
+      if (setup.oninput) {
+         this._range.oninput = () => setup.oninput(this);
+      }
    }
 
    /**
