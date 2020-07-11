@@ -34,9 +34,9 @@ export class SquintApp implements IApp {
 
    private uploadCheckbox: Checkbox;
 
-   //private host = 'https://woyaktest.ue.r.appspot.com/';
+   private host = 'https://woyaktest.ue.r.appspot.com/';
    //private host = 'http://192.168.86.23:8080/';
-   private host = 'http://localhost:8080/';
+   //private host = 'http://localhost:8080/';
    //private host = 'http://' + location.hostname + ':8080/';
 
    public constructor() {
@@ -86,7 +86,7 @@ export class SquintApp implements IApp {
    private buildPanel(): Promise<void> {
 
       this.brightness = new Slider(this.panelDiv, {
-         label: 'Brightness C',
+         label: 'Brightness D',
          min: 0,
          max: 200,
          value: 100,
@@ -194,7 +194,7 @@ export class SquintApp implements IApp {
       fetch(this.host)
          .then(response => {
             if (response.status !== 200) {
-               alert(response.statusText);
+               alert('non 200 error: ' + response.statusText);
             }
             return response.blob();
          })
