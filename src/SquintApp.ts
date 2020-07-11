@@ -57,6 +57,10 @@ export class SquintApp implements IApp {
       this.buildPanel()
          .then(() => {
 
+            let div = document.createElement('div');
+            div.innerText = this.host;
+            this.panelDiv.appendChild(div);
+
             this.canvas = document.createElement('canvas');
             this.canvas.id = 'Canvas';
             this.div.appendChild(this.canvas);
@@ -86,7 +90,7 @@ export class SquintApp implements IApp {
    private buildPanel(): Promise<void> {
 
       this.brightness = new Slider(this.panelDiv, {
-         label: 'Brightness D',
+         label: 'Brightness E',
          min: 0,
          max: 200,
          value: 100,
@@ -130,6 +134,9 @@ export class SquintApp implements IApp {
          getText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
 
+      return Promise.resolve();
+
+      /*
       return Video.getResolutions()
          .then((resolutions) => {
             let videoDiv = document.createElement('div');
@@ -173,8 +180,9 @@ export class SquintApp implements IApp {
             })
          })
          .catch((err) => {
-            alert('Can create video element: ' + err);
+            alert('Can query video element: ' + err);
          });
+         */
    }
 
    private download() {
@@ -414,10 +422,6 @@ export class SquintApp implements IApp {
 
       let msg: string;
       let extents: TextMetrics;
-
-      msg = this.host;
-      extents = ctx.measureText(msg);
-      ctx.fillText(msg, 0, extents.actualBoundingBoxAscent + extents.actualBoundingBoxDescent);
 
       msg = 'upload: ' + this.getTimeStr(this.uploadTime);
       extents = ctx.measureText(msg);
