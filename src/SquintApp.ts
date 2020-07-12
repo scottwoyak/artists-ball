@@ -6,10 +6,12 @@ import { Vec2 } from "./Vec";
 import { Stopwatch } from "./Stopwatch";
 import { Video, IVideoResolution } from "./Video";
 import { Radiobutton } from "./Radiobutton";
+import { Downloader } from "./Downloader";
+import { Uploader } from "./Uploader";
 
 export function debug(msg: string): void {
    console.log(msg);
-   alert(msg);
+   //alert(msg);
 }
 
 export class SquintApp implements IApp {
@@ -21,6 +23,8 @@ export class SquintApp implements IApp {
    private video: HTMLVideoElement;
    private desiredWidth: number;
    private desiredHeight: number;
+   private downloader = new Downloader();
+   private uploader = new Uploader();
 
    private brightness: Slider;
    private contrast: Slider;
@@ -34,12 +38,10 @@ export class SquintApp implements IApp {
 
    private imgSize = 0;
    private downloadTime: number;
-   private uploadTime: number;
-   private uploading = false;
 
-   private host = 'https://woyaktest.ue.r.appspot.com/';
+   //private host = 'https://woyaktest.ue.r.appspot.com/';
    //private host = 'http://192.168.86.23:8080/';
-   //private host = 'http://localhost:8080/';
+   private host = 'http://localhost:8080/';
    //private host = 'http://' + location.hostname + ':8080/';
 
    public constructor() {
@@ -60,15 +62,16 @@ export class SquintApp implements IApp {
 
       this.buildPanel();
 
-      let host = document.createElement('div');
-      host.innerText = 'A ' + this.host;
-      this.panelDiv.appendChild(host);
-
       this.canvas = document.createElement('canvas');
       this.canvas.id = 'Canvas';
       this.div.appendChild(this.canvas);
 
-      this.download();
+      this.downloader.url = this.host;
+      this.downloader.onDownload = (blob, downloadTime) => this.onDownload(blob, downloadTime);
+      this.downloader.start();
+
+      this.uploader.url = this.host;
+      this.uploader.onDataNeeded = () => this.takePicture();
 
       this.handler = new PointerEventHandler(this.canvas);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
@@ -77,32 +80,6 @@ export class SquintApp implements IApp {
 
       window.addEventListener('resize', () => this.onResize());
       this.updateSizes();
-      /*
-      this.buildPanel()
-         .then(() => {
-
-            let div = document.createElement('div');
-            div.innerText = this.host;
-            this.panelDiv.appendChild(div);
-
-            this.canvas = document.createElement('canvas');
-            this.canvas.id = 'Canvas';
-            this.div.appendChild(this.canvas);
-
-            this.download();
-
-            this.handler = new PointerEventHandler(this.canvas);
-            this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
-            this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
-            this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
-
-            window.addEventListener('resize', () => this.onResize());
-            this.updateSizes();
-         })
-         .catch((err) => {
-            debug('build panel.catch ' + err);
-});
-         */
    }
 
    public delete() {
@@ -192,109 +169,38 @@ export class SquintApp implements IApp {
          });
 
       })
-      /*
-      return Video.getResolutions()
-         .then((resolutions) => {
-            let videoDiv = document.createElement('div');
-            videoDiv.id = 'VideoDiv';
-            this.panelDiv.appendChild(videoDiv);
-
-            let res: IVideoResolution;
-            resolutions.forEach((resolution) => {
-               res = resolution;
-               new Radiobutton(videoDiv, {
-                  label: resolution.label,
-                  group: 'ResolutionGroup',
-                  //checked: () => { return true },
-                  oncheck: () => {
-                     this.desiredWidth = resolution.width;
-                     this.desiredHeight = resolution.height;
-                     this.enableVideo(true);
-                  }
-               });
-            });
-            new Radiobutton(videoDiv, {
-               label: 'Off',
-               group: 'ResolutionGroup',
-               checked: () => { return true },
-               oncheck: () => {
-                  this.enableVideo(false);
-               }
-            }
-            );
-
-            this.quality = new Slider(videoDiv, {
-               label: 'Quality A',
-               min: 0.1,
-               max: 1,
-               value: 0.92,
-               getText: (slider) => slider.value.toFixed(2),
-            })
-         })
-         .catch((err) => {
-            alert('Can query video element: ' + err);
-         });
-         */
    }
 
-   private download() {
+   private onDownload(blob: Blob, downloadTime: number) {
 
-      /*
-      let delay = 3000;
-      if (this.downloadSW.elapsedMs < delay) {
-         setTimeout(() => {
-            this.download();
-         }, delay - this.downloadSW.elapsedMs + 100);
-         return;
+      if (blob.type === 'text/plain') {
+         blob.text()
+            .then((txt) => {
+               console.log(txt);
+            })
+            .catch((reason) => {
+               console.log('cannot retrieve text from blob: ' + reason);
+            })
       }
-      this.downloadSW.restart();
-      */
-
-      let sw = new Stopwatch();
-      fetch(this.host)
-         .then(response => {
-            if (response.status !== 200) {
-               alert('non 200 error: ' + response.statusText);
-            }
-            return response.blob();
-         })
-         .then((blob) => {
-            this.downloadTime = sw.elapsedMs;
+      else {
+         let img = document.createElement('img');
+         img.onload = () => {
+            this.img = img;
+            this.downloadTime = downloadTime;
             this.imgSize = blob.size;
-            if (blob.type === 'text/plain') {
-               blob.text()
-                  .then((txt) => {
-                     console.log(txt);
-                  })
-                  .finally(() => {
-                     // start the next download
-                     requestAnimationFrame(() => this.download());
-                  });
-            }
-            else {
-               let img = document.createElement('img');
-               img.onload = () => {
-                  this.img = img;
-                  this.drawImg();
-
-                  // TODO what if the img load fails - how do we request the next frame?
-                  // start the next download
-                  requestAnimationFrame(() => this.download());
-               }
-               img.src = URL.createObjectURL(blob);
-            }
-         })
-         .catch((reason) => {
-            console.log('download failure: ' + reason);
-         });
-
+            this.drawImg();
+         }
+         img.onerror = (reason) => {
+            console.log('cannot load image: ' + reason);
+         }
+         img.src = URL.createObjectURL(blob);
+      }
    }
 
    private enableVideo(enable: boolean) {
 
       if (enable) {
 
-         this.uploading = true;
          const constraints = {
             video: {
                width: this.desiredWidth,
@@ -314,7 +220,7 @@ export class SquintApp implements IApp {
 
             this.video.onplay = () => {
                console.log('video size: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
-               this.onTakePicture();
+               this.uploader.start();
             };
 
             try {
@@ -333,7 +239,7 @@ export class SquintApp implements IApp {
          }
       }
       else {
-         this.uploading = false;
+         this.uploader.stop();
 
          if (this.video) {
             this.video.pause();
@@ -345,23 +251,7 @@ export class SquintApp implements IApp {
       }
    }
 
-   private onTakePicture() {
-
-      if (this.uploading === false) {
-         return;
-      }
-
-      /*
-      let delay = 3000
-      if (this.uploadSW.elapsedMs < delay) {
-         setTimeout(() => {
-            this.onTakePicture();
-         }, delay - this.uploadSW.elapsedMs + 100);
-         return;
-      }
-      this.uploadSW.restart();
-      */
-
+   private takePicture(): Promise<Blob> {
       let canvas = document.createElement('canvas');
       canvas.width = this.video.videoWidth;
       canvas.height = this.video.videoHeight;
@@ -370,37 +260,11 @@ export class SquintApp implements IApp {
       context.drawImage(this.video, 0, 0, canvas.width, canvas.height);
 
       // upload
-      canvas.toBlob((blob) => {
-         if (blob === null) {
-            console.log('XXX blob is null');
-            return; // TODO when does this happen?
-         }
-
-         //console.log('upload size: ' + blob.size / (1024 * 1024));
-         let url = URL.createObjectURL(blob);
-         let fd = new FormData();
-         fd.append('file', blob, 'myBlob');
-
-         // TODO limit to one call at a time
-         let sw = new Stopwatch();
-         fetch(this.host,
-            {
-               method: 'post',
-               body: fd
-            })
-            .then((response) => {
-               this.uploadTime = sw.elapsedMs;
-               URL.revokeObjectURL(url);
-               this.onTakePicture();
-               return response;
-            })
-            .catch(function (err) {
-               alert('post error: ' + err);
-               console.log(err);
-            });
-      },
-         'image/jpeg',
-         this.quality.value);
+      return new Promise<Blob>((resolve, reject) => {
+         canvas.toBlob((blob) => resolve(blob),
+            'image/jpeg',
+            this.quality.value);
+      });
    }
 
    private onResize() {
@@ -432,7 +296,9 @@ export class SquintApp implements IApp {
       let canvasHeight = this.canvas.height;
       let canvasAR = canvasWidth / canvasHeight;
 
-      let imgAR = this.img.width / this.img.height;
+      let imgWidth = this.img.width;
+      let imgHeight = this.img.height;
+      let imgAR = imgWidth / imgHeight;
 
       let width: number;
       let height: number;
@@ -447,11 +313,11 @@ export class SquintApp implements IApp {
       }
       */
       if (canvasAR > imgAR) {
-         height = this.zoom.value * this.img.height;
+         height = this.zoom.value * imgHeight;
          width = height * imgAR;
       }
       else {
-         width = this.zoom.value * this.img.width;
+         width = this.zoom.value * imgWidth;
          height = width / imgAR;
       }
 
@@ -473,18 +339,19 @@ export class SquintApp implements IApp {
       ctx.drawImage(this.img, x, y, width, height);
 
       let msg: string;
-      let extents: TextMetrics;
 
-      msg = 'upload: ' + this.getTimeStr(this.uploadTime);
-      extents = ctx.measureText(msg);
+      ctx.fillText(this.host, 0, 10);
+
+      msg = imgWidth + 'x' + imgHeight;
+      ctx.fillText(msg, 0, canvasHeight - 35);
+
+      msg = 'upload: ' + this.getTimeStr(this.uploader.uploadTime) + ' - ' + this.uploader.fps.rate.toFixed(1);
       ctx.fillText(msg, 0, canvasHeight - 25);
 
-      msg = 'download: ' + this.getTimeStr(this.downloadTime);
-      extents = ctx.measureText(msg);
+      msg = 'download: ' + this.getTimeStr(this.downloadTime) + ' - ' + this.downloader.fps.rate.toFixed(1);
       ctx.fillText(msg, 0, canvasHeight - 15);
 
       msg = this.getSizeStr(this.imgSize);
-      extents = ctx.measureText(msg);
       ctx.fillText(msg, 0, canvasHeight - 5);
    }
 

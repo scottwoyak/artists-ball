@@ -1,15 +1,17 @@
+import { Stopwatch } from "./Stopwatch";
+
 /**
  * Utility class for logging timing messages for profile code
  */
 export class Profiler {
 
-   private startTime = performance.now();
+   private sw = new Stopwatch();
 
    /**
     * The elapsed time in milliseconds
     */
    public get elapsedMs() {
-      return (performance.now() - this.startTime);
+      return this.sw.elapsedMs;
    }
 
    /**
@@ -19,6 +21,6 @@ export class Profiler {
     */
    public log(msg: string) {
       console.log(msg + ' ' + this.elapsedMs.toFixed(1) + ' ms');
-      this.startTime = performance.now();
+      this.sw.restart();
    }
 }

@@ -28,6 +28,11 @@ class VideoResolution {
 
 let testResolutions: IVideoResolution[] = [
    {
+      label: 'Max',
+      width: 10000,
+      height: 10000,
+   },
+   {
       label: '4K (3840x2160)',
       width: 3840,
       height: 2160,
@@ -43,6 +48,11 @@ let testResolutions: IVideoResolution[] = [
       height: 1080,
    },
    {
+      label: 'HDx (1920x1080)',
+      width: 1080,
+      height: 1920,
+   },
+   {
       label: '720p (1280x720)',
       width: 1280,
       height: 720,
@@ -52,142 +62,69 @@ let testResolutions: IVideoResolution[] = [
       width: 854,
       height: 480,
    },
+   {
+      label: '2000x2000',
+      width: 2000,
+      height: 2000,
+   },
+   {
+      label: '1000x1000',
+      width: 1000,
+      height: 1000,
+   },
+   {
+      label: '500x500',
+      width: 500,
+      height: 500,
+   },
+
 ];
 
 export class Video {
 
    public static listResolutions(onFound: (resolution: IVideoResolution) => void) {
 
-      try {
-         let uniqueResolutions: IVideoResolution[] = [];
+      let uniqueResolutions: IVideoResolution[] = [];
 
-         if (!navigator.mediaDevices) {
-            return Promise.reject('Host server must be https');
-         }
-
-         for (let i = 0; i < testResolutions.length; i++) {
-            let desired = testResolutions[i];
-
-            let video = document.createElement('video');
-
-            video.onloadedmetadata = () => {
-               let actual = new VideoResolution(desired,
-                  video.videoWidth,
-                  video.videoHeight);
-               video.pause();
-               video.srcObject = null;
-               video.load();
-               video = null;
-
-               if (Video.isUnique(uniqueResolutions, actual)) {
-                  uniqueResolutions.push(actual);
-                  onFound(actual);
-               }
-            };
-
-            const constraints = {
-               video: desired,
-            };
-
-            // Attach the video stream to trigger the onloadedmetadata event
-            navigator.mediaDevices.getUserMedia(constraints)
-               .then((stream) => {
-                  video.srcObject = stream;
-               })
-               .catch((err) => {
-                  debug('getUserMedia.catch ' + err);
-               });
-         }
-
+      if (!navigator.mediaDevices) {
+         return Promise.reject('Host server must be https');
       }
-      catch (err) {
-         debug('getResolution exception: ' + err);
-         alert('getResolutions exception: ' + err);
-         return null;
-      }
-   }
 
+      for (let i = 0; i < testResolutions.length; i++) {
+         let desired = testResolutions[i];
 
-   public static getResolutions(): Promise<IVideoResolution[]> {
+         let video = document.createElement('video');
 
-      debug('getting resolutions');
-      try {
-         if (!navigator.mediaDevices) {
-            debug('rejecting - no media devices');
-            return Promise.reject('Host server must be https');
-         }
+         video.onloadedmetadata = () => {
+            let actual = new VideoResolution(desired,
+               video.videoWidth,
+               video.videoHeight);
+            video.pause();
+            video.srcObject = null;
+            video.load();
+            video = null;
 
-         let promises: Promise<IVideoResolution>[] = [];
+            if (Video.isUnique(uniqueResolutions, actual)) {
+               uniqueResolutions.push(actual);
+               onFound(actual);
+            }
+         };
 
-         for (let i = 0; i < testResolutions.length; i++) {
-            let desired = testResolutions[i];
+         const constraints = {
+            video: desired,
+         };
 
-            let promise = new Promise<IVideoResolution>((resolve, reject) => {
-               debug('creating video element ' + 1);
-               let video = document.createElement('video');
-               debug('created ' + 1);
-
-               video.onloadedmetadata = () => {
-                  debug('onloadmetadata ' + i);
-                  let actual = new VideoResolution(desired,
-                     video.videoWidth,
-                     video.videoHeight);
-                  video.pause();
-                  video.srcObject = null;
-                  video.load();
-                  video = null;
-                  debug('video cleared ' + i + ' ' + actual.label);
-
-                  resolve(actual);
-               };
-
-               const constraints = {
-                  video: desired,
-               };
-
-               debug('getUserMedia ' + i);
-               // Attach the video stream to trigger the onloadedmetadata event
-               navigator.mediaDevices.getUserMedia(constraints)
-                  .then((stream) => {
-                     debug('getUserMedia.then ' + i);
-                     video.srcObject = stream;
-                     debug('video.srcObject set ' + i);
-                  })
-                  .catch((err) => {
-                     debug('getUserMedia.catch ' + err);
-                     reject(err);
-                  });
-            });
-            promises.push(promise);
-         }
-
-         debug('returning promise.all');
-
-         return Promise.all(promises)
-            .then((resolutions) => {
-               debug('promise.all.then');
-               let uniqueResolutions: IVideoResolution[] = [];
-
-               resolutions.forEach((resolution) => {
-                  // TODO sort
-                  if (Video.isUnique(uniqueResolutions, resolution)) {
-                     debug('supported: ' + resolution.label);
-                     uniqueResolutions.push(resolution);
-                  }
-               });
-               return uniqueResolutions;
+         // Attach the video stream to trigger the onloadedmetadata event
+         navigator.mediaDevices.getUserMedia(constraints)
+            .then((stream) => {
+               video.srcObject = stream;
             })
             .catch((err) => {
-               debug('promise.all.catch ' + err);
-               return [];
+               debug('getUserMedia.catch ' + err);
             });
       }
-      catch (err) {
-         debug('getResolution exception: ' + err);
-         alert('getResolutions exception: ' + err);
-         return null;
-      }
    }
+
 
    private static isUnique(array: IVideoResolution[], item: IVideoResolution) {
       for (let i = 0; i < array.length; i++) {
