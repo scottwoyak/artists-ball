@@ -96,7 +96,7 @@ export class SquintApp implements IApp {
    private buildPanel(): Promise<void> {
 
       this.brightness = new Slider(this.panelDiv, {
-         label: 'Brightness A',
+         label: 'Brightness B',
          min: 0,
          max: 200,
          value: 100,
