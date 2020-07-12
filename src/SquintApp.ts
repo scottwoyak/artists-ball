@@ -7,6 +7,8 @@ import { Video } from "./Video";
 import { Radiobutton } from "./Radiobutton";
 import { Downloader } from "./Downloader";
 import { Uploader } from "./Uploader";
+import { getTimeStr, getSizeStr } from "./Globals";
+import { Checkbox } from "./Checkbox";
 
 export function debug(msg: string): void {
    console.log(msg);
@@ -38,10 +40,10 @@ export class SquintApp implements IApp {
    private imgSize = 0;
    private downloadTime: number;
 
-   private host = 'https://woyaktest.ue.r.appspot.com/';
+   //private host = 'https://woyaktest.ue.r.appspot.com/';
    //private host = 'http://192.168.86.23:8080/';
    //private host = 'http://localhost:8080/';
-   //private host = 'http://' + location.hostname + ':8080/';
+   private host = 'http://' + location.hostname + ':8080/';
 
    public constructor() {
    }
@@ -134,6 +136,18 @@ export class SquintApp implements IApp {
          getText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
 
+      new Checkbox(this.panelDiv, {
+         label: 'Pause',
+         oncheck: (checkbox) => {
+            if (checkbox.checked) {
+               this.downloader.stop();
+            }
+            else {
+               this.downloader.start();
+            }
+         }
+      })
+
       let videoDiv = document.createElement('div');
       videoDiv.id = 'VideoDiv';
       this.panelDiv.appendChild(videoDiv);
@@ -166,7 +180,6 @@ export class SquintApp implements IApp {
                this.enableVideo(true);
             }
          });
-
       })
    }
 
@@ -343,35 +356,14 @@ export class SquintApp implements IApp {
       msg = imgWidth + 'x' + imgHeight;
       ctx.fillText(msg, 0, canvasHeight - 35);
 
-      msg = 'upload: ' + this.getTimeStr(this.uploader.uploadTime) + ' - ' + this.uploader.fps.rate.toFixed(1);
+      msg = 'upload: ' + getTimeStr(this.uploader.uploadTime) + ' - ' + this.uploader.fps.rate.toFixed(1);
       ctx.fillText(msg, 0, canvasHeight - 25);
 
-      msg = 'download: ' + this.getTimeStr(this.downloadTime) + ' - ' + this.downloader.fps.rate.toFixed(1);
+      msg = 'download: ' + getTimeStr(this.downloadTime) + ' - ' + this.downloader.fps.rate.toFixed(1);
       ctx.fillText(msg, 0, canvasHeight - 15);
 
-      msg = this.getSizeStr(this.imgSize);
+      msg = getSizeStr(this.imgSize);
       ctx.fillText(msg, 0, canvasHeight - 5);
-   }
-
-   private getSizeStr(val: number): string {
-      if (val < 1024) {
-         return val + ' bytes';
-      }
-      else if (val < 1024 * 1024) {
-         return (val / 1024).toFixed(1) + ' kb';
-      }
-      else {
-         return (val / (1024 * 1024)).toFixed(1) + ' mb';
-      }
-   }
-
-   private getTimeStr(val: number): string {
-      if (val < 1000) {
-         return val.toFixed(0) + ' ms';
-      }
-      else {
-         return (val / 1000).toFixed(1) + ' s';
-      }
    }
 
    private onScale(scale: number, change: number) {

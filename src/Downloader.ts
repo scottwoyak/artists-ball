@@ -8,9 +8,17 @@ export class Downloader {
    public url: string;
    public onDownload: DownloadHandler;
    public fps = new FPS();
+   private handle: number;
+   private running = false;
 
    public start() {
-      requestAnimationFrame(() => this.download());
+      this.running = true;
+      this.handle = requestAnimationFrame(() => this.download());
+   }
+
+   public stop() {
+      this.running = false;
+      cancelAnimationFrame(this.handle);
    }
 
    private download() {
@@ -35,7 +43,9 @@ export class Downloader {
             console.log('Download failure for [' + this.url + '] ' + reason);
          })
          .finally(() => {
-            requestAnimationFrame(() => this.download());
+            if (this.running) {
+               requestAnimationFrame(() => this.download());
+            }
          });
    }
 }
