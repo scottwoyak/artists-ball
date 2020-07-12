@@ -40,10 +40,10 @@ export class SquintApp implements IApp {
    private imgSize = 0;
    private downloadTime: number;
 
-   //private host = 'https://woyaktest.ue.r.appspot.com/';
+   private host = 'https://woyaktest.ue.r.appspot.com/';
    //private host = 'http://192.168.86.23:8080/';
    //private host = 'http://localhost:8080/';
-   private host = 'http://' + location.hostname + ':8080/';
+   //private host = 'http://' + location.hostname + ':8080/';
 
    public constructor() {
    }
