@@ -84,7 +84,7 @@ export class Video {
                   video.srcObject = null;
                   video.load();
                   video = null;
-                  debug('video cleared ' + i);
+                  debug('video cleared ' + i + ' ' + actual.label);
 
                   resolve(actual);
                };
@@ -101,6 +101,9 @@ export class Video {
                      video.srcObject = stream;
                      debug('video.srcObject set ' + i);
                   })
+                  .catch((err) => {
+                     debug('getUserMedia.catch ' + err);
+                  });
             });
             promises.push(promise);
          }
@@ -119,6 +122,10 @@ export class Video {
                   }
                });
                return uniqueResolutions;
+            })
+            .catch((err) => {
+               debug('promise.all.catch ' + err);
+               return [];
             });
 
       }

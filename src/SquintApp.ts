@@ -3,7 +3,6 @@ import { IApp } from "./IApp";
 import { Menubar } from "./Menu";
 import { Slider } from "./Slider";
 import { Vec2 } from "./Vec";
-import { Checkbox } from "./Checkbox";
 import { Stopwatch } from "./Stopwatch";
 import { Video, IVideoResolution } from "./Video";
 import { Radiobutton } from "./Radiobutton";
@@ -82,6 +81,9 @@ export class SquintApp implements IApp {
 
             window.addEventListener('resize', () => this.onResize());
             this.updateSizes();
+         })
+         .catch((err) => {
+            debug('build panel.catch ' + err);
          });
    }
 
@@ -229,8 +231,7 @@ export class SquintApp implements IApp {
             }
          })
          .catch((reason) => {
-            alert(reason);
-            console.log('download: ' + reason);
+            console.log('download failure: ' + reason);
          });
 
    }
