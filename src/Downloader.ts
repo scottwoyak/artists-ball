@@ -21,7 +21,7 @@ export class Downloader {
       fetch(this.url)
          .then(response => {
             if (response.status !== 200) {
-               throw 'non 200 download error: ' + response.statusText;
+               return Promise.reject(response.status + ': ' + response.statusText);
             }
             return response.blob();
          })
@@ -32,7 +32,7 @@ export class Downloader {
             }
          })
          .catch((reason) => {
-            console.log('download failure: ' + reason);
+            console.log('Download failure for [' + this.url + '] ' + reason);
          })
          .finally(() => {
             requestAnimationFrame(() => this.download());

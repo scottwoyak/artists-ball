@@ -3,8 +3,7 @@ import { IApp } from "./IApp";
 import { Menubar } from "./Menu";
 import { Slider } from "./Slider";
 import { Vec2 } from "./Vec";
-import { Stopwatch } from "./Stopwatch";
-import { Video, IVideoResolution } from "./Video";
+import { Video } from "./Video";
 import { Radiobutton } from "./Radiobutton";
 import { Downloader } from "./Downloader";
 import { Uploader } from "./Uploader";
@@ -39,9 +38,9 @@ export class SquintApp implements IApp {
    private imgSize = 0;
    private downloadTime: number;
 
-   //private host = 'https://woyaktest.ue.r.appspot.com/';
+   private host = 'https://woyaktest.ue.r.appspot.com/';
    //private host = 'http://192.168.86.23:8080/';
-   private host = 'http://localhost:8080/';
+   //private host = 'http://localhost:8080/';
    //private host = 'http://' + location.hostname + ':8080/';
 
    public constructor() {
@@ -140,7 +139,7 @@ export class SquintApp implements IApp {
       this.panelDiv.appendChild(videoDiv);
 
       this.quality = new Slider(videoDiv, {
-         label: 'Quality A',
+         label: 'Quality',
          min: 0.1,
          max: 1,
          value: 0.92,
@@ -219,7 +218,6 @@ export class SquintApp implements IApp {
             this.div.appendChild(this.video);
 
             this.video.onplay = () => {
-               console.log('video size: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
                this.uploader.start();
             };
 

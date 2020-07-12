@@ -1,5 +1,5 @@
 #SquintApp #Panel {
-  flex: 0 0 400px;
+  flex: 0 0 300px;
   display: block;
   background-color: lightgray;
 }
@@ -10,13 +10,27 @@
 
 #SquintApp #VideoDiv {
   background-color: darkgray;
-  padding: 10px;
+}
+
+#SquintApp #VideoDiv .SliderDiv {
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 #SquintApp .CheckboxDiv {
   padding-bottom: 10px;
+  padding-left: 10px;
 }
 
 #SquintApp .RadiobuttonDiv {
   padding-bottom: 10px;
+  padding-left: 10px;
+}
+
+#SquintApp .SliderLabel {
+  flex: 0 0 100px;
+}
+
+#SquintApp .SliderRange {
+  flex: 1 1 100px;
 }

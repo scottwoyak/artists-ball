@@ -31,8 +31,7 @@ export class Uploader {
       this.onDataNeeded()
          .then((blob: Blob) => {
             if (blob === null) {
-               console.log('XXX blob is null');
-               return; // TODO when does this happen?
+               return Promise.reject('Invalid Blob (null)');
             }
 
             //console.log('upload size: ' + blob.size / (1024 * 1024));
@@ -52,11 +51,11 @@ export class Uploader {
                   URL.revokeObjectURL(url);
 
                   if (response.status != 200) {
-                     throw 'non 200 uploadload error: ' + response.statusText;
+                     return Promise.reject(response.status + ': ' + response.statusText);
                   }
                })
-               .catch((err) => {
-                  console.log(err);
+               .catch((reason) => {
+                  console.log('Upload failure for [' + this.url + '] ' + reason);
                })
                .finally(() => {
                   if (this.running) {
