@@ -8,6 +8,11 @@ import { Stopwatch } from "./Stopwatch";
 import { Video, IVideoResolution } from "./Video";
 import { Radiobutton } from "./Radiobutton";
 
+export function debug(msg: string): void {
+   console.log(msg);
+   alert(msg);
+}
+
 export class SquintApp implements IApp {
    private handler: PointerEventHandler;
    private div: HTMLDivElement;
@@ -31,8 +36,7 @@ export class SquintApp implements IApp {
    private imgSize = 0;
    private downloadTime: number;
    private uploadTime: number;
-
-   private uploadCheckbox: Checkbox;
+   private uploading = false;
 
    private host = 'https://woyaktest.ue.r.appspot.com/';
    //private host = 'http://192.168.86.23:8080/';
@@ -90,7 +94,7 @@ export class SquintApp implements IApp {
    private buildPanel(): Promise<void> {
 
       this.brightness = new Slider(this.panelDiv, {
-         label: 'Brightness F',
+         label: 'Brightness A',
          min: 0,
          max: 200,
          value: 100,
@@ -140,33 +144,29 @@ export class SquintApp implements IApp {
             videoDiv.id = 'VideoDiv';
             this.panelDiv.appendChild(videoDiv);
 
-            this.uploadCheckbox = new Checkbox(videoDiv, {
-               label: 'Use my video',
-               oncheck: (checkbox: Checkbox) => {
-                  this.enableVideo();
-               }
-            });
-
-            let rb: Radiobutton;
             let res: IVideoResolution;
             resolutions.forEach((resolution) => {
                res = resolution;
-               rb = new Radiobutton(videoDiv, {
+               new Radiobutton(videoDiv, {
                   label: resolution.label,
                   group: 'ResolutionGroup',
                   //checked: () => { return true },
                   oncheck: () => {
                      this.desiredWidth = resolution.width;
                      this.desiredHeight = resolution.height;
-                     this.enableVideo();
+                     this.enableVideo(true);
                   }
                });
-
-               // select the last resolution
-               rb.check();
-               this.desiredWidth = res.width;
-               this.desiredHeight = res.height;
             });
+            new Radiobutton(videoDiv, {
+               label: 'Off',
+               group: 'ResolutionGroup',
+               checked: () => { return true },
+               oncheck: () => {
+                  this.enableVideo(false);
+               }
+            }
+            );
 
             this.quality = new Slider(videoDiv, {
                label: 'Quality A',
@@ -235,10 +235,11 @@ export class SquintApp implements IApp {
 
    }
 
-   private enableVideo() {
+   private enableVideo(enable: boolean) {
 
-      if (this.uploadCheckbox.checked) {
+      if (enable) {
 
+         this.uploading = true;
          const constraints = {
             video: {
                width: this.desiredWidth,
@@ -250,33 +251,35 @@ export class SquintApp implements IApp {
             let stream = this.video.srcObject as MediaStream;
             stream.getVideoTracks()[0].applyConstraints(constraints.video);
          }
+         else {
+            this.video = document.createElement('video');
+            this.video.autoplay = true;
+            this.video.style.display = 'none';
+            this.div.appendChild(this.video);
 
-         this.video = document.createElement('video');
-         this.video.autoplay = true;
-         this.video.style.display = 'none';
-         this.div.appendChild(this.video);
+            this.video.onplay = () => {
+               console.log('video size: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
+               this.onTakePicture();
+            };
 
-         this.video.onplay = () => {
-            console.log('video size: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
-            this.onTakePicture();
-         };
+            try {
 
-
-         try {
-
-            navigator.mediaDevices.getUserMedia(constraints)
-               .then((stream) => {
-                  this.video.srcObject = stream;
-               })
-               .catch((reason) => {
-                  alert('video error: ' + reason);
-               });
-         }
-         catch (err) {
-            alert('video error2: ' + err);
+               navigator.mediaDevices.getUserMedia(constraints)
+                  .then((stream) => {
+                     this.video.srcObject = stream;
+                  })
+                  .catch((reason) => {
+                     alert('video error: ' + reason);
+                  });
+            }
+            catch (err) {
+               alert('video error2: ' + err);
+            }
          }
       }
       else {
+         this.uploading = false;
+
          if (this.video) {
             this.video.pause();
             this.video.srcObject = null;
@@ -289,7 +292,7 @@ export class SquintApp implements IApp {
 
    private onTakePicture() {
 
-      if (this.uploadCheckbox.checked === false) {
+      if (this.uploading === false) {
          return;
       }
 
@@ -323,19 +326,17 @@ export class SquintApp implements IApp {
          let fd = new FormData();
          fd.append('file', blob, 'myBlob');
 
+         // TODO limit to one call at a time
          let sw = new Stopwatch();
          fetch(this.host,
             {
                method: 'post',
-               //mode: 'cors', // needed for development on localhost
                body: fd
             })
             .then((response) => {
                this.uploadTime = sw.elapsedMs;
                URL.revokeObjectURL(url);
-               if (this.uploadCheckbox.checked) {
-                  this.onTakePicture();
-               }
+               this.onTakePicture();
                return response;
             })
             .catch(function (err) {

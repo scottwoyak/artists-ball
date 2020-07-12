@@ -1,3 +1,4 @@
+import { debug } from "./SquintApp";
 
 export interface IVideoResolution {
    label: string,
@@ -57,55 +58,63 @@ export class Video {
 
    public static getResolutions(): Promise<IVideoResolution[]> {
 
+      debug('getting resolutions');
       try {
          if (!navigator.mediaDevices) {
+            debug('rejecting - no media devices');
             return Promise.reject('Host server must be https');
          }
 
          let promises: Promise<IVideoResolution>[] = [];
 
-         testResolutions.forEach((desired: IVideoResolution) => {
+         for (let i = 0; i < testResolutions.length; i++) {
+            let desired = testResolutions[i];
 
-            try {
-               let promise = new Promise<IVideoResolution>((resolve) => {
-                  let video = document.createElement('video');
+            let promise = new Promise<IVideoResolution>((resolve) => {
+               debug('creating video element ' + 1);
+               let video = document.createElement('video');
+               debug('created ' + 1);
 
-                  video.onloadedmetadata = () => {
-                     let actual = new VideoResolution(desired,
-                        video.videoWidth,
-                        video.videoHeight);
-                     video.pause();
-                     video.srcObject = null;
-                     video.load();
-                     video = null;
+               video.onloadedmetadata = () => {
+                  debug('onloadmetadata ' + i);
+                  let actual = new VideoResolution(desired,
+                     video.videoWidth,
+                     video.videoHeight);
+                  video.pause();
+                  video.srcObject = null;
+                  video.load();
+                  video = null;
+                  debug('video cleared ' + i);
 
-                     resolve(actual);
-                  };
+                  resolve(actual);
+               };
 
-                  const constraints = {
-                     video: desired,
-                  };
+               const constraints = {
+                  video: desired,
+               };
 
-                  // Attach the video stream to trigger the onloadedmetadata event
-                  navigator.mediaDevices.getUserMedia(constraints)
-                     .then((stream) => {
-                        video.srcObject = stream;
-                     })
-               });
-               promises.push(promise);
-            }
-            catch (err) {
-               alert('foreach exception ' + err);
-            }
-         });
+               debug('getUserMedia ' + i);
+               // Attach the video stream to trigger the onloadedmetadata event
+               navigator.mediaDevices.getUserMedia(constraints)
+                  .then((stream) => {
+                     debug('getUserMedia.then ' + i);
+                     video.srcObject = stream;
+                     debug('video.srcObject set ' + i);
+                  })
+            });
+            promises.push(promise);
+         }
 
+         debug('returning promise.all');
          return Promise.all(promises)
             .then((resolutions) => {
+               debug('promise.all.then');
                let uniqueResolutions: IVideoResolution[] = [];
 
                resolutions.forEach((resolution) => {
                   // TODO sort
                   if (Video.isUnique(uniqueResolutions, resolution)) {
+                     debug('supported: ' + resolution.label);
                      uniqueResolutions.push(resolution);
                   }
                });
@@ -114,6 +123,7 @@ export class Video {
 
       }
       catch (err) {
+         debug('getResolution exception: ' + err);
          alert('getResolutions exception: ' + err);
          return null;
       }
