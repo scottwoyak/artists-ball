@@ -47,6 +47,8 @@ export class SquintApp implements IApp {
 
    public create(div: HTMLDivElement) {
 
+      alert('A');
+
       div.id = 'SquintApp';
 
       this.div = document.createElement('div');
@@ -96,7 +98,7 @@ export class SquintApp implements IApp {
    private buildPanel(): Promise<void> {
 
       this.brightness = new Slider(this.panelDiv, {
-         label: 'Brightness B',
+         label: 'Brightness',
          min: 0,
          max: 200,
          value: 100,

@@ -70,7 +70,7 @@ export class Video {
          for (let i = 0; i < testResolutions.length; i++) {
             let desired = testResolutions[i];
 
-            let promise = new Promise<IVideoResolution>((resolve) => {
+            let promise = new Promise<IVideoResolution>((resolve, reject) => {
                debug('creating video element ' + 1);
                let video = document.createElement('video');
                debug('created ' + 1);
@@ -103,6 +103,7 @@ export class Video {
                   })
                   .catch((err) => {
                      debug('getUserMedia.catch ' + err);
+                     reject(err);
                   });
             });
             promises.push(promise);
