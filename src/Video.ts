@@ -56,6 +56,58 @@ let testResolutions: IVideoResolution[] = [
 
 export class Video {
 
+   public static listResolutions(onFound: (resolution: IVideoResolution) => void) {
+
+      try {
+         let uniqueResolutions: IVideoResolution[] = [];
+
+         if (!navigator.mediaDevices) {
+            return Promise.reject('Host server must be https');
+         }
+
+         for (let i = 0; i < testResolutions.length; i++) {
+            let desired = testResolutions[i];
+
+            let video = document.createElement('video');
+
+            video.onloadedmetadata = () => {
+               let actual = new VideoResolution(desired,
+                  video.videoWidth,
+                  video.videoHeight);
+               video.pause();
+               video.srcObject = null;
+               video.load();
+               video = null;
+
+               if (Video.isUnique(uniqueResolutions, actual)) {
+                  uniqueResolutions.push(actual);
+                  onFound(actual);
+               }
+            };
+
+            const constraints = {
+               video: desired,
+            };
+
+            // Attach the video stream to trigger the onloadedmetadata event
+            navigator.mediaDevices.getUserMedia(constraints)
+               .then((stream) => {
+                  video.srcObject = stream;
+               })
+               .catch((err) => {
+                  debug('getUserMedia.catch ' + err);
+               });
+         }
+
+      }
+      catch (err) {
+         debug('getResolution exception: ' + err);
+         alert('getResolutions exception: ' + err);
+         return null;
+      }
+   }
+
+
    public static getResolutions(): Promise<IVideoResolution[]> {
 
       debug('getting resolutions');
@@ -110,6 +162,7 @@ export class Video {
          }
 
          debug('returning promise.all');
+
          return Promise.all(promises)
             .then((resolutions) => {
                debug('promise.all.then');
@@ -128,7 +181,6 @@ export class Video {
                debug('promise.all.catch ' + err);
                return [];
             });
-
       }
       catch (err) {
          debug('getResolution exception: ' + err);

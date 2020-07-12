@@ -47,8 +47,6 @@ export class SquintApp implements IApp {
 
    public create(div: HTMLDivElement) {
 
-      alert('A');
-
       div.id = 'SquintApp';
 
       this.div = document.createElement('div');
@@ -59,6 +57,27 @@ export class SquintApp implements IApp {
       this.panelDiv.id = 'Panel';
       this.panelDiv.className = 'Panel';
       this.div.appendChild(this.panelDiv);
+
+      this.buildPanel();
+
+      let host = document.createElement('div');
+      host.innerText = 'A ' + this.host;
+      this.panelDiv.appendChild(host);
+
+      this.canvas = document.createElement('canvas');
+      this.canvas.id = 'Canvas';
+      this.div.appendChild(this.canvas);
+
+      this.download();
+
+      this.handler = new PointerEventHandler(this.canvas);
+      this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
+      this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
+      this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
+
+      window.addEventListener('resize', () => this.onResize());
+      this.updateSizes();
+      /*
       this.buildPanel()
          .then(() => {
 
@@ -72,10 +91,6 @@ export class SquintApp implements IApp {
 
             this.download();
 
-            /*
-            'https://static.wixstatic.com/media/6f1353_883709beb9fc4db2b8e0b882dc7b7792~mv2.jpg'
-               */
-
             this.handler = new PointerEventHandler(this.canvas);
             this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
             this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
@@ -86,7 +101,8 @@ export class SquintApp implements IApp {
          })
          .catch((err) => {
             debug('build panel.catch ' + err);
-         });
+});
+         */
    }
 
    public delete() {
@@ -95,7 +111,7 @@ export class SquintApp implements IApp {
    public buildMenu(menubar: Menubar) {
    }
 
-   private buildPanel(): Promise<void> {
+   private buildPanel() {
 
       this.brightness = new Slider(this.panelDiv, {
          label: 'Brightness',
@@ -142,6 +158,41 @@ export class SquintApp implements IApp {
          getText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
 
+      let videoDiv = document.createElement('div');
+      videoDiv.id = 'VideoDiv';
+      this.panelDiv.appendChild(videoDiv);
+
+      this.quality = new Slider(videoDiv, {
+         label: 'Quality A',
+         min: 0.1,
+         max: 1,
+         value: 0.92,
+         getText: (slider) => slider.value.toFixed(2),
+      })
+
+      new Radiobutton(videoDiv, {
+         label: 'Off',
+         group: 'ResolutionGroup',
+         checked: () => { return true },
+         oncheck: () => {
+            this.enableVideo(false);
+         }
+      });
+
+      Video.listResolutions((resolution) => {
+         new Radiobutton(videoDiv, {
+            label: resolution.label,
+            group: 'ResolutionGroup',
+            //checked: () => { return true },
+            oncheck: () => {
+               this.desiredWidth = resolution.width;
+               this.desiredHeight = resolution.height;
+               this.enableVideo(true);
+            }
+         });
+
+      })
+      /*
       return Video.getResolutions()
          .then((resolutions) => {
             let videoDiv = document.createElement('div');
@@ -183,6 +234,7 @@ export class SquintApp implements IApp {
          .catch((err) => {
             alert('Can query video element: ' + err);
          });
+         */
    }
 
    private download() {
