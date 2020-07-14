@@ -1,7 +1,3 @@
-#SquintApp {
-  font-size: 15px;
-}
-
 #SquintApp #Panel {
   flex: 0 0 300px;
   display: block;
@@ -9,7 +5,6 @@
 }
 
 #SquintApp .Instructions {
-  font-size: 12px;
   padding-bottom: 10px;
 }
 
@@ -26,6 +21,10 @@
 #SquintApp .Camera {
   background-color: lightpink;
   padding: 10px;
+}
+
+#SquintApp #Slider .disabled::-webkit-slider-thumb {
+  background: linear-gradient(135deg, lightpink, lightpink);
 }
 
 #SquintApp #VideoDiv .SliderDiv {
@@ -50,11 +49,16 @@
 }
 
 @media only screen and (max-device-width: 800px) {
-  * {
-    font-size: 30px;
+  #SquintApp #Panel {
+    flex: 0 0 300px;
+    display: block;
   }
 
-  #SquintApp .Instructions {
-    font-size: 20px;
+  #SquintApp .SliderLabel {
+    flex: 0 0 120px;
+  }
+
+  #SquintApp * {
+    font-size: 30px;
   }
 }

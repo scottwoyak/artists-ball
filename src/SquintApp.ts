@@ -12,7 +12,7 @@ import { Checkbox } from "./Checkbox";
 
 export function debug(msg: string): void {
    console.log(msg);
-   alert('debug: ' + msg);
+   //alert('debug: ' + msg);
 }
 
 export class SquintApp implements IApp {
@@ -188,6 +188,8 @@ export class SquintApp implements IApp {
          checked: () => { return true },
          oncheck: () => {
             this.enableVideo(false);
+            this.resolution.disabled = true;
+            this.quality.disabled = true;
          }
       });
 
@@ -198,6 +200,8 @@ export class SquintApp implements IApp {
             oncheck: () => {
                this.desired = resolution;
                this.enableVideo(true);
+               this.resolution.disabled = false;
+               this.quality.disabled = false;
             }
          });
       })
@@ -208,15 +212,17 @@ export class SquintApp implements IApp {
          max: 1,
          value: 0.5,
          getText: (slider) => (100 * slider.value).toFixed() + '%',
-      })
+      });
+      this.quality.disabled = true;
 
       this.resolution = new Slider(camDiv, {
          label: 'Resolution',
          min: 10,
          max: 100,
-         value: 10,
+         value: 25,
          getText: (slider) => slider.value.toFixed() + '%',
-      })
+      });
+      this.resolution.disabled = true;
 
    }
 

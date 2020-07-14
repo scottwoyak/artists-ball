@@ -51,12 +51,31 @@ class RangeMapper {
  */
 export class Slider implements ICtrl {
 
+   private _label: HTMLLabelElement;
    private _range: HTMLInputElement;
    private _colorSpan: HTMLSpanElement;
    private _valueSpan: HTMLSpanElement;
    private _colors: ColorRange;
    private _getText: (slider: Slider) => string;
    private _rangeMapper: RangeMapper;
+
+   public set disabled(value: boolean) {
+      this._range.disabled = value;
+      if (value) {
+         this._label.classList.add('disabled');
+         this._valueSpan.classList.add('disabled');
+         this._range.classList.add('disabled');
+      }
+      else {
+         this._label.classList.remove('disabled');
+         this._valueSpan.classList.remove('disabled');
+         this._range.classList.remove('disabled');
+      }
+   }
+   public get disabled(): boolean {
+      return this._range.disabled;
+   }
+
 
    /**
     * @param parent The parent html object.
@@ -72,11 +91,11 @@ export class Slider implements ICtrl {
       div.className = 'SliderDiv';
       parent.appendChild(div);
 
-      let label = document.createElement('label');
-      label.id = id + 'Label';
-      label.className = 'SliderLabel';
-      label.innerText = setup.label ?? '';
-      div.appendChild(label);
+      this._label = document.createElement('label');
+      this._label.id = id + 'Label';
+      this._label.className = 'SliderLabel';
+      this._label.innerText = setup.label ?? '';
+      div.appendChild(this._label);
 
       this._rangeMapper = new RangeMapper(setup.min, setup.max);
 
@@ -91,7 +110,7 @@ export class Slider implements ICtrl {
          this.updateSpanColor();
          this.updateSpanText()
       });
-      label.htmlFor = this._range.id;
+      this._label.htmlFor = this._range.id;
       div.appendChild(this._range);
 
       if (setup.colors) {
