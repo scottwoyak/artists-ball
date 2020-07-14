@@ -38,7 +38,9 @@ export class Video {
          .then((devices) => {
             for (let i = 0; i < devices.length; i++) {
                let device = devices[i];
-               //alert(JSON.stringify(device.toJSON(), null, ' '));
+               if (device.kind === 'videoinput') {
+                  //alert(i + ': \n' + JSON.stringify(device.toJSON(), null, ' '));
+               }
 
                if (device.kind === 'videoinput') {
                   const constraints = {
@@ -60,10 +62,6 @@ export class Video {
                         //alert(JSON.stringify(capabilities));
                         let constraints = mediaTrack.getConstraints();
                         let settings = mediaTrack.getSettings();
-
-                        let str = '';
-                        str += 'Settings: ' + JSON.stringify(settings, null, ' ');
-                        //alert(str);
 
                         let cam = (settings.facingMode === 'user' ? 'Front' : 'Back');
                         let maxWidth = capabilities.width.max;

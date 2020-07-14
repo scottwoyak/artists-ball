@@ -12,7 +12,7 @@ import { Checkbox } from "./Checkbox";
 
 export function debug(msg: string): void {
    console.log(msg);
-   //alert(msg);
+   alert('debug: ' + msg);
 }
 
 export class SquintApp implements IApp {
@@ -98,7 +98,16 @@ export class SquintApp implements IApp {
 
    private buildPanel() {
 
-      this.brightness = new Slider(this.panelDiv, {
+      let picDiv = document.createElement('div');
+      picDiv.className = 'Picture';
+      this.panelDiv.appendChild(picDiv);
+
+      let textDiv = document.createElement('div');
+      textDiv.innerText = 'Use these settings to adjust the image on the end users side, i.e. as if you were using Photoshop after a picture has been taken.';
+      textDiv.className = 'Instructions';
+      picDiv.appendChild(textDiv);
+
+      this.brightness = new Slider(picDiv, {
          label: 'Brightness',
          min: 0,
          max: 200,
@@ -107,7 +116,7 @@ export class SquintApp implements IApp {
          getText: (slider) => slider.value.toFixed(0) + '%',
       })
 
-      this.contrast = new Slider(this.panelDiv, {
+      this.contrast = new Slider(picDiv, {
          label: 'Contrast',
          min: 0,
          max: 200,
@@ -116,7 +125,7 @@ export class SquintApp implements IApp {
          getText: (slider) => slider.value.toFixed(0) + '%',
       });
 
-      this.saturate = new Slider(this.panelDiv, {
+      this.saturate = new Slider(picDiv, {
          label: 'Chroma',
          min: 0,
          max: 200,
@@ -125,7 +134,7 @@ export class SquintApp implements IApp {
          getText: (slider) => slider.value.toFixed(0) + '%',
       });
 
-      this.blur = new Slider(this.panelDiv, {
+      this.blur = new Slider(picDiv, {
          label: 'Blur',
          min: 0,
          max: 10,
@@ -134,7 +143,7 @@ export class SquintApp implements IApp {
          getText: (slider) => slider.value.toFixed(0),
       });
 
-      this.zoom = new Slider(this.panelDiv, {
+      this.zoom = new Slider(picDiv, {
          label: 'Zoom',
          min: 0.1,
          max: 5,
@@ -143,7 +152,7 @@ export class SquintApp implements IApp {
          getText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
 
-      new Checkbox(this.panelDiv, {
+      new Checkbox(picDiv, {
          label: 'Pause',
          oncheck: (checkbox) => {
             if (checkbox.checked) {
@@ -155,27 +164,25 @@ export class SquintApp implements IApp {
          }
       })
 
-      let videoDiv = document.createElement('div');
-      videoDiv.id = 'VideoDiv';
-      this.panelDiv.appendChild(videoDiv);
 
-      this.quality = new Slider(videoDiv, {
-         label: 'Quality',
-         min: 0.1,
-         max: 1,
-         value: 0.5,
-         getText: (slider) => (100 * slider.value).toFixed() + '%',
-      })
 
-      this.resolution = new Slider(videoDiv, {
-         label: 'Resolution',
-         min: 10,
-         max: 100,
-         value: 10,
-         getText: (slider) => slider.value.toFixed() + '%',
-      })
 
-      new Radiobutton(videoDiv, {
+
+
+      let camDiv = document.createElement('div');
+      camDiv.className = 'Camera';
+      this.panelDiv.appendChild(camDiv);
+
+      textDiv = document.createElement('div');
+      textDiv.innerText = 'Use these settings to adjust the camera used to create the picture.';
+      textDiv.className = 'Instructions';
+      camDiv.appendChild(textDiv);
+
+      let camerasDiv = document.createElement('div');
+      camerasDiv.id = 'CamerasDiv';
+      camDiv.appendChild(camerasDiv);
+
+      new Radiobutton(camerasDiv, {
          label: 'Off',
          group: 'ResolutionGroup',
          checked: () => { return true },
@@ -185,7 +192,7 @@ export class SquintApp implements IApp {
       });
 
       Video.getResolutions((resolution) => {
-         new Radiobutton(videoDiv, {
+         new Radiobutton(camerasDiv, {
             label: resolution.label,
             group: 'ResolutionGroup',
             oncheck: () => {
@@ -194,6 +201,23 @@ export class SquintApp implements IApp {
             }
          });
       })
+
+      this.quality = new Slider(camDiv, {
+         label: 'Quality',
+         min: 0.1,
+         max: 1,
+         value: 0.5,
+         getText: (slider) => (100 * slider.value).toFixed() + '%',
+      })
+
+      this.resolution = new Slider(camDiv, {
+         label: 'Resolution',
+         min: 10,
+         max: 100,
+         value: 10,
+         getText: (slider) => slider.value.toFixed() + '%',
+      })
+
    }
 
    private onDownload(blob: Blob, downloadTime: number) {

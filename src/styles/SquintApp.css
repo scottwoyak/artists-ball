@@ -1,15 +1,31 @@
+#SquintApp {
+  font-size: 15px;
+}
+
 #SquintApp #Panel {
   flex: 0 0 300px;
   display: block;
   background-color: lightgray;
 }
 
-#SquintApp #Canvas {
-  flex-grow: 1;
+#SquintApp .Instructions {
+  font-size: 12px;
+  padding-bottom: 10px;
 }
 
-#SquintApp #VideoDiv {
-  background-color: darkgray;
+#SquintApp #Canvas {
+  flex-grow: 1;
+  padding: 10px;
+}
+
+#SquintApp .Picture {
+  background-color: lightblue;
+  padding: 10px;
+}
+
+#SquintApp .Camera {
+  background-color: lightpink;
+  padding: 10px;
 }
 
 #SquintApp #VideoDiv .SliderDiv {
@@ -19,18 +35,26 @@
 
 #SquintApp .CheckboxDiv {
   padding-bottom: 10px;
-  padding-left: 10px;
 }
 
 #SquintApp .RadiobuttonDiv {
   padding-bottom: 10px;
-  padding-left: 10px;
 }
 
 #SquintApp .SliderLabel {
-  flex: 0 0 100px;
+  flex: 0 0 80px;
 }
 
 #SquintApp .SliderRange {
-  flex: 1 1 100px;
+  flex: 1 1 80px;
+}
+
+@media only screen and (max-device-width: 800px) {
+  * {
+    font-size: 30px;
+  }
+
+  #SquintApp .Instructions {
+    font-size: 20px;
+  }
 }
