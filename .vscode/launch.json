@@ -8,7 +8,14 @@
          "type": "chrome",
          "request": "launch",
          "name": "Launch Chrome against localhost",
-         "url": "http://localhost?squint",
+         "url": "https://192.168.86.23?squint",
+         "webRoot": "${workspaceFolder}"
+      },
+      {
+         "type": "firefox",
+         "request": "launch",
+         "name": "Launch Firefox against localhost",
+         "url": "https://192.168.86.23?squint",
          "webRoot": "${workspaceFolder}"
       }
    ]

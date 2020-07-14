@@ -5,7 +5,8 @@
   "main": "app.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server",
+    "startOld": "webpack-dev-server",
+    "start": "webpack-dev-server --https --cert server.crt --key server.key",
     "build": "webpack"
   },
   "repository": {

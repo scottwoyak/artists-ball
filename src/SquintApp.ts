@@ -3,7 +3,7 @@ import { IApp } from "./IApp";
 import { Menubar } from "./Menu";
 import { Slider } from "./Slider";
 import { Vec2 } from "./Vec";
-import { Video } from "./Video";
+import { Video, IVideoResolution } from "./Video";
 import { Radiobutton } from "./Radiobutton";
 import { Downloader } from "./Downloader";
 import { Uploader } from "./Uploader";
@@ -22,8 +22,14 @@ export class SquintApp implements IApp {
    private img: HTMLImageElement;
    private canvas: HTMLCanvasElement;
    private video: HTMLVideoElement;
-   private desiredWidth: number;
-   private desiredHeight: number;
+   private desired: IVideoResolution = {
+      label: '',
+      width: 0,
+      height: 0,
+      frameRate: 0,
+      facingMode: '',
+      deviceId: '',
+   };
    private downloader = new Downloader();
    private uploader = new Uploader();
 
@@ -33,6 +39,7 @@ export class SquintApp implements IApp {
    private blur: Slider;
    private zoom: Slider;
    private quality: Slider;
+   private resolution: Slider;
 
    private xOffset = 0;
    private yOffset = 0;
@@ -156,8 +163,16 @@ export class SquintApp implements IApp {
          label: 'Quality',
          min: 0.1,
          max: 1,
-         value: 0.92,
-         getText: (slider) => slider.value.toFixed(2),
+         value: 0.5,
+         getText: (slider) => (100 * slider.value).toFixed() + '%',
+      })
+
+      this.resolution = new Slider(videoDiv, {
+         label: 'Resolution',
+         min: 10,
+         max: 100,
+         value: 10,
+         getText: (slider) => slider.value.toFixed() + '%',
       })
 
       new Radiobutton(videoDiv, {
@@ -169,14 +184,12 @@ export class SquintApp implements IApp {
          }
       });
 
-      Video.listResolutions((resolution) => {
+      Video.getResolutions((resolution) => {
          new Radiobutton(videoDiv, {
             label: resolution.label,
             group: 'ResolutionGroup',
-            //checked: () => { return true },
             oncheck: () => {
-               this.desiredWidth = resolution.width;
-               this.desiredHeight = resolution.height;
+               this.desired = resolution;
                this.enableVideo(true);
             }
          });
@@ -209,20 +222,52 @@ export class SquintApp implements IApp {
       }
    }
 
+   private killVideo() {
+      if (this.video) {
+         // Using the camera is not robust. Applying constraints to change things
+         // like which camera is in use only works sometimes. The most robust I can
+         // make it is to close the video element and create a new one.
+         this.video.pause();
+         this.video.srcObject = null;
+         this.video.parentElement.removeChild(this.video);
+         this.video.load();
+         this.video = null;
+      }
+   }
+
    private enableVideo(enable: boolean) {
 
       if (enable) {
 
          const constraints = {
             video: {
-               width: this.desiredWidth,
-               height: this.desiredHeight,
+               width: this.desired.width,
+               height: this.desired.height,
+               deviceId: { exact: this.desired.deviceId },
+               //deviceId: this.desired.deviceId,
+               //frameRate: this.desired.frameRate,
+               //facingMode: { exact: this.desired.facingMode }
+               //facingMode: this.desired.facingMode
             }
          };
 
+         this.killVideo();
+
          if (this.video) {
+            // docs say applyConstraints() should work, but in my experience it is not
+            // reliable. Instead we kill the stream each time a new constraint is selected
+            /*
             let stream = this.video.srcObject as MediaStream;
-            stream.getVideoTracks()[0].applyConstraints(constraints.video);
+            let track = stream.getVideoTracks()[0];
+            track.applyConstraints(constraints.video)
+               .then(() => {
+                  alert('applying constraints: ' + JSON.stringify(constraints, null, ' ') + '\n' +
+                     'settings: ' + JSON.stringify(track.getSettings(), null, ' '));
+               })
+               .catch((err) => {
+                  alert('set constraints error: ' + err);
+               })
+               */
          }
          else {
             this.video = document.createElement('video');
@@ -252,20 +297,14 @@ export class SquintApp implements IApp {
       else {
          this.uploader.stop();
 
-         if (this.video) {
-            this.video.pause();
-            this.video.srcObject = null;
-            this.video.parentElement.removeChild(this.video);
-            this.video.load();
-            this.video = null;
-         }
+         this.killVideo();
       }
    }
 
    private takePicture(): Promise<Blob> {
       let canvas = document.createElement('canvas');
-      canvas.width = this.video.videoWidth;
-      canvas.height = this.video.videoHeight;
+      canvas.width = this.video.videoWidth * (this.resolution.value / 100);
+      canvas.height = this.video.videoHeight * (this.resolution.value / 100);
 
       const context = canvas.getContext('2d');
       context.drawImage(this.video, 0, 0, canvas.width, canvas.height);
