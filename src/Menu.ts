@@ -233,9 +233,9 @@ export class Menubar extends Menu {
       parent.appendChild(this.div);
    }
 
-   public addSubMenu(text: string, id: string): SubMenu {
+   public addSubMenu(text: string, id?: string): SubMenu {
 
-      return this.internalAddSubMenu(text, id, MenuLocation.Below);
+      return this.internalAddSubMenu(text, id ?? (text + 'Menu'), MenuLocation.Below);
    }
 }
 

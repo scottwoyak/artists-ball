@@ -7,8 +7,7 @@ import { Video, IVideoResolution } from "./Video";
 import { Radiobutton } from "./Radiobutton";
 import { Downloader } from "./Downloader";
 import { Uploader } from "./Uploader";
-import { getTimeStr, getSizeStr } from "./Globals";
-import { Checkbox } from "./Checkbox";
+import { getTimeStr, getSizeStr, isMobile } from "./Globals";
 
 export function debug(msg: string): void {
    console.log(msg);
@@ -94,6 +93,37 @@ export class SquintApp implements IApp {
    }
 
    public buildMenu(menubar: Menubar) {
+      let optionsMenu = menubar.addSubMenu('Options');
+
+      optionsMenu.addItem(
+         'Show/Hide Settings...',
+         () => {
+            let style = getComputedStyle(this.panelDiv);
+            if (style.display === "none") {
+               this.panelDiv.style.display = 'block';
+            } else {
+               this.panelDiv.style.display = 'none';
+            }
+            this.updateSizes();
+         });
+
+      if (isMobile) {
+         this.panelDiv.style.display = 'none';
+         this.updateSizes();
+      }
+
+      let item = optionsMenu.addItem(
+         'Pause',
+         () => {
+            if (this.downloader.running) {
+               item.innerText = 'Resume';
+               this.downloader.stop();
+            }
+            else {
+               item.innerText = 'Pause';
+               this.downloader.start();
+            }
+         });
    }
 
    private buildPanel() {
@@ -101,6 +131,11 @@ export class SquintApp implements IApp {
       let picDiv = document.createElement('div');
       picDiv.className = 'Picture';
       this.panelDiv.appendChild(picDiv);
+
+      let titleDiv = document.createElement('div');
+      titleDiv.className = 'Title';
+      titleDiv.innerText = 'Image Settings';
+      picDiv.appendChild(titleDiv);
 
       let textDiv = document.createElement('div');
       textDiv.innerText = 'Use these settings to adjust the image on the end users side, i.e. as if you were using Photoshop after a picture has been taken.';
@@ -152,17 +187,6 @@ export class SquintApp implements IApp {
          getText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
 
-      new Checkbox(picDiv, {
-         label: 'Pause',
-         oncheck: (checkbox) => {
-            if (checkbox.checked) {
-               this.downloader.stop();
-            }
-            else {
-               this.downloader.start();
-            }
-         }
-      })
 
 
 
@@ -172,6 +196,11 @@ export class SquintApp implements IApp {
       let camDiv = document.createElement('div');
       camDiv.className = 'Camera';
       this.panelDiv.appendChild(camDiv);
+
+      titleDiv = document.createElement('div');
+      titleDiv.className = 'Title';
+      titleDiv.innerText = 'Camera Settings';
+      camDiv.appendChild(titleDiv);
 
       textDiv = document.createElement('div');
       textDiv.innerText = 'Use these settings to adjust the camera used to create the picture.';
@@ -353,7 +382,7 @@ export class SquintApp implements IApp {
 
    private updateSizes() {
       let menubarHeight = document.getElementById('Menubar').clientHeight;
-      let panelWidth = this.panelDiv.clientWidth;
+      let panelWidth = getComputedStyle(this.panelDiv).display === 'none' ? 0 : this.panelDiv.clientWidth;
 
       let viewWidth = document.documentElement.clientWidth;
       let viewHeight = document.documentElement.clientHeight;

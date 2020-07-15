@@ -6,11 +6,17 @@
 
 #SquintApp .Instructions {
   padding-bottom: 10px;
+  display: none;
+}
+
+#SquintApp .Title {
+  font-weight: bold;
+  padding-top: 5px;
+  padding-bottom: 10px;
 }
 
 #SquintApp #Canvas {
   flex-grow: 1;
-  padding: 10px;
 }
 
 #SquintApp .Picture {
@@ -33,11 +39,13 @@
 }
 
 #SquintApp .CheckboxDiv {
-  padding-bottom: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 #SquintApp .RadiobuttonDiv {
-  padding-bottom: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 #SquintApp .SliderLabel {
@@ -51,7 +59,6 @@
 @media only screen and (max-device-width: 800px) {
   #SquintApp #Panel {
     flex: 0 0 300px;
-    display: block;
   }
 
   #SquintApp .SliderLabel {

@@ -9,7 +9,7 @@ export class Downloader {
    public onDownload: DownloadHandler;
    public fps = new FPS();
    private handle: number;
-   private running = false;
+   public running = false;
 
    public start() {
       this.running = true;
