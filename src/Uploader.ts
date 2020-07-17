@@ -1,16 +1,17 @@
 import { Stopwatch } from "./Stopwatch";
 import { FPS } from "./FPS";
+import { Squint } from "./Squint";
 
 export type DataNeededHandler = () => Promise<Blob>;
 
 export class Uploader {
-   public url: string;
    public onDataNeeded: DataNeededHandler;
    public uploadTime: number;
    public fps = new FPS();
 
    private running = false;
    private handle: number;
+   private squint = new Squint();
 
    public start() {
       this.handle = requestAnimationFrame(() => this.upload());
@@ -41,23 +42,15 @@ export class Uploader {
 
             // TODO limit to one call at a time
             let sw = new Stopwatch();
-            fetch(this.url,
-               {
-                  method: 'post',
-                  body: fd
-               })
+            this.squint.post(fd)
                .then((response) => {
                   this.uploadTime = sw.elapsedMs;
-                  URL.revokeObjectURL(url);
-
-                  if (response.status != 200) {
-                     return Promise.reject(response.status + ': ' + response.statusText);
-                  }
                })
                .catch((reason) => {
-                  console.log('Upload failure for [' + this.url + '] ' + reason);
+                  console.log('Upload failure for [' + Squint.url + '] ' + reason);
                })
                .finally(() => {
+                  URL.revokeObjectURL(url);
                   if (this.running) {
                      this.handle = requestAnimationFrame(() => this.upload());
                   }

@@ -8,6 +8,7 @@ import { Radiobutton } from "./Radiobutton";
 import { Downloader } from "./Downloader";
 import { Uploader } from "./Uploader";
 import { getTimeStr, getSizeStr, isMobile } from "./Globals";
+import { Squint } from "./Squint";
 
 export function debug(msg: string): void {
    console.log(msg);
@@ -46,12 +47,6 @@ export class SquintApp implements IApp {
    private imgSize = 0;
    private downloadTime: number;
 
-   //private host = 'https://woyaktest.ue.r.appspot.com/';
-   private host = 'https://squintserver-11278.nodechef.com/';
-   //private host = 'http://192.168.86.23:8080/';
-   //private host = 'http://localhost:8080/';
-   //private host = 'http://' + location.hostname + ':8080/';
-
    public constructor() {
    }
 
@@ -74,11 +69,9 @@ export class SquintApp implements IApp {
       this.canvas.id = 'Canvas';
       this.div.appendChild(this.canvas);
 
-      this.downloader.url = this.host;
       this.downloader.onDownload = (blob, downloadTime) => this.onDownload(blob, downloadTime);
       this.downloader.start();
 
-      this.uploader.url = this.host;
       this.uploader.onDataNeeded = () => this.takePicture();
 
       this.handler = new PointerEventHandler(this.canvas);
@@ -303,35 +296,17 @@ export class SquintApp implements IApp {
             video: {
                width: this.desired.width,
                height: this.desired.height,
-               /*
-               width: { exact: this.desired.width },
-               height: { exact: this.desired.height },
-               */
                deviceId: { exact: this.desired.deviceId },
-               //deviceId: this.desired.deviceId,
-               //frameRate: this.desired.frameRate,
-               //facingMode: { exact: this.desired.facingMode }
-               //facingMode: this.desired.facingMode
             }
          };
 
-         this.killVideo();
-
          if (this.video) {
-            // docs say applyConstraints() should work, but in my experience it is not
-            // reliable. Instead we kill the stream each time a new constraint is selected
-            /*
             let stream = this.video.srcObject as MediaStream;
             let track = stream.getVideoTracks()[0];
             track.applyConstraints(constraints.video)
-               .then(() => {
-                  alert('applying constraints: ' + JSON.stringify(constraints, null, ' ') + '\n' +
-                     'settings: ' + JSON.stringify(track.getSettings(), null, ' '));
-               })
                .catch((err) => {
-                  alert('set constraints error: ' + err);
+                  alert('Cannot change camera: ' + err);
                })
-               */
          }
          else {
             this.video = document.createElement('video');
@@ -454,7 +429,7 @@ export class SquintApp implements IApp {
 
       let msg: string;
 
-      ctx.fillText(this.host, 0, 10);
+      ctx.fillText(Squint.url, 0, 10);
 
       msg = imgWidth + 'x' + imgHeight;
       ctx.fillText(msg, 0, canvasHeight - 35);

@@ -7,14 +7,21 @@
       {
          "type": "chrome",
          "request": "launch",
-         "name": "Launch Chrome against localhost",
+         "name": "Chrome:http",
+         "url": "http://localhost?squint",
+         "webRoot": "${workspaceFolder}"
+      },
+      {
+         "type": "chrome",
+         "request": "launch",
+         "name": "Chrome:https",
          "url": "https://192.168.86.23?squint",
          "webRoot": "${workspaceFolder}"
       },
       {
          "type": "firefox",
          "request": "launch",
-         "name": "Launch Firefox against localhost",
+         "name": "Firefox:https",
          "url": "https://192.168.86.23?squint",
          "webRoot": "${workspaceFolder}"
       }

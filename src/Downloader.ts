@@ -1,15 +1,16 @@
 import { Stopwatch } from "./Stopwatch";
 import { FPS } from "./FPS";
+import { Squint } from "./Squint";
 
 type DownloadHandler = (blob: Blob, downloadTime: number) => void;
 
 export class Downloader {
 
-   public url: string;
    public onDownload: DownloadHandler;
    public fps = new FPS();
    private handle: number;
    public running = false;
+   private squint = new Squint();
 
    public start() {
       this.running = true;
@@ -26,13 +27,7 @@ export class Downloader {
       this.fps.tick();
 
       let sw = new Stopwatch();
-      fetch(this.url)
-         .then(response => {
-            if (response.status !== 200) {
-               return Promise.reject(response.status + ': ' + response.statusText);
-            }
-            return response.blob();
-         })
+      this.squint.get()
          .then((blob) => {
 
             if (this.onDownload) {
@@ -40,7 +35,7 @@ export class Downloader {
             }
          })
          .catch((reason) => {
-            console.log('Download failure for [' + this.url + '] ' + reason);
+            console.log('Download failure for [' + Squint.url + '] ' + reason);
          })
          .finally(() => {
             if (this.running) {

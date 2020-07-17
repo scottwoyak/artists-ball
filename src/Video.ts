@@ -46,9 +46,12 @@ export class Video {
                   const constraints = {
                      video:
                      {
-                        /*
+                        // if we don't ask for an initial size, Chrome will initialize
+                        // the camera with a lower one and then this resolution sticks
+                        // until the camera turns off
                         width: 10 * 1024,
                         height: 10 * 1024,
+                        /*
                         frameRate: 30,
                         */
                         deviceId: device.deviceId,
