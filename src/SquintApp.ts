@@ -46,7 +46,8 @@ export class SquintApp implements IApp {
    private imgSize = 0;
    private downloadTime: number;
 
-   private host = 'https://woyaktest.ue.r.appspot.com/';
+   //private host = 'https://woyaktest.ue.r.appspot.com/';
+   private host = 'https://squintserver-11278.nodechef.com/';
    //private host = 'http://192.168.86.23:8080/';
    //private host = 'http://localhost:8080/';
    //private host = 'http://' + location.hostname + ':8080/';
@@ -302,6 +303,10 @@ export class SquintApp implements IApp {
             video: {
                width: this.desired.width,
                height: this.desired.height,
+               /*
+               width: { exact: this.desired.width },
+               height: { exact: this.desired.height },
+               */
                deviceId: { exact: this.desired.deviceId },
                //deviceId: this.desired.deviceId,
                //frameRate: this.desired.frameRate,
