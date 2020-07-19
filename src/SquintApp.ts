@@ -11,9 +11,9 @@ import { Squint, ISessions } from "./Squint";
 import { ListBox } from "./ListBox";
 import { ICtrl } from "./ICtrl";
 
-// TODO: disable camera radio buttons
+// TODO: 
+// - disable camera radio buttons - update styles
 // - check into camera being in use
-// - add a close session button
 
 export function debug(msg: string): void {
    console.log(msg);
@@ -288,11 +288,6 @@ export class SquintApp implements IApp {
 
       let cameraMenu = menubar.addSubMenu('Camera');
 
-      cameraMenu.addItem('Stop', () => {
-         this.enableVideo(false);
-         this.showStartDialog();
-      });
-
       let firstItem = true;
       Video.getResolutions((resolution) => {
          let radioButton = cameraMenu.addRadiobutton(
@@ -332,6 +327,18 @@ export class SquintApp implements IApp {
       this.cameraCtrls.push(this.resolution);
 
       this.enableCameraCtrls(false);
+
+      let sessionMenu = menubar.addSubMenu('Session');
+
+      sessionMenu.addItem('Stop', () => {
+         this.downloader.stop();
+         this.enableVideo(false);
+         this.showStartDialog();
+
+         let ctx = this.canvas.getContext('2d');
+         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      });
+
    }
 
 

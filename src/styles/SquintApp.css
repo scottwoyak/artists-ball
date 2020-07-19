@@ -29,8 +29,12 @@
   padding: 10px;
 }
 
+#SquintApp .SliderLabel .disabled {
+  color: gray;
+}
+
 #SquintApp #Slider .disabled::-webkit-slider-thumb {
-  background: linear-gradient(135deg, lightpink, lightpink);
+  background: linear-gradient(135deg, lightgray, lightgray);
 }
 
 #SquintApp #VideoDiv .SliderDiv {

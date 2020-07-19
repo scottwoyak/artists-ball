@@ -32,7 +32,7 @@ export class Downloader {
       this.squint.get(this.id)
          .then((blob) => {
 
-            if (this.onDownload) {
+            if (this.running && this.onDownload) {
                this.onDownload(blob, sw.elapsedMs);
             }
          })
