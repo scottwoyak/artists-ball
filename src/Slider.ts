@@ -59,21 +59,21 @@ export class Slider implements ICtrl {
    private _getText: (slider: Slider) => string;
    private _rangeMapper: RangeMapper;
 
-   public set disabled(value: boolean) {
-      this._range.disabled = value;
+   public set enabled(value: boolean) {
+      this._range.disabled = !value;
       if (value) {
-         this._label.classList.add('disabled');
-         this._valueSpan.classList.add('disabled');
-         this._range.classList.add('disabled');
-      }
-      else {
          this._label.classList.remove('disabled');
          this._valueSpan.classList.remove('disabled');
          this._range.classList.remove('disabled');
       }
+      else {
+         this._label.classList.add('disabled');
+         this._valueSpan.classList.add('disabled');
+         this._range.classList.add('disabled');
+      }
    }
-   public get disabled(): boolean {
-      return this._range.disabled;
+   public get enabled(): boolean {
+      return !this._range.disabled;
    }
 
 

@@ -9,6 +9,11 @@ import { Uploader } from "./Uploader";
 import { getTimeStr, getSizeStr, isMobile } from "./Globals";
 import { Squint, ISessions } from "./Squint";
 import { ListBox } from "./ListBox";
+import { ICtrl } from "./ICtrl";
+
+// TODO: disable camera radio buttons
+// - check into camera being in use
+// - add a close session button
 
 export function debug(msg: string): void {
    console.log(msg);
@@ -39,6 +44,7 @@ export class SquintApp implements IApp {
    private zoom: Slider;
    private quality: Slider;
    private resolution: Slider;
+   private cameraCtrls: ICtrl[] = [];
 
    private xOffset = 0;
    private yOffset = 0;
@@ -135,7 +141,8 @@ export class SquintApp implements IApp {
       buttonDiv.appendChild(viewButton);
 
       viewButton.onclick = () => {
-         alert('starting view: ' + this.viewListBox.selected);
+         this.showStartDialog(false);
+         this.downloader.start(this.viewListBox.selected);
       }
 
       let orParentDiv = document.createElement('div');
@@ -193,8 +200,6 @@ export class SquintApp implements IApp {
             .then((id) => {
                this.sessionId = id;
                this.enableVideo(true);
-               this.quality.disabled = false;
-               this.resolution.disabled = false;
                this.showStartDialog(false);
             })
             .catch((err) => {
@@ -208,12 +213,18 @@ export class SquintApp implements IApp {
    private updateList(value: ISessions) {
       this.viewListBox.clear();
       for (let i = 0; i < value.sessions.length; i++) {
-         this.viewListBox.addItem(value.sessions[i].name);
+         this.viewListBox.addItem(value.sessions[i].name, value.sessions[i].id);
       }
-      this.squint.listSessions(value.id)
+      this.squint.listSessions(value.responseId)
          .then((value) => {
             this.updateList(value);
          });
+   }
+
+   private enableCameraCtrls(flag: boolean) {
+      for (let i = 0; i < this.cameraCtrls.length; i++) {
+         this.cameraCtrls[i].enabled = flag;
+      }
    }
 
    public buildMenu(menubar: Menubar) {
@@ -298,6 +309,8 @@ export class SquintApp implements IApp {
             this.desired = resolution;
             firstItem = false;
          }
+
+         this.cameraCtrls.push(radioButton);
       })
 
       this.quality = cameraMenu.addSlider({
@@ -307,7 +320,7 @@ export class SquintApp implements IApp {
          value: 0.5,
          getText: (slider) => (100 * slider.value).toFixed() + '%',
       });
-      this.quality.disabled = true;
+      this.cameraCtrls.push(this.quality);
 
       this.resolution = cameraMenu.addSlider({
          label: 'Resolution',
@@ -316,8 +329,9 @@ export class SquintApp implements IApp {
          value: 25,
          getText: (slider) => slider.value.toFixed() + '%',
       });
-      this.resolution.disabled = true;
+      this.cameraCtrls.push(this.resolution);
 
+      this.enableCameraCtrls(false);
    }
 
 
@@ -361,6 +375,8 @@ export class SquintApp implements IApp {
    }
 
    private enableVideo(enable: boolean) {
+
+      this.enableCameraCtrls(enable);
 
       if (enable) {
 

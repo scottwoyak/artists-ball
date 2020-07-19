@@ -6,7 +6,7 @@ export interface ISession {
 }
 
 export interface ISessions {
-   id: string,
+   responseId: string,
    sessions: ISession[],
 }
 

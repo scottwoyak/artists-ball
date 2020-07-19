@@ -52,3 +52,16 @@ export function getTimeStr(val: number): string {
       return (val / 1000).toFixed(1) + ' s';
    }
 }
+
+export function getBooleanValue(value: boolean | (() => boolean)): boolean {
+   if (typeof value === 'boolean') {
+      return value;
+   }
+   else if (typeof value === 'function') {
+      return value();
+   }
+   else {
+      return false;
+   }
+}
+

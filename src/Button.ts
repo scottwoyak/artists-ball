@@ -13,6 +13,15 @@ export interface IButtonSetup {
 export class Button implements ICtrl {
    private button: HTMLButtonElement;
 
+
+   public get enabled(): boolean {
+      return !this.button.disabled;
+   }
+
+   public set enabled(value: boolean) {
+      this.button.disabled = !value;
+   }
+
    /**
     * @param parent The parent html object.
     * @param setup The setup data object

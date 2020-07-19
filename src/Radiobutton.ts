@@ -1,4 +1,5 @@
 import { ICtrl } from "./ICtrl";
+import { getBooleanValue } from "./Globals";
 
 type BooleanFunc = () => boolean;
 
@@ -20,6 +21,14 @@ export class Radiobutton implements ICtrl {
 
    public get checked() {
       return this.box.checked;
+   }
+
+   public get enabled(): boolean {
+      return !this.box.disabled;
+   }
+
+   public set enabled(value: boolean) {
+      this.box.disabled = !value;
    }
 
    /**
@@ -49,7 +58,7 @@ export class Radiobutton implements ICtrl {
       this.box.type = 'radio';
       this.box.name = setup.group;
       this.box.id = id + 'Radiobutton';
-      this.box.checked = this.getBoolValue(setup.checked);
+      this.box.checked = getBooleanValue(setup.checked);
       this.box.onchange = () => {
          if (this.box.checked) {
             if (setup.oncheck) {
@@ -68,18 +77,6 @@ export class Radiobutton implements ICtrl {
       mark.className = 'RadioCheckmark';
       mark.id = id + 'RadioCheckmark';
       label.appendChild(mark);
-   }
-
-   private getBoolValue(value: boolean | (() => boolean)): boolean {
-      if (typeof value === 'boolean') {
-         return value;
-      }
-      else if (typeof value === 'function') {
-         this.box.checked = value();
-      }
-      else {
-         return false;
-      }
    }
 
    public check(value: boolean = true) {

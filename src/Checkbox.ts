@@ -1,4 +1,5 @@
 import { ICtrl } from "./ICtrl";
+import { getBooleanValue } from "./Globals";
 
 /**
  * Interface for data passed to the Checkbox constructor
@@ -6,7 +7,7 @@ import { ICtrl } from "./ICtrl";
 export interface ICheckboxSetup {
    id?: string,
    label: string,
-   checked?: () => boolean,
+   checked?: boolean | (() => boolean),
    oncheck?: (checkbox: Checkbox) => void,
 }
 
@@ -19,13 +20,23 @@ export class Checkbox implements ICtrl {
       return this.box.checked;
    }
 
+   public get enabled(): boolean {
+      return !this.box.disabled;
+   }
+
+   public set enabled(value: boolean) {
+      this.box.disabled = !value;
+   }
+
    /**
     * @param parent The parent html object.
     * @param setup The setup data object
     */
    public constructor(parent: HTMLElement, setup: ICheckboxSetup) {
 
-      this.getState = setup.checked;
+      if (typeof setup.checked === 'function') {
+         this.getState = setup.checked;
+      }
 
       let div = document.createElement('div');
       div.id = setup.id;
@@ -42,7 +53,7 @@ export class Checkbox implements ICtrl {
       this.box.className = 'Checkbox';
       this.box.type = 'checkbox';
       this.box.id = setup.id + 'Checkbox';
-      this.box.checked = setup.checked ? setup.checked() : false;
+      this.box.checked = getBooleanValue(setup.checked);
       this.box.onchange = () => {
          if (setup.oncheck) {
             setup.oncheck(this);

@@ -30,6 +30,15 @@ export class ListBox<T = any> implements ICtrl {
       return null;
    }
 
+   public get enabled(): boolean {
+      alert('Not Implemented Yet: ListBox.enabled');
+      return false;
+   }
+
+   public set enabled(value: boolean) {
+      alert('Not Implemented Yet: ListBox.enabled');
+   }
+
    /**
     * @param parent The parent html object.
     * @param setup The setup data object
