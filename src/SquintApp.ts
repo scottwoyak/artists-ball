@@ -291,7 +291,7 @@ export class SquintApp implements IApp {
                   this.desired = resolution;
                   this.enableVideo(true);
                },
-               checked: () => firstItem,
+               checked: firstItem,
                group: 'CamerasGroup',
             });
          if (firstItem) {
@@ -363,6 +363,10 @@ export class SquintApp implements IApp {
    private enableVideo(enable: boolean) {
 
       if (enable) {
+
+         // it seems you have to fully kill the video to switch cameras. This
+         // set of APIs is not that robust it seems
+         this.killVideo();
 
          const constraints = {
             video: {
