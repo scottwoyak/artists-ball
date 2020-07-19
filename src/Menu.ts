@@ -4,7 +4,7 @@ import { ICtrl } from "./ICtrl";
 import { IRadiobuttonSetup, Radiobutton } from "./Radiobutton";
 import { isMobile } from "./Globals";
 
-export type MenuItemFunction = () => void;
+export type MenuItemFunction = (item?: HTMLDivElement) => void;
 export type MenuItemFunctionBool = (value: boolean) => void;
 
 enum MenuLocation {
@@ -160,7 +160,7 @@ class Menu {
          }
 
          // fire the event
-         callback();
+         callback(item);
       }
       this.div.appendChild(item);
 

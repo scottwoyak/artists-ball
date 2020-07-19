@@ -4,11 +4,11 @@ import { Menubar } from "./Menu";
 import { Slider } from "./Slider";
 import { Vec2 } from "./Vec";
 import { Video, IVideoResolution } from "./Video";
-import { Radiobutton } from "./Radiobutton";
 import { Downloader } from "./Downloader";
 import { Uploader } from "./Uploader";
 import { getTimeStr, getSizeStr, isMobile } from "./Globals";
-import { Squint } from "./Squint";
+import { Squint, ISessions } from "./Squint";
+import { ListBox } from "./ListBox";
 
 export function debug(msg: string): void {
    console.log(msg);
@@ -18,7 +18,6 @@ export function debug(msg: string): void {
 export class SquintApp implements IApp {
    private handler: PointerEventHandler;
    private div: HTMLDivElement;
-   private panelDiv: HTMLDivElement;
    private img: HTMLImageElement;
    private canvas: HTMLCanvasElement;
    private video: HTMLVideoElement;
@@ -46,6 +45,12 @@ export class SquintApp implements IApp {
 
    private imgSize = 0;
    private downloadTime: number;
+   private squint = new Squint();
+
+   private viewListBox: ListBox<string>;
+   private sessionId: string;
+
+   private startDialog: HTMLDivElement;
 
    public constructor() {
    }
@@ -54,23 +59,17 @@ export class SquintApp implements IApp {
 
       div.id = 'SquintApp';
 
+      this.startDialog = this.createStartDialog(div);
+
       this.div = document.createElement('div');
       this.div.className = 'FlexContainer';
       div.appendChild(this.div);
-
-      this.panelDiv = document.createElement('div');
-      this.panelDiv.id = 'Panel';
-      this.panelDiv.className = 'Panel';
-      this.div.appendChild(this.panelDiv);
-
-      this.buildPanel();
 
       this.canvas = document.createElement('canvas');
       this.canvas.id = 'Canvas';
       this.div.appendChild(this.canvas);
 
       this.downloader.onDownload = (blob, downloadTime) => this.onDownload(blob, downloadTime);
-      this.downloader.start();
 
       this.uploader.onDataNeeded = () => this.takePicture();
 
@@ -81,62 +80,150 @@ export class SquintApp implements IApp {
 
       window.addEventListener('resize', () => this.onResize());
       this.updateSizes();
+
+      this.showStartDialog();
    }
 
    public delete() {
    }
 
-   public buildMenu(menubar: Menubar) {
-      let optionsMenu = menubar.addSubMenu('Options');
+   private showStartDialog(show = true) {
+      if (show) {
+         this.startDialog.style.display = 'block';
+      }
+      else {
+         this.startDialog.style.display = 'none';
+      }
+   }
 
-      optionsMenu.addItem(
-         'Show/Hide Settings...',
-         () => {
-            let style = getComputedStyle(this.panelDiv);
-            if (style.display === "none") {
-               this.panelDiv.style.display = 'block';
-            } else {
-               this.panelDiv.style.display = 'none';
-            }
-            this.updateSizes();
+   private createStartDialog(div: HTMLDivElement): HTMLDivElement {
+      let backgroundDiv = document.createElement('div');
+      backgroundDiv.className = 'DialogBackground';
+      div.appendChild(backgroundDiv);
+
+      let dialogDiv = document.createElement('div');
+      dialogDiv.id = 'DialogDiv';
+      backgroundDiv.appendChild(dialogDiv);
+
+      let viewDiv = document.createElement('div');
+      viewDiv.id = 'ViewPanelDiv';
+      dialogDiv.appendChild(viewDiv);
+
+      let viewHeader = document.createElement('div');
+      viewHeader.id = 'ViewHeader';
+      viewHeader.className = 'Header';
+      viewHeader.innerText = 'View a camera...';
+      viewDiv.appendChild(viewHeader);
+
+      this.viewListBox = new ListBox<string>(
+         viewDiv, {
+         id: 'ViewListBox'
+      });
+
+      this.squint.listSessions()
+         .then((value) => {
+            this.updateList(value);
          });
 
-      if (isMobile) {
-         this.panelDiv.style.display = 'none';
-         this.updateSizes();
+      let buttonDiv = document.createElement('div');
+      buttonDiv.className = 'ButtonDiv';
+      viewDiv.appendChild(buttonDiv);
+
+      let viewButton = document.createElement('button');
+      viewButton.id = 'ViewButton';
+      viewButton.innerText = 'Go';
+      buttonDiv.appendChild(viewButton);
+
+      viewButton.onclick = () => {
+         alert('starting view: ' + this.viewListBox.selected);
       }
 
-      let item = optionsMenu.addItem(
-         'Pause',
-         () => {
-            if (this.downloader.running) {
-               item.innerText = 'Resume';
-               this.downloader.stop();
-            }
-            else {
-               item.innerText = 'Pause';
-               this.downloader.start();
-            }
+      let orParentDiv = document.createElement('div');
+      orParentDiv.id = 'OrParentDiv';
+      dialogDiv.appendChild(orParentDiv);
+
+      let orDiv = document.createElement('div');
+      orDiv.id = 'OrDiv';
+      orDiv.innerText = 'OR';
+      orParentDiv.appendChild(orDiv);
+
+
+
+      let hostPanelDiv = document.createElement('div');
+      hostPanelDiv.id = 'HostPanelDiv';
+      dialogDiv.appendChild(hostPanelDiv);
+
+      let hostHeader = document.createElement('div');
+      hostHeader.id = 'HostHeader';
+      hostHeader.className = 'Header';
+      hostHeader.innerText = 'Host a camera...';
+      hostPanelDiv.appendChild(hostHeader);
+
+      let cameraNameDiv = document.createElement('div');
+      cameraNameDiv.id = 'CameraNameDiv';
+      cameraNameDiv.classList.add('Stretch');
+      hostPanelDiv.appendChild(cameraNameDiv);
+
+      let nameLabel = document.createElement('label');
+      nameLabel.innerText = 'Camera Name:';
+      nameLabel.htmlFor = 'NameInputText';
+      cameraNameDiv.appendChild(nameLabel);
+
+      let nameInputText = document.createElement('input');
+      nameInputText.type = 'text';
+      nameInputText.id = 'NameInputText';
+      nameInputText.placeholder = 'Your Name';
+      cameraNameDiv.appendChild(nameInputText);
+      nameInputText.oninput = () => {
+         okButton.disabled = (nameInputText.value.trim().length === 0);
+      };
+
+      buttonDiv = document.createElement('div');
+      buttonDiv.classList.add('ButtonDiv', 'NoStretch');
+      hostPanelDiv.appendChild(buttonDiv);
+
+      let okButton = document.createElement('button');
+      okButton.id = 'HostOkButton';
+      okButton.innerText = 'Go';
+      okButton.disabled = true;
+      buttonDiv.appendChild(okButton);
+
+      okButton.onclick = () => {
+         this.squint.createSession(nameInputText.value)
+            .then((id) => {
+               this.sessionId = id;
+               this.enableVideo(true);
+               this.quality.disabled = false;
+               this.resolution.disabled = false;
+               this.showStartDialog(false);
+            })
+            .catch((err) => {
+               alert('could not create session: ' + err);
+            });
+      }
+
+      return backgroundDiv
+   }
+
+   private updateList(value: ISessions) {
+      this.viewListBox.clear();
+      for (let i = 0; i < value.sessions.length; i++) {
+         this.viewListBox.addItem(value.sessions[i].name);
+      }
+      this.squint.listSessions(value.id)
+         .then((value) => {
+            this.updateList(value);
          });
    }
 
-   private buildPanel() {
+   public buildMenu(menubar: Menubar) {
 
-      let picDiv = document.createElement('div');
-      picDiv.className = 'Picture';
-      this.panelDiv.appendChild(picDiv);
 
-      let titleDiv = document.createElement('div');
-      titleDiv.className = 'Title';
-      titleDiv.innerText = 'Image Settings';
-      picDiv.appendChild(titleDiv);
 
-      let textDiv = document.createElement('div');
-      textDiv.innerText = 'Use these settings to adjust the image on the end users side, i.e. as if you were using Photoshop after a picture has been taken.';
-      textDiv.className = 'Instructions';
-      picDiv.appendChild(textDiv);
 
-      this.brightness = new Slider(picDiv, {
+      let viewMenu = menubar.addSubMenu('View');
+
+      this.brightness = viewMenu.addSlider({
          label: 'Brightness',
          min: 0,
          max: 200,
@@ -145,7 +232,7 @@ export class SquintApp implements IApp {
          getText: (slider) => slider.value.toFixed(0) + '%',
       })
 
-      this.contrast = new Slider(picDiv, {
+      this.contrast = viewMenu.addSlider({
          label: 'Contrast',
          min: 0,
          max: 200,
@@ -154,7 +241,7 @@ export class SquintApp implements IApp {
          getText: (slider) => slider.value.toFixed(0) + '%',
       });
 
-      this.saturate = new Slider(picDiv, {
+      this.saturate = viewMenu.addSlider({
          label: 'Chroma',
          min: 0,
          max: 200,
@@ -163,7 +250,7 @@ export class SquintApp implements IApp {
          getText: (slider) => slider.value.toFixed(0) + '%',
       });
 
-      this.blur = new Slider(picDiv, {
+      this.blur = viewMenu.addSlider({
          label: 'Blur',
          min: 0,
          max: 10,
@@ -172,7 +259,7 @@ export class SquintApp implements IApp {
          getText: (slider) => slider.value.toFixed(0),
       });
 
-      this.zoom = new Slider(picDiv, {
+      this.zoom = viewMenu.addSlider({
          label: 'Zoom',
          min: 0.1,
          max: 5,
@@ -187,49 +274,33 @@ export class SquintApp implements IApp {
 
 
 
-      let camDiv = document.createElement('div');
-      camDiv.className = 'Camera';
-      this.panelDiv.appendChild(camDiv);
 
-      titleDiv = document.createElement('div');
-      titleDiv.className = 'Title';
-      titleDiv.innerText = 'Camera Settings';
-      camDiv.appendChild(titleDiv);
+      let cameraMenu = menubar.addSubMenu('Camera');
 
-      textDiv = document.createElement('div');
-      textDiv.innerText = 'Use these settings to adjust the camera used to create the picture.';
-      textDiv.className = 'Instructions';
-      camDiv.appendChild(textDiv);
-
-      let camerasDiv = document.createElement('div');
-      camerasDiv.id = 'CamerasDiv';
-      camDiv.appendChild(camerasDiv);
-
-      new Radiobutton(camerasDiv, {
-         label: 'Off',
-         group: 'ResolutionGroup',
-         checked: () => { return true },
-         oncheck: () => {
-            this.enableVideo(false);
-            this.resolution.disabled = true;
-            this.quality.disabled = true;
-         }
+      cameraMenu.addItem('Stop', () => {
+         this.enableVideo(false);
+         this.showStartDialog();
       });
 
+      let firstItem = true;
       Video.getResolutions((resolution) => {
-         new Radiobutton(camerasDiv, {
-            label: resolution.label,
-            group: 'ResolutionGroup',
-            oncheck: () => {
-               this.desired = resolution;
-               this.enableVideo(true);
-               this.resolution.disabled = false;
-               this.quality.disabled = false;
-            }
-         });
+         let radioButton = cameraMenu.addRadiobutton(
+            {
+               label: resolution.label,
+               oncheck: () => {
+                  this.desired = resolution;
+                  this.enableVideo(true);
+               },
+               checked: () => firstItem,
+               group: 'CamerasGroup',
+            });
+         if (firstItem) {
+            this.desired = resolution;
+            firstItem = false;
+         }
       })
 
-      this.quality = new Slider(camDiv, {
+      this.quality = cameraMenu.addSlider({
          label: 'Quality',
          min: 0.1,
          max: 1,
@@ -238,7 +309,7 @@ export class SquintApp implements IApp {
       });
       this.quality.disabled = true;
 
-      this.resolution = new Slider(camDiv, {
+      this.resolution = cameraMenu.addSlider({
          label: 'Resolution',
          min: 10,
          max: 100,
@@ -248,6 +319,7 @@ export class SquintApp implements IApp {
       this.resolution.disabled = true;
 
    }
+
 
    private onDownload(blob: Blob, downloadTime: number) {
 
@@ -315,7 +387,8 @@ export class SquintApp implements IApp {
             this.div.appendChild(this.video);
 
             this.video.onplay = () => {
-               this.uploader.start();
+               this.uploader.start(this.sessionId);
+               this.downloader.start(this.sessionId);
             };
 
             try {
@@ -335,6 +408,7 @@ export class SquintApp implements IApp {
       }
       else {
          this.uploader.stop();
+         this.downloader.stop();
 
          this.killVideo();
       }
@@ -362,12 +436,11 @@ export class SquintApp implements IApp {
 
    private updateSizes() {
       let menubarHeight = document.getElementById('Menubar').clientHeight;
-      let panelWidth = getComputedStyle(this.panelDiv).display === 'none' ? 0 : this.panelDiv.clientWidth;
 
       let viewWidth = document.documentElement.clientWidth;
       let viewHeight = document.documentElement.clientHeight;
 
-      this.canvas.width = viewWidth - panelWidth;
+      this.canvas.width = viewWidth;
       this.canvas.height = viewHeight - menubarHeight;
 
       this.drawImg();

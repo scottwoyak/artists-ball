@@ -11,8 +11,10 @@ export class Downloader {
    private handle: number;
    public running = false;
    private squint = new Squint();
+   private id: string;
 
-   public start() {
+   public start(id: string) {
+      this.id = id;
       this.running = true;
       this.handle = requestAnimationFrame(() => this.download());
    }
@@ -27,7 +29,7 @@ export class Downloader {
       this.fps.tick();
 
       let sw = new Stopwatch();
-      this.squint.get()
+      this.squint.get(this.id)
          .then((blob) => {
 
             if (this.onDownload) {

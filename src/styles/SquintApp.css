@@ -1,7 +1,7 @@
 #SquintApp #Panel {
   flex: 0 0 300px;
   display: block;
-  background-color: lightgray;
+  background-color: white;
 }
 
 #SquintApp .Instructions {
@@ -54,6 +54,102 @@
 
 #SquintApp .SliderRange {
   flex: 1 1 80px;
+}
+
+#SquintApp .DialogBackground {
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  background-color: rgb(0, 0, 0, 0.4);
+  display: none;
+}
+
+#SquintApp #DialogDiv {
+  position: absolute;
+  display: flex;
+  top: 20%;
+  left: 20%;
+  width: 60%;
+  height: 60%;
+  background-color: white;
+  border-radius: 20px;
+}
+
+#SquintApp .ButtonDiv {
+  text-align: right;
+}
+
+#SquintApp #ViewPanelDiv {
+  flex: auto;
+  padding: 10px;
+  margin: 10px;
+  display: flex;
+  flex-direction: column;
+  background-color: lightblue;
+  border-radius: 10px;
+}
+
+#SquintApp #ViewButton {
+  flex: 0 1 20px;
+  margin-top: 10px;
+}
+
+#SquintApp #ViewListBox {
+  margin-top: 10px;
+  flex: 1 1 auto;
+}
+
+#SquintApp #OrParentDiv {
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+
+#SquintApp #OrDiv {
+  padding: 10px;
+}
+
+#SquintApp #HostPanelDiv {
+  flex: auto;
+  padding: 10px;
+  margin: 10px;
+  display: flex;
+  flex-direction: column;
+  background-color: lightpink;
+  border-radius: 10px;
+}
+
+#SquintApp #CameraNameDiv {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#SquintApp #NameInputText {
+  flex-grow: 1 1 auto;
+}
+
+#SquintApp .Stretch {
+  flex: 1 0 auto;
+}
+
+#SquintApp .NoStretch {
+  flex: 0 0 auto;
+}
+
+@media (orientation: landscape) {
+  #SquintApp #DialogDiv {
+    flex-direction: row;
+  }
+}
+
+@media (orientation: portrait) {
+  #SquintApp #DialogDiv {
+    flex-direction: column;
+  }
 }
 
 @media only screen and (max-device-width: 800px) {

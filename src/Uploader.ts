@@ -12,8 +12,10 @@ export class Uploader {
    private running = false;
    private handle: number;
    private squint = new Squint();
+   private id: string;
 
-   public start() {
+   public start(id: string) {
+      this.id = id;
       this.handle = requestAnimationFrame(() => this.upload());
       this.running = true;
    }
@@ -38,12 +40,13 @@ export class Uploader {
             //console.log('upload size: ' + blob.size / (1024 * 1024));
             let url = URL.createObjectURL(blob);
             let fd = new FormData();
-            fd.append('file', blob, 'myBlob');
+            fd.append('image', blob);
 
             // TODO limit to one call at a time
             let sw = new Stopwatch();
-            this.squint.post(fd)
-               .then((response) => {
+            this.squint.put(this.id, fd)
+               .then(() => {
+                  console.log('upload time: ' + sw.elapsedMs);
                   this.uploadTime = sw.elapsedMs;
                })
                .catch((reason) => {
