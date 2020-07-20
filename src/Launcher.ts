@@ -70,7 +70,7 @@ export class Launcher {
       this.menubar = new Menubar(this.div);
       subMenu = this.menubar.addSubMenu('Apps', 'Apps');
       subMenu.addItem('3D Viewer', () => this.launch(AppType.Viewer));
-      //subMenu.addItem('Squint', () => this.launch(AppType.Squint));
+      subMenu.addItem('Squint', () => this.launch(AppType.Squint));
       subMenu.addItem('Artist\'s Ball', () => this.launch(AppType.ArtistsBall));
    }
 }

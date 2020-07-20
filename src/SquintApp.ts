@@ -59,7 +59,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 3';
+      document.title += ' 4';
    }
 
    public create(div: HTMLDivElement) {
@@ -289,15 +289,6 @@ export class SquintApp implements IApp {
 
       let cameraMenu = menubar.addSubMenu('Camera');
 
-      let radioButton = cameraMenu.addRadiobutton(
-         {
-            label: '1000x1000',
-            oncheck: () => {
-               this.desired = { label: '1000x1000', width: 1000, height: 1000, facingMode: 'xxx', frameRate: 30, deviceId: undefined };
-               this.enableVideo(true);
-            },
-            group: 'CamerasGroup',
-         });
       let firstItem = true;
       Video.getResolutions((resolution) => {
          /*
@@ -344,6 +335,27 @@ export class SquintApp implements IApp {
          getText: (slider) => slider.value.toFixed() + '%',
       });
       this.cameraCtrls.push(this.resolution);
+
+      cameraMenu.addRadiobutton(
+         {
+            label: '1000x1000',
+            oncheck: () => {
+               this.desired = { label: '1000x1000', width: 1000, height: 1000, facingMode: 'xxx', frameRate: 30, deviceId: undefined };
+               this.enableVideo(true);
+            },
+            group: 'CamerasGroup',
+         });
+
+      cameraMenu.addRadiobutton(
+         {
+            label: '2000x2000',
+            oncheck: () => {
+               this.desired = { label: '2000x2000', width: 2000, height: 2000, facingMode: 'xxx', frameRate: 30, deviceId: undefined };
+               this.enableVideo(true);
+            },
+            group: 'CamerasGroup',
+         });
+
 
       this.enableCameraCtrls(false);
 
@@ -413,20 +425,17 @@ export class SquintApp implements IApp {
 
          const constraints = {
             video: {
-               width: this.desired.width,
-               height: this.desired.height,
+               //width: this.desired.width,
+               //height: this.desired.height,
+               width: 1000,
+               height: 1000,
                //width: { exact: this.desired.width },
                //height: { exact: this.desired.height },
                //deviceId: this.desired.deviceId,
-               deviceId: { exact: this.desired.deviceId },
+               //deviceId: { exact: this.desired.deviceId },
                frameRate: 30,
             }
          };
-
-         if (iOS() || !this.desired.deviceId) {
-            alert('ios detected, deleting deviceId');
-            delete constraints.video.deviceId;
-         }
 
          if (this.video) {
             let stream = this.video.srcObject as MediaStream;
