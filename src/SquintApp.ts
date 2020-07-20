@@ -59,7 +59,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 1';
+      document.title += ' 2';
    }
 
    public create(div: HTMLDivElement) {
@@ -291,6 +291,12 @@ export class SquintApp implements IApp {
 
       let firstItem = true;
       Video.getResolutions((resolution) => {
+         alert('found camera:\n' +
+            'width: ' + resolution.width + '\n' +
+            'height: ' + resolution.height + '\n' +
+            'deviceId: ' + resolution.deviceId + '\n' +
+            'frameRate: ' + resolution.frameRate + '\n' +
+            'facingMode: ' + resolution.facingMode);
          let radioButton = cameraMenu.addRadiobutton(
             {
                label: resolution.label,
@@ -392,16 +398,21 @@ export class SquintApp implements IApp {
          // set of APIs is not that robust it seems
          this.killVideo();
 
+
          const constraints = {
             video: {
                width: this.desired.width,
                height: this.desired.height,
                //width: { exact: this.desired.width },
                //height: { exact: this.desired.height },
-               deviceId: this.desired.deviceId,
-               //deviceId: { exact: this.desired.deviceId },
+               //deviceId: this.desired.deviceId,
+               deviceId: { exact: this.desired.deviceId },
             }
          };
+
+         if (this.desired.deviceId) {
+            delete constraints.video.deviceId;
+         }
 
          if (this.video) {
             let stream = this.video.srcObject as MediaStream;

@@ -14,6 +14,7 @@ export class Video {
    public static getResolutions(onFound: (resolution: IVideoResolution) => void) {
       navigator.mediaDevices.enumerateDevices()
          .then((devices) => {
+            /*
             let str = '';
             let count = 0;
             for (let i = 0; i < devices.length; i++) {
@@ -25,6 +26,7 @@ export class Video {
             }
             str = count + ' cameras found.\n' + str;
             alert(str);
+            */
 
             for (let i = 0; i < devices.length; i++) {
                let device = devices[i];
@@ -82,6 +84,7 @@ export class Video {
                            onFound(actual)
                         }
 
+                        mediaTrack.stop();
                      })
                      .catch((err) => {
                         debug('getUserMedia.catch\n' + device.label + ':' + device.deviceId + '\n' + err);
