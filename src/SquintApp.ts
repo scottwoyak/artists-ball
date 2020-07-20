@@ -6,7 +6,7 @@ import { Vec2 } from "./Vec";
 import { Video, IVideoResolution } from "./Video";
 import { Downloader } from "./Downloader";
 import { Uploader } from "./Uploader";
-import { getTimeStr, getSizeStr, isMobile } from "./Globals";
+import { getTimeStr, getSizeStr, isMobile, iOS } from "./Globals";
 import { Squint, ISessions } from "./Squint";
 import { ListBox } from "./ListBox";
 import { ICtrl } from "./ICtrl";
@@ -59,7 +59,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 2';
+      document.title += ' 3';
    }
 
    public create(div: HTMLDivElement) {
@@ -289,14 +289,26 @@ export class SquintApp implements IApp {
 
       let cameraMenu = menubar.addSubMenu('Camera');
 
+      let radioButton = cameraMenu.addRadiobutton(
+         {
+            label: '1000x1000',
+            oncheck: () => {
+               this.desired = { label: '1000x1000', width: 1000, height: 1000, facingMode: 'xxx', frameRate: 30, deviceId: undefined };
+               this.enableVideo(true);
+            },
+            group: 'CamerasGroup',
+         });
       let firstItem = true;
       Video.getResolutions((resolution) => {
+         /*
          alert('found camera:\n' +
             'width: ' + resolution.width + '\n' +
             'height: ' + resolution.height + '\n' +
             'deviceId: ' + resolution.deviceId + '\n' +
             'frameRate: ' + resolution.frameRate + '\n' +
             'facingMode: ' + resolution.facingMode);
+            */
+
          let radioButton = cameraMenu.addRadiobutton(
             {
                label: resolution.label,
@@ -407,10 +419,12 @@ export class SquintApp implements IApp {
                //height: { exact: this.desired.height },
                //deviceId: this.desired.deviceId,
                deviceId: { exact: this.desired.deviceId },
+               frameRate: 30,
             }
          };
 
-         if (this.desired.deviceId) {
+         if (iOS() || !this.desired.deviceId) {
+            alert('ios detected, deleting deviceId');
             delete constraints.video.deviceId;
          }
 
@@ -429,6 +443,7 @@ export class SquintApp implements IApp {
             this.div.appendChild(this.video);
 
             this.video.onplay = () => {
+               alert('this.video.onplay');
                this.uploader.start(this.sessionId);
                this.downloader.start(this.sessionId);
             };
@@ -437,6 +452,7 @@ export class SquintApp implements IApp {
 
                navigator.mediaDevices.getUserMedia(constraints)
                   .then((stream) => {
+                     alert('getUserMedia().then() ' + JSON.stringify(stream.getVideoTracks()[0].getSettings(), null, ' '));
                      this.video.srcObject = stream;
                   })
                   .catch((reason) => {
