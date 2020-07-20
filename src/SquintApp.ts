@@ -59,7 +59,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 4';
+      document.title += ' 5';
    }
 
    public create(div: HTMLDivElement) {
@@ -336,6 +336,7 @@ export class SquintApp implements IApp {
       });
       this.cameraCtrls.push(this.resolution);
 
+      /*
       cameraMenu.addRadiobutton(
          {
             label: '1000x1000',
@@ -355,6 +356,7 @@ export class SquintApp implements IApp {
             },
             group: 'CamerasGroup',
          });
+         */
 
 
       this.enableCameraCtrls(false);
@@ -425,15 +427,13 @@ export class SquintApp implements IApp {
 
          const constraints = {
             video: {
-               //width: this.desired.width,
-               //height: this.desired.height,
-               width: 1000,
-               height: 1000,
+               width: this.desired.width,
+               height: this.desired.height,
                //width: { exact: this.desired.width },
                //height: { exact: this.desired.height },
                //deviceId: this.desired.deviceId,
-               //deviceId: { exact: this.desired.deviceId },
-               frameRate: 30,
+               deviceId: { exact: this.desired.deviceId },
+               //frameRate: 30,
             }
          };
 
@@ -452,7 +452,6 @@ export class SquintApp implements IApp {
             this.div.appendChild(this.video);
 
             this.video.onplay = () => {
-               alert('this.video.onplay');
                this.uploader.start(this.sessionId);
                this.downloader.start(this.sessionId);
             };
@@ -461,7 +460,7 @@ export class SquintApp implements IApp {
 
                navigator.mediaDevices.getUserMedia(constraints)
                   .then((stream) => {
-                     alert('getUserMedia().then() ' + JSON.stringify(stream.getVideoTracks()[0].getSettings(), null, ' '));
+                     //alert('getUserMedia().then() ' + JSON.stringify(stream.getVideoTracks()[0].getSettings(), null, ' '));
                      this.video.srcObject = stream;
                   })
                   .catch((reason) => {
