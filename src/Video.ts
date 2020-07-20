@@ -9,46 +9,32 @@ export interface IVideoResolution {
    facingMode: string,
 }
 
-/*
-class VideoResolution {
-   public label: string;
-   public width: number;
-   public height: number;
-
-   public constructor(desired: IVideoResolution,
-      actualWidth: number,
-      actualHeight: number) {
-      this.width = actualWidth;
-      this.height = actualHeight;
-
-      if (desired.width === actualWidth && desired.height === actualHeight) {
-         this.label = desired.label;
-      }
-      else {
-         this.label = actualWidth + 'x' + actualHeight;
-      }
-   }
-}
-*/
-
 export class Video {
 
    public static getResolutions(onFound: (resolution: IVideoResolution) => void) {
       navigator.mediaDevices.enumerateDevices()
          .then((devices) => {
+            let str = '';
+            let count = 0;
             for (let i = 0; i < devices.length; i++) {
                let device = devices[i];
                if (device.kind === 'videoinput') {
-                  //alert(i + ': \n' + JSON.stringify(device.toJSON(), null, ' '));
+                  count++;
+                  str += device.deviceId + ': ' + device.label + '\n';
                }
+            }
+            str = count + ' cameras found.\n' + str;
+            alert(str);
 
+            for (let i = 0; i < devices.length; i++) {
+               let device = devices[i];
                if (device.kind === 'videoinput') {
                   const constraints = {
                      video:
                      {
                         // if we don't ask for an initial size, Chrome will initialize
                         // the camera with a lower one and then this resolution sticks
-                        // until the camera turns off
+                        // until the camera turns off. Ask for the highest possible.
                         width: 10 * 1024,
                         height: 10 * 1024,
                         /*
@@ -61,29 +47,45 @@ export class Video {
                   navigator.mediaDevices.getUserMedia(constraints)
                      .then((stream) => {
                         let mediaTrack = stream.getVideoTracks()[0];
-                        let capabilities = mediaTrack.getCapabilities(); // not supported by firefox
-                        //alert(JSON.stringify(capabilities));
                         let constraints = mediaTrack.getConstraints();
                         let settings = mediaTrack.getSettings();
+                        if (mediaTrack.getCapabilities) {
+                           let capabilities = mediaTrack.getCapabilities(); // not supported by firefox
 
-                        let cam = (settings.facingMode === 'user' ? 'Front' : 'Back');
-                        let maxWidth = capabilities.width.max;
-                        let maxHeight = capabilities.height.max;
-                        let actual = {
-                           label: cam + ' (' + maxWidth + 'x' + maxHeight + ')',
-                           width: maxWidth,
-                           height: maxHeight,
-                           facingMode: capabilities.facingMode[0],
-                           frameRate: 30,
-                           deviceId: capabilities.deviceId,
+                           let cam = (settings.facingMode === 'user' ? 'Front' : 'Back');
+                           let maxWidth = capabilities.width.max;
+                           let maxHeight = capabilities.height.max;
+                           let actual = {
+                              label: cam + ' (' + maxWidth + 'x' + maxHeight + ')',
+                              width: maxWidth,
+                              height: maxHeight,
+                              facingMode: capabilities.facingMode[0],
+                              frameRate: 30,
+                              deviceId: capabilities.deviceId,
+                           }
+
+                           onFound(actual)
+                        }
+                        else {
+                           let cam = (settings.facingMode === 'user' ? 'Front' : 'Back');
+                           let maxWidth = settings.width;
+                           let maxHeight = settings.height;
+                           let actual = {
+                              label: cam + ' (' + maxWidth + 'x' + maxHeight + ')',
+                              width: maxWidth,
+                              height: maxHeight,
+                              facingMode: settings.facingMode,
+                              frameRate: 30,
+                              deviceId: settings.deviceId,
+                           }
+
+                           onFound(actual)
                         }
 
-                        onFound(actual)
                      })
                      .catch((err) => {
-                        debug('getUserMedia.catch ' + err);
+                        debug('getUserMedia.catch\n' + device.label + ':' + device.deviceId + '\n' + err);
                      });
-
                }
             }
          });

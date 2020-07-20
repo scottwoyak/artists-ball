@@ -17,7 +17,7 @@ import { ICtrl } from "./ICtrl";
 
 export function debug(msg: string): void {
    console.log(msg);
-   //alert('debug: ' + msg);
+   alert('debug: ' + msg);
 }
 
 export class SquintApp implements IApp {
@@ -59,6 +59,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
+      document.title += ' 1';
    }
 
    public create(div: HTMLDivElement) {
@@ -395,7 +396,10 @@ export class SquintApp implements IApp {
             video: {
                width: this.desired.width,
                height: this.desired.height,
-               deviceId: { exact: this.desired.deviceId },
+               //width: { exact: this.desired.width },
+               //height: { exact: this.desired.height },
+               deviceId: this.desired.deviceId,
+               //deviceId: { exact: this.desired.deviceId },
             }
          };
 
