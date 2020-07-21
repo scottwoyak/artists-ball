@@ -59,7 +59,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 6';
+      document.title += ' 7';
    }
 
    public create(div: HTMLDivElement) {
@@ -407,7 +407,7 @@ export class SquintApp implements IApp {
          // like which camera is in use only works sometimes. The most robust I can
          // make it is to close the video element and create a new one.
          let stream = this.video.srcObject as MediaStream;
-         stream.getVideoTracks().forEach((track: MediaStreamTrack) => {
+         stream.getTracks().forEach((track: MediaStreamTrack) => {
             track.stop();
          });
 

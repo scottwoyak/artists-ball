@@ -86,7 +86,9 @@ export class Video {
                         }
 
                         // TODO if onFound throws, this is skipped
-                        mediaTrack.stop();
+                        stream.getTracks().forEach((track: MediaStreamTrack) => {
+                           track.stop();
+                        });
                      })
                      .catch((err) => {
                         debug('getUserMedia.catch\n' + device.label + ':' + device.deviceId + '\n' + err);
