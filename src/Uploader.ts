@@ -15,14 +15,18 @@ export class Uploader {
    private id: string;
 
    public start(id: string) {
-      this.id = id;
-      this.handle = requestAnimationFrame(() => this.upload());
-      this.running = true;
+      if (!this.running) {
+         this.id = id;
+         this.handle = requestAnimationFrame(() => this.upload());
+         this.running = true;
+      }
    }
 
    public stop() {
-      cancelAnimationFrame(this.handle);
-      this.running = false;
+      if (this.running) {
+         cancelAnimationFrame(this.handle);
+         this.running = false;
+      }
    }
 
    private upload() {

@@ -14,14 +14,18 @@ export class Downloader {
    private id: string;
 
    public start(id: string) {
-      this.id = id;
-      this.running = true;
-      this.handle = requestAnimationFrame(() => this.download());
+      if (!this.running) {
+         this.id = id;
+         this.running = true;
+         this.handle = requestAnimationFrame(() => this.download());
+      }
    }
 
    public stop() {
-      this.running = false;
-      cancelAnimationFrame(this.handle);
+      if (this.running) {
+         this.running = false;
+         cancelAnimationFrame(this.handle);
+      }
    }
 
    private download() {
