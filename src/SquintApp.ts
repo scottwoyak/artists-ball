@@ -59,7 +59,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 5';
+      document.title += ' 6';
    }
 
    public create(div: HTMLDivElement) {
@@ -406,6 +406,11 @@ export class SquintApp implements IApp {
          // Using the camera is not robust. Applying constraints to change things
          // like which camera is in use only works sometimes. The most robust I can
          // make it is to close the video element and create a new one.
+         let stream = this.video.srcObject as MediaStream;
+         stream.getVideoTracks().forEach((track: MediaStreamTrack) => {
+            track.stop();
+         });
+
          this.video.pause();
          this.video.srcObject = null;
          this.video.parentElement.removeChild(this.video);
@@ -437,6 +442,7 @@ export class SquintApp implements IApp {
             }
          };
 
+         /*
          if (this.video) {
             let stream = this.video.srcObject as MediaStream;
             let track = stream.getVideoTracks()[0];
@@ -445,31 +451,33 @@ export class SquintApp implements IApp {
                   alert('Cannot change camera: ' + err);
                })
          }
-         else {
-            this.video = document.createElement('video');
-            this.video.autoplay = true;
-            this.video.style.display = 'none';
-            this.div.appendChild(this.video);
+         */
+         this.video = document.createElement('video');
+         this.video.autoplay = true;
+         this.video.style.display = 'none';
+         this.div.appendChild(this.video);
 
-            this.video.onplay = () => {
-               this.uploader.start(this.sessionId);
-               this.downloader.start(this.sessionId);
-            };
+         this.video.onplay = () => {
+            alert('playing video');
+            this.uploader.start(this.sessionId);
+            this.downloader.start(this.sessionId);
+         };
 
-            try {
+         try {
 
-               navigator.mediaDevices.getUserMedia(constraints)
-                  .then((stream) => {
-                     //alert('getUserMedia().then() ' + JSON.stringify(stream.getVideoTracks()[0].getSettings(), null, ' '));
-                     this.video.srcObject = stream;
-                  })
-                  .catch((reason) => {
-                     alert('video error: ' + reason);
-                  });
-            }
-            catch (err) {
-               alert('video error2: ' + err);
-            }
+            alert('getUserMedia: ' + JSON.stringify(constraints, null, ' '));
+            navigator.mediaDevices.getUserMedia(constraints)
+               .then((stream) => {
+                  //alert('getUserMedia().then() ' + JSON.stringify(stream.getVideoTracks()[0].getSettings(), null, ' '));
+                  alert('requesting video: ' + stream.getVideoTracks()[0].label);
+                  this.video.srcObject = stream;
+               })
+               .catch((reason) => {
+                  alert('video error: ' + reason);
+               });
+         }
+         catch (err) {
+            alert('video error2: ' + err);
          }
       }
       else {

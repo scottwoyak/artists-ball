@@ -51,6 +51,7 @@ export class Video {
                         let mediaTrack = stream.getVideoTracks()[0];
                         let constraints = mediaTrack.getConstraints();
                         let settings = mediaTrack.getSettings();
+
                         if (mediaTrack.getCapabilities) {
                            let capabilities = mediaTrack.getCapabilities(); // not supported by firefox
 
@@ -84,6 +85,7 @@ export class Video {
                            onFound(actual)
                         }
 
+                        // TODO if onFound throws, this is skipped
                         mediaTrack.stop();
                      })
                      .catch((err) => {
