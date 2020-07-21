@@ -2,7 +2,7 @@
 
 export interface ISession {
    name: string,
-   id: string,
+   sessionId: string,
 }
 
 export interface ISessions {
@@ -52,7 +52,10 @@ export class Squint {
             else {
                return response.json()
                   .then((obj) => {
-                     return obj.id;
+                     if (obj.sessionId === undefined) {
+                        throw 'Session ID not returned from server';
+                     }
+                     return obj.sessionId;
                   });
             }
          });

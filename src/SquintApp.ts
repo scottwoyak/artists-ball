@@ -214,7 +214,7 @@ export class SquintApp implements IApp {
    private updateList(value: ISessions) {
       this.viewListBox.clear();
       for (let i = 0; i < value.sessions.length; i++) {
-         this.viewListBox.addItem(value.sessions[i].name, value.sessions[i].id);
+         this.viewListBox.addItem(value.sessions[i].name, value.sessions[i].sessionId);
       }
       this.squint.listSessions(value.responseId)
          .then((value) => {
