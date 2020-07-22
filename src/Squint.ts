@@ -2,7 +2,7 @@
 
 export interface ISession {
    name: string,
-   sessionId: string,
+   id: string,
 }
 
 export interface ISessions {
@@ -21,14 +21,26 @@ export class Squint {
    static readonly url = 'https://squintserver-11278.nodechef.com/V1';
    //static readonly url = 'http://' + location.hostname + ':8080/V1'
 
+   private abortController = new AbortController();
+
+   public constructor() {
+      window.addEventListener('beforeunload', () => {
+         this.abortController.abort();
+      });
+   }
+
    public get(id: string): Promise<Blob> {
-      return fetch(Squint.url + '/sessions/' + id)
+
+      return fetch(Squint.url + '/sessions/' + id,
+         {
+            signal: this.abortController.signal
+         })
          .then(response => {
             if (response.status !== 200) {
                return Promise.reject(response.status + ': ' + response.statusText);
             }
             return response.blob();
-         });
+         })
    }
 
    public createSession(name: string): Promise<string> {
@@ -44,6 +56,7 @@ export class Squint {
                "Content-Type": "application/json"
             },
             body: JSON.stringify(json),
+            signal: this.abortController.signal,
          })
          .then((response) => {
             if (response.status != 200) {
@@ -65,7 +78,8 @@ export class Squint {
       return fetch(Squint.url + '/sessions/' + id,
          {
             method: 'post',
-            body: fd
+            body: fd,
+            signal: this.abortController.signal,
          })
          .then((response) => {
             if (response.status != 200) {
@@ -84,13 +98,14 @@ export class Squint {
       return fetch(url,
          {
             method: 'get',
+            signal: this.abortController.signal,
          })
          .then((response) => {
             if (response.status != 200) {
                return Promise.reject(response.status + ': ' + response.statusText);
             }
             else {
-               return response.json()
+               return response.json();
             }
          });
    }

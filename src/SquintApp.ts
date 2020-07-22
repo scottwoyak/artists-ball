@@ -6,7 +6,7 @@ import { Vec2 } from "./Vec";
 import { Video, IVideoResolution } from "./Video";
 import { Downloader } from "./Downloader";
 import { Uploader } from "./Uploader";
-import { getTimeStr, getSizeStr, isMobile, iOS } from "./Globals";
+import { getTimeStr, getSizeStr } from "./Globals";
 import { Squint, ISessions } from "./Squint";
 import { ListBox } from "./ListBox";
 import { ICtrl } from "./ICtrl";
@@ -34,8 +34,8 @@ export class SquintApp implements IApp {
       facingMode: '',
       deviceId: '',
    };
-   private downloader = new Downloader();
-   private uploader = new Uploader();
+   private downloader: Downloader;
+   private uploader: Uploader;
 
    private brightness: Slider;
    private contrast: Slider;
@@ -59,7 +59,11 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 7';
+      document.title += ' 9';
+      alert(document.title);
+
+      this.downloader = new Downloader(this.squint);
+      this.uploader = new Uploader(this.squint);
    }
 
    public create(div: HTMLDivElement) {
@@ -214,7 +218,7 @@ export class SquintApp implements IApp {
    private updateList(value: ISessions) {
       this.viewListBox.clear();
       for (let i = 0; i < value.sessions.length; i++) {
-         this.viewListBox.addItem(value.sessions[i].name, value.sessions[i].sessionId);
+         this.viewListBox.addItem(value.sessions[i].name, value.sessions[i].id);
       }
       this.squint.listSessions(value.responseId)
          .then((value) => {
@@ -336,28 +340,15 @@ export class SquintApp implements IApp {
       });
       this.cameraCtrls.push(this.resolution);
 
-      /*
-      cameraMenu.addRadiobutton(
-         {
-            label: '1000x1000',
-            oncheck: () => {
-               this.desired = { label: '1000x1000', width: 1000, height: 1000, facingMode: 'xxx', frameRate: 30, deviceId: undefined };
-               this.enableVideo(true);
-            },
-            group: 'CamerasGroup',
-         });
-
-      cameraMenu.addRadiobutton(
-         {
-            label: '2000x2000',
-            oncheck: () => {
-               this.desired = { label: '2000x2000', width: 2000, height: 2000, facingMode: 'xxx', frameRate: 30, deviceId: undefined };
-               this.enableVideo(true);
-            },
-            group: 'CamerasGroup',
-         });
-         */
-
+      cameraMenu.addItem('maximize camera', () => {
+         let stream = this.video.srcObject as MediaStream;
+         let track = stream.getVideoTracks()[0];
+         track.applyConstraints({
+            width: 10 * 1000,
+            height: 10 * 1000,
+         })
+            .catch((err) => alert('Failed applying constraints: ' + err));
+      })
 
       this.enableCameraCtrls(false);
 
@@ -365,6 +356,7 @@ export class SquintApp implements IApp {
 
       sessionMenu.addItem('Stop', () => {
          this.downloader.stop();
+         this.uploader.stop();
          this.enableVideo(false);
          this.showStartDialog();
 
@@ -377,13 +369,14 @@ export class SquintApp implements IApp {
 
    private onDownload(blob: Blob, downloadTime: number) {
 
+      // TODO text download is an error
       if (blob.type === 'text/plain') {
          blob.text()
             .then((txt) => {
-               console.log(txt);
+               debug(txt);
             })
             .catch((reason) => {
-               console.log('cannot retrieve text from blob: ' + reason);
+               debug('cannot retrieve text from blob: ' + reason);
             })
       }
       else {
@@ -395,31 +388,74 @@ export class SquintApp implements IApp {
             this.drawImg();
          }
          img.onerror = (reason) => {
-            console.log('cannot load image: ' + reason);
+            alert('cannot load image: ' + reason);
          }
          img.src = URL.createObjectURL(blob);
       }
    }
 
-   private killVideo() {
-      if (this.video) {
-         // Using the camera is not robust. Applying constraints to change things
-         // like which camera is in use only works sometimes. The most robust I can
-         // make it is to close the video element and create a new one.
-         let stream = this.video.srcObject as MediaStream;
-         stream.getTracks().forEach((track: MediaStreamTrack) => {
-            track.stop();
-         });
+   // version that reuses the Video element
+   private enableVideo(enable: boolean) {
 
+      this.uploader.stop();
+      this.stopTracks();
+      if (this.video) {
          this.video.pause();
          this.video.srcObject = null;
-         this.video.parentElement.removeChild(this.video);
          this.video.load();
-         this.video = null;
+      }
+
+      this.enableCameraCtrls(enable);
+
+      if (enable) {
+
+         if (!this.video) {
+            this.video = document.createElement('video');
+            this.video.autoplay = true;
+            this.video.style.display = 'none';
+            this.video.style.position = 'absolute';
+            this.div.appendChild(this.video);
+
+            this.video.onplay = () => {
+               //alert('playing video');
+               this.uploader.start(this.sessionId);
+               this.downloader.start(this.sessionId);
+            };
+         }
+
+         const constraints = {
+            video: {
+               //width: this.desired.width,
+               //height: this.desired.height,
+               //deviceId: this.desired.deviceId,
+               deviceId: { exact: this.desired.deviceId },
+               //frameRate: 30,
+            },
+         };
+
+         try {
+
+            //alert('getUserMedia: ' + JSON.stringify(constraints, null, ' '));
+            navigator.mediaDevices.getUserMedia(constraints)
+               .then((stream) => {
+                  //alert('requesting video: ' + stream.getVideoTracks()[0].label);
+                  this.video.srcObject = stream;
+               })
+               .catch((reason) => {
+                  alert('video error: ' + reason);
+               });
+         }
+         catch (err) {
+            alert('video error2: ' + err);
+         }
+      }
+      else {
+         this.uploader.stop();
+         this.downloader.stop();
       }
    }
 
-   private enableVideo(enable: boolean) {
+   private enableVideo2(enable: boolean) {
 
       this.enableCameraCtrls(enable);
 
@@ -458,14 +494,14 @@ export class SquintApp implements IApp {
          this.div.appendChild(this.video);
 
          this.video.onplay = () => {
-            alert('playing video');
+            //alert('playing video');
             this.uploader.start(this.sessionId);
             this.downloader.start(this.sessionId);
          };
 
          try {
 
-            alert('getUserMedia: ' + JSON.stringify(constraints, null, ' '));
+            //alert('getUserMedia: ' + JSON.stringify(constraints, null, ' '));
             navigator.mediaDevices.getUserMedia(constraints)
                .then((stream) => {
                   //alert('getUserMedia().then() ' + JSON.stringify(stream.getVideoTracks()[0].getSettings(), null, ' '));
@@ -485,6 +521,33 @@ export class SquintApp implements IApp {
          this.downloader.stop();
 
          this.killVideo();
+      }
+   }
+
+   private stopTracks() {
+      if (this.video && this.video.srcObject) {
+         // Using the camera is not robust. Applying constraints to change things
+         // like which camera is in use only works sometimes. The most robust I can
+         // make it is to close the video element and create a new one.
+         let stream = this.video.srcObject as MediaStream;
+         stream.getTracks().forEach((track: MediaStreamTrack) => {
+            track.stop();
+         });
+      }
+   }
+
+   private killVideo() {
+      if (this.video) {
+         // Using the camera is not robust. Applying constraints to change things
+         // like which camera is in use only works sometimes. The most robust I can
+         // make it is to close the video element and create a new one.
+         this.stopTracks();
+
+         this.video.pause();
+         this.video.srcObject = null;
+         this.video.parentElement.removeChild(this.video);
+         this.video.load();
+         this.video = null;
       }
    }
 

@@ -1,6 +1,7 @@
 import { Stopwatch } from "./Stopwatch";
 import { FPS } from "./FPS";
 import { Squint } from "./Squint";
+import { debug } from "./SquintApp";
 
 export type DataNeededHandler = () => Promise<Blob>;
 
@@ -11,11 +12,16 @@ export class Uploader {
 
    private running = false;
    private handle: number;
-   private squint = new Squint();
+   private squint: Squint;
    private id: string;
+
+   public constructor(squint: Squint) {
+      this.squint = squint;
+   }
 
    public start(id: string) {
       if (!this.running) {
+         //debug('starting uploader');
          this.id = id;
          this.handle = requestAnimationFrame(() => this.upload());
          this.running = true;
@@ -24,6 +30,7 @@ export class Uploader {
 
    public stop() {
       if (this.running) {
+         //debug('stopping uploader');
          cancelAnimationFrame(this.handle);
          this.running = false;
       }
@@ -38,7 +45,13 @@ export class Uploader {
       this.onDataNeeded()
          .then((blob: Blob) => {
             if (blob === null) {
-               return Promise.reject('Invalid Blob (null)');
+               debug('Cannot generate image from video: blob is null');
+
+               if (this.running) {
+                  this.handle = requestAnimationFrame(() => this.upload());
+               }
+
+               return;
             }
 
             //console.log('upload size: ' + blob.size / (1024 * 1024));
@@ -46,15 +59,17 @@ export class Uploader {
             let fd = new FormData();
             fd.append('image', blob);
 
-            // TODO limit to one call at a time
             let sw = new Stopwatch();
             this.squint.put(this.id, fd)
                .then(() => {
-                  console.log('upload time: ' + sw.elapsedMs);
+                  //console.log('upload time: ' + sw.elapsedMs);
                   this.uploadTime = sw.elapsedMs;
                })
                .catch((reason) => {
-                  console.log('Upload failure for [' + Squint.url + '] ' + reason);
+                  // TODO fix error message to match the full url
+                  if (reason.name != 'AbortError') {
+                     alert('Upload failure for [' + Squint.url + '] ' + reason);
+                  }
                })
                .finally(() => {
                   URL.revokeObjectURL(url);
@@ -62,6 +77,8 @@ export class Uploader {
                      this.handle = requestAnimationFrame(() => this.upload());
                   }
                });
-         })
+         }).catch((err) => {
+            debug('Cannot generate image from video: ' + err);
+         });
    }
 }
