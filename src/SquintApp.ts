@@ -62,6 +62,10 @@ export class SquintApp implements IApp {
       alert(document.title);
 
       this.downloader = new Downloader(this.squint);
+      this.downloader.onStop = () => {
+         this.enableVideo(false);
+         this.showStartDialog(true);
+      }
       this.uploader = new Uploader(this.squint);
    }
 
@@ -130,7 +134,6 @@ export class SquintApp implements IApp {
          id: 'ViewListBox'
       });
       this.viewListBox.onSelectedChanged = () => {
-         console.log('this.selected: ' + this.viewListBox.selected);
          goViewButton.disabled = (this.viewListBox.selected === null);
       }
 

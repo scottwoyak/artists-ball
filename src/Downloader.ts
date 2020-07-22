@@ -1,7 +1,6 @@
 import { Stopwatch } from "./Stopwatch";
 import { FPS } from "./FPS";
-import { Squint } from "./Squint";
-import { debug } from "./SquintApp";
+import { Squint, SquintError } from "./Squint";
 
 type DownloadHandler = (blob: Blob, downloadTime: number) => void;
 
@@ -13,6 +12,8 @@ export class Downloader {
    public running = false;
    private squint: Squint;
    private id: string;
+
+   public onStop: () => void;
 
    public constructor(squint: Squint) {
       this.squint = squint;
@@ -48,7 +49,23 @@ export class Downloader {
             }
          })
          .catch((reason) => {
-            if (reason.name != 'AbortError') {
+            if (reason.name === 'AbortError') {
+               return;
+            }
+            else if (reason instanceof SquintError) {
+               if (reason.status === 404) {
+                  alert('The Squint host camera has ended.')
+                  this.stop();
+                  if (this.onStop) {
+                     this.onStop();
+                  }
+               }
+               else {
+                  // TODO fix error message to match the full url
+                  alert('Download failure for [' + Squint.url + '] ' + reason);
+               }
+            }
+            else {
                // TODO fix error message to match the full url
                alert('Download failure for [' + Squint.url + '] ' + reason);
             }

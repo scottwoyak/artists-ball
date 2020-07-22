@@ -10,6 +10,20 @@ export interface ISessions {
    sessions: ISession[],
 }
 
+export class SquintError {
+   public readonly status: number;
+   public readonly statusText: string;
+
+   public constructor(response: Response) {
+      this.status = response.status;
+      this.statusText = response.statusText;
+   }
+
+   public toString() {
+      return this.status + ': ' + this.statusText;
+   }
+}
+
 export class Squint {
 
    //private host = 'https://woyaktest.ue.r.appspot.com/';
@@ -37,7 +51,7 @@ export class Squint {
          })
          .then(response => {
             if (response.status !== 200) {
-               return Promise.reject(response.status + ': ' + response.statusText);
+               return Promise.reject(new SquintError(response));
             }
             return response.blob();
          })
