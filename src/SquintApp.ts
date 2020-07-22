@@ -455,75 +455,6 @@ export class SquintApp implements IApp {
       }
    }
 
-   private enableVideo2(enable: boolean) {
-
-      this.enableCameraCtrls(enable);
-
-      if (enable) {
-
-         // it seems you have to fully kill the video to switch cameras. This
-         // set of APIs is not that robust it seems
-         this.killVideo();
-
-
-         const constraints = {
-            video: {
-               width: this.desired.width,
-               height: this.desired.height,
-               //width: { exact: this.desired.width },
-               //height: { exact: this.desired.height },
-               //deviceId: this.desired.deviceId,
-               deviceId: { exact: this.desired.deviceId },
-               //frameRate: 30,
-            }
-         };
-
-         /*
-         if (this.video) {
-            let stream = this.video.srcObject as MediaStream;
-            let track = stream.getVideoTracks()[0];
-            track.applyConstraints(constraints.video)
-               .catch((err) => {
-                  alert('Cannot change camera: ' + err);
-               })
-         }
-         */
-         this.video = document.createElement('video');
-         this.video.autoplay = true;
-         this.video.style.display = 'none';
-         this.div.appendChild(this.video);
-
-         this.video.onplay = () => {
-            //alert('playing video');
-            this.uploader.start(this.sessionId);
-            this.downloader.start(this.sessionId);
-         };
-
-         try {
-
-            //alert('getUserMedia: ' + JSON.stringify(constraints, null, ' '));
-            navigator.mediaDevices.getUserMedia(constraints)
-               .then((stream) => {
-                  //alert('getUserMedia().then() ' + JSON.stringify(stream.getVideoTracks()[0].getSettings(), null, ' '));
-                  alert('requesting video: ' + stream.getVideoTracks()[0].label);
-                  this.video.srcObject = stream;
-               })
-               .catch((reason) => {
-                  alert('video error: ' + reason);
-               });
-         }
-         catch (err) {
-            alert('video error2: ' + err);
-         }
-      }
-      else {
-         this.uploader.stop();
-         this.downloader.stop();
-
-         this.killVideo();
-      }
-   }
-
    private stopTracks() {
       if (this.video && this.video.srcObject) {
          // Using the camera is not robust. Applying constraints to change things
@@ -536,6 +467,7 @@ export class SquintApp implements IApp {
       }
    }
 
+   /*
    private killVideo() {
       if (this.video) {
          // Using the camera is not robust. Applying constraints to change things
@@ -550,6 +482,7 @@ export class SquintApp implements IApp {
          this.video = null;
       }
    }
+   */
 
    private takePicture(): Promise<Blob> {
       let canvas = document.createElement('canvas');
