@@ -10,6 +10,7 @@ import { getTimeStr, getSizeStr, iOS } from "./Globals";
 import { Squint, ISessions } from "./Squint";
 import { ListBox } from "./ListBox";
 import { ICtrl } from "./ICtrl";
+import 'webrtc-adapter';
 
 // TODO: 
 // - check into camera being in use
@@ -58,7 +59,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 14';
+      document.title += ' 15';
       let msg = document.title;
       if (iOS()) {
          msg += '. Running on Apple';
