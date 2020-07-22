@@ -58,7 +58,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 11';
+      document.title += ' 12';
       let msg = document.title;
       if (iOS()) {
          msg += '. Running on Apple';
@@ -430,8 +430,10 @@ export class SquintApp implements IApp {
             video: {
                //width: this.desired.width,
                //height: this.desired.height,
-               width: iOS() ? undefined : 10 * 1000,
-               height: iOS() ? undefined : 10 * 1000,
+               //width: iOS() ? undefined : 10 * 1000,
+               //height: iOS() ? undefined : 10 * 1000,
+               width: 3088,
+               height: 2320,
                //deviceId: this.desired.deviceId,
                deviceId: { exact: this.desired.deviceId },
                //frameRate: 30,
@@ -442,6 +444,7 @@ export class SquintApp implements IApp {
 
             navigator.mediaDevices.getUserMedia(constraints)
                .then((stream) => {
+                  /*
                   if (iOS()) {
                      let track = stream.getVideoTracks()[0];
                      let settings = track.getSettings();
@@ -462,8 +465,9 @@ export class SquintApp implements IApp {
                      }
                   }
                   else {
-                     this.video.srcObject = stream;
                   }
+                  */
+                  this.video.srcObject = stream;
 
                })
                .catch((reason) => {
