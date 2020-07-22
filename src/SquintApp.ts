@@ -434,6 +434,8 @@ export class SquintApp implements IApp {
             video: {
                //width: this.desired.width,
                //height: this.desired.height,
+               width: 10 * 1000,
+               height: 10 * 1000,
                //deviceId: this.desired.deviceId,
                deviceId: { exact: this.desired.deviceId },
                //frameRate: 30,
