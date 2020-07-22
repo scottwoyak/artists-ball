@@ -17,6 +17,7 @@ const STYLE_LIST_BOX_ITEM_SELECTED = 'ListBoxItemSelected';
 export class ListBox<T = any> implements ICtrl {
    private box: HTMLDivElement;
    private items: IListBoxItem<T>[] = [];
+   public onSelectedChanged: () => void;
 
    public get selected(): T {
 
@@ -53,32 +54,56 @@ export class ListBox<T = any> implements ICtrl {
    }
 
    public addItem(label: string, userData?: any, id?: string) {
+      let oldSelected = this.selected;
+
       let item = document.createElement('div');
       item.id = id ?? undefined;
       item.className = 'ListBoxItem';
       item.innerText = label;
       this.box.appendChild(item);
 
-      if (this.selected === null) {
-         item.classList.add(STYLE_LIST_BOX_ITEM_SELECTED);
-      }
-
       item.onclick = () => {
+         let oldSelected = this.selected;
+
          for (let i = 0; i < this.items.length; i++) {
             this.items[i].div.classList.remove(STYLE_LIST_BOX_ITEM_SELECTED);
          }
          item.classList.toggle(STYLE_LIST_BOX_ITEM_SELECTED);
+
+         if (oldSelected !== this.selected) {
+            if (this.onSelectedChanged) {
+               this.onSelectedChanged();
+            }
+         }
       }
 
       this.items.push({
          div: item,
          userData: userData,
       });
+
+      if (this.selected === null) {
+         item.classList.add(STYLE_LIST_BOX_ITEM_SELECTED);
+      }
+
+      if (oldSelected !== this.selected) {
+         if (this.onSelectedChanged) {
+            this.onSelectedChanged();
+         }
+      }
    }
 
    public clear() {
+      let oldSelected = this.selected;
+
       this.box.innerHTML = '';
       this.items = [];
+
+      if (oldSelected !== this.selected) {
+         if (this.onSelectedChanged) {
+            this.onSelectedChanged();
+         }
+      }
    }
 
    public refresh() {

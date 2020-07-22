@@ -12,7 +12,6 @@ import { ListBox } from "./ListBox";
 import { ICtrl } from "./ICtrl";
 
 // TODO: 
-// - disable camera radio buttons - update styles
 // - check into camera being in use
 
 export function debug(msg: string): void {
@@ -59,7 +58,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 9';
+      document.title += ' 10';
       alert(document.title);
 
       this.downloader = new Downloader(this.squint);
@@ -130,6 +129,10 @@ export class SquintApp implements IApp {
          viewDiv, {
          id: 'ViewListBox'
       });
+      this.viewListBox.onSelectedChanged = () => {
+         console.log('this.selected: ' + this.viewListBox.selected);
+         goViewButton.disabled = (this.viewListBox.selected === null);
+      }
 
       this.squint.listSessions()
          .then((value) => {
@@ -140,12 +143,13 @@ export class SquintApp implements IApp {
       buttonDiv.className = 'ButtonDiv';
       viewDiv.appendChild(buttonDiv);
 
-      let viewButton = document.createElement('button');
-      viewButton.id = 'ViewButton';
-      viewButton.innerText = 'Go';
-      buttonDiv.appendChild(viewButton);
+      let goViewButton = document.createElement('button');
+      goViewButton.id = 'ViewButton';
+      goViewButton.innerText = 'Go';
+      goViewButton.disabled = true;
+      buttonDiv.appendChild(goViewButton);
 
-      viewButton.onclick = () => {
+      goViewButton.onclick = () => {
          this.showStartDialog(false);
          this.downloader.start(this.viewListBox.selected);
       }
@@ -187,20 +191,20 @@ export class SquintApp implements IApp {
       nameInputText.placeholder = 'Your Name';
       cameraNameDiv.appendChild(nameInputText);
       nameInputText.oninput = () => {
-         okButton.disabled = (nameInputText.value.trim().length === 0);
+         goHostButton.disabled = (nameInputText.value.trim().length === 0);
       };
 
       buttonDiv = document.createElement('div');
       buttonDiv.classList.add('ButtonDiv', 'NoStretch');
       hostPanelDiv.appendChild(buttonDiv);
 
-      let okButton = document.createElement('button');
-      okButton.id = 'HostOkButton';
-      okButton.innerText = 'Go';
-      okButton.disabled = true;
-      buttonDiv.appendChild(okButton);
+      let goHostButton = document.createElement('button');
+      goHostButton.id = 'HostOkButton';
+      goHostButton.innerText = 'Go';
+      goHostButton.disabled = true;
+      buttonDiv.appendChild(goHostButton);
 
-      okButton.onclick = () => {
+      goHostButton.onclick = () => {
          this.squint.createSession(nameInputText.value)
             .then((id) => {
                this.sessionId = id;
