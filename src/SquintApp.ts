@@ -6,7 +6,7 @@ import { Vec2 } from "./Vec";
 import { Video, IVideoResolution } from "./Video";
 import { Downloader } from "./Downloader";
 import { Uploader } from "./Uploader";
-import { getTimeStr, getSizeStr } from "./Globals";
+import { getTimeStr, getSizeStr, iOS } from "./Globals";
 import { Squint, ISessions } from "./Squint";
 import { ListBox } from "./ListBox";
 import { ICtrl } from "./ICtrl";
@@ -58,8 +58,15 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 10';
-      alert(document.title);
+      document.title += ' 11';
+      let msg = document.title;
+      if (iOS()) {
+         msg += '. Running on Apple';
+      }
+      msg += '\nuserAgent: ' + navigator.userAgent;
+      msg += '\nplatform: ' + navigator.platform;
+
+      alert(msg);
 
       this.downloader = new Downloader(this.squint);
       this.downloader.onStop = () => {
@@ -347,16 +354,6 @@ export class SquintApp implements IApp {
       });
       this.cameraCtrls.push(this.resolution);
 
-      cameraMenu.addItem('maximize camera', () => {
-         let stream = this.video.srcObject as MediaStream;
-         let track = stream.getVideoTracks()[0];
-         track.applyConstraints({
-            width: 10 * 1000,
-            height: 10 * 1000,
-         })
-            .catch((err) => alert('Failed applying constraints: ' + err));
-      })
-
       this.enableCameraCtrls(false);
 
       let sessionMenu = menubar.addSubMenu('Session');
@@ -424,7 +421,6 @@ export class SquintApp implements IApp {
             this.div.appendChild(this.video);
 
             this.video.onplay = () => {
-               //alert('playing video');
                this.uploader.start(this.sessionId);
                this.downloader.start(this.sessionId);
             };
@@ -434,8 +430,8 @@ export class SquintApp implements IApp {
             video: {
                //width: this.desired.width,
                //height: this.desired.height,
-               width: 10 * 1000,
-               height: 10 * 1000,
+               width: iOS() ? undefined : 10 * 1000,
+               height: iOS() ? undefined : 10 * 1000,
                //deviceId: this.desired.deviceId,
                deviceId: { exact: this.desired.deviceId },
                //frameRate: 30,
@@ -444,11 +440,31 @@ export class SquintApp implements IApp {
 
          try {
 
-            //alert('getUserMedia: ' + JSON.stringify(constraints, null, ' '));
             navigator.mediaDevices.getUserMedia(constraints)
                .then((stream) => {
-                  //alert('requesting video: ' + stream.getVideoTracks()[0].label);
-                  this.video.srcObject = stream;
+                  if (iOS()) {
+                     let track = stream.getVideoTracks()[0];
+                     let settings = track.getSettings();
+                     if (track.getConstraints) {
+                        let capabilities = track.getCapabilities();
+                        constraints.video.width = capabilities.width.max;
+                        constraints.video.height = capabilities.height.max;
+
+                        let msg = 'trying to improve from ' + settings.width + 'x' + settings.height + ' to ' + capabilities.width.max + 'x' + capabilities.height.max;
+                        alert(msg);
+                        track.applyConstraints(constraints.video)
+                           .catch((err) => {
+                              debug('Failed to acquire highest resolution camera: ' + err);
+                           })
+                           .finally(() => {
+                              this.video.srcObject = stream;
+                           });
+                     }
+                  }
+                  else {
+                     this.video.srcObject = stream;
+                  }
+
                })
                .catch((reason) => {
                   alert('video error: ' + reason);
