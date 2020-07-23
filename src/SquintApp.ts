@@ -12,6 +12,8 @@ import { ListBox } from "./ListBox";
 import { ICtrl } from "./ICtrl";
 import 'webrtc-adapter';
 
+let V = 17;
+
 // TODO: 
 // - check into camera being in use
 
@@ -59,7 +61,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 16';
+      document.title += (' ' + V);
       let msg = document.title;
       if (iOS()) {
          msg += '. Running on Apple';
@@ -310,14 +312,12 @@ export class SquintApp implements IApp {
 
       let firstItem = true;
       Video.getResolutions((resolution) => {
-         /*
          alert('found camera:\n' +
             'width: ' + resolution.width + '\n' +
             'height: ' + resolution.height + '\n' +
             'deviceId: ' + resolution.deviceId + '\n' +
             'frameRate: ' + resolution.frameRate + '\n' +
             'facingMode: ' + resolution.facingMode);
-            */
 
          let radioButton = cameraMenu.addRadiobutton(
             {
@@ -495,7 +495,7 @@ export class SquintApp implements IApp {
 
          try {
 
-            console.log('---getUserMedia()');
+            console.log('---getUserMedia() ' + JSON.stringify(constraints, null, ' '));
             navigator.mediaDevices.getUserMedia(constraints)
                .then((stream) => {
                   console.log('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
