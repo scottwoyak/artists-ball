@@ -12,7 +12,7 @@ import { ListBox } from "./ListBox";
 import { ICtrl } from "./ICtrl";
 import 'webrtc-adapter';
 
-let V = 17;
+let V = 18;
 
 // TODO: 
 // - check into camera being in use
@@ -311,7 +311,7 @@ export class SquintApp implements IApp {
       let cameraMenu = menubar.addSubMenu('Camera');
 
       let firstItem = true;
-      Video.getResolutions((resolution) => {
+      Video.getCameras((resolution) => {
          alert('found camera:\n' +
             'width: ' + resolution.width + '\n' +
             'height: ' + resolution.height + '\n' +
@@ -488,7 +488,7 @@ export class SquintApp implements IApp {
                //width: { ideal: 10 * 1000 },
                //height: { ideal: 10 * 1000 },
                //deviceId: this.desired.deviceId,
-               deviceId: { exact: this.desired.deviceId },
+               deviceId: (this.desired && this.desired.deviceId) ? { exact: this.desired.deviceId } : undefined,
                //frameRate: 30,
             },
          };
