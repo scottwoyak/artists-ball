@@ -59,7 +59,7 @@ export class SquintApp implements IApp {
    private startDialog: HTMLDivElement;
 
    public constructor() {
-      document.title += ' 15';
+      document.title += ' 16';
       let msg = document.title;
       if (iOS()) {
          msg += '. Running on Apple';
@@ -218,9 +218,9 @@ export class SquintApp implements IApp {
       goHostButton.onclick = () => {
          this.squint.createSession(nameInputText.value)
             .then((id) => {
+               this.showStartDialog(false);
                this.sessionId = id;
                this.enableVideo(true);
-               this.showStartDialog(false);
             })
             .catch((err) => {
                alert('could not create session: ' + err);
@@ -337,6 +337,25 @@ export class SquintApp implements IApp {
          this.cameraCtrls.push(radioButton);
       })
 
+      let button = cameraMenu.addItem('Capabilities...', () => {
+         if (this.video && this.video.srcObject) {
+            let stream = this.video.srcObject as MediaStream;
+            let track = stream.getVideoTracks()[0];
+            if (track.getCapabilities) {
+               let capabilities = track.getCapabilities();
+               let msg = 'Camera Capabilities:\n';
+               for (let key in capabilities) {
+                  if (key === 'deviceId' || key === 'groupId') {
+                     continue;
+                  }
+                  msg += this.capabilityToString(capabilities, key) + '\n';
+               }
+               alert(msg);
+               console.log(JSON.stringify(capabilities, null, ' '));
+            }
+         }
+      })
+
       this.quality = cameraMenu.addSlider({
          label: 'Quality',
          min: 0.1,
@@ -371,6 +390,39 @@ export class SquintApp implements IApp {
 
    }
 
+   private numToString(num: number): string {
+      if (Number.isInteger(num)) {
+         return num.toString();
+      }
+      else {
+         return num.toFixed(3);
+      }
+   }
+
+   private capabilityToString(capabilities: MediaTrackCapabilities, name: string): string {
+      let obj = (<any>capabilities)[name];
+      let str = name + ': ';
+      if (typeof obj === 'object') {
+         if (obj['min'] !== undefined) {
+            str += this.numToString(obj['min'] as number) + ' to ' + this.numToString(obj['max'] as number);
+         }
+         else if (obj instanceof Array) {
+            for (let i = 0; i < obj.length; i++) {
+               if (i > 0) {
+                  str += ', ';
+               }
+               str += JSON.stringify(obj[i]);
+            }
+         }
+         else {
+            str += JSON.stringify(obj);
+         }
+      }
+      else {
+         str += JSON.stringify(obj);
+      }
+      return str;
+   }
 
    private onDownload(blob: Blob, downloadTime: number) {
 
@@ -433,8 +485,8 @@ export class SquintApp implements IApp {
                //height: this.desired.height,
                //width: iOS() ? undefined : 10 * 1000,
                //height: iOS() ? undefined : 10 * 1000,
-               width: { ideal: 10 * 1000 },
-               height: { ideal: 10 * 1000 },
+               //width: { ideal: 10 * 1000 },
+               //height: { ideal: 10 * 1000 },
                //deviceId: this.desired.deviceId,
                deviceId: { exact: this.desired.deviceId },
                //frameRate: 30,
@@ -443,35 +495,51 @@ export class SquintApp implements IApp {
 
          try {
 
+            console.log('---getUserMedia()');
             navigator.mediaDevices.getUserMedia(constraints)
                .then((stream) => {
-                  /*
-                  if (iOS()) {
-                     let track = stream.getVideoTracks()[0];
-                     let settings = track.getSettings();
-                     if (track.getConstraints) {
-                        let capabilities = track.getCapabilities();
-                        constraints.video.width = capabilities.width.max;
-                        constraints.video.height = capabilities.height.max;
+                  console.log('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
+                  //                  if (iOS()) {
+                  let track = stream.getVideoTracks()[0];
+                  let settings = track.getSettings();
+                  if (track.getConstraints) {
+                     let capabilities = track.getCapabilities();
 
-                        let msg = 'trying to improve from ' + settings.width + 'x' + settings.height + ' to ' + capabilities.width.max + 'x' + capabilities.height.max;
-                        alert(msg);
-                        track.applyConstraints(constraints.video)
-                           .catch((err) => {
-                              debug('Failed to acquire highest resolution camera: ' + err);
-                           })
-                           .finally(() => {
-                              this.video.srcObject = stream;
-                           });
-                     }
+                     const constraints = {
+                        video: {
+                           width: capabilities.width.max,
+                           height: capabilities.height.max,
+                           //width: this.desired.width,
+                           //height: this.desired.height,
+                           //width: iOS() ? undefined : 10 * 1000,
+                           //height: iOS() ? undefined : 10 * 1000,
+                           //width: { ideal: 10 * 1000 },
+                           //height: { ideal: 10 * 1000 },
+                           //deviceId: this.desired.deviceId,
+                           deviceId: { exact: this.desired.deviceId },
+                           //frameRate: 30,
+                        }
+                     };
+
+                     let msg = 'trying to improve from ' + settings.width + 'x' + settings.height + ' to ' + capabilities.width.max + 'x' + capabilities.height.max;
+                     alert(msg);
+                     track.applyConstraints(constraints.video)
+                        .catch((err) => {
+                           debug('Failed to acquire highest resolution camera: ' + err);
+                        })
+                        .finally(() => {
+                           console.log('---setting video.srcObject to upgraded stream: ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
+                           this.video.srcObject = stream;
+                        });
                   }
-                  else {
-                  }
-                  */
+                  //}
+
+
                   if (stream === null) {
                      alert('Could not create video stream');
                   }
                   else {
+                     console.log('---setting video.srcObject');
                      this.video.srcObject = stream;
                   }
                })
