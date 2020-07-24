@@ -12,7 +12,7 @@ import { ListBox } from "./ListBox";
 import { ICtrl } from "./ICtrl";
 import 'webrtc-adapter';
 
-let V = 18;
+let V = 19;
 
 // TODO: 
 // - check into camera being in use
@@ -312,12 +312,7 @@ export class SquintApp implements IApp {
 
       let firstItem = true;
       Video.getCameras((resolution) => {
-         alert('found camera:\n' +
-            'width: ' + resolution.width + '\n' +
-            'height: ' + resolution.height + '\n' +
-            'deviceId: ' + resolution.deviceId + '\n' +
-            'frameRate: ' + resolution.frameRate + '\n' +
-            'facingMode: ' + resolution.facingMode);
+         alert('found camera: ' + resolution.deviceId);
 
          let radioButton = cameraMenu.addRadiobutton(
             {
@@ -469,8 +464,15 @@ export class SquintApp implements IApp {
          if (!this.video) {
             this.video = document.createElement('video');
             this.video.autoplay = true;
-            this.video.style.display = 'none';
+            //this.video.style.display = 'none';
+
             this.video.style.position = 'absolute';
+            this.video.style.left = '10px';
+            this.video.style.top = '50px';
+            this.video.style.width = '100px';
+            this.video.style.height = '100px';
+            this.video.style.border = 'solid 1px';
+
             this.div.appendChild(this.video);
 
             this.video.onplay = () => {
@@ -485,8 +487,8 @@ export class SquintApp implements IApp {
                //height: this.desired.height,
                //width: iOS() ? undefined : 10 * 1000,
                //height: iOS() ? undefined : 10 * 1000,
-               //width: { ideal: 10 * 1000 },
-               //height: { ideal: 10 * 1000 },
+               width: { ideal: 10 * 1000 },
+               height: { ideal: 10 * 1000 },
                //deviceId: this.desired.deviceId,
                deviceId: (this.desired && this.desired.deviceId) ? { exact: this.desired.deviceId } : undefined,
                //frameRate: 30,
@@ -502,6 +504,7 @@ export class SquintApp implements IApp {
                   //                  if (iOS()) {
                   let track = stream.getVideoTracks()[0];
                   let settings = track.getSettings();
+                  /*
                   if (track.getConstraints) {
                      let capabilities = track.getCapabilities();
 
@@ -532,6 +535,7 @@ export class SquintApp implements IApp {
                            this.video.srcObject = stream;
                         });
                   }
+                  */
                   //}
 
 
