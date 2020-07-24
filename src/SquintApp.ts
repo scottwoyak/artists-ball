@@ -463,15 +463,8 @@ export class SquintApp implements IApp {
 
          if (!this.video) {
             this.video = document.createElement('video');
+            this.video.id = 'Video';
             this.video.autoplay = true;
-            //this.video.style.display = 'none';
-
-            this.video.style.position = 'absolute';
-            this.video.style.left = '10px';
-            this.video.style.top = '50px';
-            this.video.style.width = '100px';
-            this.video.style.height = '100px';
-            this.video.style.border = 'solid 1px';
 
             this.div.appendChild(this.video);
 

@@ -37,11 +37,6 @@
   background: linear-gradient(135deg, lightgray, lightgray);
 }
 
-#SquintApp #VideoDiv .SliderDiv {
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-
 #SquintApp .CheckboxDiv {
   padding-top: 5px;
   padding-bottom: 5px;
@@ -144,6 +139,16 @@
   flex: 0 0 auto;
 }
 
+#SquintApp #Video {
+  /*display: 'none';*/
+  position: absolute;
+  left: 10px;
+  top: 50px;
+  width: 100px;
+  height: 100px;
+  border: solid 1px;
+}
+
 @media (orientation: landscape) {
   #SquintApp #DialogDiv {
     flex-direction: row;
@@ -157,6 +162,12 @@
 }
 
 @media only screen and (max-device-width: 800px) {
+  #SquintApp #Video {
+    top: 100px;
+    width: 200px;
+    height: 200px;
+  }
+
   #SquintApp #Panel {
     flex: 0 0 300px;
   }
