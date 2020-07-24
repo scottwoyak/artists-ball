@@ -20,11 +20,11 @@ export class Video {
                let device = devices[i];
                if (device.kind === 'videoinput') {
                   count++;
-                  str += device.deviceId + ': ' + device.label + '\n';
+                  str += '"' + device.deviceId + '": ' + device.label + '\n';
                }
             }
             str = count + ' cameras found.\n' + str;
-            console.log('enumerateDevices()\n' + str);
+            debug('enumerateDevices()\n' + str);
 
             let cameraCount = 1;
             for (let i = 0; i < devices.length; i++) {

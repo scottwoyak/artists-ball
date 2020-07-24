@@ -12,7 +12,7 @@ import { ListBox } from "./ListBox";
 import { ICtrl } from "./ICtrl";
 import 'webrtc-adapter';
 
-let V = 19;
+let V = 20;
 
 // TODO: 
 // - check into camera being in use
@@ -59,6 +59,7 @@ export class SquintApp implements IApp {
    private sessionId: string;
 
    private startDialog: HTMLDivElement;
+   private sessionNameInput: HTMLInputElement;
 
    public constructor() {
       document.title += (' ' + V);
@@ -73,7 +74,6 @@ export class SquintApp implements IApp {
 
       this.downloader = new Downloader(this.squint);
       this.downloader.onStop = () => {
-         this.enableVideo(false);
          this.showStartDialog(true);
       }
       this.uploader = new Uploader(this.squint);
@@ -92,6 +92,28 @@ export class SquintApp implements IApp {
       this.canvas = document.createElement('canvas');
       this.canvas.id = 'Canvas';
       this.div.appendChild(this.canvas);
+
+      this.video = document.createElement('video');
+      this.video.id = 'Video';
+      this.video.autoplay = true;
+      this.div.appendChild(this.video);
+      this.video.style.display = 'none';
+
+      this.video.onplay = () => {
+         this.squint.createSession(this.sessionNameInput.value)
+            .then((id) => {
+               this.sessionId = id;
+
+               // TODO can't start these until both the session is available and the video is ready
+               this.uploader.start(this.sessionId);
+               this.downloader.start(this.sessionId);
+            })
+            .catch((err) => {
+               alert('could not create session: ' + err);
+               this.showStartDialog(true);
+               this.enableVideo(false);
+            });
+      }
 
       this.downloader.onDownload = (blob, downloadTime) => this.onDownload(blob, downloadTime);
 
@@ -198,13 +220,13 @@ export class SquintApp implements IApp {
       nameLabel.htmlFor = 'NameInputText';
       cameraNameDiv.appendChild(nameLabel);
 
-      let nameInputText = document.createElement('input');
-      nameInputText.type = 'text';
-      nameInputText.id = 'NameInputText';
-      nameInputText.placeholder = 'Your Name';
-      cameraNameDiv.appendChild(nameInputText);
-      nameInputText.oninput = () => {
-         goHostButton.disabled = (nameInputText.value.trim().length === 0);
+      this.sessionNameInput = document.createElement('input');
+      this.sessionNameInput.type = 'text';
+      this.sessionNameInput.id = 'NameInputText';
+      this.sessionNameInput.placeholder = 'Your Name';
+      cameraNameDiv.appendChild(this.sessionNameInput);
+      this.sessionNameInput.oninput = () => {
+         goHostButton.disabled = (this.sessionNameInput.value.trim().length === 0);
       };
 
       buttonDiv = document.createElement('div');
@@ -218,15 +240,8 @@ export class SquintApp implements IApp {
       buttonDiv.appendChild(goHostButton);
 
       goHostButton.onclick = () => {
-         this.squint.createSession(nameInputText.value)
-            .then((id) => {
-               this.showStartDialog(false);
-               this.sessionId = id;
-               this.enableVideo(true);
-            })
-            .catch((err) => {
-               alert('could not create session: ' + err);
-            });
+         this.showStartDialog(false);
+         this.enableVideo(true);
       }
 
       return backgroundDiv
@@ -312,7 +327,6 @@ export class SquintApp implements IApp {
 
       let firstItem = true;
       Video.getCameras((resolution) => {
-         alert('found camera: ' + resolution.deviceId);
 
          let radioButton = cameraMenu.addRadiobutton(
             {
@@ -333,7 +347,7 @@ export class SquintApp implements IApp {
       })
 
       let button = cameraMenu.addItem('Capabilities...', () => {
-         if (this.video && this.video.srcObject) {
+         if (this.video.srcObject) {
             let stream = this.video.srcObject as MediaStream;
             let track = stream.getVideoTracks()[0];
             if (track.getCapabilities) {
@@ -449,44 +463,50 @@ export class SquintApp implements IApp {
    // version that reuses the Video element
    private enableVideo(enable: boolean) {
 
+      // stop the last video
       this.uploader.stop();
       this.stopTracks();
-      if (this.video) {
-         this.video.pause();
-         this.video.srcObject = null;
-         this.video.load();
-      }
+      this.video.pause();
+      this.video.srcObject = null;
+      this.video.load();
 
       this.enableCameraCtrls(enable);
 
       if (enable) {
 
-         if (!this.video) {
-            this.video = document.createElement('video');
-            this.video.id = 'Video';
-            this.video.autoplay = true;
+         this.video.style.display = 'block';
 
-            this.div.appendChild(this.video);
-
-            this.video.onplay = () => {
-               this.uploader.start(this.sessionId);
-               this.downloader.start(this.sessionId);
-            };
+         let constraints: any;
+         if (this.desired) {
+            if (this.desired.deviceId && this.desired.deviceId.trim().length > 0) {
+               constraints = {
+                  video: {
+                     //width: this.desired.width,
+                     //height: this.desired.height,
+                     //width: iOS() ? undefined : 10 * 1000,
+                     //height: iOS() ? undefined : 10 * 1000,
+                     width: { ideal: 10 * 1000 },
+                     height: { ideal: 10 * 1000 },
+                     //deviceId: this.desired.deviceId,
+                     deviceId: (this.desired && this.desired.deviceId) ? { exact: this.desired.deviceId } : undefined,
+                     //frameRate: 30,
+                  },
+               };
+            }
+            else {
+               constraints = {
+                  video: {
+                     width: { ideal: 10 * 1000 },
+                     height: { ideal: 10 * 1000 },
+                  },
+               };
+            }
          }
-
-         const constraints = {
-            video: {
-               //width: this.desired.width,
-               //height: this.desired.height,
-               //width: iOS() ? undefined : 10 * 1000,
-               //height: iOS() ? undefined : 10 * 1000,
-               width: { ideal: 10 * 1000 },
-               height: { ideal: 10 * 1000 },
-               //deviceId: this.desired.deviceId,
-               deviceId: (this.desired && this.desired.deviceId) ? { exact: this.desired.deviceId } : undefined,
-               //frameRate: 30,
-            },
-         };
+         else {
+            constraints = {
+               video: true,
+            }
+         }
 
          try {
 
@@ -536,7 +556,7 @@ export class SquintApp implements IApp {
                      alert('Could not create video stream');
                   }
                   else {
-                     console.log('---setting video.srcObject');
+                     this.updateVideoSize(settings.width, settings.height);
                      this.video.srcObject = stream;
                   }
                })
@@ -551,11 +571,12 @@ export class SquintApp implements IApp {
       else {
          this.uploader.stop();
          this.downloader.stop();
+         this.video.style.display = 'none';
       }
    }
 
    private stopTracks() {
-      if (this.video && this.video.srcObject) {
+      if (this.video.srcObject) {
          // Using the camera is not robust. Applying constraints to change things
          // like which camera is in use only works sometimes. The most robust I can
          // make it is to close the video element and create a new one.
@@ -565,23 +586,6 @@ export class SquintApp implements IApp {
          });
       }
    }
-
-   /*
-   private killVideo() {
-      if (this.video) {
-         // Using the camera is not robust. Applying constraints to change things
-         // like which camera is in use only works sometimes. The most robust I can
-         // make it is to close the video element and create a new one.
-         this.stopTracks();
-
-         this.video.pause();
-         this.video.srcObject = null;
-         this.video.parentElement.removeChild(this.video);
-         this.video.load();
-         this.video = null;
-      }
-   }
-   */
 
    private takePicture(): Promise<Blob> {
       let canvas = document.createElement('canvas');
@@ -601,6 +605,20 @@ export class SquintApp implements IApp {
 
    private onResize() {
       this.updateSizes();
+   }
+
+   private updateVideoSize(videoWidth: number, videoHeight: number) {
+      if (getComputedStyle(this.video).display !== 'none') {
+         let videoSize = Math.max(this.video.clientWidth, this.video.clientHeight);
+         if (videoWidth > videoHeight) {
+            this.video.style.width = videoSize + 'px';
+            this.video.style.height = (videoSize * videoHeight / videoWidth) + 'px';
+         }
+         else {
+            this.video.style.height = videoSize + 'px';
+            this.video.style.width = (videoSize * videoWidth / videoHeight) + 'px';
+         }
+      }
    }
 
    private updateSizes() {
