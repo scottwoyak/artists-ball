@@ -12,7 +12,7 @@ import { iOS, getTimeStr, getSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 
-let V = 26;
+let V = 27;
 
 // TODO: 
 // - check into camera being in us
@@ -114,6 +114,7 @@ export class SquintApp implements IApp {
       this.video = document.createElement('video');
       this.video.id = 'Video';
       this.video.autoplay = true;
+      (<any>this.video).playsinline = true;
       this.video.onerror = (err) => {
          alert('video.onerror(): ' + err);
       }
@@ -541,6 +542,7 @@ export class SquintApp implements IApp {
                   let track = stream.getVideoTracks()[0];
                   let settings = track.getSettings();
                   this.updateVideoSize(settings.width, settings.height);
+                  debug('setting video.srcObject to ' + stream);
                   this.video.srcObject = stream;
                }
             })
