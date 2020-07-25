@@ -140,7 +140,7 @@
 }
 
 #SquintApp #Video {
-  /*display: 'none';*/
+  display: "none";
   position: absolute;
   left: 10px;
   top: 50px;
@@ -165,8 +165,8 @@
 @media only screen and (max-device-width: 800px) {
   #SquintApp #Video {
     top: 100px;
-    width: 200px;
-    height: 200px;
+    width: 400px;
+    height: 400px;
   }
 
   #SquintApp #Panel {

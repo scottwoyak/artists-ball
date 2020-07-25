@@ -12,7 +12,7 @@ import { ListBox } from "./ListBox";
 import { ICtrl } from "./ICtrl";
 import 'webrtc-adapter';
 
-let V = 20;
+let V = 21;
 
 // TODO: 
 // - check into camera being in use
@@ -96,23 +96,28 @@ export class SquintApp implements IApp {
       this.video = document.createElement('video');
       this.video.id = 'Video';
       this.video.autoplay = true;
+      this.video.onerror = (err) => {
+         alert('video.onerror(): ' + err);
+      }
       this.div.appendChild(this.video);
       this.video.style.display = 'none';
 
       this.video.onplay = () => {
-         this.squint.createSession(this.sessionNameInput.value)
-            .then((id) => {
-               this.sessionId = id;
+         if (!this.sessionId) {
+            this.squint.createSession(this.sessionNameInput.value)
+               .then((id) => {
+                  this.sessionId = id;
 
-               // TODO can't start these until both the session is available and the video is ready
-               this.uploader.start(this.sessionId);
-               this.downloader.start(this.sessionId);
-            })
-            .catch((err) => {
-               alert('could not create session: ' + err);
-               this.showStartDialog(true);
-               this.enableVideo(false);
-            });
+                  // TODO can't start these until both the session is available and the video is ready
+                  this.uploader.start(this.sessionId);
+                  this.downloader.start(this.sessionId);
+               })
+               .catch((err) => {
+                  alert('could not create session: ' + err);
+                  this.showStartDialog(true);
+                  this.enableVideo(false);
+               });
+         }
       }
 
       this.downloader.onDownload = (blob, downloadTime) => this.onDownload(blob, downloadTime);
@@ -460,117 +465,71 @@ export class SquintApp implements IApp {
       }
    }
 
-   // version that reuses the Video element
+   private setConstraints() {
+
+      try {
+
+         let constraints: any;
+         if (this.desired.deviceId && this.desired.deviceId.trim().length > 0) {
+            constraints = {
+               video: {
+                  width: { ideal: 10 * 1000 },
+                  height: { ideal: 10 * 1000 },
+                  deviceId: (this.desired && this.desired.deviceId) ? { exact: this.desired.deviceId } : undefined,
+               }
+            };
+         }
+         else {
+            debug('no device id, falling back to any camera');
+            constraints = {
+               video: true,
+            };
+         }
+
+         console.log('---getUserMedia() ' + JSON.stringify(constraints, null, ' '));
+         navigator.mediaDevices.getUserMedia(constraints)
+            .then((stream) => {
+               console.log('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
+               //alert('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
+
+               if (stream === null) {
+                  alert('Could not create video stream');
+               }
+               else {
+                  let track = stream.getVideoTracks()[0];
+                  let settings = track.getSettings();
+                  this.updateVideoSize(settings.width, settings.height);
+                  this.video.srcObject = stream;
+               }
+            })
+            .catch((reason) => {
+               alert('video error: ' + reason);
+            });
+      }
+      catch (err) {
+         alert('video error2: ' + err);
+      }
+   }
+
    private enableVideo(enable: boolean) {
 
       // stop the last video
-      this.uploader.stop();
+      //this.uploader.stop();
       this.stopTracks();
-      this.video.pause();
-      this.video.srcObject = null;
-      this.video.load();
+      //this.video.pause();
+      //this.video.srcObject = null;
+      //this.video.load();
 
       this.enableCameraCtrls(enable);
 
       if (enable) {
-
          this.video.style.display = 'block';
-
-         let constraints: any;
-         if (this.desired) {
-            if (this.desired.deviceId && this.desired.deviceId.trim().length > 0) {
-               constraints = {
-                  video: {
-                     //width: this.desired.width,
-                     //height: this.desired.height,
-                     //width: iOS() ? undefined : 10 * 1000,
-                     //height: iOS() ? undefined : 10 * 1000,
-                     width: { ideal: 10 * 1000 },
-                     height: { ideal: 10 * 1000 },
-                     //deviceId: this.desired.deviceId,
-                     deviceId: (this.desired && this.desired.deviceId) ? { exact: this.desired.deviceId } : undefined,
-                     //frameRate: 30,
-                  },
-               };
-            }
-            else {
-               constraints = {
-                  video: {
-                     width: { ideal: 10 * 1000 },
-                     height: { ideal: 10 * 1000 },
-                  },
-               };
-            }
-         }
-         else {
-            constraints = {
-               video: true,
-            }
-         }
-
-         try {
-
-            console.log('---getUserMedia() ' + JSON.stringify(constraints, null, ' '));
-            navigator.mediaDevices.getUserMedia(constraints)
-               .then((stream) => {
-                  console.log('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
-                  //                  if (iOS()) {
-                  let track = stream.getVideoTracks()[0];
-                  let settings = track.getSettings();
-                  /*
-                  if (track.getConstraints) {
-                     let capabilities = track.getCapabilities();
-
-                     const constraints = {
-                        video: {
-                           width: capabilities.width.max,
-                           height: capabilities.height.max,
-                           //width: this.desired.width,
-                           //height: this.desired.height,
-                           //width: iOS() ? undefined : 10 * 1000,
-                           //height: iOS() ? undefined : 10 * 1000,
-                           //width: { ideal: 10 * 1000 },
-                           //height: { ideal: 10 * 1000 },
-                           //deviceId: this.desired.deviceId,
-                           deviceId: { exact: this.desired.deviceId },
-                           //frameRate: 30,
-                        }
-                     };
-
-                     let msg = 'trying to improve from ' + settings.width + 'x' + settings.height + ' to ' + capabilities.width.max + 'x' + capabilities.height.max;
-                     alert(msg);
-                     track.applyConstraints(constraints.video)
-                        .catch((err) => {
-                           debug('Failed to acquire highest resolution camera: ' + err);
-                        })
-                        .finally(() => {
-                           console.log('---setting video.srcObject to upgraded stream: ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
-                           this.video.srcObject = stream;
-                        });
-                  }
-                  */
-                  //}
-
-
-                  if (stream === null) {
-                     alert('Could not create video stream');
-                  }
-                  else {
-                     this.updateVideoSize(settings.width, settings.height);
-                     this.video.srcObject = stream;
-                  }
-               })
-               .catch((reason) => {
-                  alert('video error: ' + reason);
-               });
-         }
-         catch (err) {
-            alert('video error2: ' + err);
-         }
+         this.setConstraints();
       }
       else {
          this.uploader.stop();
          this.downloader.stop();
+         this.sessionId = null;
          this.video.style.display = 'none';
       }
    }
@@ -608,6 +567,7 @@ export class SquintApp implements IApp {
    }
 
    private updateVideoSize(videoWidth: number, videoHeight: number) {
+
       if (getComputedStyle(this.video).display !== 'none') {
          let videoSize = Math.max(this.video.clientWidth, this.video.clientHeight);
          if (videoWidth > videoHeight) {
