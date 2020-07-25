@@ -12,7 +12,7 @@ import { iOS, getTimeStr, getSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 
-let V = 21;
+let V = 22;
 
 // TODO: 
 // - check into camera being in use
@@ -486,10 +486,10 @@ export class SquintApp implements IApp {
             };
          }
 
-         console.log('---getUserMedia() ' + JSON.stringify(constraints, null, ' '));
+         debug('---getUserMedia() ' + JSON.stringify(constraints, null, ' '));
          navigator.mediaDevices.getUserMedia(constraints)
             .then((stream) => {
-               console.log('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
+               debug('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
                //alert('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
 
                if (stream === null) {
@@ -536,6 +536,7 @@ export class SquintApp implements IApp {
 
    private stopTracks() {
       if (this.video.srcObject) {
+         debug('stopping tracks');
          // Using the camera is not robust. Applying constraints to change things
          // like which camera is in use only works sometimes. The most robust I can
          // make it is to close the video element and create a new one.
