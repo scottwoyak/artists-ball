@@ -146,8 +146,9 @@
   top: 50px;
   width: 100px;
   height: 100px;
-  border: solid 1px;
-  border-color: white;
+  border: solid 10px;
+  border-color: green;
+  background-color: red;
 }
 
 @media (orientation: landscape) {

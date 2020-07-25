@@ -12,10 +12,10 @@ import { iOS, getTimeStr, getSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 
-let V = 24;
+let V = 25;
 
 // TODO: 
-// - check into camera being in use
+// - check into camera being in us
 
 let log: HTMLTextAreaElement;
 
@@ -70,11 +70,10 @@ export class SquintApp implements IApp {
    public constructor() {
       log = document.createElement('textarea');
       log.style.position = 'absolute';
-      log.style.top = '75%';
+      log.style.top = '40%';
       log.style.left = '0px';
       log.style.bottom = '0px';
       log.style.right = '0px';
-      //log.style.width = '100%';
       log.style.backgroundColor = 'darkblue';
       log.style.color = 'white';
       log.style.fontSize = '12px';
@@ -122,6 +121,12 @@ export class SquintApp implements IApp {
       this.video.style.display = 'none';
 
       this.video.onplay = () => {
+         debug('video.onplay: \n' +
+            'element: ' + this.video.width + 'x' + this.video.height + '\n' +
+            'client: ' + this.video.clientWidth + 'x' + this.video.clientHeight + '\n' +
+            'video: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
+
+         /*
          try {
             if (!this.sessionId) {
                this.squint.createSession(this.sessionNameInput.value)
@@ -142,6 +147,7 @@ export class SquintApp implements IApp {
          catch (err) {
             debug('this.video.onplay() ' + err);
          };
+         */
       }
 
       this.downloader.onDownload = (blob, downloadTime) => this.onDownload(blob, downloadTime);
@@ -617,6 +623,7 @@ export class SquintApp implements IApp {
    }
 
    private updateVideoSize(videoWidth: number, videoHeight: number) {
+      debug('updateVideoSize(' + videoWidth + ',' + videoHeight + ')');
       try {
          if (getComputedStyle(this.video).display !== 'none') {
             let videoSize = Math.max(this.video.clientWidth, this.video.clientHeight);
@@ -628,6 +635,7 @@ export class SquintApp implements IApp {
                this.video.style.height = videoSize + 'px';
                this.video.style.width = (videoSize * videoWidth / videoHeight) + 'px';
             }
+            debug('updateVideoSize() to ' + this.video.style.width + 'x' + this.video.style.height);
          }
       }
       catch (err) {
@@ -637,7 +645,9 @@ export class SquintApp implements IApp {
 
    private updateSizes() {
       try {
+         debug('updateSizes()');
          let menubarHeight = document.getElementById('Menubar').clientHeight;
+         debug('updateSizes() menubarHeight: ' + menubarHeight);
 
          let viewWidth = document.documentElement.clientWidth;
          let viewHeight = document.documentElement.clientHeight;
