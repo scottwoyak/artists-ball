@@ -12,7 +12,7 @@ import { iOS, getTimeStr, getSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 
-let V = 23;
+let V = 24;
 
 // TODO: 
 // - check into camera being in use
@@ -23,7 +23,7 @@ let fullmsg = '';
 export function debug(msg: string): void {
    console.log(msg);
    //alert('debug: ' + msg);
-   fullmsg += (msg + '\n\n');
+   fullmsg = msg + '\n\n' + fullmsg;
    //navigator.clipboard.writeText(fullmsg).catch((err) => alert('error writing to clipboard: ' + err));
    log.textContent = fullmsg;
 }
