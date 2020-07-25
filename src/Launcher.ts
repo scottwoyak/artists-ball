@@ -1,8 +1,8 @@
-import { SubMenu, Menubar } from "./Menu";
-import { ViewerApp } from "./ViewerApp";
 import { IApp } from "./IApp";
-import { PathTracerApp } from "./PathTracerApp";
-import { SquintApp } from "./SquintApp";
+import { Menubar, SubMenu } from "./GUI/Menu";
+import { PathTracerApp } from "./Apps/PathTracer/PathTracerApp";
+import { ViewerApp } from "./Apps/Viewer/ViewerApp";
+import { SquintApp } from "./Apps/Squint/SquintApp";
 
 enum AppType {
    ArtistsBall,

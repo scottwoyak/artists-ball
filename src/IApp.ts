@@ -1,4 +1,4 @@
-import { Menubar } from "./Menu";
+import { Menubar } from "./GUI/Menu";
 
 export interface IApp {
    create(parent: HTMLElement): void;
