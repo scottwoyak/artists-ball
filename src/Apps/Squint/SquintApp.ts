@@ -12,7 +12,7 @@ import { iOS, getTimeStr, getSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 
-let V = 25;
+let V = 26;
 
 // TODO: 
 // - check into camera being in us
@@ -126,16 +126,20 @@ export class SquintApp implements IApp {
             'client: ' + this.video.clientWidth + 'x' + this.video.clientHeight + '\n' +
             'video: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
 
-         /*
          try {
             if (!this.sessionId) {
+               debug('creating session');
                this.squint.createSession(this.sessionNameInput.value)
                   .then((id) => {
+                     debug('session created: ' + id);
                      this.sessionId = id;
 
                      // TODO can't start these until both the session is available and the video is ready
+                     debug('starting uploader');
                      this.uploader.start(this.sessionId);
+                     debug('starting downloader');
                      this.downloader.start(this.sessionId);
+                     debug('both started');
                   })
                   .catch((err) => {
                      alert('could not create session: ' + err);
@@ -147,7 +151,6 @@ export class SquintApp implements IApp {
          catch (err) {
             debug('this.video.onplay() ' + err);
          };
-         */
       }
 
       this.downloader.onDownload = (blob, downloadTime) => this.onDownload(blob, downloadTime);

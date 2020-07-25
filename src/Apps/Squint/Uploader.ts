@@ -21,7 +21,7 @@ export class Uploader {
 
    public start(id: string) {
       if (!this.running) {
-         //debug('starting uploader');
+         debug('starting uploader');
          this.id = id;
          this.handle = requestAnimationFrame(() => this.upload());
          this.running = true;
@@ -30,7 +30,7 @@ export class Uploader {
 
    public stop() {
       if (this.running) {
-         //debug('stopping uploader');
+         debug('stopping uploader');
          cancelAnimationFrame(this.handle);
          this.running = false;
       }
@@ -42,8 +42,10 @@ export class Uploader {
       }
 
       this.fps.tick();
+      debug('uploading');
       this.onDataNeeded()
          .then((blob: Blob) => {
+            debug('upload blob: ' + blob);
             if (blob === null) {
                debug('Cannot generate image from video: blob is null');
 
@@ -60,8 +62,10 @@ export class Uploader {
             fd.append('image', blob);
 
             let sw = new Stopwatch();
+            debug('putting');
             this.squint.put(this.id, fd)
                .then(() => {
+                  debug('put');
                   //console.log('upload time: ' + sw.elapsedMs);
                   this.uploadTime = sw.elapsedMs;
                })
@@ -72,8 +76,10 @@ export class Uploader {
                   }
                })
                .finally(() => {
+                  debug('revoking url');
                   URL.revokeObjectURL(url);
                   if (this.running) {
+                     debug('requesting next upload frame');
                      this.handle = requestAnimationFrame(() => this.upload());
                   }
                });
