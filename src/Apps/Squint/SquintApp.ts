@@ -17,12 +17,15 @@ let V = 23;
 // TODO: 
 // - check into camera being in use
 
+let log: HTMLTextAreaElement;
+
 let fullmsg = '';
 export function debug(msg: string): void {
    console.log(msg);
-   alert('debug: ' + msg);
-   //fullmsg += msg + '\n';
+   //alert('debug: ' + msg);
+   fullmsg += (msg + '\n\n');
    //navigator.clipboard.writeText(fullmsg).catch((err) => alert('error writing to clipboard: ' + err));
+   log.textContent = fullmsg;
 }
 
 export class SquintApp implements IApp {
@@ -65,6 +68,19 @@ export class SquintApp implements IApp {
    private sessionNameInput: HTMLInputElement;
 
    public constructor() {
+      log = document.createElement('textarea');
+      log.style.position = 'absolute';
+      log.style.top = '75%';
+      log.style.left = '0px';
+      log.style.bottom = '0px';
+      log.style.right = '0px';
+      //log.style.width = '100%';
+      log.style.backgroundColor = 'darkblue';
+      log.style.color = 'white';
+      log.style.fontSize = '12px';
+      log.cols = 150;
+      document.body.appendChild(log);
+
       document.title += (' ' + V);
       alert(document.title);
       let msg = '';
@@ -73,7 +89,7 @@ export class SquintApp implements IApp {
       }
       msg += '\nuserAgent: ' + navigator.userAgent;
       msg += '\nplatform: ' + navigator.platform;
-      //debug(msg);
+      debug(msg);
 
       this.downloader = new Downloader(this.squint);
       this.downloader.onStop = () => {
