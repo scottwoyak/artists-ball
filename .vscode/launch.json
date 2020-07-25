@@ -22,7 +22,7 @@
       {
          "type": "chrome",
          "request": "launch",
-         "name": "Chrome:https",
+         "name": "c:hotspot",
          "url": "https://192.168.43.170?squint",
          "webRoot": "${workspaceFolder}"
       },

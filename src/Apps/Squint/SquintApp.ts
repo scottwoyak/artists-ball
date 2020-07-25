@@ -12,14 +12,17 @@ import { iOS, getTimeStr, getSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 
-let V = 22;
+let V = 23;
 
 // TODO: 
 // - check into camera being in use
 
+let fullmsg = '';
 export function debug(msg: string): void {
    console.log(msg);
    alert('debug: ' + msg);
+   //fullmsg += msg + '\n';
+   //navigator.clipboard.writeText(fullmsg).catch((err) => alert('error writing to clipboard: ' + err));
 }
 
 export class SquintApp implements IApp {
@@ -63,14 +66,14 @@ export class SquintApp implements IApp {
 
    public constructor() {
       document.title += (' ' + V);
-      let msg = document.title;
+      alert(document.title);
+      let msg = '';
       if (iOS()) {
          msg += '. Running on Apple';
       }
       msg += '\nuserAgent: ' + navigator.userAgent;
       msg += '\nplatform: ' + navigator.platform;
-
-      alert(msg);
+      //debug(msg);
 
       this.downloader = new Downloader(this.squint);
       this.downloader.onStop = () => {
@@ -103,21 +106,26 @@ export class SquintApp implements IApp {
       this.video.style.display = 'none';
 
       this.video.onplay = () => {
-         if (!this.sessionId) {
-            this.squint.createSession(this.sessionNameInput.value)
-               .then((id) => {
-                  this.sessionId = id;
+         try {
+            if (!this.sessionId) {
+               this.squint.createSession(this.sessionNameInput.value)
+                  .then((id) => {
+                     this.sessionId = id;
 
-                  // TODO can't start these until both the session is available and the video is ready
-                  this.uploader.start(this.sessionId);
-                  this.downloader.start(this.sessionId);
-               })
-               .catch((err) => {
-                  alert('could not create session: ' + err);
-                  this.showStartDialog(true);
-                  this.enableVideo(false);
-               });
+                     // TODO can't start these until both the session is available and the video is ready
+                     this.uploader.start(this.sessionId);
+                     this.downloader.start(this.sessionId);
+                  })
+                  .catch((err) => {
+                     alert('could not create session: ' + err);
+                     this.showStartDialog(true);
+                     this.enableVideo(false);
+                  });
+            }
          }
+         catch (err) {
+            debug('this.video.onplay() ' + err);
+         };
       }
 
       this.downloader.onDownload = (blob, downloadTime) => this.onDownload(blob, downloadTime);
@@ -253,14 +261,19 @@ export class SquintApp implements IApp {
    }
 
    private updateList(value: ISessions) {
-      this.viewListBox.clear();
-      for (let i = 0; i < value.sessions.length; i++) {
-         this.viewListBox.addItem(value.sessions[i].name, value.sessions[i].id);
+      try {
+         this.viewListBox.clear();
+         for (let i = 0; i < value.sessions.length; i++) {
+            this.viewListBox.addItem(value.sessions[i].name, value.sessions[i].id);
+         }
+         this.squint.listSessions(value.responseId)
+            .then((value) => {
+               this.updateList(value);
+            });
       }
-      this.squint.listSessions(value.responseId)
-         .then((value) => {
-            this.updateList(value);
-         });
+      catch (err) {
+         debug('updateList() ' + err);
+      }
    }
 
    private enableCameraCtrls(flag: boolean) {
@@ -439,29 +452,33 @@ export class SquintApp implements IApp {
    }
 
    private onDownload(blob: Blob, downloadTime: number) {
-
-      // TODO text download is an error
-      if (blob.type === 'text/plain') {
-         blob.text()
-            .then((txt) => {
-               debug(txt);
-            })
-            .catch((reason) => {
-               debug('cannot retrieve text from blob: ' + reason);
-            })
+      try {
+         // TODO text download is an error
+         if (blob.type === 'text/plain') {
+            blob.text()
+               .then((txt) => {
+                  debug(txt);
+               })
+               .catch((reason) => {
+                  debug('cannot retrieve text from blob: ' + reason);
+               })
+         }
+         else {
+            let img = document.createElement('img');
+            img.onload = () => {
+               this.img = img;
+               this.downloadTime = downloadTime;
+               this.imgSize = blob.size;
+               this.drawImg();
+            }
+            img.onerror = (reason) => {
+               alert('cannot load image: ' + reason);
+            }
+            img.src = URL.createObjectURL(blob);
+         }
       }
-      else {
-         let img = document.createElement('img');
-         img.onload = () => {
-            this.img = img;
-            this.downloadTime = downloadTime;
-            this.imgSize = blob.size;
-            this.drawImg();
-         }
-         img.onerror = (reason) => {
-            alert('cannot load image: ' + reason);
-         }
-         img.src = URL.createObjectURL(blob);
+      catch (err) {
+         debug('onDownload() ' + err);
       }
    }
 
@@ -480,7 +497,7 @@ export class SquintApp implements IApp {
             };
          }
          else {
-            debug('no device id, falling back to any camera');
+            //debug('no device id, falling back to any camera');
             constraints = {
                video: true,
             };
@@ -489,7 +506,7 @@ export class SquintApp implements IApp {
          debug('---getUserMedia() ' + JSON.stringify(constraints, null, ' '));
          navigator.mediaDevices.getUserMedia(constraints)
             .then((stream) => {
-               debug('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
+               debug('---getUserMedia().then() ' + stream + ' width=' + stream.getVideoTracks()[0].getSettings().width);
                //alert('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
 
                if (stream === null) {
@@ -513,54 +530,70 @@ export class SquintApp implements IApp {
 
    private enableVideo(enable: boolean) {
 
-      // stop the last video
-      //this.uploader.stop();
-      this.stopTracks();
-      //this.video.pause();
-      //this.video.srcObject = null;
-      //this.video.load();
+      try {
+         // stop the last video
+         //this.uploader.stop();
+         this.stopTracks();
+         //this.video.pause();
+         //this.video.srcObject = null;
+         //this.video.load();
 
-      this.enableCameraCtrls(enable);
+         this.enableCameraCtrls(enable);
 
-      if (enable) {
-         this.video.style.display = 'block';
-         this.setConstraints();
+         if (enable) {
+            this.video.style.display = 'block';
+            this.setConstraints();
+         }
+         else {
+            this.uploader.stop();
+            this.downloader.stop();
+            this.sessionId = null;
+            this.video.style.display = 'none';
+         }
       }
-      else {
-         this.uploader.stop();
-         this.downloader.stop();
-         this.sessionId = null;
-         this.video.style.display = 'none';
+      catch (err) {
+         debug('enableVideo(' + enable + ') ' + err);
       }
+
    }
 
    private stopTracks() {
-      if (this.video.srcObject) {
-         debug('stopping tracks');
-         // Using the camera is not robust. Applying constraints to change things
-         // like which camera is in use only works sometimes. The most robust I can
-         // make it is to close the video element and create a new one.
-         let stream = this.video.srcObject as MediaStream;
-         stream.getTracks().forEach((track: MediaStreamTrack) => {
-            track.stop();
-         });
+      try {
+         if (this.video.srcObject) {
+            debug('stopping tracks');
+            // Using the camera is not robust. Applying constraints to change things
+            // like which camera is in use only works sometimes. The most robust I can
+            // make it is to close the video element and create a new one.
+            let stream = this.video.srcObject as MediaStream;
+            stream.getTracks().forEach((track: MediaStreamTrack) => {
+               track.stop();
+            });
+         }
+      }
+      catch (err) {
+         debug('stopTracks() ' + err);
       }
    }
 
    private takePicture(): Promise<Blob> {
-      let canvas = document.createElement('canvas');
-      canvas.width = this.video.videoWidth * (this.resolution.value / 100);
-      canvas.height = this.video.videoHeight * (this.resolution.value / 100);
+      try {
+         let canvas = document.createElement('canvas');
+         canvas.width = this.video.videoWidth * (this.resolution.value / 100);
+         canvas.height = this.video.videoHeight * (this.resolution.value / 100);
 
-      const context = canvas.getContext('2d');
-      context.drawImage(this.video, 0, 0, canvas.width, canvas.height);
+         const context = canvas.getContext('2d');
+         context.drawImage(this.video, 0, 0, canvas.width, canvas.height);
 
-      // upload
-      return new Promise<Blob>((resolve, reject) => {
-         canvas.toBlob((blob) => resolve(blob),
-            'image/jpeg',
-            this.quality.value);
-      });
+         // upload
+         return new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob((blob) => resolve(blob),
+               'image/jpeg',
+               this.quality.value);
+         });
+      }
+      catch (err) {
+         debug('takePicture() ' + err);
+      }
    }
 
    private onResize() {
@@ -568,101 +601,114 @@ export class SquintApp implements IApp {
    }
 
    private updateVideoSize(videoWidth: number, videoHeight: number) {
-
-      if (getComputedStyle(this.video).display !== 'none') {
-         let videoSize = Math.max(this.video.clientWidth, this.video.clientHeight);
-         if (videoWidth > videoHeight) {
-            this.video.style.width = videoSize + 'px';
-            this.video.style.height = (videoSize * videoHeight / videoWidth) + 'px';
+      try {
+         if (getComputedStyle(this.video).display !== 'none') {
+            let videoSize = Math.max(this.video.clientWidth, this.video.clientHeight);
+            if (videoWidth > videoHeight) {
+               this.video.style.width = videoSize + 'px';
+               this.video.style.height = (videoSize * videoHeight / videoWidth) + 'px';
+            }
+            else {
+               this.video.style.height = videoSize + 'px';
+               this.video.style.width = (videoSize * videoWidth / videoHeight) + 'px';
+            }
          }
-         else {
-            this.video.style.height = videoSize + 'px';
-            this.video.style.width = (videoSize * videoWidth / videoHeight) + 'px';
-         }
+      }
+      catch (err) {
+         debug('updateVideoSize() ' + err);
       }
    }
 
    private updateSizes() {
-      let menubarHeight = document.getElementById('Menubar').clientHeight;
+      try {
+         let menubarHeight = document.getElementById('Menubar').clientHeight;
 
-      let viewWidth = document.documentElement.clientWidth;
-      let viewHeight = document.documentElement.clientHeight;
+         let viewWidth = document.documentElement.clientWidth;
+         let viewHeight = document.documentElement.clientHeight;
 
-      this.canvas.width = viewWidth;
-      this.canvas.height = viewHeight - menubarHeight;
+         this.canvas.width = viewWidth;
+         this.canvas.height = viewHeight - menubarHeight;
 
-      this.drawImg();
+         this.drawImg();
+      }
+      catch (err) {
+         debug('updateSizes() ' + err);
+      }
    }
 
 
 
    private drawImg() {
+      try {
+         if (!this.img) {
+            return;
+         }
 
-      if (!this.img) {
-         return;
+         let canvasWidth = this.canvas.width;
+         let canvasHeight = this.canvas.height;
+         let canvasAR = canvasWidth / canvasHeight;
+
+         let imgWidth = this.img.width;
+         let imgHeight = this.img.height;
+         let imgAR = imgWidth / imgHeight;
+
+         let width: number;
+         let height: number;
+         /*
+         if (canvasAR > imgAR) {
+            height = this.zoom.value * canvasHeight;
+            width = height * imgAR;
+         }
+         else {
+            width = this.zoom.value * canvasWidth;
+            height = width / imgAR;
+         }
+         */
+         if (canvasAR > imgAR) {
+            height = this.zoom.value * imgHeight;
+            width = height * imgAR;
+         }
+         else {
+            width = this.zoom.value * imgWidth;
+            height = width / imgAR;
+         }
+
+         let x = (canvasWidth - width) / 2.0 + this.xOffset;
+         let y = (canvasHeight - height) / 2.0 - this.yOffset;
+
+         let ctx = this.canvas.getContext('2d');
+         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+         ctx.imageSmoothingEnabled = true;
+         ctx.imageSmoothingQuality = 'high';
+
+         ctx.filter =
+            'brightness(' + this.brightness.value + '%) ' +
+            'contrast(' + this.contrast.value + '%) ' +
+            'saturate(' + this.saturate.value + '%) ' +
+            'blur(' + this.blur.value + 'px) ';
+
+         ctx.drawImage(this.img, x, y, width, height);
+
+         let msg: string;
+
+         ctx.fillText(Squint.url, 0, 10);
+
+         msg = imgWidth + 'x' + imgHeight;
+         ctx.fillText(msg, 0, canvasHeight - 35);
+
+         msg = 'upload: ' + getTimeStr(this.uploader.uploadTime) + ' - ' + this.uploader.fps.rate.toFixed(1);
+         ctx.fillText(msg, 0, canvasHeight - 25);
+
+         msg = 'download: ' + getTimeStr(this.downloadTime) + ' - ' + this.downloader.fps.rate.toFixed(1);
+         ctx.fillText(msg, 0, canvasHeight - 15);
+
+         msg = getSizeStr(this.imgSize);
+         ctx.fillText(msg, 0, canvasHeight - 5);
       }
-
-      let canvasWidth = this.canvas.width;
-      let canvasHeight = this.canvas.height;
-      let canvasAR = canvasWidth / canvasHeight;
-
-      let imgWidth = this.img.width;
-      let imgHeight = this.img.height;
-      let imgAR = imgWidth / imgHeight;
-
-      let width: number;
-      let height: number;
-      /*
-      if (canvasAR > imgAR) {
-         height = this.zoom.value * canvasHeight;
-         width = height * imgAR;
+      catch (err) {
+         debug('drawImg() ' + err);
       }
-      else {
-         width = this.zoom.value * canvasWidth;
-         height = width / imgAR;
-      }
-      */
-      if (canvasAR > imgAR) {
-         height = this.zoom.value * imgHeight;
-         width = height * imgAR;
-      }
-      else {
-         width = this.zoom.value * imgWidth;
-         height = width / imgAR;
-      }
-
-      let x = (canvasWidth - width) / 2.0 + this.xOffset;
-      let y = (canvasHeight - height) / 2.0 - this.yOffset;
-
-      let ctx = this.canvas.getContext('2d');
-      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-
-      ctx.filter =
-         'brightness(' + this.brightness.value + '%) ' +
-         'contrast(' + this.contrast.value + '%) ' +
-         'saturate(' + this.saturate.value + '%) ' +
-         'blur(' + this.blur.value + 'px) ';
-
-      ctx.drawImage(this.img, x, y, width, height);
-
-      let msg: string;
-
-      ctx.fillText(Squint.url, 0, 10);
-
-      msg = imgWidth + 'x' + imgHeight;
-      ctx.fillText(msg, 0, canvasHeight - 35);
-
-      msg = 'upload: ' + getTimeStr(this.uploader.uploadTime) + ' - ' + this.uploader.fps.rate.toFixed(1);
-      ctx.fillText(msg, 0, canvasHeight - 25);
-
-      msg = 'download: ' + getTimeStr(this.downloadTime) + ' - ' + this.downloader.fps.rate.toFixed(1);
-      ctx.fillText(msg, 0, canvasHeight - 15);
-
-      msg = getSizeStr(this.imgSize);
-      ctx.fillText(msg, 0, canvasHeight - 5);
    }
 
    private onScale(scale: number, change: number) {
