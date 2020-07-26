@@ -31,7 +31,7 @@ export function toCss(r: number, g: number, b: number, a?: number): string {
    return 'rgb(' + r + ',' + g + ',' + b + (a === undefined ? '' : ',' + a) + ')';
 }
 
-export function getSizeStr(val: number): string {
+export function toSizeStr(val: number): string {
    if (val < 1024) {
       return val + ' bytes';
    }
@@ -43,7 +43,7 @@ export function getSizeStr(val: number): string {
    }
 }
 
-export function getTimeStr(val: number): string {
+export function toTimeStr(val: number): string {
    if (val < 1000) {
       return val.toFixed(0) + ' ms';
    }

@@ -2,6 +2,7 @@ import { FPS } from "../../Util/FPS";
 import { Squint } from "./Squint";
 import { debug } from "./SquintApp";
 import { Stopwatch } from "../../Util/Stopwatch";
+import { toSizeStr, toTimeStr } from "../../Util/Globals";
 
 export type DataNeededHandler = () => Promise<Blob>;
 
@@ -21,7 +22,7 @@ export class Uploader {
 
    public start(id: string) {
       if (!this.running) {
-         debug('starting uploader');
+         console.log('starting uploader');
          this.id = id;
          this.handle = requestAnimationFrame(() => this.upload());
          this.running = true;
@@ -30,7 +31,7 @@ export class Uploader {
 
    public stop() {
       if (this.running) {
-         debug('stopping uploader');
+         console.log('stopping uploader');
          cancelAnimationFrame(this.handle);
          this.running = false;
       }
@@ -42,10 +43,8 @@ export class Uploader {
       }
 
       this.fps.tick();
-      debug('uploading');
       this.onDataNeeded()
          .then((blob: Blob) => {
-            debug('upload blob: ' + blob);
             if (blob === null) {
                debug('Cannot generate image from video: blob is null');
 
@@ -62,11 +61,10 @@ export class Uploader {
             fd.append('image', blob);
 
             let sw = new Stopwatch();
-            debug('putting');
+            console.log('uploading: size=' + toSizeStr(blob.size));
             this.squint.put(this.id, fd)
                .then(() => {
-                  debug('put - success ' + sw.elapsedMs + 'ms');
-                  //console.log('upload time: ' + sw.elapsedMs);
+                  console.log('uploaded: ' + toTimeStr(sw.elapsedMs));
                   this.uploadTime = sw.elapsedMs;
                })
                .catch((reason) => {
@@ -76,10 +74,8 @@ export class Uploader {
                   }
                })
                .finally(() => {
-                  debug('revoking url');
                   URL.revokeObjectURL(url);
                   if (this.running) {
-                     debug('requesting next upload frame');
                      this.handle = requestAnimationFrame(() => this.upload());
                   }
                });

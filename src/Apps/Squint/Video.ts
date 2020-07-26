@@ -24,7 +24,7 @@ export class Video {
                }
             }
             str = count + ' cameras found.\n' + str;
-            debug('enumerateDevices()\n' + str);
+            console.log('enumerateDevices()\n' + str);
 
             let cameraCount = 1;
             for (let i = 0; i < devices.length; i++) {

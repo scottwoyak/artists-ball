@@ -1,7 +1,7 @@
 import { FPS } from "../../Util/FPS";
 import { Squint, SquintError } from "./Squint";
 import { Stopwatch } from "../../Util/Stopwatch";
-import { debug } from "./SquintApp";
+import { toSizeStr, toTimeStr } from "../../Util/Globals";
 
 type DownloadHandler = (blob: Blob, downloadTime: number) => void;
 
@@ -22,7 +22,7 @@ export class Downloader {
 
    public start(id: string) {
       if (!this.running) {
-         debug('starting downloader: ' + id);
+         console.log('starting downloader: ' + id);
          this.id = id;
          this.running = true;
          this.handle = requestAnimationFrame(() => this.download());
@@ -31,7 +31,7 @@ export class Downloader {
 
    public stop() {
       if (this.running) {
-         debug('stopping downloader');
+         console.log('stopping downloader');
          this.running = false;
          cancelAnimationFrame(this.handle);
       }
@@ -42,11 +42,10 @@ export class Downloader {
       this.fps.tick();
 
       let sw = new Stopwatch();
-      debug('getting download');
+      console.log('starting download');
       this.squint.get(this.id)
          .then((blob) => {
-            debug('got download blob: ' + blob + ' ' + sw.elapsedMs + 'ms');
-            //console.log('download time: ' + sw.elapsedMs);
+            console.log('got download blob: ' + blob + ' ' + toSizeStr(blob.size) + ' ' + toTimeStr(sw.elapsedMs));
             if (this.running && this.onDownload) {
                this.onDownload(blob, sw.elapsedMs);
             }
@@ -75,7 +74,6 @@ export class Downloader {
          })
          .finally(() => {
             if (this.running) {
-               debug('requesting next download frame');
                requestAnimationFrame(() => this.download());
             }
          });
