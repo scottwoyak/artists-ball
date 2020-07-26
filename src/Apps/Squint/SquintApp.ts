@@ -12,7 +12,7 @@ import { iOS, getTimeStr, getSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 
-let V = 27;
+let V = 28;
 
 // TODO: 
 // - check into camera being in us
@@ -70,7 +70,7 @@ export class SquintApp implements IApp {
    public constructor() {
       log = document.createElement('textarea');
       log.style.position = 'absolute';
-      log.style.top = '40%';
+      log.style.top = '60%';
       log.style.left = '0px';
       log.style.bottom = '0px';
       log.style.right = '0px';
@@ -113,8 +113,8 @@ export class SquintApp implements IApp {
 
       this.video = document.createElement('video');
       this.video.id = 'Video';
-      this.video.autoplay = true;
-      (<any>this.video).playsinline = true;
+      //this.video.autoplay = true;
+      //(<any>this.video).playsinline = true;
       this.video.onerror = (err) => {
          alert('video.onerror(): ' + err);
       }
@@ -123,9 +123,9 @@ export class SquintApp implements IApp {
 
       this.video.onplay = () => {
          debug('video.onplay: \n' +
-            'element: ' + this.video.width + 'x' + this.video.height + '\n' +
-            'client: ' + this.video.clientWidth + 'x' + this.video.clientHeight + '\n' +
-            'video: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
+            'element: ' + this.video.width + ' x ' + this.video.height + '\n' +
+            'client: ' + this.video.clientWidth + ' x ' + this.video.clientHeight + '\n' +
+            'video: ' + this.video.videoWidth + ' x ' + this.video.videoHeight);
 
          try {
             if (!this.sessionId) {
@@ -525,6 +525,8 @@ export class SquintApp implements IApp {
          else {
             //debug('no device id, falling back to any camera');
             constraints = {
+               width: { ideal: 10 * 1000 },
+               height: { ideal: 10 * 1000 },
                video: true,
             };
          }
@@ -532,7 +534,7 @@ export class SquintApp implements IApp {
          debug('---getUserMedia() ' + JSON.stringify(constraints, null, ' '));
          navigator.mediaDevices.getUserMedia(constraints)
             .then((stream) => {
-               debug('---getUserMedia().then() ' + stream + ' width=' + stream.getVideoTracks()[0].getSettings().width);
+               debug('---getUserMedia().then() ' + stream);
                //alert('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
 
                if (stream === null) {
@@ -541,9 +543,17 @@ export class SquintApp implements IApp {
                else {
                   let track = stream.getVideoTracks()[0];
                   let settings = track.getSettings();
+                  debug('size: ' + settings.width + ' x ' + settings.height);
                   this.updateVideoSize(settings.width, settings.height);
                   debug('setting video.srcObject to ' + stream);
                   this.video.srcObject = stream;
+                  this.video.play()
+                     .then(() => {
+                        debug('playing');
+                     })
+                     .catch((err) => {
+                        debug('error playing: ' + err);
+                     });
                }
             })
             .catch((reason) => {
@@ -640,7 +650,7 @@ export class SquintApp implements IApp {
                this.video.style.height = videoSize + 'px';
                this.video.style.width = (videoSize * videoWidth / videoHeight) + 'px';
             }
-            debug('updateVideoSize() to ' + this.video.style.width + 'x' + this.video.style.height);
+            debug('updateVideoSize() to ' + this.video.style.width + ' x ' + this.video.style.height);
          }
       }
       catch (err) {
