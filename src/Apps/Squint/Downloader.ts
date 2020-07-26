@@ -7,75 +7,89 @@ type DownloadHandler = (blob: Blob, downloadTime: number) => void;
 
 export class Downloader {
 
-   public onDownload: DownloadHandler;
+   private onDownload: DownloadHandler;
    public fps = new FPS();
-   private handle: number;
-   public running = false;
+   public running = true;
    private squint: Squint;
    private id: string;
+   private busy = false;
 
    public onStop: () => void;
 
-   public constructor(squint: Squint) {
+   public constructor(squint: Squint, id: string, onDownload: DownloadHandler) {
+      console.log('starting downloader: ' + id);
       this.squint = squint;
-   }
-
-   public start(id: string) {
-      if (!this.running) {
-         console.log('starting downloader: ' + id);
-         this.id = id;
-         this.running = true;
-         this.handle = requestAnimationFrame(() => this.download());
-      }
+      this.id = id;
+      this.onDownload = onDownload;
+      this.download();
    }
 
    public stop() {
       if (this.running) {
          console.log('stopping downloader');
          this.running = false;
-         cancelAnimationFrame(this.handle);
       }
    }
 
-   private download() {
+   private download(delay = 0) {
 
+      if (!this.running) {
+         return;
+      }
+      if (this.busy) {
+         console.error('download() called before previous call returned');
+      }
+      if (delay > 0) {
+         setTimeout(() => {
+            this.download(0);
+         }, delay);
+         return;
+      }
+
+      this.busy = true;
       this.fps.tick();
 
+      let nextDelay = 0;
       let sw = new Stopwatch();
       console.log('starting download');
       this.squint.get(this.id)
          .then((blob) => {
             console.log('got download blob: ' + blob + ' ' + toSizeStr(blob.size) + ' ' + toTimeStr(sw.elapsedMs));
-            if (this.running && this.onDownload) {
-               this.onDownload(blob, sw.elapsedMs);
+            if (this.running) {
+               try {
+                  this.onDownload(blob, sw.elapsedMs);
+               }
+               catch (err) {
+                  console.error('Unexpected exception in Downloader.onDownload(): ' + err);
+                  this.stop();
+               }
             }
          })
-         .catch((reason) => {
-            if (reason.name === 'AbortError') {
+         .catch((err) => {
+            if (err.name === 'AbortError') {
                return;
             }
-            else if (reason instanceof SquintError) {
-               if (reason.status === 404) {
+            else if (err instanceof SquintError) {
+               if (err.status === 404) {
                   alert('The Squint host camera has ended.')
-                  this.stop();
-                  if (this.onStop) {
-                     this.onStop();
-                  }
                }
                else {
-                  // TODO fix error message to match the full url
-                  alert('Download failure for [' + Squint.url + '] ' + reason);
+                  console.log('download failed (stopping downloads): ' + err);
+               }
+
+               this.stop();
+               if (this.onStop) {
+                  this.onStop();
                }
             }
             else {
-               // TODO fix error message to match the full url
-               alert('Download failure for [' + Squint.url + '] ' + reason);
+               console.log('download failed (trying again): ' + err);
+               nextDelay = 3000;
             }
          })
          .finally(() => {
-            if (this.running) {
-               requestAnimationFrame(() => this.download());
-            }
+            this.busy = false;
+            this.download(nextDelay);
          });
    }
 }

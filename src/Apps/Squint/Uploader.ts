@@ -1,5 +1,5 @@
 import { FPS } from "../../Util/FPS";
-import { Squint } from "./Squint";
+import { Squint, SquintError } from "./Squint";
 import { debug } from "./SquintApp";
 import { Stopwatch } from "../../Util/Stopwatch";
 import { toSizeStr, toTimeStr } from "../../Util/Globals";
@@ -7,80 +7,100 @@ import { toSizeStr, toTimeStr } from "../../Util/Globals";
 export type DataNeededHandler = () => Promise<Blob>;
 
 export class Uploader {
-   public onDataNeeded: DataNeededHandler;
+   private onDataNeeded: DataNeededHandler;
    public uploadTime: number;
    public fps = new FPS();
 
-   private running = false;
-   private handle: number;
+   private running = true;
+   private busy = false;
    private squint: Squint;
    private id: string;
 
-   public constructor(squint: Squint) {
+   public constructor(squint: Squint, id: string, onDataNeeded: DataNeededHandler) {
+      console.log('starting uploader');
       this.squint = squint;
-   }
+      this.id = id;
+      this.onDataNeeded = onDataNeeded;
 
-   public start(id: string) {
-      if (!this.running) {
-         console.log('starting uploader');
-         this.id = id;
-         this.handle = requestAnimationFrame(() => this.upload());
-         this.running = true;
-      }
+      this.upload();
    }
 
    public stop() {
       if (this.running) {
          console.log('stopping uploader');
-         cancelAnimationFrame(this.handle);
          this.running = false;
       }
    }
 
-   private upload() {
-      if (!this.onDataNeeded) {
+   private upload(delay = 0) {
+
+      if (!this.running) {
+         return;
+      }
+      if (this.busy) {
+         console.error('upload() called before previous call returned');
+      }
+      if (delay > 0) {
+         setTimeout(() => {
+            this.upload(0);
+         }, delay);
          return;
       }
 
+      this.busy = false;
       this.fps.tick();
-      this.onDataNeeded()
-         .then((blob: Blob) => {
-            if (blob === null) {
-               debug('Cannot generate image from video: blob is null');
 
-               if (this.running) {
-                  this.handle = requestAnimationFrame(() => this.upload());
+      try {
+         this.onDataNeeded()
+            .then((blob: Blob) => {
+               if (blob === null) {
+                  debug('Cannot generate image from video: blob is null');
+                  this.upload(3000);
+                  this.busy = false;
+                  return;
                }
 
-               return;
-            }
+               let url = URL.createObjectURL(blob);
+               let fd = new FormData();
+               fd.append('image', blob);
 
-            //console.log('upload size: ' + blob.size / (1024 * 1024));
-            let url = URL.createObjectURL(blob);
-            let fd = new FormData();
-            fd.append('image', blob);
+               let sw = new Stopwatch();
+               console.log('starting upload: size=' + toSizeStr(blob.size));
 
-            let sw = new Stopwatch();
-            console.log('uploading: size=' + toSizeStr(blob.size));
-            this.squint.put(this.id, fd)
-               .then(() => {
-                  console.log('uploaded: ' + toTimeStr(sw.elapsedMs));
-                  this.uploadTime = sw.elapsedMs;
-               })
-               .catch((reason) => {
-                  // TODO fix error message to match the full url
-                  if (reason.name != 'AbortError') {
-                     alert('Upload failure for [' + Squint.url + '] ' + reason);
-                  }
-               })
-               .finally(() => {
-                  URL.revokeObjectURL(url);
-                  if (this.running) {
-                     this.handle = requestAnimationFrame(() => this.upload());
-                  }
-               });
-         }).catch((err) => {
-            debug('Cannot generate image from video: ' + err);
-         });
+               return this.squint.put(this.id, fd)
+                  .then(() => {
+                     console.log('uploaded: ' + toTimeStr(sw.elapsedMs));
+                     this.uploadTime = sw.elapsedMs;
+                     this.upload();
+                  })
+                  .catch((err) => {
+                     // TODO fix error message to match the full url
+                     if (err.name === 'AbortError') {
+                        this.stop();
+                     }
+                     else if (err instanceof SquintError) {
+                        console.log('upload failed (stopping uploads): ' + err);
+                        // TODO figure out when we should retry
+                        this.stop();
+                     }
+                     else {
+                        console.log('upload failed (trying again): ' + err);
+                        this.upload(3000);
+                     }
+                  })
+                  .finally(() => {
+                     URL.revokeObjectURL(url);
+                  });
+            }).catch((err) => {
+               debug('Cannot generate image from video: ' + err);
+            })
+            .finally(() => {
+               this.busy = false;
+            });
+      }
+      catch (err) {
+         console.error('Unexpected exception in Uploader.onDataNeeded(): ' + err);
+         this.stop();
+      }
    }
 }

@@ -66,7 +66,7 @@ export class SquintApp implements IApp {
    public constructor() {
 
       document.title += (' ' + V);
-      alert(document.title);
+      //alert(document.title);
       let msg = '';
       if (iOS()) {
          msg += '. Running on Apple';
@@ -74,12 +74,6 @@ export class SquintApp implements IApp {
       msg += '\nuserAgent: ' + navigator.userAgent;
       msg += '\nplatform: ' + navigator.platform;
       console.log(msg);
-
-      this.downloader = new Downloader(this.squint);
-      this.downloader.onStop = () => {
-         this.showStartDialog(true);
-      }
-      this.uploader = new Uploader(this.squint);
    }
 
    public create(div: HTMLDivElement) {
@@ -115,10 +109,6 @@ export class SquintApp implements IApp {
          //this.startSession();
       }
 
-      this.downloader.onDownload = (blob, downloadTime) => this.onDownload(blob, downloadTime);
-
-      this.uploader.onDataNeeded = () => this.takePicture();
-
       this.handler = new PointerEventHandler(this.canvas);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
       this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
@@ -134,24 +124,52 @@ export class SquintApp implements IApp {
    }
 
    private startSession() {
-      if (!this.sessionId) {
-         console.log('creating session on ' + Squint.url);
-         this.squint.createSession(this.sessionNameInput.value)
-            .then((id) => {
-               console.log('session created: ' + id);
-               this.sessionId = id;
+      console.log('creating session on ' + Squint.url);
+      this.squint.createSession(this.sessionNameInput.value)
+         .then((id) => {
+            console.log('session created: ' + id);
+            this.startUploader(id);
+            this.startDownloader(id);
+         })
+         .catch((err) => {
+            alert('Could not create session: ' + err);
+            this.showStartDialog(true);
+            this.enableVideo(false);
+         });
+   }
 
-               // TODO can't start these until both the session is available and the video is ready
-               this.uploader.start(this.sessionId);
-               this.downloader.start(this.sessionId);
-            })
-            .catch((err) => {
-               alert('Could not create session: ' + err);
-               this.showStartDialog(true);
-               this.enableVideo(false);
-            });
+   private startDownloader(sessionId: string) {
+      this.downloader = new Downloader(
+         this.squint,
+         sessionId,
+         (blob, downloadTime) => this.onDownload(blob, downloadTime),
+      );
+      this.downloader.onStop = () => {
+         this.enableVideo(false);
+         this.showStartDialog(true);
       }
    }
+   private startUploader(sessionId: string) {
+      this.uploader = new Uploader(
+         this.squint,
+         sessionId,
+         () => this.takePicture()
+      );
+   }
+   private stopDownloader() {
+      if (this.downloader) {
+         this.downloader.stop();
+         this.downloader = null;
+      }
+   }
+   private stopUploader() {
+      if (this.uploader) {
+         this.uploader.stop();
+         this.uploader = null;
+      }
+   }
+
+
 
    private showStartDialog(show = true) {
       if (show) {
@@ -206,7 +224,8 @@ export class SquintApp implements IApp {
 
       goViewButton.onclick = () => {
          this.showStartDialog(false);
-         this.downloader.start(this.viewListBox.selected);
+         let sessionId = this.viewListBox.selected;
+         this.startDownloader(sessionId);
       }
 
       let orParentDiv = document.createElement('div');
@@ -285,9 +304,6 @@ export class SquintApp implements IApp {
    }
 
    public buildMenu(menubar: Menubar) {
-
-
-
 
       let viewMenu = menubar.addSubMenu('View');
 
@@ -408,8 +424,8 @@ export class SquintApp implements IApp {
       let sessionMenu = menubar.addSubMenu('Session');
 
       sessionMenu.addItem('Stop', () => {
-         this.downloader.stop();
-         this.uploader.stop();
+         this.stopDownloader();
+         this.stopUploader();
          this.enableVideo(false);
          this.showStartDialog();
 
@@ -544,11 +560,7 @@ export class SquintApp implements IApp {
    private enableVideo(enable: boolean) {
 
       // stop the last video
-      //this.uploader.stop();
       this.stopTracks();
-      //this.video.pause();
-      //this.video.srcObject = null;
-      //this.video.load();
 
       this.enableCameraCtrls(enable);
 
@@ -557,9 +569,8 @@ export class SquintApp implements IApp {
          this.setConstraints();
       }
       else {
-         this.uploader.stop();
-         this.downloader.stop();
-         this.sessionId = null;
+         this.stopUploader();
+         this.stopDownloader();
          this.video.style.display = 'none';
       }
    }
@@ -686,11 +697,15 @@ export class SquintApp implements IApp {
       msg = imgWidth + 'x' + imgHeight;
       ctx.fillText(msg, 0, canvasHeight - 35);
 
-      msg = 'upload: ' + toTimeStr(this.uploader.uploadTime) + ' - ' + this.uploader.fps.rate.toFixed(1);
-      ctx.fillText(msg, 0, canvasHeight - 25);
+      if (this.uploader) {
+         msg = 'upload: ' + toTimeStr(this.uploader.uploadTime) + ' - ' + this.uploader.fps.rate.toFixed(1);
+         ctx.fillText(msg, 0, canvasHeight - 25);
+      }
 
-      msg = 'download: ' + toTimeStr(this.downloadTime) + ' - ' + this.downloader.fps.rate.toFixed(1);
-      ctx.fillText(msg, 0, canvasHeight - 15);
+      if (this.downloader) {
+         msg = 'download: ' + toTimeStr(this.downloadTime) + ' - ' + this.downloader.fps.rate.toFixed(1);
+         ctx.fillText(msg, 0, canvasHeight - 15);
+      }
 
       msg = toSizeStr(this.imgSize);
       ctx.fillText(msg, 0, canvasHeight - 5);
