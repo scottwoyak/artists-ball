@@ -65,7 +65,7 @@ export class Uploader {
             debug('putting');
             this.squint.put(this.id, fd)
                .then(() => {
-                  debug('put');
+                  debug('put - success ' + sw.elapsedMs + 'ms');
                   //console.log('upload time: ' + sw.elapsedMs);
                   this.uploadTime = sw.elapsedMs;
                })

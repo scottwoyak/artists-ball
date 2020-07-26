@@ -12,7 +12,7 @@ import { iOS, getTimeStr, getSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 
-let V = 28;
+let V = 29;
 
 // TODO: 
 // - check into camera being in us
@@ -113,7 +113,7 @@ export class SquintApp implements IApp {
 
       this.video = document.createElement('video');
       this.video.id = 'Video';
-      //this.video.autoplay = true;
+      this.video.autoplay = true;
       //(<any>this.video).playsinline = true;
       this.video.onerror = (err) => {
          alert('video.onerror(): ' + err);
@@ -127,31 +127,7 @@ export class SquintApp implements IApp {
             'client: ' + this.video.clientWidth + ' x ' + this.video.clientHeight + '\n' +
             'video: ' + this.video.videoWidth + ' x ' + this.video.videoHeight);
 
-         try {
-            if (!this.sessionId) {
-               debug('creating session');
-               this.squint.createSession(this.sessionNameInput.value)
-                  .then((id) => {
-                     debug('session created: ' + id);
-                     this.sessionId = id;
-
-                     // TODO can't start these until both the session is available and the video is ready
-                     debug('starting uploader');
-                     this.uploader.start(this.sessionId);
-                     debug('starting downloader');
-                     this.downloader.start(this.sessionId);
-                     debug('both started');
-                  })
-                  .catch((err) => {
-                     alert('could not create session: ' + err);
-                     this.showStartDialog(true);
-                     this.enableVideo(false);
-                  });
-            }
-         }
-         catch (err) {
-            debug('this.video.onplay() ' + err);
-         };
+         //this.startSession();
       }
 
       this.downloader.onDownload = (blob, downloadTime) => this.onDownload(blob, downloadTime);
@@ -170,6 +146,34 @@ export class SquintApp implements IApp {
    }
 
    public delete() {
+   }
+
+   private startSession() {
+      try {
+         if (!this.sessionId) {
+            debug('creating session');
+            this.squint.createSession(this.sessionNameInput.value)
+               .then((id) => {
+                  debug('session created: ' + id);
+                  this.sessionId = id;
+
+                  // TODO can't start these until both the session is available and the video is ready
+                  debug('starting uploader');
+                  this.uploader.start(this.sessionId);
+                  debug('starting downloader');
+                  this.downloader.start(this.sessionId);
+                  debug('both started');
+               })
+               .catch((err) => {
+                  alert('could not create session: ' + err);
+                  this.showStartDialog(true);
+                  this.enableVideo(false);
+               });
+         }
+      }
+      catch (err) {
+         debug('this.startSession() ' + err);
+      };
    }
 
    private showStartDialog(show = true) {
@@ -518,20 +522,24 @@ export class SquintApp implements IApp {
                video: {
                   width: { ideal: 10 * 1000 },
                   height: { ideal: 10 * 1000 },
-                  deviceId: (this.desired && this.desired.deviceId) ? { exact: this.desired.deviceId } : undefined,
+                  deviceId: this.desired.deviceId,
                }
             };
          }
          else {
             //debug('no device id, falling back to any camera');
             constraints = {
-               width: { ideal: 10 * 1000 },
-               height: { ideal: 10 * 1000 },
-               video: true,
+               video: {
+                  width: { ideal: 10 * 1000 },
+                  height: { ideal: 10 * 1000 },
+               },
             };
          }
 
          debug('---getUserMedia() ' + JSON.stringify(constraints, null, ' '));
+         debug('---navigator.mediaDevices ' + navigator.mediaDevices);
+         debug('---navigator.getUserMedia ' + navigator.getUserMedia);
+         debug('---navigator.mediaDevices.getUserMedia ' + navigator.mediaDevices.getUserMedia);
          navigator.mediaDevices.getUserMedia(constraints)
             .then((stream) => {
                debug('---getUserMedia().then() ' + stream);
@@ -554,6 +562,7 @@ export class SquintApp implements IApp {
                      .catch((err) => {
                         debug('error playing: ' + err);
                      });
+                  this.startSession();
                }
             })
             .catch((reason) => {
@@ -618,6 +627,7 @@ export class SquintApp implements IApp {
          canvas.width = this.video.videoWidth * (this.resolution.value / 100);
          canvas.height = this.video.videoHeight * (this.resolution.value / 100);
 
+         debug('capturing image: ' + canvas.width + 'x' + canvas.height);
          const context = canvas.getContext('2d');
          context.drawImage(this.video, 0, 0, canvas.width, canvas.height);
 
