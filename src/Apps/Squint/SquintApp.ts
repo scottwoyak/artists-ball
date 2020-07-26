@@ -93,21 +93,11 @@ export class SquintApp implements IApp {
       this.video = document.createElement('video');
       this.video.id = 'Video';
       this.video.autoplay = true;
-      //(<any>this.video).playsinline = true;
       this.video.onerror = (err) => {
          alert('video.onerror(): ' + err);
       }
       this.div.appendChild(this.video);
       this.video.style.display = 'none';
-
-      this.video.onplay = () => {
-         console.log('video.onplay: \n' +
-            'element: ' + this.video.width + ' x ' + this.video.height + '\n' +
-            'client: ' + this.video.clientWidth + ' x ' + this.video.clientHeight + '\n' +
-            'video: ' + this.video.videoWidth + ' x ' + this.video.videoHeight);
-
-         //this.startSession();
-      }
 
       this.handler = new PointerEventHandler(this.canvas);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
@@ -249,21 +239,21 @@ export class SquintApp implements IApp {
       hostHeader.innerText = 'Host a camera...';
       hostPanelDiv.appendChild(hostHeader);
 
-      let cameraNameDiv = document.createElement('div');
-      cameraNameDiv.id = 'CameraNameDiv';
-      cameraNameDiv.classList.add('Stretch');
-      hostPanelDiv.appendChild(cameraNameDiv);
+      let sessionNameDiv = document.createElement('div');
+      sessionNameDiv.id = 'CameraNameDiv';
+      sessionNameDiv.classList.add('Stretch');
+      hostPanelDiv.appendChild(sessionNameDiv);
 
       let nameLabel = document.createElement('label');
       nameLabel.innerText = 'Camera Name:';
       nameLabel.htmlFor = 'NameInputText';
-      cameraNameDiv.appendChild(nameLabel);
+      sessionNameDiv.appendChild(nameLabel);
 
       this.sessionNameInput = document.createElement('input');
       this.sessionNameInput.type = 'text';
       this.sessionNameInput.id = 'NameInputText';
       this.sessionNameInput.placeholder = 'Your Name';
-      cameraNameDiv.appendChild(this.sessionNameInput);
+      sessionNameDiv.appendChild(this.sessionNameInput);
       this.sessionNameInput.oninput = () => {
          goHostButton.disabled = (this.sessionNameInput.value.trim().length === 0);
       };

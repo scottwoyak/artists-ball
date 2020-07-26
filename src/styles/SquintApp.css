@@ -4,17 +4,6 @@
   background-color: white;
 }
 
-#SquintApp .Instructions {
-  padding-bottom: 10px;
-  display: none;
-}
-
-#SquintApp .Title {
-  font-weight: bold;
-  padding-top: 5px;
-  padding-bottom: 10px;
-}
-
 #SquintApp #Canvas {
   flex-grow: 1;
 }
