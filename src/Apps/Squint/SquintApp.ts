@@ -13,7 +13,7 @@ import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
 
-let V = 30;
+let V = 31;
 
 // TODO: 
 // - check into camera being in us
@@ -513,10 +513,7 @@ export class SquintApp implements IApp {
          };
       }
 
-      console.log('---getUserMedia() ' + JSON.stringify(constraints, null, ' '));
-      console.log('---navigator.mediaDevices ' + navigator.mediaDevices);
-      console.log('---navigator.getUserMedia ' + navigator.getUserMedia);
-      console.log('---navigator.mediaDevices.getUserMedia ' + navigator.mediaDevices.getUserMedia);
+      console.log('---getUserMedia() requesting\n' + JSON.stringify(constraints, null, ' '));
       navigator.mediaDevices.getUserMedia(constraints)
          .then((stream) => {
             console.log('---getUserMedia().then() ' + stream);
@@ -528,7 +525,7 @@ export class SquintApp implements IApp {
             else {
                let track = stream.getVideoTracks()[0];
                let settings = track.getSettings();
-               console.log('size: ' + settings.width + ' x ' + settings.height);
+               console.log('actual video size: ' + settings.width + ' x ' + settings.height);
                this.updateVideoSize(settings.width, settings.height);
                console.log('setting video.srcObject to ' + stream);
                this.video.srcObject = stream;
@@ -539,7 +536,9 @@ export class SquintApp implements IApp {
                   .catch((err) => {
                      console.log('error playing: ' + err);
                   });
-               this.startSession();
+               if (!this.uploader && !this.downloader) {
+                  this.startSession();
+               }
             }
          })
          .catch((reason) => {
