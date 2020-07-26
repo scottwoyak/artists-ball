@@ -135,7 +135,7 @@ export class SquintApp implements IApp {
 
    private startSession() {
       if (!this.sessionId) {
-         console.log('creating session');
+         console.log('creating session on ' + Squint.url);
          this.squint.createSession(this.sessionNameInput.value)
             .then((id) => {
                console.log('session created: ' + id);
@@ -146,7 +146,7 @@ export class SquintApp implements IApp {
                this.downloader.start(this.sessionId);
             })
             .catch((err) => {
-               alert('could not create session: ' + err);
+               alert('Could not create session: ' + err);
                this.showStartDialog(true);
                this.enableVideo(false);
             });

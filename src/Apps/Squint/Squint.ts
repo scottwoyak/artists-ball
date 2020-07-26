@@ -34,6 +34,7 @@ export class Squint {
 
    static readonly url = 'https://squintserver-11278.nodechef.com/V1';
    //static readonly url = 'http://' + location.hostname + ':8080/V1'
+   //static readonly url = 'http://localhost:8080/V1'
 
    private abortController = new AbortController();
 
