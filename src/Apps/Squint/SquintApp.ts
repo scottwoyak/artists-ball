@@ -12,7 +12,7 @@ import { iOS, getTimeStr, getSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 
-let V = 29;
+let V = 30;
 
 // TODO: 
 // - check into camera being in us
@@ -78,6 +78,7 @@ export class SquintApp implements IApp {
       log.style.color = 'white';
       log.style.fontSize = '12px';
       log.cols = 150;
+      log.style.display = 'none';
       document.body.appendChild(log);
 
       document.title += (' ' + V);
@@ -445,6 +446,15 @@ export class SquintApp implements IApp {
          ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       });
 
+      sessionMenu.addItem('Toggle Log', () => {
+         if (getComputedStyle(log).display === 'none') {
+            log.style.display = 'block';
+         }
+         else {
+            log.style.display = 'none';
+         }
+      })
+
    }
 
    private numToString(num: number): string {
@@ -523,7 +533,8 @@ export class SquintApp implements IApp {
                   width: { ideal: 10 * 1000 },
                   height: { ideal: 10 * 1000 },
                   deviceId: this.desired.deviceId,
-               }
+               },
+               audio: false,
             };
          }
          else {
@@ -533,6 +544,7 @@ export class SquintApp implements IApp {
                   width: { ideal: 10 * 1000 },
                   height: { ideal: 10 * 1000 },
                },
+               audio: false,
             };
          }
 
