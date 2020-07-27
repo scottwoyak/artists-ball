@@ -539,6 +539,7 @@ export class SquintApp implements IApp {
                this.video.play()
                   .then(() => {
                      console.log('playing');
+                     this.updateVideoSize(this.video.videoWidth, this.video.videoHeight);
                   })
                   .catch((err) => {
                      console.log('error playing: ' + err);
