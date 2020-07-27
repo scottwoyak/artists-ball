@@ -5,9 +5,9 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 module.exports = {
    devServer: {
       // use with 'npm start'
-      //host: '192.168.86.23',
+      host: '192.168.86.23',
       //host: 'localhost',
-      host: '192.168.43.170',
+      //host: '192.168.43.170',
       port: 443,
       // use with 'npm run startX'
       //host: 'localhost',

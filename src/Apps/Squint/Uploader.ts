@@ -54,8 +54,10 @@ export class Uploader {
          this.onDataNeeded()
             .then((blob: Blob) => {
                if (blob === null) {
-                  debug('Cannot generate image from video: blob is null');
-                  this.upload(3000);
+                  // this happens when the camera is being initialized. Just try
+                  // again in a second
+                  console.warn('Cannot generate image from video: blob is null. Trying again');
+                  this.upload(1000);
                   this.busy = false;
                   return;
                }

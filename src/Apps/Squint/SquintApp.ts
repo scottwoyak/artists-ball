@@ -13,7 +13,7 @@ import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
 
-let V = 33;
+let V = 34;
 
 // TODO: 
 // - check into camera being in us
@@ -57,7 +57,6 @@ export class SquintApp implements IApp {
    private squint = new Squint();
 
    private viewListBox: ListBox<string>;
-   private sessionId: string;
 
    private startDialog: HTMLDivElement;
    private sessionNameInput: HTMLInputElement;
@@ -137,9 +136,12 @@ export class SquintApp implements IApp {
       this.downloader.onStop = () => {
          this.enableVideo(false);
          this.showStartDialog(true);
+         this.stopDownloader();
+         this.stopUploader();
       }
    }
    private startUploader(sessionId: string) {
+      console.log('starting uploader, video.readyState=' + this.video.readyState);
       this.uploader = new Uploader(
          this.squint,
          sessionId,
@@ -409,7 +411,7 @@ export class SquintApp implements IApp {
          label: 'Resolution',
          min: 10,
          max: 100,
-         value: 25,
+         value: 50,
          getText: (slider) => slider.value.toFixed() + '%',
       });
       this.cameraCtrls.push(this.resolution);

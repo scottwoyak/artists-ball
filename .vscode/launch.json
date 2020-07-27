@@ -22,7 +22,7 @@
          "type": "chrome",
          "request": "launch",
          "name": "cs:localhost",
-         "url": "https://localhost?squint",
+         "url": "http://localhost?squint",
          "webRoot": "${workspaceFolder}"
       },
       {

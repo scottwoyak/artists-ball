@@ -42,6 +42,10 @@ export class Squint {
       window.addEventListener('beforeunload', () => {
          this.abortController.abort();
       });
+      window.addEventListener('resume', () => {
+         alert('resume event');
+         this.abortController = new AbortController();
+      });
    }
 
    public get(id: string): Promise<Blob> {

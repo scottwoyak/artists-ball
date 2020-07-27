@@ -54,7 +54,7 @@ export class Downloader {
       console.log('starting download');
       this.squint.get(this.id)
          .then((blob) => {
-            console.log('got download blob: ' + blob + ' ' + toSizeStr(blob.size) + ' ' + toTimeStr(sw.elapsedMs));
+            console.log('blob downloaded: ' + blob + ' ' + toSizeStr(blob.size) + ' ' + toTimeStr(sw.elapsedMs));
             if (this.running) {
                try {
                   this.onDownload(blob, sw.elapsedMs);
