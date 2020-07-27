@@ -71,10 +71,10 @@ export class Downloader {
             }
             else if (err instanceof SquintError) {
                if (err.status === 404) {
-                  alert('The Squint host camera has ended.')
+                  console.log('session ended: 404 (stopping downloads)');
                }
                else {
-                  console.log('download failed (stopping downloads): ' + err);
+                  console.log('download failed: ' + err.status + ' (stopping downloads): ' + err);
                }
 
                this.stop();

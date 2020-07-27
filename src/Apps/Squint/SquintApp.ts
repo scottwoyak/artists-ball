@@ -7,16 +7,12 @@ import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
 import { Squint } from './Squint';
-import { ListBox } from '../../GUI/ListBox';
 import { iOS, toTimeStr, toSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
-
-let V = 34;
-
-// TODO: 
-// - check into camera being in us
+import { StartDialog } from './StartDialog';
+import { Version } from './Version';
 
 export function debug(msg: string): void {
    console.error(msg);
@@ -55,16 +51,14 @@ export class SquintApp implements IApp {
    private imgSize = 0;
    private downloadTime: number;
    private squint = new Squint();
+   private sessionName = '';
 
-   private viewListBox: ListBox<string>;
-
-   private startDialog: HTMLDivElement;
-   private sessionNameInput: HTMLInputElement;
+   private startDialog: StartDialog;
    private consoleCapture = new ConsoleCapture();
 
    public constructor() {
 
-      document.title += (' ' + V);
+      document.title += (' ' + Version.Build);
       //alert(document.title);
       let msg = '';
       if (iOS()) {
@@ -79,7 +73,17 @@ export class SquintApp implements IApp {
 
       div.id = 'SquintApp';
 
-      this.startDialog = this.createStartDialog(div);
+      this.startDialog = new StartDialog(
+         div,
+         this.squint,
+         (sessionId) => {
+            this.startDownloader(sessionId);
+         },
+         (sessionName) => {
+            this.sessionName = sessionName;
+            this.enableVideo(true);
+         }
+      );
 
       this.div = document.createElement('div');
       this.div.className = 'FlexContainer';
@@ -106,15 +110,15 @@ export class SquintApp implements IApp {
       window.addEventListener('resize', () => this.onResize());
       this.updateSizes();
 
-      this.showStartDialog();
+      this.startDialog.show = true;
    }
 
    public delete() {
    }
 
    private startSession() {
-      console.log('creating session on ' + Squint.url);
-      this.squint.createSession(this.sessionNameInput.value)
+      console.log('creating session \'' + this.sessionName + '\' on ' + Squint.url);
+      this.squint.createSession(this.sessionName)
          .then((id) => {
             console.log('session created: ' + id);
             this.startUploader(id);
@@ -122,7 +126,7 @@ export class SquintApp implements IApp {
          })
          .catch((err) => {
             alert('Could not create session: ' + err);
-            this.showStartDialog(true);
+            this.startDialog.show = true;
             this.enableVideo(false);
          });
    }
@@ -134,8 +138,10 @@ export class SquintApp implements IApp {
          (blob, downloadTime) => this.onDownload(blob, downloadTime),
       );
       this.downloader.onStop = () => {
+         alert('Squint session \'' + this.sessionName + '\' has ended');
+         this.sessionName = '';
          this.enableVideo(false);
-         this.showStartDialog(true);
+         this.startDialog.show = true;
          this.stopDownloader();
          this.stopUploader();
       }
@@ -163,136 +169,6 @@ export class SquintApp implements IApp {
 
 
 
-   private showStartDialog(show = true) {
-      if (show) {
-         this.startDialog.style.display = 'block';
-      }
-      else {
-         this.startDialog.style.display = 'none';
-      }
-   }
-
-   private createStartDialog(div: HTMLDivElement): HTMLDivElement {
-      let backgroundDiv = document.createElement('div');
-      backgroundDiv.className = 'DialogBackground';
-      div.appendChild(backgroundDiv);
-
-      let dialogDiv = document.createElement('div');
-      dialogDiv.id = 'DialogDiv';
-      backgroundDiv.appendChild(dialogDiv);
-
-      let viewDiv = document.createElement('div');
-      viewDiv.id = 'ViewPanelDiv';
-      dialogDiv.appendChild(viewDiv);
-
-      let viewHeader = document.createElement('div');
-      viewHeader.id = 'ViewHeader';
-      viewHeader.className = 'Header';
-      viewHeader.innerText = 'View a camera...';
-      viewDiv.appendChild(viewHeader);
-
-      this.viewListBox = new ListBox<string>(
-         viewDiv, {
-         id: 'ViewListBox'
-      });
-      this.viewListBox.onSelectedChanged = () => {
-         goViewButton.disabled = (this.viewListBox.selected === null);
-      }
-
-      this.updateList();
-
-      let buttonDiv = document.createElement('div');
-      buttonDiv.className = 'ButtonDiv';
-      viewDiv.appendChild(buttonDiv);
-
-      let goViewButton = document.createElement('button');
-      goViewButton.id = 'ViewButton';
-      goViewButton.innerText = 'Go';
-      goViewButton.disabled = true;
-      buttonDiv.appendChild(goViewButton);
-
-      goViewButton.onclick = () => {
-         this.showStartDialog(false);
-         let sessionId = this.viewListBox.selected;
-         this.startDownloader(sessionId);
-      }
-
-      let orParentDiv = document.createElement('div');
-      orParentDiv.id = 'OrParentDiv';
-      dialogDiv.appendChild(orParentDiv);
-
-      let orDiv = document.createElement('div');
-      orDiv.id = 'OrDiv';
-      orDiv.innerText = 'OR';
-      orParentDiv.appendChild(orDiv);
-
-
-
-      let hostPanelDiv = document.createElement('div');
-      hostPanelDiv.id = 'HostPanelDiv';
-      dialogDiv.appendChild(hostPanelDiv);
-
-      let hostHeader = document.createElement('div');
-      hostHeader.id = 'HostHeader';
-      hostHeader.className = 'Header';
-      hostHeader.innerText = 'Host a camera...';
-      hostPanelDiv.appendChild(hostHeader);
-
-      let sessionNameDiv = document.createElement('div');
-      sessionNameDiv.id = 'CameraNameDiv';
-      sessionNameDiv.classList.add('Stretch');
-      hostPanelDiv.appendChild(sessionNameDiv);
-
-      let nameLabel = document.createElement('label');
-      nameLabel.innerText = 'Camera Name:';
-      nameLabel.htmlFor = 'NameInputText';
-      sessionNameDiv.appendChild(nameLabel);
-
-      this.sessionNameInput = document.createElement('input');
-      this.sessionNameInput.type = 'text';
-      this.sessionNameInput.id = 'NameInputText';
-      this.sessionNameInput.placeholder = 'Your Name';
-      sessionNameDiv.appendChild(this.sessionNameInput);
-      this.sessionNameInput.oninput = () => {
-         goHostButton.disabled = (this.sessionNameInput.value.trim().length === 0);
-      };
-
-      buttonDiv = document.createElement('div');
-      buttonDiv.classList.add('ButtonDiv', 'NoStretch');
-      hostPanelDiv.appendChild(buttonDiv);
-
-      let goHostButton = document.createElement('button');
-      goHostButton.id = 'HostOkButton';
-      goHostButton.innerText = 'Go';
-      goHostButton.disabled = true;
-      buttonDiv.appendChild(goHostButton);
-
-      goHostButton.onclick = () => {
-         this.showStartDialog(false);
-         this.enableVideo(true);
-      }
-
-      return backgroundDiv
-   }
-
-   private updateList(responseId: string = undefined) {
-      this.squint.listSessions(responseId)
-         .then((value) => {
-            this.viewListBox.clear();
-            for (let i = 0; i < value.sessions.length; i++) {
-               this.viewListBox.addItem(value.sessions[i].name, value.sessions[i].id);
-            }
-            this.updateList(value.responseId);
-         })
-         .catch((err) => {
-            if (err.name !== 'AbortError') {
-               console.warn('listSessions: ' + err);
-            }
-            setTimeout(() => {
-               this.updateList(responseId);
-            }, 1000);
-         })
-   }
 
    private enableCameraCtrls(flag: boolean) {
       for (let i = 0; i < this.cameraCtrls.length; i++) {
@@ -424,7 +300,7 @@ export class SquintApp implements IApp {
          this.stopDownloader();
          this.stopUploader();
          this.enableVideo(false);
-         this.showStartDialog();
+         this.startDialog.show = true;
 
          let ctx = this.canvas.getContext('2d');
          ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);

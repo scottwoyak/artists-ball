@@ -57,6 +57,7 @@
 
 #SquintApp #DialogDiv {
   position: absolute;
+  flex-direction: column;
   display: flex;
   top: 20%;
   left: 20%;
@@ -64,6 +65,23 @@
   height: 60%;
   background-color: white;
   border-radius: 20px;
+}
+
+#SquintApp #DialogTitleDiv {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  background-color: lightgray;
+  padding-left: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-weight: bold;
+}
+
+#SquintApp #DialogBodyDiv {
+  display: flex;
+  background-color: white;
+  border-radius: 10px;
+  flex: 1 1;
 }
 
 #SquintApp .ButtonDiv {
@@ -110,14 +128,15 @@
   border-radius: 10px;
 }
 
-#SquintApp #CameraNameDiv {
+#SquintApp #SessionNameDiv {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 #SquintApp #NameInputText {
-  flex-grow: 1 1 auto;
+  flex: 1 1 auto;
+  width: 0;
 }
 
 #SquintApp .Stretch {
@@ -151,13 +170,13 @@
 }
 
 @media (orientation: landscape) {
-  #SquintApp #DialogDiv {
+  #SquintApp #DialogBodyDiv {
     flex-direction: row;
   }
 }
 
 @media (orientation: portrait) {
-  #SquintApp #DialogDiv {
+  #SquintApp #DialogBodyDiv {
     flex-direction: column;
   }
 }
@@ -169,8 +188,10 @@
     height: 400px;
   }
 
-  #SquintApp #Panel {
-    flex: 0 0 300px;
+  #SquintApp #HostPanelDiv,
+  #SquintApp #ViewPanelDiv {
+    padding: 20px;
+    margin: 20px;
   }
 
   #SquintApp .SliderLabel {
