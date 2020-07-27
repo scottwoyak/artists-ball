@@ -67,7 +67,7 @@ export class Downloader {
          })
          .catch((err) => {
             if (err.name === 'AbortError') {
-               return;
+               this.stop();
             }
             else if (err instanceof SquintError) {
                if (err.status === 404) {

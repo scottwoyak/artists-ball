@@ -6,14 +6,14 @@ import { Downloader } from './Downloader';
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
-import { Squint, ISessions } from './Squint';
+import { Squint } from './Squint';
 import { ListBox } from '../../GUI/ListBox';
 import { iOS, toTimeStr, toSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
 
-let V = 31;
+let V = 33;
 
 // TODO: 
 // - check into camera being in us
@@ -197,10 +197,7 @@ export class SquintApp implements IApp {
          goViewButton.disabled = (this.viewListBox.selected === null);
       }
 
-      this.squint.listSessions()
-         .then((value) => {
-            this.updateList(value);
-         });
+      this.updateList();
 
       let buttonDiv = document.createElement('div');
       buttonDiv.className = 'ButtonDiv';
@@ -276,15 +273,23 @@ export class SquintApp implements IApp {
       return backgroundDiv
    }
 
-   private updateList(value: ISessions) {
-      this.viewListBox.clear();
-      for (let i = 0; i < value.sessions.length; i++) {
-         this.viewListBox.addItem(value.sessions[i].name, value.sessions[i].id);
-      }
-      this.squint.listSessions(value.responseId)
+   private updateList(responseId: string = undefined) {
+      this.squint.listSessions(responseId)
          .then((value) => {
-            this.updateList(value);
-         });
+            this.viewListBox.clear();
+            for (let i = 0; i < value.sessions.length; i++) {
+               this.viewListBox.addItem(value.sessions[i].name, value.sessions[i].id);
+            }
+            this.updateList(value.responseId);
+         })
+         .catch((err) => {
+            if (err.name !== 'AbortError') {
+               console.warn('listSessions: ' + err);
+            }
+            setTimeout(() => {
+               this.updateList(responseId);
+            }, 1000);
+         })
    }
 
    private enableCameraCtrls(flag: boolean) {
