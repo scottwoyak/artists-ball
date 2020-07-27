@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "startX": "webpack-dev-server",
-    "start": "webpack-dev-server --https --cert server.crt --key server.key",
+    "startValhalla": "webpack-dev-server --https --cert server.crt --key server.key --host 192.168.86.23 --port 443",
+    "startHotspot": "webpack-dev-server --https --cert server.crt --key server.key --host 192.168.43.170 --port 443",
+    "startLocalhost": "webpack-dev-server --host localhost --port 80",
     "build": "webpack"
   },
   "repository": {

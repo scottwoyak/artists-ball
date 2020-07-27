@@ -4,14 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
    devServer: {
-      // use with 'npm start'
-      //host: 'localhost',
-      //host: '192.168.86.23',
-      host: '192.168.43.170',
-      port: 443,
-      // use with 'npm run startX'
-      //host: 'localhost',
-      //port: 80,
+      // host and port are specified via the command line in package.json
       contentBase: path.join(__dirname, 'dist'),
    },
    entry: './src/index.ts',
