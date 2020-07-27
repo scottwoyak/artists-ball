@@ -64,12 +64,12 @@ export class ConsoleCapture {
    }
 
    private append(msg: string) {
-      let fullmsg = this.textArea.textContent;
+      let fullmsg = this.textArea.value;
 
       fullmsg = msg + '\n\n' + fullmsg;
       fullmsg = fullmsg.substr(0, 1024 * 1024);
 
-      this.textArea.textContent = fullmsg;
+      this.textArea.value = fullmsg;
    }
 
    public setEdges(left: number, right: number, top: number, bottom: number) {
