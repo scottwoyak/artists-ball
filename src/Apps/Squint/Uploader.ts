@@ -1,25 +1,20 @@
 import { FPS } from "../../Util/FPS";
-import { Squint, SquintError } from "./Squint";
 import { debug } from "./SquintApp";
-import { Stopwatch } from "../../Util/Stopwatch";
-import { toSizeStr, toTimeStr } from "../../Util/Globals";
+import { SquintWS } from "./SquintWS";
 
 export type DataNeededHandler = () => Promise<Blob>;
 
 export class Uploader {
    private onDataNeeded: DataNeededHandler;
-   public uploadTime: number;
    public fps = new FPS();
 
    private running = true;
    private busy = false;
-   private squint: Squint;
-   private id: string;
+   private squint: SquintWS;
 
-   public constructor(squint: Squint, id: string, onDataNeeded: DataNeededHandler) {
+   public constructor(squint: SquintWS, onDataNeeded: DataNeededHandler) {
       console.log('starting uploader');
       this.squint = squint;
-      this.id = id;
       this.onDataNeeded = onDataNeeded;
 
       this.upload();
@@ -46,9 +41,12 @@ export class Uploader {
          }, delay);
          return;
       }
+      if (!this.squint.bufferReady) {
+         requestAnimationFrame(() => { this.upload() });
+         return;
+      }
 
-      this.busy = false;
-      this.fps.tick();
+      this.busy = true;
 
       try {
          this.onDataNeeded()
@@ -62,37 +60,11 @@ export class Uploader {
                   return;
                }
 
-               let url = URL.createObjectURL(blob);
-               let fd = new FormData();
-               fd.append('image', blob);
+               this.fps.tick();
+               this.squint.sendImage(blob);
 
-               let sw = new Stopwatch();
-               console.log('starting upload: size=' + toSizeStr(blob.size));
+               requestAnimationFrame(() => { this.upload() });
 
-               return this.squint.put(this.id, fd)
-                  .then(() => {
-                     console.log('uploaded: ' + toTimeStr(sw.elapsedMs));
-                     this.uploadTime = sw.elapsedMs;
-                     this.upload();
-                  })
-                  .catch((err) => {
-                     // TODO fix error message to match the full url
-                     if (err.name === 'AbortError') {
-                        this.stop();
-                     }
-                     else if (err instanceof SquintError) {
-                        console.log('upload failed (stopping uploads): ' + err);
-                        // TODO figure out when we should retry
-                        this.stop();
-                     }
-                     else {
-                        console.log('upload failed (trying again): ' + err);
-                        this.upload(3000);
-                     }
-                  })
-                  .finally(() => {
-                     URL.revokeObjectURL(url);
-                  });
             }).catch((err) => {
                debug('Cannot generate image from video: ' + err);
             })

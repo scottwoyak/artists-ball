@@ -2,17 +2,17 @@ import 'webrtc-adapter';
 import { IApp } from '../../IApp';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
 import { IVideoResolution, Video } from './Video';
-import { Downloader } from './Downloader';
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
-import { Squint } from './Squint';
 import { iOS, toTimeStr, toSizeStr } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
 import { StartDialog } from './StartDialog';
 import { Version } from './Version';
+import { SquintWS, ISession } from './SquintWS';
+import { FPS } from '../../Util/FPS';
 
 export function debug(msg: string): void {
    console.error(msg);
@@ -33,8 +33,8 @@ export class SquintApp implements IApp {
       facingMode: '',
       deviceId: '',
    };
-   private downloader: Downloader;
    private uploader: Uploader;
+   private downloadFPS = new FPS();
 
    private brightness: Slider;
    private contrast: Slider;
@@ -50,7 +50,7 @@ export class SquintApp implements IApp {
 
    private imgSize = 0;
    private downloadTime: number;
-   private squint = new Squint();
+   private squintWS: SquintWS;
    private sessionName = '';
 
    private startDialog: StartDialog;
@@ -72,12 +72,24 @@ export class SquintApp implements IApp {
    public create(div: HTMLDivElement) {
 
       div.id = 'SquintApp';
+      this.squintWS = new SquintWS();
+      this.squintWS.onImage = (blob) => this.onDownload(blob, 0);
+
+      this.squintWS.onClose = () => {
+         this.stopUploader();
+         this.enableVideo(false);
+         this.startDialog.visible = true;
+
+         let ctx = this.canvas.getContext('2d');
+         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+      this.squintWS.onError = (msg) => alert('onError: ' + msg);
 
       this.startDialog = new StartDialog(
          div,
-         this.squint,
+         this.squintWS,
          (sessionId) => {
-            this.startDownloader(sessionId);
+            this.squintWS.subscribe(sessionId);
          },
          (sessionName) => {
             this.sessionName = sessionName;
@@ -110,55 +122,33 @@ export class SquintApp implements IApp {
       window.addEventListener('resize', () => this.onResize());
       this.updateSizes();
 
-      this.startDialog.show = true;
+      this.startDialog.visible = true;
    }
 
    public delete() {
    }
 
    private startSession() {
-      console.log('creating session \'' + this.sessionName + '\' on ' + Squint.url);
-      this.squint.createSession(this.sessionName)
-         .then((id) => {
-            console.log('session created: ' + id);
-            this.startUploader(id);
-            this.startDownloader(id);
+      console.log('creating session \'' + this.sessionName + '\' on ' + SquintWS.url);
+      this.squintWS.createSession(this.sessionName)
+         .then((session) => {
+            console.log('session created: ' + session.id);
+            this.startUploader(session.id);
+            this.squintWS.subscribe(session.id);
          })
          .catch((err) => {
-            alert('Could not create session: ' + err);
-            this.startDialog.show = true;
+            alert('Failed to create session: ' + err);
+            this.startDialog.visible = true;
             this.enableVideo(false);
          });
    }
 
-   private startDownloader(sessionId: string) {
-      this.downloader = new Downloader(
-         this.squint,
-         sessionId,
-         (blob, downloadTime) => this.onDownload(blob, downloadTime),
-      );
-      this.downloader.onStop = () => {
-         alert('Squint session \'' + this.sessionName + '\' has ended');
-         this.sessionName = '';
-         this.enableVideo(false);
-         this.startDialog.show = true;
-         this.stopDownloader();
-         this.stopUploader();
-      }
-   }
    private startUploader(sessionId: string) {
       console.log('starting uploader, video.readyState=' + this.video.readyState);
       this.uploader = new Uploader(
-         this.squint,
-         sessionId,
+         this.squintWS,
          () => this.takePicture()
       );
-   }
-   private stopDownloader() {
-      if (this.downloader) {
-         this.downloader.stop();
-         this.downloader = null;
-      }
    }
    private stopUploader() {
       if (this.uploader) {
@@ -297,13 +287,7 @@ export class SquintApp implements IApp {
       let sessionMenu = menubar.addSubMenu('Session');
 
       sessionMenu.addItem('Stop', () => {
-         this.stopDownloader();
-         this.stopUploader();
-         this.enableVideo(false);
-         this.startDialog.show = true;
-
-         let ctx = this.canvas.getContext('2d');
-         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+         this.squintWS.close();
       });
 
       let item = sessionMenu.addItem('Show Log', () => {
@@ -358,6 +342,7 @@ export class SquintApp implements IApp {
             })
       }
       else {
+         this.downloadFPS.tick();
          let img = document.createElement('img');
          img.onload = () => {
             this.img = img;
@@ -420,7 +405,7 @@ export class SquintApp implements IApp {
                   .catch((err) => {
                      console.log('error playing: ' + err);
                   });
-               if (!this.uploader && !this.downloader) {
+               if (!this.uploader) {
                   this.startSession();
                }
             }
@@ -443,7 +428,6 @@ export class SquintApp implements IApp {
       }
       else {
          this.stopUploader();
-         this.stopDownloader();
          this.video.style.display = 'none';
       }
    }
@@ -467,7 +451,7 @@ export class SquintApp implements IApp {
       canvas.width = this.video.videoWidth * (this.resolution.value / 100);
       canvas.height = this.video.videoHeight * (this.resolution.value / 100);
 
-      console.log('capturing image: ' + canvas.width + 'x' + canvas.height);
+      //console.log('capturing image: ' + canvas.width + 'x' + canvas.height);
       const context = canvas.getContext('2d');
       context.drawImage(this.video, 0, 0, canvas.width, canvas.height);
 
@@ -565,20 +549,18 @@ export class SquintApp implements IApp {
 
       let msg: string;
 
-      ctx.fillText(Squint.url, 0, 10);
+      ctx.fillText(SquintWS.url, 0, 10);
 
       msg = imgWidth + 'x' + imgHeight;
       ctx.fillText(msg, 0, canvasHeight - 35);
 
       if (this.uploader) {
-         msg = 'upload: ' + toTimeStr(this.uploader.uploadTime) + ' - ' + this.uploader.fps.rate.toFixed(1);
+         msg = 'upload: ' + this.uploader.fps.rate.toFixed(1);
          ctx.fillText(msg, 0, canvasHeight - 25);
       }
 
-      if (this.downloader) {
-         msg = 'download: ' + toTimeStr(this.downloadTime) + ' - ' + this.downloader.fps.rate.toFixed(1);
-         ctx.fillText(msg, 0, canvasHeight - 15);
-      }
+      msg = 'download: ' + this.downloadFPS.rate.toFixed(1);
+      ctx.fillText(msg, 0, canvasHeight - 15);
 
       msg = toSizeStr(this.imgSize);
       ctx.fillText(msg, 0, canvasHeight - 5);

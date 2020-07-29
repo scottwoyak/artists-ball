@@ -1,6 +1,6 @@
 import { ListBox } from "../../GUI/ListBox";
-import { Squint } from "./Squint";
 import { Version } from "./Version";
+import { SquintWS, ISession } from "./SquintWS";
 
 export type ViewSessionHandler = (sessionId: string) => void;
 export type StartSessionHandler = (sessionName: string) => void;
@@ -8,17 +8,35 @@ export type StartSessionHandler = (sessionName: string) => void;
 export class StartDialog {
    private viewListBox: ListBox<string>;
    private backgroundDiv: HTMLDivElement;
+   private bodyDiv: HTMLDivElement;
+   private connectingDiv: HTMLDivElement;
+   private connectingAnimationDiv: HTMLDivElement;
    private sessionNameInput: HTMLInputElement;
-   private squint: Squint;
+   private squintWS: SquintWS;
    private onStartView: ViewSessionHandler;
    private onStartSession: StartSessionHandler;
 
-   public get show(): boolean {
-      return true;
+   public get enable(): boolean {
+      return (getComputedStyle(this.bodyDiv).pointerEvents === 'none');
    }
-   public set show(flag: boolean) {
+   public set enable(flag: boolean) {
+      // TODO move this all to an "Enabled" style
+      this.bodyDiv.style.pointerEvents = flag ? 'auto' : 'none';
+      this.bodyDiv.style.filter = flag ? '' : 'grayscale(1) contrast(0.4)';
+   }
+
+   public get visible(): boolean {
+      return (getComputedStyle(this.backgroundDiv).display === 'block');
+   }
+   public set visible(flag: boolean) {
+      if (flag === this.visible) {
+         return;
+      }
+
       if (flag) {
+         this.enable = false;
          this.backgroundDiv.style.display = 'block';
+         this.connect();
       }
       else {
          this.backgroundDiv.style.display = 'none';
@@ -27,11 +45,12 @@ export class StartDialog {
 
    public constructor(
       parent: HTMLDivElement,
-      squint: Squint,
+      squint: SquintWS,
       onViewSession: ViewSessionHandler,
       onStartSession: StartSessionHandler,
    ) {
-      this.squint = squint;
+      this.squintWS = squint;
+      this.squintWS.onSessionList = (sessions) => this.onSessionList(sessions);
       this.onStartView = onViewSession;
       this.onStartSession = onStartSession;
 
@@ -43,21 +62,39 @@ export class StartDialog {
       dialogDiv.id = 'DialogDiv';
       this.backgroundDiv.appendChild(dialogDiv);
 
-      let titleDiv = document.createElement('div');
-      titleDiv.id = 'DialogTitleDiv';
-      titleDiv.innerText = 'Squint V' + Version.Build;
-      dialogDiv.appendChild(titleDiv);
+      let dialogTitleDiv = document.createElement('div');
+      dialogTitleDiv.id = 'DialogTitleDiv';
+      dialogDiv.appendChild(dialogTitleDiv);
 
-      let bodyDiv = document.createElement('div');
-      bodyDiv.id = 'DialogBodyDiv';
-      dialogDiv.appendChild(bodyDiv);
+      let titleDiv = document.createElement('div');
+      titleDiv.id = 'TitleDiv';
+      titleDiv.innerText = 'Squint V' + Version.Build;
+      dialogTitleDiv.appendChild(titleDiv);
+
+      this.connectingDiv = document.createElement('div');
+      this.connectingDiv.id = 'ConnectingText';
+      this.connectingDiv.innerText = 'connecting ';
+      dialogTitleDiv.appendChild(this.connectingDiv);
+
+      this.connectingAnimationDiv = document.createElement('div');
+      this.connectingAnimationDiv.id = 'ConnectingAnimation';
+      this.connectingAnimationDiv.className = 'lds-ring';
+      this.connectingAnimationDiv.appendChild(document.createElement('div'));
+      this.connectingAnimationDiv.appendChild(document.createElement('div'));
+      this.connectingAnimationDiv.appendChild(document.createElement('div'));
+      this.connectingAnimationDiv.appendChild(document.createElement('div'));
+      dialogTitleDiv.appendChild(this.connectingAnimationDiv);
+
+      this.bodyDiv = document.createElement('div');
+      this.bodyDiv.id = 'DialogBodyDiv';
+      dialogDiv.appendChild(this.bodyDiv);
 
       //
       // View a session panel
       //
       let viewPanelDiv = document.createElement('div');
       viewPanelDiv.id = 'ViewPanelDiv';
-      bodyDiv.appendChild(viewPanelDiv);
+      this.bodyDiv.appendChild(viewPanelDiv);
 
       let viewHeader = document.createElement('div');
       viewHeader.id = 'ViewHeader';
@@ -73,8 +110,6 @@ export class StartDialog {
          goViewButton.disabled = (this.viewListBox.selected === null);
       }
 
-      this.updateList();
-
       let buttonDiv = document.createElement('div');
       buttonDiv.className = 'ButtonDiv';
       viewPanelDiv.appendChild(buttonDiv);
@@ -86,7 +121,7 @@ export class StartDialog {
       buttonDiv.appendChild(goViewButton);
 
       goViewButton.onclick = () => {
-         this.show = false;
+         this.visible = false;
          let sessionId = this.viewListBox.selected;
          this.onStartView(sessionId);
       }
@@ -96,7 +131,7 @@ export class StartDialog {
       //
       let orParentDiv = document.createElement('div');
       orParentDiv.id = 'OrParentDiv';
-      bodyDiv.appendChild(orParentDiv);
+      this.bodyDiv.appendChild(orParentDiv);
 
       let orDiv = document.createElement('div');
       orDiv.id = 'OrDiv';
@@ -110,7 +145,7 @@ export class StartDialog {
       //
       let hostPanelDiv = document.createElement('div');
       hostPanelDiv.id = 'HostPanelDiv';
-      bodyDiv.appendChild(hostPanelDiv);
+      this.bodyDiv.appendChild(hostPanelDiv);
 
       let hostHeader = document.createElement('div');
       hostHeader.id = 'HostHeader';
@@ -148,27 +183,38 @@ export class StartDialog {
       buttonDiv.appendChild(goHostButton);
 
       goHostButton.onclick = () => {
-         this.show = false;
+         this.visible = false;
          this.onStartSession(this.sessionNameInput.value);
       }
    }
 
-   private updateList(responseId: string = undefined) {
-      this.squint.listSessions(responseId)
-         .then((value) => {
-            this.viewListBox.clear();
-            for (let i = 0; i < value.sessions.length; i++) {
-               this.viewListBox.addItem(value.sessions[i].name, value.sessions[i].id);
+   private connect() {
+      this.connectingDiv.style.display = 'block';
+      this.connectingAnimationDiv.style.display = 'block';
+
+      this.squintWS.connect(SquintWS.url)
+         .then(() => {
+            this.squintWS.onSessionList = (sessions: ISession[]) => {
+               this.onSessionList(sessions);
             }
-            this.updateList(value.responseId);
+            this.connectingDiv.style.display = 'none';
+            this.connectingAnimationDiv.style.display = 'none';
+            this.enable = true;
          })
          .catch((err) => {
-            if (err.name !== 'AbortError') {
-               console.warn('listSessions: ' + err);
-            }
+            // TODO figure out when this err value is human readable
+            alert('Could not connect to server.\n\n' + err);
             setTimeout(() => {
-               this.updateList(responseId);
+               this.connect();
             }, 1000);
-         })
+         });
+   }
+
+   private onSessionList(sessions: ISession[]) {
+
+      this.viewListBox.clear();
+      for (let i = 0; i < sessions.length; i++) {
+         this.viewListBox.addItem(sessions[i].name, sessions[i].id);
+      }
    }
 }
