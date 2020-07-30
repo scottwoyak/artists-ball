@@ -11,7 +11,7 @@ import { Menubar } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
 import { StartDialog } from './StartDialog';
 import { Version } from './Version';
-import { SquintWS, ISession } from './SquintWS';
+import { Squint } from './Squint';
 import { FPS } from '../../Util/FPS';
 
 export function debug(msg: string): void {
@@ -49,8 +49,7 @@ export class SquintApp implements IApp {
    private yOffset = 0;
 
    private imgSize = 0;
-   private downloadTime: number;
-   private squintWS: SquintWS;
+   private squint: Squint;
    private sessionName = '';
 
    private startDialog: StartDialog;
@@ -72,10 +71,10 @@ export class SquintApp implements IApp {
    public create(div: HTMLDivElement) {
 
       div.id = 'SquintApp';
-      this.squintWS = new SquintWS();
-      this.squintWS.onImage = (blob) => this.onDownload(blob, 0);
+      this.squint = new Squint();
+      this.squint.onImage = (blob) => this.onDownload(blob);
 
-      this.squintWS.onClose = () => {
+      this.squint.onClose = () => {
          this.stopUploader();
          this.enableVideo(false);
          this.startDialog.visible = true;
@@ -83,13 +82,13 @@ export class SquintApp implements IApp {
          let ctx = this.canvas.getContext('2d');
          ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       }
-      this.squintWS.onError = (msg) => alert('onError: ' + msg);
+      this.squint.onError = (msg) => alert('onError: ' + msg);
 
       this.startDialog = new StartDialog(
          div,
-         this.squintWS,
+         this.squint,
          (sessionId) => {
-            this.squintWS.subscribe(sessionId);
+            this.squint.subscribe(sessionId);
          },
          (sessionName) => {
             this.sessionName = sessionName;
@@ -129,12 +128,12 @@ export class SquintApp implements IApp {
    }
 
    private startSession() {
-      console.log('creating session \'' + this.sessionName + '\' on ' + SquintWS.url);
-      this.squintWS.createSession(this.sessionName)
+      console.log('creating session \'' + this.sessionName + '\' on ' + Squint.url);
+      this.squint.createSession(this.sessionName)
          .then((session) => {
             console.log('session created: ' + session.id);
             this.startUploader(session.id);
-            this.squintWS.subscribe(session.id);
+            this.squint.subscribe(session.id);
          })
          .catch((err) => {
             alert('Failed to create session: ' + err);
@@ -146,7 +145,7 @@ export class SquintApp implements IApp {
    private startUploader(sessionId: string) {
       console.log('starting uploader, video.readyState=' + this.video.readyState);
       this.uploader = new Uploader(
-         this.squintWS,
+         this.squint,
          () => this.takePicture()
       );
    }
@@ -287,7 +286,7 @@ export class SquintApp implements IApp {
       let sessionMenu = menubar.addSubMenu('Session');
 
       sessionMenu.addItem('Stop', () => {
-         this.squintWS.close();
+         this.squint.close();
       });
 
       let item = sessionMenu.addItem('Show Log', () => {
@@ -330,7 +329,7 @@ export class SquintApp implements IApp {
       return str;
    }
 
-   private onDownload(blob: Blob, downloadTime: number) {
+   private onDownload(blob: Blob) {
       // TODO text download is an error
       if (blob.type === 'text/plain') {
          blob.text()
@@ -346,7 +345,6 @@ export class SquintApp implements IApp {
          let img = document.createElement('img');
          img.onload = () => {
             this.img = img;
-            this.downloadTime = downloadTime;
             this.imgSize = blob.size;
             this.drawImg();
          }
@@ -549,7 +547,7 @@ export class SquintApp implements IApp {
 
       let msg: string;
 
-      ctx.fillText(SquintWS.url, 0, 10);
+      ctx.fillText(Squint.url, 0, 10);
 
       msg = imgWidth + 'x' + imgHeight;
       ctx.fillText(msg, 0, canvasHeight - 35);

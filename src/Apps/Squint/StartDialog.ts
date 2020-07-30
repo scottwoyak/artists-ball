@@ -1,6 +1,6 @@
 import { ListBox } from "../../GUI/ListBox";
 import { Version } from "./Version";
-import { SquintWS, ISession } from "./SquintWS";
+import { Squint, ISession } from "./Squint";
 
 export type ViewSessionHandler = (sessionId: string) => void;
 export type StartSessionHandler = (sessionName: string) => void;
@@ -12,7 +12,7 @@ export class StartDialog {
    private connectingDiv: HTMLDivElement;
    private connectingAnimationDiv: HTMLDivElement;
    private sessionNameInput: HTMLInputElement;
-   private squintWS: SquintWS;
+   private squint: Squint;
    private onStartView: ViewSessionHandler;
    private onStartSession: StartSessionHandler;
 
@@ -45,12 +45,12 @@ export class StartDialog {
 
    public constructor(
       parent: HTMLDivElement,
-      squint: SquintWS,
+      squint: Squint,
       onViewSession: ViewSessionHandler,
       onStartSession: StartSessionHandler,
    ) {
-      this.squintWS = squint;
-      this.squintWS.onSessionList = (sessions) => this.onSessionList(sessions);
+      this.squint = squint;
+      this.squint.onSessionList = (sessions) => this.onSessionList(sessions);
       this.onStartView = onViewSession;
       this.onStartSession = onStartSession;
 
@@ -192,9 +192,9 @@ export class StartDialog {
       this.connectingDiv.style.display = 'block';
       this.connectingAnimationDiv.style.display = 'block';
 
-      this.squintWS.connect(SquintWS.url)
+      this.squint.connect(Squint.url)
          .then(() => {
-            this.squintWS.onSessionList = (sessions: ISession[]) => {
+            this.squint.onSessionList = (sessions: ISession[]) => {
                this.onSessionList(sessions);
             }
             this.connectingDiv.style.display = 'none';
@@ -202,8 +202,7 @@ export class StartDialog {
             this.enable = true;
          })
          .catch((err) => {
-            // TODO figure out when this err value is human readable
-            alert('Could not connect to server.\n\n' + err);
+            alert(err);
             setTimeout(() => {
                this.connect();
             }, 1000);

@@ -1,6 +1,6 @@
 import { FPS } from "../../Util/FPS";
 import { debug } from "./SquintApp";
-import { SquintWS } from "./SquintWS";
+import { Squint } from "./Squint";
 
 export type DataNeededHandler = () => Promise<Blob>;
 
@@ -10,9 +10,9 @@ export class Uploader {
 
    private running = true;
    private busy = false;
-   private squint: SquintWS;
+   private squint: Squint;
 
-   public constructor(squint: SquintWS, onDataNeeded: DataNeededHandler) {
+   public constructor(squint: Squint, onDataNeeded: DataNeededHandler) {
       console.log('starting uploader');
       this.squint = squint;
       this.onDataNeeded = onDataNeeded;
@@ -34,11 +34,16 @@ export class Uploader {
       }
       if (this.busy) {
          console.error('upload() called before previous call returned');
+         return;
       }
       if (delay > 0) {
          setTimeout(() => {
             this.upload(0);
          }, delay);
+         return;
+      }
+      if (this.squint.connected === false) {
+         this.stop();
          return;
       }
       if (!this.squint.bufferReady) {
@@ -55,8 +60,8 @@ export class Uploader {
                   // this happens when the camera is being initialized. Just try
                   // again in a second
                   console.warn('Cannot generate image from video: blob is null. Trying again');
-                  this.upload(1000);
                   this.busy = false;
+                  this.upload(1000);
                   return;
                }
 

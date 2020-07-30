@@ -1,8 +1,8 @@
-import { SquintWsUrl } from "./Servers";
+import { SquintUrl as SquintUrl } from "./Servers";
 
 export interface ISquintMessage {
    [prop: string]: any,
-   subject: 'CreateSession' | 'SessionCreated' | 'SessionCreateError' | 'SessionList' | 'Subscribe' | 'Ready',
+   subject: 'CreateSession' | 'SessionCreated' | 'SessionCreateError' | 'SessionList' | 'Subscribe' | 'ReadyForNextImage',
 }
 export interface ISession {
    name: string,
@@ -15,9 +15,9 @@ export type SessionListHandler = (session: ISession[]) => void;
 type SessionCreatedHandler = (session: ISession) => void;
 type SessionCreateErrorHandler = (error: string) => void;
 
-export class SquintWS {
+export class Squint {
 
-   public static readonly url = SquintWsUrl;
+   public static readonly url = SquintUrl;
 
    private ws: WebSocket;
 
@@ -29,29 +29,49 @@ export class SquintWS {
    public onError: (event: Event) => void;
    public onClose: (event: CloseEvent) => void;
 
+   public constructor() {
+      window.addEventListener('beforeunload', () => {
+         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.close();
+         }
+      });
+   }
+
+   public get connected(): boolean {
+      return (this.ws && this.ws.readyState === WebSocket.OPEN);
+   }
+
    public get bufferReady(): boolean {
+      if (!this.connected) {
+         throw new Error('WebSocket not connected.');
+      }
+
       return this.ws.bufferedAmount === 0;
    }
 
    private setWS(ws: WebSocket) {
+
       this.ws = ws;
 
       ws.onopen = null;
 
       ws.onerror = (event: Event) => {
+         this.ws = null;
          if (this.onError) {
             this.onError(event);
          }
       };
 
       ws.onmessage = (message: MessageEvent) => {
+         // process the image
          if (message.data instanceof Blob) {
             if (this.onImage) {
                this.onImage(message.data);
             }
 
+            // let the server know we're ready for the next download
             this.send({
-               subject: 'Ready',
+               subject: 'ReadyForNextImage',
             });
          }
          else if (typeof message.data === 'string') {
@@ -66,6 +86,7 @@ export class SquintWS {
       };
 
       ws.onclose = (event: CloseEvent) => {
+         this.ws = null;
          if (this.onClose) {
             this.onClose(event);
          }
@@ -73,22 +94,27 @@ export class SquintWS {
    }
 
    public connect(url: string): Promise<void> {
+
       return new Promise((resolve, reject) => {
 
-         // TODO prevent calls if already connected or trying to connect
+         if (this.connected) {
+            reject('Cannot connect to server: previous connection is still open');
+            return;
+         }
 
          // create temporary handlers that process the server handshake
          let ws = new WebSocket(url);
          ws.onclose = (event) => {
-            reject('Could not connect to server: ' + event.code);
+            reject('Cannot connect to server: ' + event.code);
          }
 
          ws.onopen = () => {
+            // send handshake message
             ws.send('Hello');
          };
 
-         ws.onerror = (err) => {
-            reject(err);
+         ws.onerror = (event: Event) => {
+            reject('Cannot connect to ' + url);
          };
 
          ws.onmessage = (messageEvent) => {
@@ -110,7 +136,12 @@ export class SquintWS {
    }
 
    public close() {
+      if (!this.connected) {
+         throw new Error('WebSocket not connected.');
+      }
+
       this.ws.close();
+      this.ws = null;
    }
 
    private processMessage(msg: ISquintMessage) {
@@ -136,14 +167,27 @@ export class SquintWS {
          case undefined:
             console.error('Invalid Message: \'subject\' not found.\n' + JSON.stringify(msg, null, ' '));
             break;
+
+         default:
+            console.error('Invalid Message: unknown \'subject\'.\n' + JSON.stringify(msg, null, ' '));
+            break;
+
       }
    }
 
    private send(msg: ISquintMessage) {
+      if (!this.connected) {
+         throw new Error('WebSocket not connected.');
+      }
+
       this.ws.send(JSON.stringify(msg));
    }
 
    public sendImage(blob: Blob) {
+      if (!this.connected) {
+         throw new Error('WebSocket not connected.');
+      }
+
       if (this.bufferReady) {
          this.ws.send(blob);
       }
@@ -153,28 +197,47 @@ export class SquintWS {
    }
 
    public createSession(name: string): Promise<ISession> {
-      this.send({
-         subject: 'CreateSession',
-         name: name,
-      });
-
       return new Promise((resolve, reject) => {
+         if (!this.connected) {
+            console.log('socket ready state: ' + this.ws.readyState);
+            reject('WebSocket not connected.');
+         }
+         this.send({
+            subject: 'CreateSession',
+            name: name,
+         });
+
+         let closeHandler = () => {
+            reject('WebSocket was closed');
+         }
+         this.ws.addEventListener('close', closeHandler);
+         let errHandler = () => {
+            reject('WebSocket error');
+         }
+         this.ws.addEventListener('error', errHandler);
+
          this.onSessionCreated = (session) => {
             this.onSessionCreated = null;
             this.onSessionCreateError = null;
+            this.ws.removeEventListener('close', closeHandler);
+            this.ws.removeEventListener('error', errHandler);
             resolve(session);
          };
          this.onSessionCreateError = (err) => {
             this.onSessionCreated = null;
             this.onSessionCreateError = null;
+            this.ws.removeEventListener('close', closeHandler);
+            this.ws.removeEventListener('error', errHandler);
             reject(err);
          };
-
-         // TODO if the socket closes we should also reject
       });
    }
 
    public subscribe(sessionId: string) {
+      if (!this.connected) {
+         throw new Error('WebSocket not connected.');
+      }
+
       this.send({
          subject: 'Subscribe',
          sessionId: sessionId,
