@@ -199,7 +199,7 @@ export class Squint {
    public createSession(name: string): Promise<ISession> {
       return new Promise((resolve, reject) => {
          if (!this.connected) {
-            console.log('socket ready state: ' + this.ws.readyState);
+            console.log('socket ready state: ' + (this.ws ? this.ws.readyState : 'null'));
             reject('WebSocket not connected.');
          }
          this.send({

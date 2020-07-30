@@ -165,6 +165,7 @@
   font-size: "12px";
   display: none;
 }
+
 #SquintApp #Video {
   display: "none";
   position: absolute;
@@ -238,6 +239,7 @@
 @media only screen and (max-device-width: 800px) {
   #SquintApp #Video {
     top: 100px;
+    width: 30%;
   }
 
   #SquintApp #HostPanelDiv,
@@ -251,6 +253,6 @@
   }
 
   #SquintApp * {
-    font-size: 30px;
+    font-size: 25pt;
   }
 }

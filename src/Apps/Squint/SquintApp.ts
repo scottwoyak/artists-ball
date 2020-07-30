@@ -107,6 +107,7 @@ export class SquintApp implements IApp {
       this.video = document.createElement('video');
       this.video.id = 'Video';
       this.video.autoplay = true;
+      this.video.setAttribute('playsinline', 'true'); // needed for iPhones
       this.video.onerror = (err) => {
          alert('video.onerror(): ' + err);
       }
