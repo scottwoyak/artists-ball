@@ -2,7 +2,7 @@ import { SquintWsUrl } from "./Servers";
 
 export interface ISquintMessage {
    [prop: string]: any,
-   subject: 'CreateSession' | 'SessionCreated' | 'SessionCreateError' | 'SessionList' | 'Subscribe',
+   subject: 'CreateSession' | 'SessionCreated' | 'SessionCreateError' | 'SessionList' | 'Subscribe' | 'Ready',
 }
 export interface ISession {
    name: string,
@@ -49,6 +49,10 @@ export class SquintWS {
             if (this.onImage) {
                this.onImage(message.data);
             }
+
+            this.send({
+               subject: 'Ready',
+            });
          }
          else if (typeof message.data === 'string') {
             try {
@@ -80,7 +84,7 @@ export class SquintWS {
          }
 
          ws.onopen = () => {
-            ws.send('hello');
+            ws.send('Hello');
          };
 
          ws.onerror = (err) => {
@@ -90,7 +94,7 @@ export class SquintWS {
          ws.onmessage = (messageEvent) => {
             try {
                let msg = JSON.parse(messageEvent.data);
-               if (msg.subject && msg.subject === 'Version') {
+               if (msg.subject && msg.subject === 'Hello') {
                   this.setWS(ws);
                   resolve();
                }
