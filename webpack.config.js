@@ -1,5 +1,4 @@
 const path = require('path');
-const TypedocWebpackPlugin = require('typedoc-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
@@ -39,14 +38,9 @@ module.exports = {
    },
    // add to webpack plugins
    plugins: [
-      new TypedocWebpackPlugin({
-         name: 'Artist\'s Ball',
-         mode: 'file',
-         includeDeclarations: false,
-         ignoreCompilerErrors: true,
-      }),
       new HtmlWebpackPlugin({
-         title: 'Artist\'s Ball'
+         // needed to prevent iphones from zooming in when editing input fields
+         meta: { viewport: 'user-scalable=0' }
       })
    ]
 };

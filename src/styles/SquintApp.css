@@ -82,6 +82,17 @@
   font-weight: bold;
 }
 
+#SquintApp #ConnectingText {
+  color: white;
+  flex: 1 1 auto;
+  text-align: right;
+  padding-right: 10px;
+}
+
+#SquintApp #ConnectingAnimation {
+  zoom: 0.2;
+}
+
 #SquintApp #DialogBodyDiv {
   display: flex;
   background-color: white;
@@ -154,18 +165,6 @@
   flex: 0 0 auto;
 }
 
-#Console {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  bottom: 0px;
-  right: 0px;
-  background-color: darkblue;
-  color: white;
-  font-size: "12px";
-  display: none;
-}
-
 #SquintApp #Video {
   display: "none";
   position: absolute;
@@ -176,15 +175,8 @@
   border-color: white;
 }
 
-#SquintApp #ConnectingText {
-  color: white;
-  flex: 1 1 auto;
-  text-align: right;
-  padding-right: 5px;
-}
-
-#SquintApp #ConnectingAnimation {
-  zoom: 0.2;
+#SquintApp #Canvas {
+  font-size: 40px;
 }
 
 /* cool animation from https://loading.io/css/ */
@@ -252,6 +244,9 @@
     flex: 0 0 120px;
   }
 
+  #SquintApp #ConnectingAnimation {
+    zoom: 0.4;
+  }
   #SquintApp * {
     font-size: 25pt;
   }

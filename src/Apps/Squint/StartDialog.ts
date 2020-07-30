@@ -73,7 +73,7 @@ export class StartDialog {
 
       this.connectingDiv = document.createElement('div');
       this.connectingDiv.id = 'ConnectingText';
-      this.connectingDiv.innerText = 'connecting ';
+      this.connectingDiv.innerText = 'connecting...';
       dialogTitleDiv.appendChild(this.connectingDiv);
 
       this.connectingAnimationDiv = document.createElement('div');
@@ -183,8 +183,9 @@ export class StartDialog {
       buttonDiv.appendChild(goHostButton);
 
       goHostButton.onclick = () => {
-         this.visible = false;
+
          this.onStartSession(this.sessionNameInput.value);
+         this.visible = false;
       }
    }
 

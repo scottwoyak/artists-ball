@@ -61,6 +61,18 @@ body::-webkit-scrollbar {
   color: red;
 }
 
+#Console {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  bottom: 0px;
+  right: 0px;
+  background-color: darkblue;
+  color: white;
+  font-size: "12px";
+  display: none;
+}
+
 @import "Menu.css";
 @import "Slider.css";
 @import "Tabs.css";

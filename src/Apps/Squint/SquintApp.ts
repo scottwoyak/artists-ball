@@ -5,7 +5,7 @@ import { IVideoResolution, Video } from './Video';
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
-import { iOS, toTimeStr, toSizeStr } from '../../Util/Globals';
+import { iOS, toTimeStr, toSizeStr, isMobile } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
@@ -548,18 +548,22 @@ export class SquintApp implements IApp {
 
       let msg: string;
 
+      ctx.font = '10px sans-serif';
       ctx.fillText(Squint.url, 0, 10);
 
+      let fontSize = isMobile ? 20 : 10;
+      ctx.font = fontSize + 'px sans-serif';
+
       msg = imgWidth + 'x' + imgHeight;
-      ctx.fillText(msg, 0, canvasHeight - 35);
+      ctx.fillText(msg, 0, canvasHeight - (3 * fontSize + 5));
 
       if (this.uploader) {
          msg = 'upload: ' + this.uploader.fps.rate.toFixed(1);
-         ctx.fillText(msg, 0, canvasHeight - 25);
+         ctx.fillText(msg, 0, canvasHeight - (2 * fontSize + 5));
       }
 
       msg = 'download: ' + this.downloadFPS.rate.toFixed(1);
-      ctx.fillText(msg, 0, canvasHeight - 15);
+      ctx.fillText(msg, 0, canvasHeight - (fontSize + 5));
 
       msg = toSizeStr(this.imgSize);
       ctx.fillText(msg, 0, canvasHeight - 5);

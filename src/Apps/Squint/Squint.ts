@@ -1,4 +1,5 @@
 import { SquintUrl as SquintUrl } from "./Servers";
+import { debug } from "./SquintApp";
 
 export interface ISquintMessage {
    [prop: string]: any,
@@ -30,11 +31,21 @@ export class Squint {
    public onClose: (event: CloseEvent) => void;
 
    public constructor() {
-      window.addEventListener('beforeunload', () => {
+      window.addEventListener('unload', () => {
          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.close();
          }
       });
+      /*
+      window.addEventListener('beforeunload', () => {
+         console.log('beforeunload');
+      });
+
+      window.addEventListener('pagehide', () => {
+         alert('pagehide');
+         console.log('pagehide');
+      });
+      */
    }
 
    public get connected(): boolean {
@@ -125,6 +136,7 @@ export class Squint {
                   resolve();
                }
                else {
+                  debug('Expected Hello response, got: ' + JSON.stringify(msg, null, ' '));
                   reject('Invalid Server Version');
                }
             }
@@ -137,7 +149,8 @@ export class Squint {
 
    public close() {
       if (!this.connected) {
-         throw new Error('WebSocket not connected.');
+         debug('Squint.close() called but no connection exists');
+         return;
       }
 
       this.ws.close();
@@ -177,7 +190,8 @@ export class Squint {
 
    private send(msg: ISquintMessage) {
       if (!this.connected) {
-         throw new Error('WebSocket not connected.');
+         debug('Squint.send() called, but not connected');
+         return;
       }
 
       this.ws.send(JSON.stringify(msg));
@@ -185,21 +199,22 @@ export class Squint {
 
    public sendImage(blob: Blob) {
       if (!this.connected) {
-         throw new Error('WebSocket not connected.');
+         debug('Squint.sendImage() called, but not connected');
+         return;
       }
 
       if (this.bufferReady) {
          this.ws.send(blob);
       }
       else {
-         console.log('skipping upload, buffer not empty');
+         console.log('skipping upload, buffer not empty: ' + this.ws.bufferedAmount);
       }
    }
 
    public createSession(name: string): Promise<ISession> {
       return new Promise((resolve, reject) => {
          if (!this.connected) {
-            console.log('socket ready state: ' + (this.ws ? this.ws.readyState : 'null'));
+            console.log('createSession() socket ready state: ' + (this.ws ? this.ws.readyState : 'null'));
             reject('WebSocket not connected.');
          }
          this.send({
