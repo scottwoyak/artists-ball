@@ -1,6 +1,7 @@
 import { FPS } from "../../Util/FPS";
-import { debug } from "./SquintApp";
+import { debug, SquintStrings } from "./SquintApp";
 import { Squint } from "./Squint";
+import { Stopwatch } from "../../Util/Stopwatch";
 
 export type DataNeededHandler = () => Promise<Blob>;
 
@@ -11,6 +12,7 @@ export class Uploader {
    private running = true;
    private busy = false;
    private squint: Squint;
+   private timer = new Stopwatch();
 
    public constructor(squint: Squint, onDataNeeded: DataNeededHandler) {
       console.log('starting uploader');
@@ -27,6 +29,7 @@ export class Uploader {
       }
    }
 
+   private i = 0;
    private upload(delay = 0) {
 
       if (!this.running) {
@@ -46,7 +49,16 @@ export class Uploader {
          this.stop();
          return;
       }
+      if (this.timer.elapsedMs < 100) {
+         this.upload(100 - this.timer.elapsedMs);
+         return;
+      }
+      else {
+         this.timer.restart();
+      }
+
       if (!this.squint.bufferReady) {
+         console.log(this.i++ + ' buffer full');
          requestAnimationFrame(() => { this.upload() });
          return;
       }
@@ -56,22 +68,23 @@ export class Uploader {
       try {
          this.onDataNeeded()
             .then((blob: Blob) => {
-               if (blob === null) {
-                  // this happens when the camera is being initialized. Just try
-                  // again in a second
-                  console.warn('Cannot generate image from video: blob is null. Trying again');
-                  this.busy = false;
-                  this.upload(1000);
-                  return;
-               }
 
-               this.fps.tick();
                this.squint.sendImage(blob);
+               this.fps.tick();
 
                requestAnimationFrame(() => { this.upload() });
 
             }).catch((err) => {
-               debug('Cannot generate image from video: ' + err);
+               if (err === SquintStrings.CAMERA_NOT_READY) {
+                  // this happens when the camera is being initialized. Just try
+                  // again in a second
+                  this.busy = false;
+                  this.upload(1000);
+                  return;
+               }
+               else {
+                  debug('Cannot generate image from video: ' + err);
+               }
             })
             .finally(() => {
                this.busy = false;

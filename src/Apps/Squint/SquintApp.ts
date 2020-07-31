@@ -14,6 +14,10 @@ import { Version } from './Version';
 import { Squint } from './Squint';
 import { FPS } from '../../Util/FPS';
 
+export class SquintStrings {
+   public static readonly CAMERA_NOT_READY = 'Camera not ready';
+};
+
 export function debug(msg: string): void {
    console.error(msg);
    alert('debug error: ' + msg);
@@ -134,7 +138,6 @@ export class SquintApp implements IApp {
          .then((session) => {
             console.log('session created: ' + session.id);
             this.startUploader(session.id);
-            this.squint.subscribe(session.id);
          })
          .catch((err) => {
             alert('Failed to create session: ' + err);
@@ -331,29 +334,28 @@ export class SquintApp implements IApp {
    }
 
    private onDownload(blob: Blob) {
-      // TODO text download is an error
-      if (blob.type === 'text/plain') {
-         blob.text()
-            .then((txt) => {
-               debug(txt);
-            })
-            .catch((reason) => {
-               debug('cannot retrieve text from blob: ' + reason);
-            })
+
+      if (!blob) {
+         debug('onDownload() blob is null');
       }
-      else {
-         this.downloadFPS.tick();
-         let img = document.createElement('img');
-         img.onload = () => {
-            this.img = img;
-            this.imgSize = blob.size;
-            this.drawImg();
-         }
-         img.onerror = (reason) => {
-            alert('cannot load image: ' + reason);
-         }
-         img.src = URL.createObjectURL(blob);
+
+      // let the server know we're ready for the next download
+      this.squint.requestNextImage();
+      this.drawBlob(blob);
+   }
+
+   private drawBlob(blob: Blob) {
+      this.downloadFPS.tick();
+      let img = document.createElement('img');
+      img.onload = () => {
+         this.img = img;
+         this.imgSize = blob.size;
+         this.drawImg();
       }
+      img.onerror = (reason) => {
+         alert('cannot load image: ' + reason);
+      }
+      img.src = URL.createObjectURL(blob);
    }
 
    private setConstraints() {
@@ -446,6 +448,10 @@ export class SquintApp implements IApp {
 
    private takePicture(): Promise<Blob> {
 
+      if (this.video.readyState != 4) {
+         return Promise.reject(SquintStrings.CAMERA_NOT_READY);
+      }
+
       let canvas = document.createElement('canvas');
       canvas.width = this.video.videoWidth * (this.resolution.value / 100);
       canvas.height = this.video.videoHeight * (this.resolution.value / 100);
@@ -456,7 +462,13 @@ export class SquintApp implements IApp {
 
       // upload
       return new Promise<Blob>((resolve, reject) => {
-         canvas.toBlob((blob) => resolve(blob),
+         canvas.toBlob(
+            (blob) => {
+               // draw what was uploaded, i.e. simulate a download
+               this.drawBlob(blob);
+
+               resolve(blob)
+            },
             'image/jpeg',
             this.quality.value);
       });

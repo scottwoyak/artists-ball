@@ -79,11 +79,6 @@ export class Squint {
             if (this.onImage) {
                this.onImage(message.data);
             }
-
-            // let the server know we're ready for the next download
-            this.send({
-               subject: 'ReadyForNextImage',
-            });
          }
          else if (typeof message.data === 'string') {
             try {
@@ -209,6 +204,12 @@ export class Squint {
       else {
          console.log('skipping upload, buffer not empty: ' + this.ws.bufferedAmount);
       }
+   }
+
+   public requestNextImage() {
+      this.send({
+         subject: 'ReadyForNextImage',
+      });
    }
 
    public createSession(name: string): Promise<ISession> {
