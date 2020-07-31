@@ -268,7 +268,7 @@ export class SquintApp implements IApp {
       })
 
       this.quality = cameraMenu.addSlider({
-         label: 'Quality',
+         label: 'JPeg Photo Quality',
          min: 0.1,
          max: 1,
          value: 0.5,
@@ -277,11 +277,11 @@ export class SquintApp implements IApp {
       this.cameraCtrls.push(this.quality);
 
       this.resolution = cameraMenu.addSlider({
-         label: 'Resolution',
-         min: 10,
-         max: 100,
-         value: 50,
-         getText: (slider) => slider.value.toFixed() + '%',
+         label: 'Camera Resolution',
+         min: 0.1,
+         max: 1,
+         value: 0.5,
+         getText: (slider) => (100 * slider.value).toFixed() + '%',
       });
       this.cameraCtrls.push(this.resolution);
 
@@ -394,8 +394,14 @@ export class SquintApp implements IApp {
             else {
                let track = stream.getVideoTracks()[0];
                let settings = track.getSettings();
+
+               if (Math.max(settings.width, settings.height) > 1000) {
+                  this.resolution.value = Math.min(1000 / settings.width, 1000 / settings.height);
+               }
+
                console.log('actual video size: ' + settings.width + ' x ' + settings.height);
                this.updateVideoSize(settings.width, settings.height);
+
                console.log('setting video.srcObject to ' + stream);
                this.video.srcObject = stream;
                this.video.play()
@@ -453,8 +459,8 @@ export class SquintApp implements IApp {
       }
 
       let canvas = document.createElement('canvas');
-      canvas.width = this.video.videoWidth * (this.resolution.value / 100);
-      canvas.height = this.video.videoHeight * (this.resolution.value / 100);
+      canvas.width = this.video.videoWidth * this.resolution.value;
+      canvas.height = this.video.videoHeight * this.resolution.value;
 
       //console.log('capturing image: ' + canvas.width + 'x' + canvas.height);
       const context = canvas.getContext('2d');
@@ -522,7 +528,7 @@ export class SquintApp implements IApp {
 
       let width: number;
       let height: number;
-      /*
+
       if (canvasAR > imgAR) {
          height = this.zoom.value * canvasHeight;
          width = height * imgAR;
@@ -531,7 +537,8 @@ export class SquintApp implements IApp {
          width = this.zoom.value * canvasWidth;
          height = width / imgAR;
       }
-      */
+
+      /*
       if (canvasAR > imgAR) {
          height = this.zoom.value * imgHeight;
          width = height * imgAR;
@@ -540,6 +547,7 @@ export class SquintApp implements IApp {
          width = this.zoom.value * imgWidth;
          height = width / imgAR;
       }
+      */
 
       let x = (canvasWidth - width) / 2.0 + this.xOffset;
       let y = (canvasHeight - height) / 2.0 - this.yOffset;
