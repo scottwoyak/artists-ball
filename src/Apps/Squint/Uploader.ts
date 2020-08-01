@@ -2,17 +2,27 @@ import { FPS } from "../../Util/FPS";
 import { debug, SquintStrings } from "./SquintApp";
 import { Squint } from "./Squint";
 import { Stopwatch } from "../../Util/Stopwatch";
+import { UploadRateTracker } from "./UploadRateTracker";
 
 export type DataNeededHandler = () => Promise<Blob>;
 
 export class Uploader {
    private onDataNeeded: DataNeededHandler;
-   public fps = new FPS();
+   private fpsTracker = new FPS();
 
    private running = true;
    private busy = false;
    private squint: Squint;
    private timer = new Stopwatch();
+   private uploadTracker = new UploadRateTracker();
+
+   public get fps(): number {
+      return this.fpsTracker.rate;
+   }
+
+   public get bandwidth(): number {
+      return this.uploadTracker.bandwidth;
+   }
 
    public constructor(squint: Squint, onDataNeeded: DataNeededHandler) {
       console.log('starting uploader');
@@ -29,7 +39,6 @@ export class Uploader {
       }
    }
 
-   private i = 0;
    private upload(delay = 0) {
 
       if (!this.running) {
@@ -49,8 +58,8 @@ export class Uploader {
          this.stop();
          return;
       }
-      if (this.timer.elapsedMs < 100) {
-         this.upload(100 - this.timer.elapsedMs);
+      if (this.timer.elapsedMs < this.uploadTracker.recommendedMsPerFrame) {
+         this.upload(this.uploadTracker.recommendedMsPerFrame - this.timer.elapsedMs);
          return;
       }
       else {
@@ -58,11 +67,12 @@ export class Uploader {
       }
 
       if (!this.squint.bufferReady) {
-         console.log(this.i++ + ' buffer full');
+         this.uploadTracker.onBufferFull();
          requestAnimationFrame(() => { this.upload() });
          return;
       }
 
+      this.uploadTracker.onReady();
       this.busy = true;
 
       try {
@@ -70,7 +80,8 @@ export class Uploader {
             .then((blob: Blob) => {
 
                this.squint.sendImage(blob);
-               this.fps.tick();
+               this.uploadTracker.onUpload(blob.size);
+               this.fpsTracker.tick();
 
                requestAnimationFrame(() => { this.upload() });
 

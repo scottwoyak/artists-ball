@@ -79,6 +79,7 @@ export class SquintApp implements IApp {
       this.squint.onImage = (blob) => this.onDownload(blob);
 
       this.squint.onClose = () => {
+         alert('Squint connection closed.');
          this.stopUploader();
          this.enableVideo(false);
          this.startDialog.visible = true;
@@ -578,12 +579,22 @@ export class SquintApp implements IApp {
       ctx.fillText(msg, 0, canvasHeight - (3 * fontSize + 5));
 
       if (this.uploader) {
-         msg = 'upload: ' + this.uploader.fps.rate.toFixed(1);
+         msg = 'upload: ' + this.uploader.fps.toFixed(1);
          ctx.fillText(msg, 0, canvasHeight - (2 * fontSize + 5));
-      }
 
-      msg = 'download: ' + this.downloadFPS.rate.toFixed(1);
-      ctx.fillText(msg, 0, canvasHeight - (fontSize + 5));
+         let bandwidth = this.uploader.bandwidth;
+         if (bandwidth < 5) {
+            msg = 'bandwidth: ' + this.uploader.bandwidth.toFixed(2) + ' Mbsp';
+         }
+         else {
+            msg = 'bandwidth: ' + this.uploader.bandwidth.toFixed(1) + ' Mbsp';
+         }
+         ctx.fillText(msg, 0, canvasHeight - (fontSize + 5));
+      }
+      else {
+         msg = 'download: ' + this.downloadFPS.rate.toFixed(1);
+         ctx.fillText(msg, 0, canvasHeight - (fontSize + 5));
+      }
 
       msg = toSizeStr(this.imgSize);
       ctx.fillText(msg, 0, canvasHeight - 5);
