@@ -35,9 +35,9 @@ export class FPS {
 
       this.ticks.push(window.performance.now());
 
-      // trim off the size as long as there are at least 2 entries and the
+      // trim off the size as long as there are at least 20 entries and the
       // time span between all entries is at least 1 second
-      while (this.ticks.length > 2 && this.spanMs > 2000) {
+      while (this.ticks.length > 20 && this.spanMs > 2000) {
          this.ticks.shift();
       }
    }
