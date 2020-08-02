@@ -2,7 +2,7 @@ import { ListBox } from "../../GUI/ListBox";
 import { Version } from "./Version";
 import { Squint, ISession } from "./Squint";
 
-export type ViewSessionHandler = (sessionId: string) => void;
+export type ViewSessionHandler = (connectionId: string) => void;
 export type StartSessionHandler = (sessionName: string) => void;
 
 export class StartDialog {
@@ -122,8 +122,8 @@ export class StartDialog {
 
       goViewButton.onclick = () => {
          this.visible = false;
-         let sessionId = this.viewListBox.selected;
-         this.onStartView(sessionId);
+         let connectionId = this.viewListBox.selected;
+         this.onStartView(connectionId);
       }
 
       //
@@ -192,6 +192,8 @@ export class StartDialog {
    private connect() {
       this.connectingDiv.style.display = 'block';
       this.connectingAnimationDiv.style.display = 'block';
+      this.viewListBox.clear();
+      this.sessionNameInput.value = '';
 
       this.squint.connect(Squint.url)
          .then(() => {
@@ -214,7 +216,7 @@ export class StartDialog {
 
       this.viewListBox.clear();
       for (let i = 0; i < sessions.length; i++) {
-         this.viewListBox.addItem(sessions[i].name, sessions[i].id);
+         this.viewListBox.addItem(sessions[i].name, sessions[i].connectionId);
       }
    }
 }

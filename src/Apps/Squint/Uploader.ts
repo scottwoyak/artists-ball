@@ -79,12 +79,13 @@ export class Uploader {
          this.onDataNeeded()
             .then((blob: Blob) => {
 
-               this.squint.sendImage(blob);
-               this.uploadTracker.onUpload(blob.size);
-               this.fpsTracker.tick();
+               if (this.squint.connected) {
+                  this.squint.sendImage(blob);
+                  this.uploadTracker.onUpload(blob.size);
+                  this.fpsTracker.tick();
 
-               requestAnimationFrame(() => { this.upload() });
-
+                  requestAnimationFrame(() => { this.upload() });
+               }
             }).catch((err) => {
                if (err === SquintStrings.CAMERA_NOT_READY) {
                   // this happens when the camera is being initialized. Just try

@@ -20,7 +20,7 @@ export class SquintStrings {
 
 export function debug(msg: string): void {
    console.error(msg);
-   alert('debug error: ' + msg);
+   //alert('debug error: ' + msg);
 }
 
 export class SquintApp implements IApp {
@@ -80,6 +80,7 @@ export class SquintApp implements IApp {
 
       this.squint.onClose = () => {
          alert('Squint connection closed.');
+         console.log('Squing connection closed.');
          this.stopUploader();
          this.enableVideo(false);
          this.startDialog.visible = true;
@@ -92,8 +93,8 @@ export class SquintApp implements IApp {
       this.startDialog = new StartDialog(
          div,
          this.squint,
-         (sessionId) => {
-            this.squint.subscribe(sessionId);
+         (connectionId) => {
+            this.squint.subscribe(connectionId);
          },
          (sessionName) => {
             this.sessionName = sessionName;
@@ -137,8 +138,8 @@ export class SquintApp implements IApp {
       console.log('creating session \'' + this.sessionName + '\' on ' + Squint.url);
       this.squint.createSession(this.sessionName)
          .then((session) => {
-            console.log('session created: ' + session.id);
-            this.startUploader(session.id);
+            console.log('Session created');
+            this.startUploader();
          })
          .catch((err) => {
             alert('Failed to create session: ' + err);
@@ -147,7 +148,7 @@ export class SquintApp implements IApp {
          });
    }
 
-   private startUploader(sessionId: string) {
+   private startUploader() {
       console.log('starting uploader, video.readyState=' + this.video.readyState);
       this.uploader = new Uploader(
          this.squint,
@@ -455,6 +456,10 @@ export class SquintApp implements IApp {
 
    private takePicture(): Promise<Blob> {
 
+      if (!this.squint.connected) {
+         console.error('takePicture() after close');
+      }
+
       if (this.video.readyState != 4) {
          return Promise.reject(SquintStrings.CAMERA_NOT_READY);
       }
@@ -515,6 +520,11 @@ export class SquintApp implements IApp {
 
 
    private drawImg() {
+
+      if (!this.squint.connected) {
+         console.error('drawImg() after close');
+      }
+
       if (!this.img) {
          return;
       }

@@ -5,9 +5,10 @@ export interface ISquintMessage {
    [prop: string]: any,
    subject: 'CreateSession' | 'SessionCreated' | 'SessionCreateError' | 'SessionList' | 'Subscribe' | 'ReadyForNextImage',
 }
+
 export interface ISession {
    name: string,
-   id: string,
+   connectionId: string,
 }
 
 export type OnImageHandler = (img: Blob) => void;
@@ -26,6 +27,7 @@ export class Squint {
    public onSessionList: SessionListHandler;
    private onSessionCreated: SessionCreatedHandler;
    private onSessionCreateError: SessionCreateErrorHandler;
+   private connectionId: string;
 
    public onError: (event: Event) => void;
    public onClose: (event: CloseEvent) => void;
@@ -99,7 +101,7 @@ export class Squint {
       }
    }
 
-   public connect(url: string): Promise<void> {
+   public connect(url: string, reconnectId: string = undefined): Promise<void> {
 
       return new Promise((resolve, reject) => {
 
@@ -110,15 +112,22 @@ export class Squint {
 
          // create temporary handlers that process the server handshake
          let ws = new WebSocket(url);
-         ws.onclose = (event) => {
-            reject('Cannot connect to server: ' + event.code);
-         }
 
          ws.onopen = () => {
             // send handshake message
-            ws.send('Hello');
+            ws.send(
+               JSON.stringify({
+                  subject: 'Hello',
+                  reconnectId: reconnectId,
+                  userAgent: navigator.userAgent,
+                  platform: navigator.platform,
+               })
+            );
          };
 
+         ws.onclose = (event) => {
+            reject('Cannot connect to server: ' + event.code);
+         }
          ws.onerror = (event: Event) => {
             reject('Cannot connect to ' + url);
          };
@@ -127,16 +136,19 @@ export class Squint {
             try {
                let msg = JSON.parse(messageEvent.data);
                if (msg.subject && msg.subject === 'Hello') {
+                  this.connectionId = msg.id;
                   this.setWS(ws);
+                  console.log('Squint connection established. ID=' + msg.id);
                   resolve();
                }
                else {
                   debug('Expected Hello response, got: ' + JSON.stringify(msg, null, ' '));
-                  reject('Invalid Server Version');
+                  reject('Cannot connect to ' + url + '\n\nInvalid server handshake.');
                }
             }
             catch (err) {
-               reject(err);
+               debug('Expected Hello response, got: ' + messageEvent.data);
+               reject('Cannot connect to ' + url + '\n\nInvalid server handshake.');
             }
          }
       });
@@ -156,7 +168,10 @@ export class Squint {
       switch (msg.subject) {
          case 'SessionCreated':
             if (this.onSessionCreated) {
-               this.onSessionCreated({ id: msg.sessionId, name: msg.name });
+               this.onSessionCreated({
+                  name: msg.name,
+                  connectionId: msg.connectionId,
+               });
             };
             break;
 
@@ -249,14 +264,14 @@ export class Squint {
       });
    }
 
-   public subscribe(sessionId: string) {
+   public subscribe(connectionId: string) {
       if (!this.connected) {
          throw new Error('WebSocket not connected.');
       }
 
       this.send({
          subject: 'Subscribe',
-         sessionId: sessionId,
+         connectionId: connectionId,
       })
    }
 }
