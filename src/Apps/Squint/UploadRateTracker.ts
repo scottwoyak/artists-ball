@@ -79,6 +79,9 @@ export class UploadRateTracker {
          let average = this.bandwidthAverager.average;
          this.bandwidthAverager.clear();
          this.bandwidthAverager.push(2 * average);
+
+         // now that we've requested a new rate, reset the upload count
+         this.uploadsWithoutBuffering = 0;
       }
    }
 
