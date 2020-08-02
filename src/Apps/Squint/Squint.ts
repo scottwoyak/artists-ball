@@ -56,7 +56,8 @@ export class Squint {
 
    public get bufferReady(): boolean {
       if (!this.connected) {
-         throw new Error('WebSocket not connected.');
+         debug('Squint.bufferReady() called after websocket was disconnected');
+         return false;
       }
 
       return this.ws.bufferedAmount === 0;
@@ -266,7 +267,7 @@ export class Squint {
 
    public subscribe(connectionId: string) {
       if (!this.connected) {
-         throw new Error('WebSocket not connected.');
+         throw new Error('Cannot subscribe. WebSocket not connected.');
       }
 
       this.send({
