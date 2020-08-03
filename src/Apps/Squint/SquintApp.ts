@@ -13,6 +13,7 @@ import { StartDialog } from './StartDialog';
 import { Version } from './Version';
 import { Squint } from './Squint';
 import { FPS } from '../../Util/FPS';
+import { ReconnectingDialog } from './ReconnectingDialog';
 
 export class SquintStrings {
    public static readonly CAMERA_NOT_READY = 'Camera not ready';
@@ -79,14 +80,7 @@ export class SquintApp implements IApp {
       this.squint.onImage = (blob) => this.onDownload(blob);
 
       this.squint.onClose = () => {
-         alert('Squint connection closed.');
-         console.log('Squing connection closed.');
-         this.stopUploader();
-         this.enableVideo(false);
-         this.startDialog.visible = true;
-
-         let ctx = this.canvas.getContext('2d');
-         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+         this.closeConnection();
       }
       this.squint.onError = (msg) => alert('onError: ' + msg);
 
@@ -101,6 +95,29 @@ export class SquintApp implements IApp {
             this.enableVideo(true);
          }
       );
+
+      let reconnectingDlg = new ReconnectingDialog(div);
+      let timeout: number;
+      this.squint.onReconnecting = () => {
+         console.log('connection lost, reconnecting...');
+         timeout = window.setTimeout(() => {
+            timeout = null;
+            reconnectingDlg.visible = true;
+         }, 200);
+      }
+      this.squint.onReconnected = (success: boolean) => {
+         console.log('reconnected: success=' + success);
+         if (timeout) {
+            clearTimeout(timeout);
+         }
+         timeout = null;
+
+         reconnectingDlg.visible = false;
+
+         if (this.startDialog.visible) {
+            this.startDialog.connect();
+         }
+      }
 
       this.div = document.createElement('div');
       this.div.className = 'FlexContainer';
@@ -129,6 +146,30 @@ export class SquintApp implements IApp {
       this.updateSizes();
 
       this.startDialog.visible = true;
+
+      document.onkeypress = async (event: KeyboardEvent) => {
+         switch (event.key) {
+
+            case 'x':
+               // simulate killing the connection
+               this.squint.ws.close();
+               break;
+
+         }
+      }
+   }
+
+   public closeConnection() {
+      if (this.squint.connected) {
+         this.squint.close();
+      }
+
+      this.stopUploader();
+      this.enableVideo(false);
+      this.startDialog.visible = true;
+
+      let ctx = this.canvas.getContext('2d');
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
    }
 
    public delete() {
@@ -155,6 +196,7 @@ export class SquintApp implements IApp {
          () => this.takePicture()
       );
    }
+
    private stopUploader() {
       if (this.uploader) {
          this.uploader.stop();
@@ -292,7 +334,7 @@ export class SquintApp implements IApp {
       let sessionMenu = menubar.addSubMenu('Session');
 
       sessionMenu.addItem('Stop', () => {
-         this.squint.close();
+         this.closeConnection();
       });
 
       let item = sessionMenu.addItem('Show Log', () => {
@@ -352,7 +394,11 @@ export class SquintApp implements IApp {
       img.onload = () => {
          this.img = img;
          this.imgSize = blob.size;
-         this.drawImg();
+         // TODO how do we know that this connection is the same as the one that
+         // initiated the request?
+         if (this.squint.connected) {
+            this.drawImg();
+         }
       }
       img.onerror = (reason) => {
          alert('cannot load image: ' + reason);
@@ -514,7 +560,9 @@ export class SquintApp implements IApp {
       this.canvas.width = viewWidth;
       this.canvas.height = viewHeight - menubarHeight;
 
-      this.drawImg();
+      if (this.img) {
+         this.drawImg();
+      }
    }
 
 
@@ -523,6 +571,7 @@ export class SquintApp implements IApp {
 
       if (!this.squint.connected) {
          console.error('drawImg() after close');
+         return;
       }
 
       if (!this.img) {

@@ -1,9 +1,18 @@
 import { SquintUrl as SquintUrl } from "./Servers";
 import { debug } from "./SquintApp";
+import { SquintConnector, ISquintConnection } from "./SquintConnector";
 
 export interface ISquintMessage {
    [prop: string]: any,
-   subject: 'CreateSession' | 'SessionCreated' | 'SessionCreateError' | 'SessionList' | 'Subscribe' | 'ReadyForNextImage',
+   subject:
+   'CreateSession' |
+   'SessionCreated' |
+   'SessionCreateError' |
+   'SessionList' |
+   'Subscribe' |
+   'ReadyForNextImage' |
+   'Reconnected' |
+   'Hello',
 }
 
 export interface ISession {
@@ -11,26 +20,33 @@ export interface ISession {
    connectionId: string,
 }
 
-export type OnImageHandler = (img: Blob) => void;
+export type ImageHandler = (img: Blob) => void;
 export type SessionListHandler = (session: ISession[]) => void;
+export type ReconnectingHandler = () => void;
+export type ReconnectedHandler = (success: boolean) => void;
 
 type SessionCreatedHandler = (session: ISession) => void;
 type SessionCreateErrorHandler = (error: string) => void;
+
+const NORMAL_CLOSURE = 1000;
 
 export class Squint {
 
    public static readonly url = SquintUrl;
 
-   private ws: WebSocket;
+   public ws: WebSocket;
+   private _reconnecting = false;
 
-   public onImage: OnImageHandler;
+   public onImage: ImageHandler;
    public onSessionList: SessionListHandler;
    private onSessionCreated: SessionCreatedHandler;
    private onSessionCreateError: SessionCreateErrorHandler;
    private connectionId: string;
 
    public onError: (event: Event) => void;
-   public onClose: (event: CloseEvent) => void;
+   public onClose: () => void;
+   public onReconnecting: ReconnectingHandler;
+   public onReconnected: ReconnectedHandler;
 
    public constructor() {
       window.addEventListener('unload', () => {
@@ -54,6 +70,10 @@ export class Squint {
       return (this.ws && this.ws.readyState === WebSocket.OPEN);
    }
 
+   public get reconnecting(): boolean {
+      return this._reconnecting;
+   }
+
    public get bufferReady(): boolean {
       if (!this.connected) {
          debug('Squint.bufferReady() called after websocket was disconnected');
@@ -69,14 +89,32 @@ export class Squint {
 
       ws.onopen = null;
 
-      ws.onerror = (event: Event) => {
-         this.ws = null;
-         if (this.onError) {
-            this.onError(event);
+      ws.onclose = (event: CloseEvent) => {
+         console.warn('xxx ws.onclose()');
+         if (event.code === NORMAL_CLOSURE) {
+            this.ws.onclose = null;
+            this.ws.onerror = null;
+            this.ws.onmessage = null;
+            this.ws.onopen = null;
+            this.ws = null;
+            if (this.onClose) {
+               this.onClose();
+            }
          }
-      };
+         else {
+            this.tryToReconnect();
+         }
+      }
+
+      ws.onerror = (event: Event) => {
+         this.tryToReconnect();
+      }
 
       ws.onmessage = (message: MessageEvent) => {
+         if (ws.readyState !== WebSocket.OPEN) {
+            debug('ws.onmessage() message received, but socket not open');
+         }
+
          // process the image
          if (message.data instanceof Blob) {
             if (this.onImage) {
@@ -85,7 +123,7 @@ export class Squint {
          }
          else if (typeof message.data === 'string') {
             try {
-               let obj = JSON.parse(message.data);
+               let obj = JSON.parse(message.data) as ISquintMessage;
                this.processMessage(obj);
             }
             catch (err) {
@@ -93,66 +131,51 @@ export class Squint {
             }
          }
       };
-
-      ws.onclose = (event: CloseEvent) => {
-         this.ws = null;
-         if (this.onClose) {
-            this.onClose(event);
-         }
-      }
    }
 
-   public connect(url: string, reconnectId: string = undefined): Promise<void> {
-
-      return new Promise((resolve, reject) => {
-
-         if (this.connected) {
-            reject('Cannot connect to server: previous connection is still open');
-            return;
-         }
-
-         // create temporary handlers that process the server handshake
-         let ws = new WebSocket(url);
-
-         ws.onopen = () => {
-            // send handshake message
-            ws.send(
-               JSON.stringify({
-                  subject: 'Hello',
-                  reconnectId: reconnectId,
-                  userAgent: navigator.userAgent,
-                  platform: navigator.platform,
-               })
-            );
-         };
-
-         ws.onclose = (event) => {
-            reject('Cannot connect to server: ' + event.code);
-         }
-         ws.onerror = (event: Event) => {
-            reject('Cannot connect to ' + url);
-         };
-
-         ws.onmessage = (messageEvent) => {
-            try {
-               let msg = JSON.parse(messageEvent.data);
-               if (msg.subject && msg.subject === 'Hello') {
-                  this.connectionId = msg.id;
-                  this.setWS(ws);
-                  console.log('Squint connection established. ID=' + msg.id);
-                  resolve();
-               }
-               else {
-                  debug('Expected Hello response, got: ' + JSON.stringify(msg, null, ' '));
-                  reject('Cannot connect to ' + url + '\n\nInvalid server handshake.');
-               }
+   private tryToReconnect() {
+      this._reconnecting = true;
+      if (this.onReconnecting) {
+         this.onReconnecting();
+      }
+      this.reconnect(SquintUrl, this.connectionId)
+         .then(() => {
+            this._reconnecting = false;
+            if (this.onReconnected) {
+               this.onReconnected(true);
             }
-            catch (err) {
-               debug('Expected Hello response, got: ' + messageEvent.data);
-               reject('Cannot connect to ' + url + '\n\nInvalid server handshake.');
+         })
+         .catch((err) => {
+            this._reconnecting = false;
+            this.ws = null;
+            if (this.onReconnected) {
+               this.onReconnected(false);
             }
-         }
-      });
+            if (this.onClose) {
+               this.onClose();
+            }
+         });
+   }
+
+   public reconnect(url: string, reconnectId: string): Promise<void> {
+      return this.doConnect(url, reconnectId);
+   }
+
+   public connect(url: string): Promise<void> {
+      return this.doConnect(url);
+   }
+
+   private doConnect(url: string, reconnectId: string = undefined): Promise<void> {
+
+      if (this.connected) {
+         return Promise.reject('Cannot connect to server: previous connection is still open');
+      }
+
+      return SquintConnector.connect(url, reconnectId)
+         .then((connection: ISquintConnection) => {
+            this.connectionId = connection.id;
+            this.setWS(connection.ws);
+         });
    }
 
    public close() {
@@ -161,7 +184,12 @@ export class Squint {
          return;
       }
 
-      this.ws.close();
+      this.ws.onclose = null;
+      this.ws.onerror = null;
+      this.ws.onmessage = null;
+      this.ws.onopen = null;
+
+      this.ws.close(NORMAL_CLOSURE);
       this.ws = null;
    }
 

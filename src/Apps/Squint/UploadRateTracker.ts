@@ -111,7 +111,6 @@ export class UploadRateTracker {
       else if (
          // conditions that must be met before increasing requested framerate
          this.uploads.numUploads > 5 &&
-         this.uploads.bytes > 300 * 1000 &&
          this.recommendedFPS < MAX_FPS
       ) {
          // signal that we want a better rate

@@ -157,6 +157,19 @@
   width: 0;
 }
 
+#SquintApp #MessageDiv {
+  position: absolute;
+  top: 40%;
+  left: 30%;
+  width: 40%;
+  height: 20%;
+  background-color: white;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 #SquintApp .Stretch {
   flex: 1 0 auto;
 }

@@ -42,10 +42,11 @@ export class Uploader {
    private upload(delay = 0) {
 
       if (!this.running) {
+         debug('upload() this.running===false, returning');
          return;
       }
       if (this.busy) {
-         console.error('upload() called before previous call returned');
+         debug('upload() called before previous call returned');
          return;
       }
       if (delay > 0) {
@@ -55,7 +56,7 @@ export class Uploader {
          return;
       }
       if (this.squint.connected === false) {
-         this.stop();
+         this.upload(1000);
          return;
       }
       if (this.timer.elapsedMs < this.uploadTracker.recommendedMsPerFrame) {
@@ -76,6 +77,7 @@ export class Uploader {
       this.busy = true;
 
       try {
+         let nextDelay = 0;
          this.onDataNeeded()
             .then((blob: Blob) => {
 
@@ -83,23 +85,21 @@ export class Uploader {
                   this.squint.sendImage(blob);
                   this.uploadTracker.onUpload(blob.size);
                   this.fpsTracker.tick();
-
-                  requestAnimationFrame(() => { this.upload() });
                }
+
             }).catch((err) => {
                if (err === SquintStrings.CAMERA_NOT_READY) {
                   // this happens when the camera is being initialized. Just try
                   // again in a second
-                  this.busy = false;
-                  this.upload(1000);
-                  return;
                }
                else {
                   debug('Cannot generate image from video: ' + err);
                }
+               nextDelay = 1000;
             })
             .finally(() => {
                this.busy = false;
+               requestAnimationFrame(() => { this.upload(nextDelay) });
             });
       }
       catch (err) {

@@ -189,11 +189,18 @@ export class StartDialog {
       }
    }
 
-   private connect() {
+   public connect() {
+      if (this.squint.connected) {
+         console.error('StartDialog.connect() called, but already connected');
+         return;
+      }
+
       this.connectingDiv.style.display = 'block';
       this.connectingAnimationDiv.style.display = 'block';
       this.viewListBox.clear();
       this.sessionNameInput.value = '';
+
+      // TODO what if the connection closes after connecting with the start dialog open?
 
       this.squint.connect(Squint.url)
          .then(() => {
@@ -208,7 +215,7 @@ export class StartDialog {
             alert(err);
             setTimeout(() => {
                this.connect();
-            }, 1000);
+            }, 5000);
          });
    }
 
