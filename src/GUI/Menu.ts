@@ -92,6 +92,12 @@ class Menu {
       });
    }
 
+   public clear() {
+      this.children = [];
+      this.ctrls = [];
+      this.div.innerHTML = '';
+   }
+
    protected internalAddSubMenu(innerHtml: string, id: string, location: MenuLocation): SubMenu {
 
       let item = document.createElement('div');
@@ -178,14 +184,7 @@ class Menu {
          { closeOnClick: false }
       );
 
-      let ctrl = new Slider(div, {
-         id: setup.id,
-         label: '',
-         min: setup.min,
-         max: setup.max,
-         value: setup.value,
-         oninput: setup.oninput,
-      });
+      let ctrl = new Slider(div, setup);
       this.ctrls.push(ctrl);
 
       return ctrl;

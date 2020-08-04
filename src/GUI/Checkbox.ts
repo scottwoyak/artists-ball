@@ -19,6 +19,9 @@ export class Checkbox implements ICtrl {
    public get checked() {
       return this.box.checked;
    }
+   public set checked(value: boolean) {
+      this.box.checked = value;
+   }
 
    public get enabled(): boolean {
       return !this.box.disabled;

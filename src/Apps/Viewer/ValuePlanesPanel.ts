@@ -65,7 +65,7 @@ export class ValuePlanesPanel extends Panel {
                this.onChange(this);
             }
          },
-         getText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
+         onGetText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
       });
 
       this.lightLightSlider = new Slider(parent, {
@@ -75,7 +75,7 @@ export class ValuePlanesPanel extends Panel {
          max: 1,
          value: this.valuePlanes.lightLight,
          colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
-         getText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
+         onGetText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
       });
       this.lightLightSlider.range.disabled = true;
 
@@ -86,7 +86,7 @@ export class ValuePlanesPanel extends Panel {
          max: 1,
          value: this.valuePlanes.midLight,
          colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
-         getText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
+         onGetText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
       });
       this.midLightSlider.range.disabled = true;
 
@@ -97,7 +97,7 @@ export class ValuePlanesPanel extends Panel {
          max: 1,
          value: this.valuePlanes.darkLight,
          colors: [glColor3.modelBlack.toHtmlColor(), glColor3.modelWhite.toHtmlColor()],
-         getText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
+         onGetText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
       });
       this.darkLightSlider.range.disabled = true;
 
@@ -116,7 +116,7 @@ export class ValuePlanesPanel extends Panel {
                this.onChange(this);
             }
          },
-         getText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
+         onGetText: (slider: Slider) => { return (100 * slider.value).toFixed(0) + "%" }
       });
    }
 

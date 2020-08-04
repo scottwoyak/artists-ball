@@ -15,7 +15,7 @@ export interface ISliderSetup {
    value: number,
    colors?: htmlColor[],
    oninput?: (slider: Slider) => void,
-   getText?: (slider: Slider) => string,
+   onGetText?: (slider: Slider) => string,
 }
 
 class RangeMapper {
@@ -84,7 +84,7 @@ export class Slider implements ICtrl {
    public constructor(parent: HTMLElement, setup: ISliderSetup) {
 
       let id = setup.id ?? 'Slider';
-      this._getText = setup.getText;
+      this._getText = setup.onGetText;
 
       let div = document.createElement('div');
       div.id = id;
@@ -149,8 +149,8 @@ export class Slider implements ICtrl {
    }
 
    /**
- * Sets the span color to the currently selected color.
- */
+    * Sets the span color to the currently selected color.
+    */
    private updateSpanText(): void {
       if (this._getText) {
          this._valueSpan.innerText = this._getText(this);

@@ -164,7 +164,7 @@ export class PathTracerApp implements IApp {
          oninput: () => {
             this.setLightColor();
          },
-         getText: (slider: Slider) => { return slider.value.toFixed() + "K" }
+         onGetText: (slider: Slider) => { return slider.value.toFixed() + "K" }
       });
 
       // apply the initial colors

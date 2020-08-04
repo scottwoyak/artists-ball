@@ -1,13 +1,13 @@
 import 'webrtc-adapter';
 import { IApp } from '../../IApp';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
-import { IVideoResolution, Video } from './Video';
+import { IVideoResolution, Video, IMediaSettingsRange, IVideoTrackAdvancedCapability, IVideoTrackAdvancedConstraint, AdvancedConstraintMode, AdvancedConstraintName } from './Video';
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
 import { iOS, toTimeStr, toSizeStr, isMobile } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
-import { Menubar } from '../../GUI/Menu';
+import { Menubar, SubMenu } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
 import { StartDialog } from './StartDialog';
 import { Version } from './Version';
@@ -22,6 +22,11 @@ export class SquintStrings {
 export function debug(msg: string): void {
    console.error(msg);
    //alert('debug error: ' + msg);
+}
+
+interface IConstraintHolder {
+   name: string,
+   value: (() => string) | (() => number),
 }
 
 export class SquintApp implements IApp {
@@ -49,6 +54,9 @@ export class SquintApp implements IApp {
    private quality: Slider;
    private resolution: Slider;
    private cameraCtrls: ICtrl[] = [];
+
+   private advancedConstraints: IConstraintHolder[] = [];
+   private advancedSubMenu: SubMenu;
 
    private xOffset = 0;
    private yOffset = 0;
@@ -223,7 +231,7 @@ export class SquintApp implements IApp {
          max: 200,
          value: 100,
          oninput: () => this.drawImg(),
-         getText: (slider) => slider.value.toFixed(0) + '%',
+         onGetText: (slider) => slider.value.toFixed(0) + '%',
       })
 
       this.contrast = viewMenu.addSlider({
@@ -232,7 +240,7 @@ export class SquintApp implements IApp {
          max: 200,
          value: 100,
          oninput: () => this.drawImg(),
-         getText: (slider) => slider.value.toFixed(0) + '%',
+         onGetText: (slider) => slider.value.toFixed(0) + '%',
       });
 
       this.saturate = viewMenu.addSlider({
@@ -241,7 +249,7 @@ export class SquintApp implements IApp {
          max: 200,
          value: 100,
          oninput: () => this.drawImg(),
-         getText: (slider) => slider.value.toFixed(0) + '%',
+         onGetText: (slider) => slider.value.toFixed(0) + '%',
       });
 
       this.blur = viewMenu.addSlider({
@@ -250,16 +258,16 @@ export class SquintApp implements IApp {
          max: 10,
          value: 0,
          oninput: () => this.drawImg(),
-         getText: (slider) => slider.value.toFixed(0),
+         onGetText: (slider) => slider.value.toFixed(0),
       });
 
       this.zoom = viewMenu.addSlider({
          label: 'Zoom',
-         min: 0.1,
+         min: 1,
          max: 5,
          value: 1,
          oninput: () => this.drawImg(),
-         getText: (slider) => (100 * slider.value).toFixed(0) + '%',
+         onGetText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
 
 
@@ -316,7 +324,7 @@ export class SquintApp implements IApp {
          min: 0.1,
          max: 1,
          value: 0.5,
-         getText: (slider) => (100 * slider.value).toFixed() + '%',
+         onGetText: (slider) => (100 * slider.value).toFixed() + '%',
       });
       this.cameraCtrls.push(this.quality);
 
@@ -325,9 +333,11 @@ export class SquintApp implements IApp {
          min: 0.1,
          max: 1,
          value: 0.5,
-         getText: (slider) => (100 * slider.value).toFixed() + '%',
+         onGetText: (slider) => (100 * slider.value).toFixed() + '%',
       });
       this.cameraCtrls.push(this.resolution);
+
+      this.advancedSubMenu = cameraMenu.addSubMenu('Advanced');
 
       this.enableCameraCtrls(false);
 
@@ -414,6 +424,7 @@ export class SquintApp implements IApp {
             video: {
                width: { ideal: 10 * 1000 },
                height: { ideal: 10 * 1000 },
+               facingMode: this.desired.facingMode,
                deviceId: this.desired.deviceId,
             },
             audio: false,
@@ -425,6 +436,7 @@ export class SquintApp implements IApp {
             video: {
                width: { ideal: 10 * 1000 },
                height: { ideal: 10 * 1000 },
+               facingMode: this.desired.facingMode,
             },
             audio: false,
          };
@@ -440,6 +452,10 @@ export class SquintApp implements IApp {
                alert('Could not create video stream');
             }
             else {
+               // let the Video object know that the user has know granted user permission
+               // to use the camera
+               Video.videoEnabled = true;
+
                let track = stream.getVideoTracks()[0];
                let settings = track.getSettings();
 
@@ -455,6 +471,7 @@ export class SquintApp implements IApp {
                this.video.play()
                   .then(() => {
                      console.log('playing');
+                     this.buildAdvancedSubMenu(track);
                      this.updateVideoSize(this.video.videoWidth, this.video.videoHeight);
                   })
                   .catch((err) => {
@@ -467,6 +484,140 @@ export class SquintApp implements IApp {
          })
          .catch((reason) => {
             alert('video error: ' + reason);
+         });
+   }
+
+   private buildAdvancedSubMenu(track: MediaStreamTrack) {
+      let capabilities = track.getCapabilities() as IVideoTrackAdvancedCapability;
+      let settings = track.getSettings() as IVideoTrackAdvancedConstraint;
+
+      if (capabilities.whiteBalanceMode && capabilities.colorTemperature) {
+         this.addAdvancedItemPair(
+            'whiteBalanceMode',
+            'Auto Whitebalance',
+            settings.whiteBalanceMode,
+            'colorTemperature',
+            'Temperature',
+            capabilities.colorTemperature.min,
+            capabilities.colorTemperature.max,
+            settings.colorTemperature);
+      }
+      if (capabilities.exposureMode && capabilities.exposureCompensation) {
+         this.addAdvancedItemPair(
+            'exposureMode',
+            'Auto Exposure',
+            settings.exposureMode,
+            'exposureCompensation',
+            'F-Stop',
+            capabilities.exposureCompensation.min,
+            capabilities.exposureCompensation.max,
+            settings.exposureCompensation);
+      }
+      if (capabilities.exposureMode && capabilities.exposureCompensation) {
+         this.addAdvancedItemPair(
+            'focusMode',
+            'Auto Focus',
+            settings.focusMode,
+            'focusDistance',
+            'Focus',
+            capabilities.focusDistance.min,
+            capabilities.focusDistance.max,
+            settings.focusDistance);
+      }
+      if (capabilities.iso) {
+         this.addAdvancedSlider(
+            'iso',
+            'ISO',
+            capabilities.iso.min,
+            capabilities.iso.min,
+            settings.iso,
+         )
+      }
+      if (capabilities.zoom) {
+         this.addAdvancedSlider(
+            'zoom',
+            'Zoom',
+            capabilities.zoom.min,
+            capabilities.zoom.max,
+            settings.zoom,
+         )
+      }
+   }
+
+   private addAdvancedItemPair(
+      checkboxConstraint: AdvancedConstraintName,
+      checkboxLabel: string,
+      checkboxConstraintValue: AdvancedConstraintMode,
+      sliderConstraint: AdvancedConstraintName,
+      sliderLabel: string,
+      sliderMin: number,
+      sliderMax: number,
+      sliderValue: number,
+   ) {
+
+      let checkbox = this.advancedSubMenu.addCheckbox({
+         label: checkboxLabel,
+         oncheck: (checkbox) => {
+            slider.enabled = !checkbox.checked;
+            this.applyConstraints();
+         },
+         checked: checkboxConstraintValue === 'continuous',
+      });
+
+      this.advancedConstraints.push({
+         name: checkboxConstraint,
+         value: () => { return checkbox.checked ? 'continuous' : 'manual'; }
+      });
+
+      let slider = this.addAdvancedSlider(
+         sliderConstraint,
+         sliderLabel,
+         sliderMin,
+         sliderMax,
+         sliderValue
+      );
+      slider.enabled = !checkbox.checked;
+   }
+
+   private addAdvancedSlider(
+      sliderConstraint: AdvancedConstraintName,
+      sliderLabel: string,
+      sliderMin: number,
+      sliderMax: number,
+      sliderValue: number,
+   ): Slider {
+
+      let slider = this.advancedSubMenu.addSlider({
+         label: sliderLabel,
+         min: sliderMin,
+         max: sliderMax,
+         value: sliderValue,
+         onGetText: (slider) => { return slider.value.toFixed(); },
+         oninput: () => { this.applyConstraints(); }
+      })
+      this.advancedConstraints.push({
+         name: sliderConstraint,
+         value: () => { return slider.value; }
+      });
+      return slider;
+   }
+
+   private applyConstraints() {
+      let stream = this.video.srcObject as MediaStream;
+      let track = stream.getVideoTracks()[0];
+
+      let constraints = { advanced: [] = [] } as any;
+      let constraint: any = {};
+      for (let item of this.advancedConstraints) {
+         constraint[item.name] = item.value();
+      }
+
+      console.log('setting advanced constraints: ' + JSON.stringify(constraint, null, ' '));
+      constraints.advanced.push(constraint);
+
+      track.applyConstraints(<MediaTrackConstraints><any>(constraints))
+         .catch((err) => {
+            debug('Cannot apply constraints: ' + err);
          });
    }
 
@@ -484,6 +635,7 @@ export class SquintApp implements IApp {
       else {
          this.stopUploader();
          this.video.style.display = 'none';
+         this.advancedSubMenu.clear();
       }
    }
 
@@ -664,9 +816,6 @@ export class SquintApp implements IApp {
       // TODO: center scaling about your two fingers
 
       let factor = change;
-      if (this.zoom.value > 2) {
-         1 + (change - 1) / (this.zoom.value / 2);
-      }
       this.zoom.value *= factor;
       this.xOffset *= factor;
       this.yOffset *= factor;

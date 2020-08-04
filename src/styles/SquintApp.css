@@ -229,6 +229,10 @@
   }
 }
 
+#SquintApp .MenuItem .SliderValueSpan {
+  display: block;
+}
+
 @media (orientation: landscape) {
   #SquintApp #DialogBodyDiv {
     flex-direction: row;
