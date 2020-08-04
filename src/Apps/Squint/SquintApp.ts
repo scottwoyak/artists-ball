@@ -502,7 +502,7 @@ export class SquintApp implements IApp {
             capabilities.colorTemperature.max,
             settings.colorTemperature);
       }
-      if (capabilities.exposureMode && capabilities.exposureCompensation) {
+      if (capabilities.exposureMode && capabilities.exposureCompensation && capabilities.exposureTime) {
          this.addAdvancedItemPair(
             'exposureMode',
             'Auto Exposure',
@@ -511,9 +511,14 @@ export class SquintApp implements IApp {
             'F-Stop',
             capabilities.exposureCompensation.min,
             capabilities.exposureCompensation.max,
-            settings.exposureCompensation);
+            settings.exposureCompensation,
+            'exposureTime',
+            'Exposure',
+            capabilities.exposureTime.min,
+            capabilities.exposureTime.max,
+            settings.exposureTime);
       }
-      if (capabilities.exposureMode && capabilities.exposureCompensation) {
+      if (capabilities.focusMode && capabilities.focusDistance) {
          this.addAdvancedItemPair(
             'focusMode',
             'Auto Focus',
@@ -529,7 +534,7 @@ export class SquintApp implements IApp {
             'iso',
             'ISO',
             capabilities.iso.min,
-            capabilities.iso.min,
+            capabilities.iso.max,
             settings.iso,
          )
       }
@@ -548,17 +553,25 @@ export class SquintApp implements IApp {
       checkboxConstraint: AdvancedConstraintName,
       checkboxLabel: string,
       checkboxConstraintValue: AdvancedConstraintMode,
-      sliderConstraint: AdvancedConstraintName,
-      sliderLabel: string,
-      sliderMin: number,
-      sliderMax: number,
-      sliderValue: number,
+      slider1Constraint: AdvancedConstraintName,
+      slider1Label: string,
+      slider1Min: number,
+      slider1Max: number,
+      slider1Value: number,
+      slider2Constraint?: AdvancedConstraintName,
+      slider2Label?: string,
+      slider2Min?: number,
+      slider2Max?: number,
+      slider2Value?: number,
    ) {
 
       let checkbox = this.advancedSubMenu.addCheckbox({
          label: checkboxLabel,
          oncheck: (checkbox) => {
-            slider.enabled = !checkbox.checked;
+            slider1.enabled = !checkbox.checked;
+            if (slider2) {
+               slider2.enabled = !checkbox.checked;
+            }
             this.applyConstraints();
          },
          checked: checkboxConstraintValue === 'continuous',
@@ -569,14 +582,26 @@ export class SquintApp implements IApp {
          value: () => { return checkbox.checked ? 'continuous' : 'manual'; }
       });
 
-      let slider = this.addAdvancedSlider(
-         sliderConstraint,
-         sliderLabel,
-         sliderMin,
-         sliderMax,
-         sliderValue
+      let slider1 = this.addAdvancedSlider(
+         slider1Constraint,
+         slider1Label,
+         slider1Min,
+         slider1Max,
+         slider1Value
       );
-      slider.enabled = !checkbox.checked;
+      slider1.enabled = !checkbox.checked;
+
+      let slider2: Slider;
+      if (slider2Constraint) {
+         slider2 = this.addAdvancedSlider(
+            slider2Constraint,
+            slider2Label,
+            slider2Min,
+            slider2Max,
+            slider2Value
+         );
+         slider2.enabled = !checkbox.checked;
+      }
    }
 
    private addAdvancedSlider(

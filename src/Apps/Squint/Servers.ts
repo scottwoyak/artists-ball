@@ -1,7 +1,14 @@
 
-//export const SquintUrl = 'ws://localhost:8080/V1/'
+let url;
+if (location.hostname === 'localhost') {
+   url = 'ws://localhost:8080/V1/';
+}
+else {
+   url = 'wss://squintserver-11278.nodechef.com/V1/'
+}
 //export const SquintUrl = 'ws://192.168.86.23:8080/V1/'
-export const SquintUrl = 'wss://squintserver-11278.nodechef.com/V1/'
+
+export const SquintUrl = url;
 
    //static readonly url = 'ws://localhost:8080/V1/'
    //static readonly url = 'wss://squintserver-11278.nodechef.com/V1/'

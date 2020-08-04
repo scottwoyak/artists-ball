@@ -17,6 +17,7 @@ export type AdvancedConstraintName =
    'colorTemperature' |
    'exposureMode' |
    'exposureCompensation' |
+   'exposureTime' |
    'focusMode' |
    'focusDistance' |
    'iso' |
@@ -34,6 +35,7 @@ export interface IVideoTrackAdvancedConstraint {
 
    exposureMode?: AdvancedConstraintMode;
    exposureCompensation?: number; // a.k.a f-stop
+   exposureTime?: number;
 
    focusMode?: AdvancedConstraintMode;
    focusDistance?: number;
@@ -48,6 +50,7 @@ export interface IVideoTrackAdvancedCapability {
 
    exposureMode?: string[];
    exposureCompensation?: IMediaSettingsRange; // a.k.a f-stop
+   exposureTime?: IMediaSettingsRange;
 
    focusMode?: string[];
    focusDistance?: IMediaSettingsRange;
