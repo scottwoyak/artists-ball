@@ -1,7 +1,7 @@
 import 'webrtc-adapter';
 import { IApp } from '../../IApp';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
-import { IVideoResolution, Video, IMediaSettingsRange, IVideoTrackAdvancedCapability, IVideoTrackAdvancedConstraint, AdvancedConstraintMode, AdvancedConstraintName } from './Video';
+import { IVideoResolution, Video, IMediaSettingsRange, IVideoTrackAdvancedCapabilities, IVideoTrackAdvancedSettings, AdvancedConstraintMode, AdvancedConstraintName } from './Video';
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
@@ -25,8 +25,13 @@ export function debug(msg: string): void {
 }
 
 interface IConstraintHolder {
-   name: string,
+   constraint: AdvancedConstraintName,
    value: (() => string) | (() => number),
+}
+
+interface IConstraintItem {
+   constraint: AdvancedConstraintName,
+   label: string,
 }
 
 export class SquintApp implements IApp {
@@ -489,141 +494,140 @@ export class SquintApp implements IApp {
 
    private buildAdvancedSubMenu(track: MediaStreamTrack) {
       this.advancedSubMenu.clear();
+      this.advancedConstraints = [];
 
-      let capabilities = track.getCapabilities() as IVideoTrackAdvancedCapability;
-      let settings = track.getSettings() as IVideoTrackAdvancedConstraint;
+      let capabilities = track.getCapabilities() as IVideoTrackAdvancedCapabilities;
+      let settings = track.getSettings() as IVideoTrackAdvancedSettings;
+
+      let whiteBalanceMode: IConstraintItem = {
+         constraint: 'whiteBalanceMode',
+         label: 'Auto White Blance'
+      }
+      let colorTemperature: IConstraintItem = {
+         constraint: 'colorTemperature',
+         label: 'Temperature'
+      }
+      let exposureMode: IConstraintItem = {
+         constraint: 'exposureMode',
+         label: 'Auto Exposure'
+      }
+      let exposureCompensation: IConstraintItem = {
+         constraint: 'exposureCompensation',
+         label: 'F-Stop'
+      }
+      let exposureTime: IConstraintItem = {
+         constraint: 'exposureTime',
+         label: 'Exposure'
+      }
+      let iso: IConstraintItem = {
+         constraint: 'iso',
+         label: 'ISO'
+      }
+      let brightness: IConstraintItem = {
+         constraint: 'brightness',
+         label: 'Brightness'
+      }
+
+      let focusMode: IConstraintItem = {
+         constraint: 'focusMode',
+         label: 'Auto Focus'
+      }
+      let focusDistance: IConstraintItem = {
+         constraint: 'focusDistance',
+         label: 'Focus'
+      }
+      let zoom: IConstraintItem = {
+         constraint: 'zoom',
+         label: 'Zoom'
+      }
 
       if (capabilities.whiteBalanceMode && capabilities.colorTemperature) {
-         this.addAdvancedItemPair(
-            'whiteBalanceMode',
-            'Auto Whitebalance',
-            settings.whiteBalanceMode,
-            'colorTemperature',
-            'Temperature',
-            capabilities.colorTemperature.min,
-            capabilities.colorTemperature.max,
-            settings.colorTemperature);
+         this.addAdvancedItems(
+            settings,
+            capabilities,
+            whiteBalanceMode,
+            [colorTemperature]
+         );
       }
-      if (capabilities.exposureMode && capabilities.exposureCompensation && capabilities.exposureTime) {
-         this.addAdvancedItemPair(
-            'exposureMode',
-            'Auto Exposure',
-            settings.exposureMode,
-            'exposureCompensation',
-            'F-Stop',
-            capabilities.exposureCompensation.min,
-            capabilities.exposureCompensation.max,
-            settings.exposureCompensation,
-            'exposureTime',
-            'Exposure',
-            capabilities.exposureTime.min,
-            capabilities.exposureTime.max,
-            settings.exposureTime);
+
+      if (
+         capabilities.exposureMode &&
+         (capabilities.exposureCompensation || capabilities.exposureTime || capabilities.iso)
+      ) {
+         this.addAdvancedItems(
+            settings,
+            capabilities,
+            exposureMode,
+            [exposureCompensation, exposureTime, iso]
+         );
       }
+
       if (capabilities.focusMode && capabilities.focusDistance) {
-         this.addAdvancedItemPair(
-            'focusMode',
-            'Auto Focus',
-            settings.focusMode,
-            'focusDistance',
-            'Focus',
-            capabilities.focusDistance.min,
-            capabilities.focusDistance.max,
-            settings.focusDistance);
+         this.addAdvancedItems(
+            settings,
+            capabilities,
+            focusMode,
+            [focusDistance]
+         );
       }
-      if (capabilities.iso) {
-         this.addAdvancedSlider(
-            'iso',
-            'ISO',
-            capabilities.iso.min,
-            capabilities.iso.max,
-            settings.iso,
-         )
-      }
+
       if (capabilities.zoom) {
-         this.addAdvancedSlider(
-            'zoom',
-            'Zoom',
-            capabilities.zoom.min,
-            capabilities.zoom.max,
-            settings.zoom,
-         )
+         this.addAdvancedSlider(settings, capabilities, zoom);
       }
    }
 
-   private addAdvancedItemPair(
-      checkboxConstraint: AdvancedConstraintName,
-      checkboxLabel: string,
-      checkboxConstraintValue: AdvancedConstraintMode,
-      slider1Constraint: AdvancedConstraintName,
-      slider1Label: string,
-      slider1Min: number,
-      slider1Max: number,
-      slider1Value: number,
-      slider2Constraint?: AdvancedConstraintName,
-      slider2Label?: string,
-      slider2Min?: number,
-      slider2Max?: number,
-      slider2Value?: number,
+   private addAdvancedItems(
+      settings: IVideoTrackAdvancedSettings,
+      capabilities: IVideoTrackAdvancedCapabilities,
+      checkboxSetup: IConstraintItem,
+      sliderSetups: IConstraintItem[]
    ) {
 
+      let sliders: Slider[] = [];
       let checkbox = this.advancedSubMenu.addCheckbox({
-         label: checkboxLabel,
+         label: checkboxSetup.label,
          oncheck: (checkbox) => {
-            slider1.enabled = !checkbox.checked;
-            if (slider2) {
-               slider2.enabled = !checkbox.checked;
+            for (let slider of sliders) {
+               slider.enabled = !checkbox.checked;
             }
             this.applyConstraints();
          },
-         checked: checkboxConstraintValue === 'continuous',
+         checked: (<any>settings)[checkboxSetup.constraint] === 'continuous',
       });
 
       this.advancedConstraints.push({
-         name: checkboxConstraint,
+         constraint: checkboxSetup.constraint,
          value: () => { return checkbox.checked ? 'continuous' : 'manual'; }
       });
 
-      let slider1 = this.addAdvancedSlider(
-         slider1Constraint,
-         slider1Label,
-         slider1Min,
-         slider1Max,
-         slider1Value
-      );
-      slider1.enabled = !checkbox.checked;
+      for (let item of sliderSetups) {
 
-      let slider2: Slider;
-      if (slider2Constraint) {
-         slider2 = this.addAdvancedSlider(
-            slider2Constraint,
-            slider2Label,
-            slider2Min,
-            slider2Max,
-            slider2Value
-         );
-         slider2.enabled = !checkbox.checked;
+         if (capabilities[item.constraint]) {
+            let slider = this.addAdvancedSlider(settings, capabilities, item);
+            slider.enabled = !checkbox.checked;
+
+            sliders.push(slider);
+         }
       }
    }
 
    private addAdvancedSlider(
-      sliderConstraint: AdvancedConstraintName,
-      sliderLabel: string,
-      sliderMin: number,
-      sliderMax: number,
-      sliderValue: number,
+      settings: IVideoTrackAdvancedSettings,
+      capabilities: IVideoTrackAdvancedCapabilities,
+      item: IConstraintItem,
    ): Slider {
 
+      let range = capabilities[item.constraint] as IMediaSettingsRange;
       let slider = this.advancedSubMenu.addSlider({
-         label: sliderLabel,
-         min: sliderMin,
-         max: sliderMax,
-         value: sliderValue,
+         label: item.label,
+         min: range.min,
+         max: range.max,
+         value: settings[item.constraint] as number,
          onGetText: (slider) => { return slider.value.toFixed(); },
          oninput: () => { this.applyConstraints(); }
       })
       this.advancedConstraints.push({
-         name: sliderConstraint,
+         constraint: item.constraint,
          value: () => { return slider.value; }
       });
       return slider;
@@ -636,7 +640,7 @@ export class SquintApp implements IApp {
       let constraints = { advanced: [] = [] } as any;
       let constraint: any = {};
       for (let item of this.advancedConstraints) {
-         constraint[item.name] = item.value();
+         constraint[item.constraint] = item.value();
       }
 
       console.log('setting advanced constraints: ' + JSON.stringify(constraint, null, ' '));

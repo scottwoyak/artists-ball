@@ -29,7 +29,10 @@ export interface IMediaSettingsRange {
    step?: number,
 }
 
-export interface IVideoTrackAdvancedConstraint {
+export interface IVideoTrackAdvancedSettings {
+
+   [index: string]: AdvancedConstraintMode | number;
+
    whiteBalanceMode?: AdvancedConstraintMode;
    colorTemperature?: number;
 
@@ -44,7 +47,10 @@ export interface IVideoTrackAdvancedConstraint {
    zoom?: number;
 }
 
-export interface IVideoTrackAdvancedCapability {
+export interface IVideoTrackAdvancedCapabilities {
+
+   [index: string]: IMediaSettingsRange | string[];
+
    whiteBalanceMode?: string[];
    colorTemperature?: IMediaSettingsRange;
 
