@@ -488,6 +488,8 @@ export class SquintApp implements IApp {
    }
 
    private buildAdvancedSubMenu(track: MediaStreamTrack) {
+      this.advancedSubMenu.clear();
+
       let capabilities = track.getCapabilities() as IVideoTrackAdvancedCapability;
       let settings = track.getSettings() as IVideoTrackAdvancedConstraint;
 
