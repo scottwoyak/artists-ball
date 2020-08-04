@@ -493,11 +493,14 @@ export class SquintApp implements IApp {
    }
 
    private buildAdvancedSubMenu(track: MediaStreamTrack) {
+      console.log('clearing menu');
       this.advancedSubMenu.clear();
       this.advancedConstraints = [];
 
       let capabilities = track.getCapabilities() as IVideoTrackAdvancedCapabilities;
       let settings = track.getSettings() as IVideoTrackAdvancedSettings;
+
+      console.log('building advanced menu: ' + JSON.stringify(capabilities, null, ' '));
 
       let whiteBalanceMode: IConstraintItem = {
          constraint: 'whiteBalanceMode',
@@ -523,11 +526,6 @@ export class SquintApp implements IApp {
          constraint: 'iso',
          label: 'ISO'
       }
-      let brightness: IConstraintItem = {
-         constraint: 'brightness',
-         label: 'Brightness'
-      }
-
       let focusMode: IConstraintItem = {
          constraint: 'focusMode',
          label: 'Auto Focus'
@@ -595,6 +593,7 @@ export class SquintApp implements IApp {
          checked: (<any>settings)[checkboxSetup.constraint] === 'continuous',
       });
 
+      console.log('adding checkbox: ' + checkboxSetup.constraint);
       this.advancedConstraints.push({
          constraint: checkboxSetup.constraint,
          value: () => { return checkbox.checked ? 'continuous' : 'manual'; }
@@ -626,6 +625,8 @@ export class SquintApp implements IApp {
          onGetText: (slider) => { return slider.value.toFixed(); },
          oninput: () => { this.applyConstraints(); }
       })
+
+      console.log('adding slider: ' + item.constraint);
       this.advancedConstraints.push({
          constraint: item.constraint,
          value: () => { return slider.value; }
@@ -666,6 +667,7 @@ export class SquintApp implements IApp {
       else {
          this.stopUploader();
          this.video.style.display = 'none';
+         console.log('clearing menu');
          this.advancedSubMenu.clear();
       }
    }
