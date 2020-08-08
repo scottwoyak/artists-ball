@@ -16,19 +16,23 @@ const STYLE_LIST_BOX_ITEM_SELECTED = 'ListBoxItemSelected';
 
 export class ListBox<T = any> implements ICtrl {
    private box: HTMLDivElement;
-   private items: IListBoxItem<T>[] = [];
+   private _items: IListBoxItem<T>[] = [];
    public onSelectedChanged: () => void;
 
    public get selected(): T {
 
-      for (let i = 0; i < this.items.length; i++) {
-         let item = this.items[i];
+      for (let i = 0; i < this._items.length; i++) {
+         let item = this._items[i];
          if (item.div.classList.contains(STYLE_LIST_BOX_ITEM_SELECTED)) {
             return item.userData;
          }
       }
 
       return null;
+   }
+
+   public get items(): IListBoxItem<T>[] {
+      return this._items;
    }
 
    public get enabled(): boolean {
@@ -65,8 +69,8 @@ export class ListBox<T = any> implements ICtrl {
       item.onclick = () => {
          let oldSelected = this.selected;
 
-         for (let i = 0; i < this.items.length; i++) {
-            this.items[i].div.classList.remove(STYLE_LIST_BOX_ITEM_SELECTED);
+         for (let i = 0; i < this._items.length; i++) {
+            this._items[i].div.classList.remove(STYLE_LIST_BOX_ITEM_SELECTED);
          }
          item.classList.toggle(STYLE_LIST_BOX_ITEM_SELECTED);
 
@@ -77,7 +81,7 @@ export class ListBox<T = any> implements ICtrl {
          }
       }
 
-      this.items.push({
+      this._items.push({
          div: item,
          userData: userData,
       });
@@ -97,7 +101,7 @@ export class ListBox<T = any> implements ICtrl {
       let oldSelected = this.selected;
 
       this.box.innerHTML = '';
-      this.items = [];
+      this._items = [];
 
       if (oldSelected !== this.selected) {
          if (this.onSelectedChanged) {

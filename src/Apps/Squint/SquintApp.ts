@@ -11,9 +11,12 @@ import { Menubar, SubMenu } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
 import { StartDialog } from './StartDialog';
 import { Version } from './Version';
-import { Squint } from './Squint';
+import { Squint, IConnectionInfo } from './Squint';
 import { FPS } from '../../Util/FPS';
 import { ReconnectingDialog } from './ReconnectingDialog';
+import { WelcomeDialog } from './WelcomeDialog';
+import { Cookie } from '../../Util/Cookie';
+import { UserNameDialog } from './UserNameDialog';
 
 export class SquintStrings {
    public static readonly CAMERA_NOT_READY = 'Camera not ready';
@@ -37,6 +40,7 @@ interface IConstraintItem {
 export class SquintApp implements IApp {
    private handler: PointerEventHandler;
    private div: HTMLDivElement;
+   private userNameMenuItemDiv: HTMLDivElement;
    private img: HTMLImageElement;
    private canvas: HTMLCanvasElement;
    private video: HTMLVideoElement;
@@ -68,10 +72,27 @@ export class SquintApp implements IApp {
 
    private imgSize = 0;
    private squint: Squint;
-   private sessionName = '';
 
    private startDialog: StartDialog;
+
    private consoleCapture = new ConsoleCapture();
+
+   private get userName(): string {
+      return Cookie.get('UserName');
+   }
+
+   private set userName(userName: string) {
+      let oldUserName = this.userName;
+      Cookie.set('UserName', userName, 365 * 24 * 60 * 60);
+
+      if (userName !== oldUserName) {
+         this.userNameMenuItemDiv.innerText = 'Hi ' + userName;
+
+         if (this.squint) {
+            this.squint.updateConnectionInfo({ userName: userName });
+         };
+      }
+   }
 
    public constructor() {
 
@@ -103,9 +124,14 @@ export class SquintApp implements IApp {
          (connectionId) => {
             this.squint.subscribe(connectionId);
          },
-         (sessionName) => {
-            this.sessionName = sessionName;
+         () => {
             this.enableVideo(true);
+         },
+         () => {
+            return this.userName;
+         },
+         (name: string) => {
+            this.userName = name;
          }
       );
 
@@ -158,7 +184,15 @@ export class SquintApp implements IApp {
       window.addEventListener('resize', () => this.onResize());
       this.updateSizes();
 
-      this.startDialog.visible = true;
+      if (!this.userName) {
+         this.showWelcomeDialog();
+      }
+      else {
+         // refresh the expiration date
+         Cookie.updateExpiration('UserName', 365 * 24 * 60 * 60);
+         this.startDialog.visible = true;
+      }
+
 
       document.onkeypress = async (event: KeyboardEvent) => {
          switch (event.key) {
@@ -170,6 +204,14 @@ export class SquintApp implements IApp {
 
          }
       }
+   }
+
+   private showWelcomeDialog() {
+      let welcomeDialog = new WelcomeDialog(this.div, (userName) => {
+         this.userName = userName;
+         this.startDialog.visible = true;
+      });
+      welcomeDialog.visible = true;
    }
 
    public closeConnection() {
@@ -189,8 +231,8 @@ export class SquintApp implements IApp {
    }
 
    private startSession() {
-      console.log('creating session \'' + this.sessionName + '\' on ' + Squint.url);
-      this.squint.createSession(this.sessionName)
+      console.log('creating session \'' + this.userName + '\' on ' + Squint.url);
+      this.squint.createSession()
          .then((session) => {
             console.log('Session created');
             this.startUploader();
@@ -356,6 +398,17 @@ export class SquintApp implements IApp {
          this.consoleCapture.show = !this.consoleCapture.show;
          item.innerText = this.consoleCapture.show ? 'Hide Log' : 'Show Log';
       });
+
+      this.userNameMenuItemDiv = menubar.addItem('Hi ' + this.userName,
+         () => {
+            new UserNameDialog(
+               this.div,
+               this.userName,
+               (userName: string) => {
+                  this.userName = userName;
+               });
+         });
+      this.userNameMenuItemDiv.id = 'UserNameItemDiv';
    }
 
    private numToString(num: number): string {
@@ -823,7 +876,7 @@ export class SquintApp implements IApp {
       ctx.fillText(msg, 0, canvasHeight - (3 * fontSize + 5));
 
       if (this.uploader) {
-         msg = 'upload: ' + this.uploader.fps.toFixed(1);
+         msg = 'upload: ' + this.uploader.fps.toFixed(1) + ' fps';
          ctx.fillText(msg, 0, canvasHeight - (2 * fontSize + 5));
 
          let bandwidth = this.uploader.bandwidth;
@@ -836,7 +889,7 @@ export class SquintApp implements IApp {
          ctx.fillText(msg, 0, canvasHeight - (fontSize + 5));
       }
       else {
-         msg = 'download: ' + this.downloadFPS.rate.toFixed(1);
+         msg = 'download: ' + this.downloadFPS.rate.toFixed(1) + ' fps';
          ctx.fillText(msg, 0, canvasHeight - (fontSize + 5));
       }
 

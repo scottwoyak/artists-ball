@@ -1,9 +1,13 @@
 import { ListBox } from "../../GUI/ListBox";
 import { Version } from "./Version";
-import { Squint, ISession } from "./Squint";
+import { Squint, IConnectionInfo } from "./Squint";
+import { GUI } from "../../GUI/GUI";
+import { UserNameDialog } from "./UserNameDialog";
 
 export type ViewSessionHandler = (connectionId: string) => void;
-export type StartSessionHandler = (sessionName: string) => void;
+export type StartSessionHandler = () => void;
+export type GetUserNameHandler = () => string;
+export type SetUserNameHandler = (name: string) => void;
 
 export class StartDialog {
    private viewListBox: ListBox<string>;
@@ -11,10 +15,13 @@ export class StartDialog {
    private bodyDiv: HTMLDivElement;
    private connectingDiv: HTMLDivElement;
    private connectingAnimationDiv: HTMLDivElement;
-   private sessionNameInput: HTMLInputElement;
+   private userNameButton: HTMLButtonElement;
+   private goHostButton: HTMLButtonElement;
    private squint: Squint;
    private onStartView: ViewSessionHandler;
    private onStartSession: StartSessionHandler;
+   private onGetUserName: GetUserNameHandler;
+   private onSetUserName: SetUserNameHandler;
 
    public get enable(): boolean {
       return (getComputedStyle(this.bodyDiv).pointerEvents === 'none');
@@ -48,59 +55,52 @@ export class StartDialog {
       squint: Squint,
       onViewSession: ViewSessionHandler,
       onStartSession: StartSessionHandler,
+      onGetUserName: GetUserNameHandler,
+      onSetUserName: SetUserNameHandler
    ) {
       this.squint = squint;
       this.squint.onSessionList = (sessions) => this.onSessionList(sessions);
       this.onStartView = onViewSession;
       this.onStartSession = onStartSession;
+      this.onGetUserName = onGetUserName;
+      this.onSetUserName = onSetUserName;
 
-      this.backgroundDiv = document.createElement('div');
-      this.backgroundDiv.className = 'DialogBackground';
-      parent.appendChild(this.backgroundDiv);
+      this.backgroundDiv = GUI.create('div', 'StartDialogBackgroundDiv', parent);
+      this.backgroundDiv.className = 'DialogBackgroundClass';
 
-      let dialogDiv = document.createElement('div');
-      dialogDiv.id = 'DialogDiv';
-      this.backgroundDiv.appendChild(dialogDiv);
+      let dialogDiv = GUI.create('div', 'StartDialogDiv', this.backgroundDiv);
+      let dialogTitleDiv = GUI.create('div', 'DialogTitleDiv', dialogDiv);
+      let titleDiv = GUI.create('div', 'TitleDiv', dialogTitleDiv);
+      titleDiv.className = 'DialogTitleClass';
+      titleDiv.innerText = 'Squint V 0.1.' + Version.Build;
 
-      let dialogTitleDiv = document.createElement('div');
-      dialogTitleDiv.id = 'DialogTitleDiv';
-      dialogDiv.appendChild(dialogTitleDiv);
-
-      let titleDiv = document.createElement('div');
-      titleDiv.id = 'TitleDiv';
-      titleDiv.innerText = 'Squint V' + Version.Build;
-      dialogTitleDiv.appendChild(titleDiv);
-
-      this.connectingDiv = document.createElement('div');
-      this.connectingDiv.id = 'ConnectingText';
+      this.connectingDiv = GUI.create('div', 'ConnectingTextDiv', dialogTitleDiv);
       this.connectingDiv.innerText = 'connecting...';
-      dialogTitleDiv.appendChild(this.connectingDiv);
 
-      this.connectingAnimationDiv = document.createElement('div');
-      this.connectingAnimationDiv.id = 'ConnectingAnimation';
-      this.connectingAnimationDiv.className = 'lds-ring';
-      this.connectingAnimationDiv.appendChild(document.createElement('div'));
-      this.connectingAnimationDiv.appendChild(document.createElement('div'));
-      this.connectingAnimationDiv.appendChild(document.createElement('div'));
-      this.connectingAnimationDiv.appendChild(document.createElement('div'));
-      dialogTitleDiv.appendChild(this.connectingAnimationDiv);
+      this.connectingAnimationDiv = GUI.createAnimation('ConnectingAnimationDiv', dialogTitleDiv);
 
-      this.bodyDiv = document.createElement('div');
-      this.bodyDiv.id = 'DialogBodyDiv';
-      dialogDiv.appendChild(this.bodyDiv);
+      this.userNameButton = GUI.create('button', 'UserNameButton', dialogTitleDiv);
+      this.userNameButton.innerText = 'Hi ' + onGetUserName();
+      this.userNameButton.style.display = 'none';
+      this.userNameButton.onclick = () => {
+         new UserNameDialog(
+            parent,
+            onGetUserName(),
+            (userName: string) => {
+               onSetUserName(userName);
+               this.userNameButton.innerText = 'Hi ' + userName;
+            });
+      }
+
+      this.bodyDiv = GUI.create('div', 'DialogBodyDiv', dialogDiv);
 
       //
       // View a session panel
       //
-      let viewPanelDiv = document.createElement('div');
-      viewPanelDiv.id = 'ViewPanelDiv';
-      this.bodyDiv.appendChild(viewPanelDiv);
-
-      let viewHeader = document.createElement('div');
-      viewHeader.id = 'ViewHeader';
-      viewHeader.className = 'Header';
+      let viewPanelDiv = GUI.create('div', 'ViewPanelDiv', this.bodyDiv);
+      let viewHeader = GUI.create('div', 'ViewHeaderDiv', viewPanelDiv);
+      document.createElement('div');
       viewHeader.innerText = 'View a camera...';
-      viewPanelDiv.appendChild(viewHeader);
 
       this.viewListBox = new ListBox<string>(
          viewPanelDiv, {
@@ -110,16 +110,12 @@ export class StartDialog {
          goViewButton.disabled = (this.viewListBox.selected === null);
       }
 
-      let buttonDiv = document.createElement('div');
-      buttonDiv.className = 'ButtonDiv';
-      viewPanelDiv.appendChild(buttonDiv);
+      let buttonDiv = GUI.create('div', 'ButtonDiv', viewPanelDiv);
+      buttonDiv.className = 'ButtonDivClass';
 
-      let goViewButton = document.createElement('button');
-      goViewButton.id = 'ViewButton';
+      let goViewButton = GUI.create('button', 'ViewButton', buttonDiv);
       goViewButton.innerText = 'Go';
       goViewButton.disabled = true;
-      buttonDiv.appendChild(goViewButton);
-
       goViewButton.onclick = () => {
          this.visible = false;
          let connectionId = this.viewListBox.selected;
@@ -129,62 +125,30 @@ export class StartDialog {
       //
       // Or panel
       //
-      let orParentDiv = document.createElement('div');
-      orParentDiv.id = 'OrParentDiv';
-      this.bodyDiv.appendChild(orParentDiv);
-
-      let orDiv = document.createElement('div');
-      orDiv.id = 'OrDiv';
+      let orPanelDiv = GUI.create('div', 'OrPanelDiv', this.bodyDiv);
+      let orDiv = GUI.create('div', 'OrDiv', orPanelDiv);
+      document.createElement('div');
       orDiv.innerText = 'OR';
-      orParentDiv.appendChild(orDiv);
 
 
 
       //
       // Host a session panel
       //
-      let hostPanelDiv = document.createElement('div');
-      hostPanelDiv.id = 'HostPanelDiv';
-      this.bodyDiv.appendChild(hostPanelDiv);
+      let hostPanelDiv = GUI.create('div', 'HostPanelDiv', this.bodyDiv);
 
-      let hostHeader = document.createElement('div');
-      hostHeader.id = 'HostHeader';
-      hostHeader.className = 'Header';
-      hostHeader.innerText = 'Host a camera...';
-      hostPanelDiv.appendChild(hostHeader);
+      let hostHeader = GUI.create('div', 'HostHeaderDiv', hostPanelDiv);
+      hostHeader.innerText = 'Share your camera...';
 
-      let sessionNameDiv = document.createElement('div');
-      sessionNameDiv.id = 'SessionNameDiv';
-      sessionNameDiv.classList.add('Stretch');
-      hostPanelDiv.appendChild(sessionNameDiv);
+      let middleDiv = GUI.create('div', 'HostImageDiv', hostPanelDiv);
 
-      let nameLabel = document.createElement('label');
-      nameLabel.innerText = 'Name:';
-      nameLabel.htmlFor = 'NameInputText';
-      sessionNameDiv.appendChild(nameLabel);
+      buttonDiv = GUI.create('div', 'ButtonDiv', hostPanelDiv);
+      buttonDiv.className = 'ButtonDivClass';
 
-      this.sessionNameInput = document.createElement('input');
-      this.sessionNameInput.type = 'text';
-      this.sessionNameInput.id = 'NameInputText';
-      this.sessionNameInput.placeholder = 'Your Name';
-      sessionNameDiv.appendChild(this.sessionNameInput);
-      this.sessionNameInput.oninput = () => {
-         goHostButton.disabled = (this.sessionNameInput.value.trim().length === 0);
-      };
-
-      buttonDiv = document.createElement('div');
-      buttonDiv.classList.add('ButtonDiv', 'NoStretch');
-      hostPanelDiv.appendChild(buttonDiv);
-
-      let goHostButton = document.createElement('button');
-      goHostButton.id = 'HostOkButton';
-      goHostButton.innerText = 'Go';
-      goHostButton.disabled = true;
-      buttonDiv.appendChild(goHostButton);
-
-      goHostButton.onclick = () => {
-
-         this.onStartSession(this.sessionNameInput.value);
+      this.goHostButton = GUI.create('button', 'HostButton', buttonDiv);
+      this.goHostButton.innerText = 'Go';
+      this.goHostButton.onclick = () => {
+         this.onStartSession();
          this.visible = false;
       }
    }
@@ -197,18 +161,24 @@ export class StartDialog {
 
       this.connectingDiv.style.display = 'block';
       this.connectingAnimationDiv.style.display = 'block';
+      this.userNameButton.style.display = 'none';
       this.viewListBox.clear();
-      this.sessionNameInput.value = '';
 
       // TODO what if the connection closes after connecting with the start dialog open?
 
-      this.squint.connect(Squint.url)
+      let userName = this.onGetUserName();
+      this.squint.connect(Squint.url, userName)
          .then(() => {
-            this.squint.onSessionList = (sessions: ISession[]) => {
+            this.squint.onSessionList = (sessions: IConnectionInfo[]) => {
                this.onSessionList(sessions);
             }
+            this.squint.onUpdateConnectionInfo = (info: IConnectionInfo) => {
+               this.onUpdateConnectionInfo(info);
+            }
+
             this.connectingDiv.style.display = 'none';
             this.connectingAnimationDiv.style.display = 'none';
+            this.userNameButton.style.display = 'block';
             this.enable = true;
          })
          .catch((err) => {
@@ -219,11 +189,19 @@ export class StartDialog {
          });
    }
 
-   private onSessionList(sessions: ISession[]) {
+   private onSessionList(sessions: IConnectionInfo[]) {
 
       this.viewListBox.clear();
       for (let i = 0; i < sessions.length; i++) {
-         this.viewListBox.addItem(sessions[i].name, sessions[i].connectionId);
+         this.viewListBox.addItem(sessions[i].userName, sessions[i].connectionId);
+      }
+   }
+
+   private onUpdateConnectionInfo(info: IConnectionInfo) {
+      for (let item of this.viewListBox.items) {
+         if (item.userData === info.connectionId) {
+            item.div.innerText = info.userName;
+         }
       }
    }
 }

@@ -7,7 +7,7 @@ export interface ISquintConnection {
 }
 
 export class SquintConnector {
-   public static connect(url: string, reconnectId: string = undefined): Promise<ISquintConnection> {
+   public static connect(url: string, userName: string, reconnectId: string = undefined): Promise<ISquintConnection> {
 
       return new Promise((resolve, reject) => {
 
@@ -19,6 +19,7 @@ export class SquintConnector {
             ws.send(
                JSON.stringify({
                   subject: 'Hello',
+                  userName: userName,
                   reconnectId: reconnectId,
                   userAgent: navigator.userAgent,
                   platform: navigator.platform

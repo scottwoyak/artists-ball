@@ -23,7 +23,7 @@ export class ReconnectingDialog {
       parent: HTMLDivElement,
    ) {
       this.backgroundDiv = document.createElement('div');
-      this.backgroundDiv.className = 'DialogBackground';
+      this.backgroundDiv.className = 'DialogBackgroundClass';
       parent.appendChild(this.backgroundDiv);
 
       let dialogDiv = document.createElement('div');

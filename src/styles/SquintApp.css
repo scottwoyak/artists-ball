@@ -44,7 +44,12 @@
   flex: 1 1 80px;
 }
 
-#SquintApp .DialogBackground {
+#SquintApp #UserNameItemDiv {
+  position: absolute;
+  right: 0px;
+}
+
+#SquintApp .DialogBackgroundClass {
   position: fixed; /* Stay in place */
   z-index: 1; /* Sit on top */
   left: 0;
@@ -55,7 +60,17 @@
   display: none;
 }
 
-#SquintApp #DialogDiv {
+#SquintApp .DialogTitleClass {
+  font-weight: bold;
+  flex: 1 1 auto;
+}
+
+/********************************************************************
+ *
+ * Start Dialog
+ *
+ ********************************************************************/
+#SquintApp #StartDialogDiv {
   position: absolute;
   flex-direction: column;
   display: flex;
@@ -67,7 +82,7 @@
   border-radius: 20px;
 }
 
-#SquintApp #DialogTitleDiv {
+#SquintApp #StartDialogDiv #DialogTitleDiv {
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
   background-color: lightgray;
@@ -78,22 +93,29 @@
   display: flex;
 }
 
-#SquintApp #TitleDiv {
-  font-weight: bold;
-}
-
-#SquintApp #ConnectingText {
+#SquintApp #StartDialogDiv #ConnectingTextDiv {
   color: white;
-  flex: 1 1 auto;
-  text-align: right;
   padding-right: 10px;
 }
 
-#SquintApp #ConnectingAnimation {
+#SquintApp #StartDialogDiv #ConnectingAnimationDiv {
   zoom: 0.2;
 }
 
-#SquintApp #DialogBodyDiv {
+#SquintApp #StartDialogDiv #UserNameButton {
+  padding-right: 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  background-color: transparent;
+  outline: none;
+}
+
+#SquintApp #StartDialogDiv #UserNameButton:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+#SquintApp #StartDialogDiv #DialogBodyDiv {
   display: flex;
   background-color: white;
   border-bottom-right-radius: 10px;
@@ -102,11 +124,11 @@
   position: relative;
 }
 
-#SquintApp .ButtonDiv {
+#SquintApp #StartDialogDiv .ButtonDivClass {
   text-align: right;
 }
 
-#SquintApp #ViewPanelDiv {
+#SquintApp #StartDialogDiv #ViewPanelDiv {
   flex: auto;
   padding: 10px;
   margin: 10px;
@@ -116,27 +138,27 @@
   border-radius: 10px;
 }
 
-#SquintApp #ViewButton {
+#SquintApp #StartDialogDiv #ViewButton {
   flex: 0 1 20px;
   margin-top: 10px;
 }
 
-#SquintApp #ViewListBox {
+#SquintApp #StartDialogDiv #ViewListBox {
   margin-top: 10px;
   flex: 1 1 auto;
 }
 
-#SquintApp #OrParentDiv {
+#SquintApp #StartDialogDiv #OrPanelDiv {
   align-items: center;
   justify-content: center;
   display: flex;
 }
 
-#SquintApp #OrDiv {
+#SquintApp #StartDialogDiv #OrDiv {
   padding: 10px;
 }
 
-#SquintApp #HostPanelDiv {
+#SquintApp #StartDialogDiv #HostPanelDiv {
   flex: auto;
   padding: 10px;
   margin: 10px;
@@ -146,18 +168,16 @@
   border-radius: 10px;
 }
 
-#SquintApp #SessionNameDiv {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+#SquintApp #StartDialogDiv #HostImageDiv {
+  flex: 1 0 auto; /* stretch */
 }
 
-#SquintApp #NameInputText {
+#SquintApp #StartDialogDiv #NameInputText {
   flex: 1 1 auto;
   width: 0;
 }
 
-#SquintApp #MessageDiv {
+#SquintApp #StartDialogDiv #MessageDiv {
   position: absolute;
   top: 40%;
   left: 30%;
@@ -170,12 +190,89 @@
   align-items: center;
 }
 
-#SquintApp .Stretch {
-  flex: 1 0 auto;
+/********************************************************************
+ *
+ * Welcome Dialog
+ *
+ ********************************************************************/
+#SquintApp #WelcomeDialogDiv {
+  position: absolute;
+  top: 25%;
+  left: 25%;
+  bottom: 25%;
+  right: 25%;
+  background-color: white;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 
-#SquintApp .NoStretch {
-  flex: 0 0 auto;
+#SquintApp #WelcomeDialogDiv #TitleDiv {
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+#SquintApp #WelcomeDialogDiv #UserNameGroupDiv {
+  flex: 1 0 auto; /* stretch */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#SquintApp #WelcomeDialogDiv #UserNameLabel {
+  margin-right: 10px;
+}
+
+#SquintApp #WelcomeDialogDiv #ButtonDiv {
+  width: 100%;
+}
+
+#SquintApp #WelcomeDialogDiv #OkButton {
+  position: absolute;
+  bottom: 10px;
+  right: 40px;
+}
+
+/********************************************************************
+ *
+ * User Name Dialog
+ *
+ ********************************************************************/
+#SquintApp #UserNameDialogDiv {
+  position: absolute;
+  top: 40%;
+  left: 30%;
+  width: 40%;
+  height: 20%;
+  background-color: white;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#SquintApp #UserNameDialogDiv #UserNameGroupDiv {
+  flex: 1 0 auto; /* stretch */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#SquintApp #UserNameDialogDiv #UserNameLabel {
+  margin-right: 10px;
+}
+
+#SquintApp #UserNameDialogDiv #ButtonDiv {
+  width: 100%;
+}
+
+#SquintApp #UserNameDialogDiv #OkButton {
+  position: absolute;
+  bottom: 10px;
+  right: 40px;
 }
 
 #SquintApp #Video {

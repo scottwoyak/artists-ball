@@ -5,6 +5,7 @@ import { SquintConnector, ISquintConnection } from "./SquintConnector";
 export interface ISquintMessage {
    [prop: string]: any,
    subject:
+   'UpdateConnectionInfo' |
    'CreateSession' |
    'SessionCreated' |
    'SessionCreateError' |
@@ -15,18 +16,19 @@ export interface ISquintMessage {
    'Hello',
 }
 
-export interface ISession {
-   name: string,
-   connectionId: string,
+export interface IConnectionInfo {
+   userName: string,
+   connectionId?: string,
 }
 
 export type ImageHandler = (img: Blob) => void;
-export type SessionListHandler = (session: ISession[]) => void;
+export type SessionListHandler = (session: IConnectionInfo[]) => void;
 export type ReconnectingHandler = () => void;
 export type ReconnectedHandler = (success: boolean) => void;
 
-type SessionCreatedHandler = (session: ISession) => void;
+type SessionCreatedHandler = () => void;
 type SessionCreateErrorHandler = (error: string) => void;
+type UpdateConnectionInfoHandler = (info: IConnectionInfo) => void;
 
 const NORMAL_CLOSURE = 1000;
 
@@ -35,6 +37,7 @@ export class Squint {
    public static readonly url = SquintUrl;
 
    public ws: WebSocket;
+   public userName: string;
    private _reconnecting = false;
 
    public onImage: ImageHandler;
@@ -47,6 +50,7 @@ export class Squint {
    public onClose: () => void;
    public onReconnecting: ReconnectingHandler;
    public onReconnected: ReconnectedHandler;
+   public onUpdateConnectionInfo: UpdateConnectionInfoHandler;
 
    public constructor() {
       window.addEventListener('unload', () => {
@@ -161,7 +165,8 @@ export class Squint {
       return this.doConnect(url, reconnectId);
    }
 
-   public connect(url: string): Promise<void> {
+   public connect(url: string, userName: string): Promise<void> {
+      this.userName = userName;
       return this.doConnect(url);
    }
 
@@ -171,7 +176,7 @@ export class Squint {
          return Promise.reject('Cannot connect to server: previous connection is still open');
       }
 
-      return SquintConnector.connect(url, reconnectId)
+      return SquintConnector.connect(url, this.userName, reconnectId)
          .then((connection: ISquintConnection) => {
             this.connectionId = connection.id;
             this.setWS(connection.ws);
@@ -195,12 +200,19 @@ export class Squint {
 
    private processMessage(msg: ISquintMessage) {
       switch (msg.subject) {
+         case 'UpdateConnectionInfo': {
+            if (this.onUpdateConnectionInfo) {
+               this.onUpdateConnectionInfo({
+                  userName: msg.userName,
+                  connectionId: msg.connectionId,
+               })
+            }
+
+         }
+
          case 'SessionCreated':
             if (this.onSessionCreated) {
-               this.onSessionCreated({
-                  name: msg.name,
-                  connectionId: msg.connectionId,
-               });
+               this.onSessionCreated();
             };
             break;
 
@@ -256,7 +268,8 @@ export class Squint {
       });
    }
 
-   public createSession(name: string): Promise<ISession> {
+   // TODO do we really need to wait for a response?
+   public createSession(): Promise<void> {
       return new Promise((resolve, reject) => {
          if (!this.connected) {
             console.log('createSession() socket ready state: ' + (this.ws ? this.ws.readyState : 'null'));
@@ -264,7 +277,6 @@ export class Squint {
          }
          this.send({
             subject: 'CreateSession',
-            name: name,
          });
 
          let closeHandler = () => {
@@ -276,12 +288,12 @@ export class Squint {
          }
          this.ws.addEventListener('error', errHandler);
 
-         this.onSessionCreated = (session) => {
+         this.onSessionCreated = () => {
             this.onSessionCreated = null;
             this.onSessionCreateError = null;
             this.ws.removeEventListener('close', closeHandler);
             this.ws.removeEventListener('error', errHandler);
-            resolve(session);
+            resolve();
          };
          this.onSessionCreateError = (err) => {
             this.onSessionCreated = null;
@@ -294,13 +306,16 @@ export class Squint {
    }
 
    public subscribe(connectionId: string) {
-      if (!this.connected) {
-         throw new Error('Cannot subscribe. WebSocket not connected.');
-      }
-
       this.send({
          subject: 'Subscribe',
          connectionId: connectionId,
+      })
+   }
+
+   public updateConnectionInfo(info: IConnectionInfo) {
+      this.send({
+         subject: 'UpdateConnectionInfo',
+         userName: info.userName,
       })
    }
 }
