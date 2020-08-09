@@ -67,6 +67,27 @@
   flex: 1 1 auto;
 }
 
+#SquintApp .ButtonClass {
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  background-color: lightgray;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  user-select: none;
+}
+
+#SquintApp .ButtonClass:hover {
+  background-color: rgb(231, 231, 231);
+}
+
+#SquintApp .ButtonClass:disabled {
+  background-color: rgba(255, 255, 255, 0.5);
+  color: rgb(180, 180, 180);
+}
+
 /********************************************************************
  *
  * Welcome Dialog
@@ -112,7 +133,6 @@
  *
  ********************************************************************/
 #SquintApp #StartDialogDiv {
-  position: absolute;
   flex-direction: column;
   display: flex;
   width: 60%;
@@ -139,26 +159,6 @@
 
 #SquintApp #StartDialogDiv #ConnectingAnimationDiv {
   zoom: 0.2;
-}
-
-#SquintApp .ButtonClass {
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-  background-color: lightgray;
-  padding-left: 8px;
-  padding-right: 8px;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  user-select: none;
-}
-
-#SquintApp .ButtonClass:hover {
-  background-color: rgb(231, 231, 231);
-}
-
-#SquintApp .ButtonClass:disabled {
-  background-color: rgba(255, 255, 255, 0.5);
 }
 
 #SquintApp #WelcomeDialogDiv .ButtonClass:disabled {
@@ -240,7 +240,7 @@
   align-items: center;
 }
 
-.icon {
+#SquintApp #StartDialogDiv .icon {
   flex: 1 0 auto; /* stretch */
   display: flex;
   justify-content: center;
@@ -248,7 +248,7 @@
   zoom: 1.5;
 }
 
-.icon .camera-icon {
+#SquintApp #StartDialogDiv .icon .camera-icon {
   background: #626262;
   height: 60px;
   width: 90px;
@@ -258,13 +258,13 @@
   justify-content: center;
   align-items: center;
 }
-.icon .camera-icon .camera-circle {
+#SquintApp #StartDialogDiv .icon .camera-icon .camera-circle {
   width: 30px;
   height: 30px;
   border: 8px solid #fff;
   border-radius: 50%;
 }
-.icon .camera-icon .camera-btn {
+#SquintApp #StartDialogDiv .icon .camera-icon .camera-btn {
   width: 10px;
   height: 10px;
   background: #fff;
@@ -273,7 +273,7 @@
   right: 10px;
   top: 10px;
 }
-.icon .camera-icon:after {
+#SquintApp #StartDialogDiv .icon .camera-icon:after {
   content: "";
   position: absolute;
   top: -5px;
@@ -380,25 +380,79 @@
 }
 
 @media only screen and (max-device-width: 800px) {
+  #SquintApp * {
+    font-size: 25pt;
+  }
+
+  #SquintApp .ButtonClass {
+    border-radius: 8px;
+    background-color: lightgray;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
   #SquintApp #Video {
     top: 100px;
     width: 30%;
   }
 
-  #SquintApp #HostPanelDiv,
-  #SquintApp #ViewPanelDiv {
+  #SquintApp #StartDialogDiv #HostPanelDiv {
     padding: 20px;
     margin: 20px;
+    border-radius: 20px;
+  }
+  #SquintApp #StartDialogDiv #ViewPanelDiv {
+    padding: 20px;
+    margin: 20px;
+    border-radius: 20px;
   }
 
   #SquintApp .SliderLabel {
     flex: 0 0 120px;
   }
 
-  #SquintApp #ConnectingAnimation {
+  #SquintApp #WelcomeDialogDiv {
+    width: 900px;
+    height: 900px;
+    border-radius: 20px;
+  }
+
+  #SquintApp #WelcomeDialogDiv #TitleDiv {
+    font-size: 60px;
+  }
+
+  #SquintApp #WelcomeDialogDiv #UserNameGroupDiv {
+    height: 100px;
+  }
+
+  #SquintApp #WelcomeDialogDiv #UserNameTextInput {
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+
+  #SquintApp #StartDialogDiv {
+    width: 70%;
+    height: 70%;
+    border-radius: 40px;
+  }
+
+  #SquintApp #StartDialogDiv #ConnectingAnimationDiv {
     zoom: 0.4;
   }
-  #SquintApp * {
-    font-size: 25pt;
+
+  #SquintApp #StartDialogDiv .icon {
+    zoom: 3;
+  }
+
+  #SquintApp #UserNameDialogDiv {
+    width: 750px;
+    height: 150px;
+  }
+
+  #SquintApp #UserNameDialogDiv #UserNameTextInput {
+    margin-right: 20px;
+    margin-left: 20px;
   }
 }

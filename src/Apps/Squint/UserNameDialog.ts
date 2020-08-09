@@ -40,6 +40,7 @@ export class UserNameDialog extends Dialog {
       }
 
       let okButton = GUI.create('button', 'OkButton', userNameGroupDiv);
+      okButton.className = 'ButtonClass';
       okButton.innerText = 'OK';
       okButton.onclick = () => {
          this.visible = false;
