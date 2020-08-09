@@ -1,64 +1,51 @@
 import { GUI } from "../../GUI/GUI";
+import { Dialog } from "../../GUI/Dialog";
 
 export type okHandler = (userName: string) => void;
 
-export class Dialog {
-
-}
-
-export class UserNameDialog {
-   private backgroundDiv: HTMLDivElement;
-
-   public get visible(): boolean {
-      return (getComputedStyle(this.backgroundDiv).display === 'block');
-   }
-   public set visible(flag: boolean) {
-      if (flag === this.visible) {
-         return;
-      }
-
-      if (flag) {
-         this.backgroundDiv.style.display = 'block';
-      }
-      else {
-         this.backgroundDiv.style.display = 'none';
-      }
-   }
+export class UserNameDialog extends Dialog {
 
    public constructor(
       parent: HTMLDivElement,
       currentUserName: string,
       onOk: okHandler
    ) {
-      this.backgroundDiv = GUI.create('div', 'UserNameDialogBackgroundDiv', parent);
-      this.backgroundDiv.className = 'DialogBackgroundClass';
+      // UserNameBackgroundDiv and UserNameDialogDiv
+      super(parent, 'UserName');
 
-      let dialogDiv = GUI.create('div', 'UserNameDialogDiv', this.backgroundDiv);
-
-      let userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', dialogDiv);
+      let userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', this.dialogDiv);
       let userNameLabel = GUI.create('label', 'UserNameLabel', userNameGroupDiv);
       userNameLabel.htmlFor = 'UserNameInput';
       userNameLabel.innerText = 'Name:';
-      let userNameInput = GUI.create('input', 'UserNameInput', userNameGroupDiv);
-      userNameInput.type = 'text';
-      userNameInput.placeholder = 'Your Name';
-      userNameInput.value = currentUserName;
+      let userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);
+      userNameTextInput.type = 'text';
+      userNameTextInput.placeholder = 'Your Name';
+      userNameTextInput.value = currentUserName;
 
-      userNameInput.oninput = () => {
-         okButton.disabled = (userNameInput.value.trim().length === 0);
+      userNameTextInput.oninput = () => {
+         okButton.disabled = (userNameTextInput.value.trim().length === 0);
       };
 
+      userNameTextInput.onkeypress = (event: KeyboardEvent) => {
+         if (event.keyCode === 13) {
+            event.preventDefault();
+            okButton.click();
+         }
+      }
 
-      let okButton = GUI.create('button', 'OkButton', dialogDiv);
+
+      this.onShow = () => {
+         userNameTextInput.focus();
+         userNameTextInput.select();
+      }
+
+      let okButton = GUI.create('button', 'OkButton', userNameGroupDiv);
       okButton.innerText = 'OK';
       okButton.onclick = () => {
          this.visible = false;
-         onOk(userNameInput.value.trim());
+         onOk(userNameTextInput.value.trim());
       };
 
       this.visible = true;
-
-      userNameInput.focus();
-      userNameInput.select();
    }
 }

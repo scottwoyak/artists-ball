@@ -1,4 +1,4 @@
-import { SquintUrl as SquintUrl } from "./Servers";
+import { SquintWsUrl as SquintWsUrl } from "./Servers";
 import { debug } from "./SquintApp";
 import { SquintConnector, ISquintConnection } from "./SquintConnector";
 
@@ -34,7 +34,7 @@ const NORMAL_CLOSURE = 1000;
 
 export class Squint {
 
-   public static readonly url = SquintUrl;
+   public static readonly url = SquintWsUrl;
 
    public ws: WebSocket;
    public userName: string;
@@ -142,7 +142,7 @@ export class Squint {
       if (this.onReconnecting) {
          this.onReconnecting();
       }
-      this.reconnect(SquintUrl, this.connectionId)
+      this.reconnect(SquintWsUrl, this.connectionId)
          .then(() => {
             this._reconnecting = false;
             if (this.onReconnected) {

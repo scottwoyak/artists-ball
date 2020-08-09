@@ -1,59 +1,59 @@
 import { GUI } from "../../GUI/GUI";
+import { SquintHttpUrl } from "./Servers";
+import { Dialog } from "../../GUI/Dialog";
 
 export type okHandler = (userName: string) => void;
 
-export class WelcomeDialog {
-   private backgroundDiv: HTMLDivElement;
-
-   public get visible(): boolean {
-      return (getComputedStyle(this.backgroundDiv).display === 'block');
-   }
-   public set visible(flag: boolean) {
-      if (flag === this.visible) {
-         return;
-      }
-
-      if (flag) {
-         this.backgroundDiv.style.display = 'block';
-      }
-      else {
-         this.backgroundDiv.style.display = 'none';
-      }
-   }
+export class WelcomeDialog extends Dialog {
 
    public constructor(
       parent: HTMLDivElement,
       onOk: okHandler
    ) {
-      this.backgroundDiv = GUI.create('div', 'WelcomeDialogBackgroundDiv', parent);
-      this.backgroundDiv.className = 'DialogBackgroundClass';
+      super(parent, 'Welcome');
 
-      let dialogDiv = GUI.create('div', 'WelcomeDialogDiv', this.backgroundDiv);
-
-      let titleDiv = GUI.create('div', 'TitleDiv', dialogDiv);
+      let titleDiv = GUI.create('div', 'TitleDiv', this.dialogDiv);
       titleDiv.className = 'DialogTitleClass';
       titleDiv.innerText = 'Welcome to Squint!';
 
+      let bodyDiv = GUI.create('div', 'BodyDiv', this.dialogDiv);
+      let img = GUI.create('img', 'SquintImg', bodyDiv);
+      img.src = SquintHttpUrl + 'squint.jpg';
 
-      let userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', dialogDiv);
+      let userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', bodyDiv);
       let userNameLabel = GUI.create('label', 'UserNameLabel', userNameGroupDiv);
       userNameLabel.htmlFor = 'UserNameInput';
       userNameLabel.innerText = 'Name:';
-      let userNameInput = GUI.create('input', 'UserNameInput', userNameGroupDiv);
-      userNameInput.type = 'text';
-      userNameInput.placeholder = 'Your Name';
+      let userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);
+      userNameTextInput.type = 'text';
+      userNameTextInput.placeholder = 'Your Name';
 
-      userNameInput.oninput = () => {
-         okButton.disabled = (userNameInput.value.trim().length === 0);
+      userNameTextInput.oninput = () => {
+         okButton.disabled = (userNameTextInput.value.trim().length === 0);
       };
 
+      userNameTextInput.onkeypress = (event: KeyboardEvent) => {
+         if (event.keyCode === 13) {
+            event.preventDefault();
+            okButton.click();
+         }
+      }
 
-      let okButton = GUI.create('button', 'OkButton', dialogDiv);
-      okButton.innerText = 'OK';
+      this.onShow = () => {
+         userNameTextInput.select();
+         userNameTextInput.focus();
+      }
+
+      let okButton = GUI.create('button', 'OkButton', userNameGroupDiv);
+      okButton.innerText = 'Start Squinting...';
       okButton.onclick = () => {
-         this.visible = false;
-         onOk(userNameInput.value.trim());
+         let userName = userNameTextInput.value.trim();
+         if (userName.length > 0) {
+            this.visible = false;
+            onOk(userNameTextInput.value.trim());
+         }
       };
       okButton.disabled = true;
+      okButton.className = 'ButtonClass';
    }
 }

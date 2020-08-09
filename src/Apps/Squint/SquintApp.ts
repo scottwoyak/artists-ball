@@ -5,13 +5,13 @@ import { IVideoResolution, Video, IMediaSettingsRange, IVideoTrackAdvancedCapabi
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
-import { iOS, toTimeStr, toSizeStr, isMobile } from '../../Util/Globals';
+import { iOS, toSizeStr, isMobile } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar, SubMenu } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
 import { StartDialog } from './StartDialog';
 import { Version } from './Version';
-import { Squint, IConnectionInfo } from './Squint';
+import { Squint } from './Squint';
 import { FPS } from '../../Util/FPS';
 import { ReconnectingDialog } from './ReconnectingDialog';
 import { WelcomeDialog } from './WelcomeDialog';
@@ -88,7 +88,7 @@ export class SquintApp implements IApp {
       if (userName !== oldUserName) {
          this.userNameMenuItemDiv.innerText = 'Hi ' + userName;
 
-         if (this.squint) {
+         if (this.squint && this.squint.connected) {
             this.squint.updateConnectionInfo({ userName: userName });
          };
       }
@@ -105,6 +105,8 @@ export class SquintApp implements IApp {
       msg += '\nuserAgent: ' + navigator.userAgent;
       msg += '\nplatform: ' + navigator.platform;
       console.log(msg);
+
+      //Cookie.delete('UserName'); // simulates starting up the first time
    }
 
    public create(div: HTMLDivElement) {
@@ -399,7 +401,7 @@ export class SquintApp implements IApp {
          item.innerText = this.consoleCapture.show ? 'Hide Log' : 'Show Log';
       });
 
-      this.userNameMenuItemDiv = menubar.addItem('Hi ' + this.userName,
+      this.userNameMenuItemDiv = menubar.addItem('Hi ' + (this.userName ?? ''),
          () => {
             new UserNameDialog(
                this.div,

@@ -15,7 +15,7 @@ export class Cookie {
    }
 
    public static delete(name: string) {
-      document.cookie = name + '=EXPIRED;max-age=-1';
+      document.cookie = name + '=EXPIRED;expires=Thu, 01 Jan 1970 00:00:01 GMT';
    }
 
    public static updateExpiration(name: string, expiresInSec: number) {

@@ -1,14 +1,21 @@
 
-let url;
+let host: string;
+let wsPre: string;
+let httpPre: string;
 if (location.hostname === 'localhost') {
-   url = 'ws://localhost:8080/V1/';
+   host = 'localhost:8080/V1/';
+   wsPre = 'ws://';
+   httpPre = 'http://';
 }
 else {
-   url = 'wss://squintserver-11278.nodechef.com/V1/'
+   host = 'squintserver-11278.nodechef.com/V1/'
+   wsPre = 'wss://'
+   httpPre = 'https://';
 }
 //export const SquintUrl = 'ws://192.168.86.23:8080/V1/'
 
-export const SquintUrl = url;
+export const SquintWsUrl = wsPre + host;
+export const SquintHttpUrl = httpPre + host;
 
    //static readonly url = 'ws://localhost:8080/V1/'
    //static readonly url = 'wss://squintserver-11278.nodechef.com/V1/'
