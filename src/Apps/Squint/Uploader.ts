@@ -42,7 +42,9 @@ export class Uploader {
    private upload(delay = 0) {
 
       if (!this.running) {
-         debug('upload() this.running===false, returning');
+         // this can happen for a number of reasons, e.g. while we were waiting for the
+         // next animation frame the socket was closed.
+         //debug('upload() this.running===false, returning');
          return;
       }
       if (this.busy) {

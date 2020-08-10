@@ -201,7 +201,7 @@ export class SquintApp implements IApp {
 
             case 'x':
                // simulate killing the connection
-               this.squint.ws.close();
+               (<any>this.squint.ss).ws.close(3000);
                break;
 
          }
@@ -234,16 +234,8 @@ export class SquintApp implements IApp {
 
    private startSession() {
       console.log('creating session \'' + this.userName + '\' on ' + Squint.url);
-      this.squint.createSession()
-         .then((session) => {
-            console.log('Session created');
-            this.startUploader();
-         })
-         .catch((err) => {
-            alert('Failed to create session: ' + err);
-            this.startDialog.visible = true;
-            this.enableVideo(false);
-         });
+      this.squint.createSession();
+      this.startUploader();
    }
 
    private startUploader() {

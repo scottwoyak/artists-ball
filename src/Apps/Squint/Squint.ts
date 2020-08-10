@@ -1,20 +1,6 @@
 import { SquintWsUrl as SquintWsUrl } from "./Servers";
 import { debug } from "./SquintApp";
-import { SquintConnector, ISquintConnection } from "./SquintConnector";
-
-export interface ISquintMessage {
-   [prop: string]: any,
-   subject:
-   'UpdateConnectionInfo' |
-   'CreateSession' |
-   'SessionCreated' |
-   'SessionCreateError' |
-   'SessionList' |
-   'Subscribe' |
-   'ReadyForNextImage' |
-   'Reconnected' |
-   'Hello',
-}
+import { SquintSocket, ISquintMessage } from "./SquintSocket";
 
 export interface IConnectionInfo {
    userName: string,
@@ -26,25 +12,18 @@ export type SessionListHandler = (session: IConnectionInfo[]) => void;
 export type ReconnectingHandler = () => void;
 export type ReconnectedHandler = (success: boolean) => void;
 
-type SessionCreatedHandler = () => void;
-type SessionCreateErrorHandler = (error: string) => void;
 type UpdateConnectionInfoHandler = (info: IConnectionInfo) => void;
-
-const NORMAL_CLOSURE = 1000;
 
 export class Squint {
 
    public static readonly url = SquintWsUrl;
 
-   public ws: WebSocket;
+   public ss: SquintSocket;
    public userName: string;
    private _reconnecting = false;
 
    public onImage: ImageHandler;
    public onSessionList: SessionListHandler;
-   private onSessionCreated: SessionCreatedHandler;
-   private onSessionCreateError: SessionCreateErrorHandler;
-   private connectionId: string;
 
    public onError: (event: Event) => void;
    public onClose: () => void;
@@ -54,8 +33,8 @@ export class Squint {
 
    public constructor() {
       window.addEventListener('unload', () => {
-         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.close();
+         if (this.ss && this.ss.connected) {
+            this.ss.close();
          }
       });
       /*
@@ -71,7 +50,12 @@ export class Squint {
    }
 
    public get connected(): boolean {
-      return (this.ws && this.ws.readyState === WebSocket.OPEN);
+      if (this.ss && this.ss.connected) {
+         return true;
+      }
+      else {
+         return false;
+      }
    }
 
    public get reconnecting(): boolean {
@@ -84,65 +68,53 @@ export class Squint {
          return false;
       }
 
-      return this.ws.bufferedAmount === 0;
+      return this.ss.bufferedAmount === 0;
    }
 
-   private setWS(ws: WebSocket) {
+   private setSS(ss: SquintSocket) {
 
-      this.ws = ws;
+      this.ss = ss;
 
-      ws.onopen = null;
-
-      ws.onclose = (event: CloseEvent) => {
-         console.warn('xxx ws.onclose()');
-         if (event.code === NORMAL_CLOSURE) {
-            this.ws.onclose = null;
-            this.ws.onerror = null;
-            this.ws.onmessage = null;
-            this.ws.onopen = null;
-            this.ws = null;
+      ss.onClose = (code: number) => {
+         let connectionId = ss.connectionId;
+         this.ss = null;
+         if (code === SquintSocket.NORMAL_CLOSURE) {
             if (this.onClose) {
                this.onClose();
             }
          }
          else {
-            this.tryToReconnect();
+            console.log('warn: websocket closed with code: ' + code);
+            this.tryToReconnect(connectionId);
          }
       }
 
-      ws.onerror = (event: Event) => {
-         this.tryToReconnect();
+      ss.onImage = (blob: Blob) => {
+         if (!ss.connected) {
+            debug('ss.onImage() message received, but socket not open');
+         }
+
+         if (this.onImage) {
+            this.onImage(blob);
+         }
       }
 
-      ws.onmessage = (message: MessageEvent) => {
-         if (ws.readyState !== WebSocket.OPEN) {
-            debug('ws.onmessage() message received, but socket not open');
+      ss.onMessage = (msg: ISquintMessage) => {
+         if (!ss.connected) {
+            debug('ws.onMessage() message received, but socket not open');
          }
 
          // process the image
-         if (message.data instanceof Blob) {
-            if (this.onImage) {
-               this.onImage(message.data);
-            }
-         }
-         else if (typeof message.data === 'string') {
-            try {
-               let obj = JSON.parse(message.data) as ISquintMessage;
-               this.processMessage(obj);
-            }
-            catch (err) {
-               console.log('Invalid message not received: Invalid JSON.\n' + message.data);
-            }
-         }
+         this.processMessage(msg);
       };
    }
 
-   private tryToReconnect() {
+   private tryToReconnect(connectionId: string) {
       this._reconnecting = true;
       if (this.onReconnecting) {
          this.onReconnecting();
       }
-      this.reconnect(SquintWsUrl, this.connectionId)
+      this.reconnect(SquintWsUrl, connectionId)
          .then(() => {
             this._reconnecting = false;
             if (this.onReconnected) {
@@ -151,7 +123,7 @@ export class Squint {
          })
          .catch((err) => {
             this._reconnecting = false;
-            this.ws = null;
+            this.ss = null;
             if (this.onReconnected) {
                this.onReconnected(false);
             }
@@ -176,10 +148,9 @@ export class Squint {
          return Promise.reject('Cannot connect to server: previous connection is still open');
       }
 
-      return SquintConnector.connect(url, this.userName, reconnectId)
-         .then((connection: ISquintConnection) => {
-            this.connectionId = connection.id;
-            this.setWS(connection.ws);
+      return SquintSocket.connect(url, this.userName, reconnectId)
+         .then((ss: SquintSocket) => {
+            this.setSS(ss);
          });
    }
 
@@ -189,13 +160,8 @@ export class Squint {
          return;
       }
 
-      this.ws.onclose = null;
-      this.ws.onerror = null;
-      this.ws.onmessage = null;
-      this.ws.onopen = null;
-
-      this.ws.close(NORMAL_CLOSURE);
-      this.ws = null;
+      this.ss.close();
+      this.ss = null;
    }
 
    private processMessage(msg: ISquintMessage) {
@@ -209,18 +175,6 @@ export class Squint {
             }
 
          }
-
-         case 'SessionCreated':
-            if (this.onSessionCreated) {
-               this.onSessionCreated();
-            };
-            break;
-
-         case 'SessionCreateError':
-            if (this.onSessionCreateError) {
-               this.onSessionCreateError(msg.error);
-            };
-            break;
 
          case 'SessionList':
             if (this.onSessionList) {
@@ -245,7 +199,7 @@ export class Squint {
          return;
       }
 
-      this.ws.send(JSON.stringify(msg));
+      this.ss.send(msg);
    }
 
    public sendImage(blob: Blob) {
@@ -255,10 +209,10 @@ export class Squint {
       }
 
       if (this.bufferReady) {
-         this.ws.send(blob);
+         this.ss.sendImage(blob);
       }
       else {
-         console.log('skipping upload, buffer not empty: ' + this.ws.bufferedAmount);
+         console.log('skipping upload, buffer not empty: ' + this.ss.bufferedAmount);
       }
    }
 
@@ -269,39 +223,9 @@ export class Squint {
    }
 
    // TODO do we really need to wait for a response?
-   public createSession(): Promise<void> {
-      return new Promise((resolve, reject) => {
-         if (!this.connected) {
-            console.log('createSession() socket ready state: ' + (this.ws ? this.ws.readyState : 'null'));
-            reject('WebSocket not connected.');
-         }
-         this.send({
-            subject: 'CreateSession',
-         });
-
-         let closeHandler = () => {
-            reject('WebSocket was closed');
-         }
-         this.ws.addEventListener('close', closeHandler);
-         let errHandler = () => {
-            reject('WebSocket error');
-         }
-         this.ws.addEventListener('error', errHandler);
-
-         this.onSessionCreated = () => {
-            this.onSessionCreated = null;
-            this.onSessionCreateError = null;
-            this.ws.removeEventListener('close', closeHandler);
-            this.ws.removeEventListener('error', errHandler);
-            resolve();
-         };
-         this.onSessionCreateError = (err) => {
-            this.onSessionCreated = null;
-            this.onSessionCreateError = null;
-            this.ws.removeEventListener('close', closeHandler);
-            this.ws.removeEventListener('error', errHandler);
-            reject(err);
-         };
+   public createSession() {
+      this.send({
+         subject: 'CreateSession',
       });
    }
 
