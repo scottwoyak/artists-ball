@@ -1,7 +1,7 @@
 import 'webrtc-adapter';
 import { IApp } from '../../IApp';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
-import { IVideoConstraint, Camera, IMediaSettingsRange, IVideoTrackAdvancedCapabilities, IVideoTrackAdvancedSettings, AdvancedConstraintMode, AdvancedConstraintName } from './Camera';
+import { IVideoConstraint, Camera, IMediaSettingsRange, IVideoTrackAdvancedCapabilities, IVideoTrackAdvancedSettings, AdvancedConstraintMode, AdvancedConstraintName, IAdvancedConstraint } from './Camera';
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
@@ -27,11 +27,6 @@ export function debug(msg: string): void {
    //alert('debug error: ' + msg);
 }
 
-interface IConstraintHolder {
-   constraint: AdvancedConstraintName,
-   value: (() => string) | (() => number),
-}
-
 interface IConstraintItem {
    constraint: AdvancedConstraintName,
    label: string,
@@ -43,9 +38,8 @@ export class SquintApp implements IApp {
    private userNameMenuItemDiv: HTMLDivElement;
    private img: HTMLImageElement;
 
-   private camera = new Camera();
+   private camera: Camera;
    private canvas: HTMLCanvasElement;
-   private video: HTMLVideoElement;
    private desired: IVideoConstraint = {
       label: '',
       width: 0,
@@ -66,7 +60,7 @@ export class SquintApp implements IApp {
    private cameraScale: Slider;
    private cameraCtrls: ICtrl[] = [];
 
-   private advancedConstraints: IConstraintHolder[] = [];
+   private advancedConstraints: IAdvancedConstraint[] = [];
    private advancedSubMenu: SubMenu;
 
    private xOffset = 0;
@@ -106,7 +100,6 @@ export class SquintApp implements IApp {
       }
       msg += '\nuserAgent: ' + navigator.userAgent;
       msg += '\nplatform: ' + navigator.platform;
-      console.log(msg);
 
       //Cookie.delete('UserName'); // simulates starting up the first time
    }
@@ -170,15 +163,8 @@ export class SquintApp implements IApp {
       this.canvas.id = 'Canvas';
       this.div.appendChild(this.canvas);
 
-      this.video = document.createElement('video');
-      this.video.id = 'Video';
-      this.video.autoplay = true;
-      this.video.setAttribute('playsinline', 'true'); // needed for iPhones
-      this.video.onerror = (err) => {
-         alert('video.onerror(): ' + err);
-      }
-      this.div.appendChild(this.video);
-      this.video.style.display = 'none';
+      this.camera = new Camera(this.div);
+      this.camera.video.style.display = 'none';
 
       this.handler = new PointerEventHandler(this.canvas);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
@@ -235,13 +221,11 @@ export class SquintApp implements IApp {
    }
 
    private startSession() {
-      console.log('creating session \'' + this.userName + '\' on ' + Squint.url);
       this.squint.createSession();
       this.startUploader();
    }
 
    private startUploader() {
-      console.log('starting uploader, video.readyState=' + this.video.readyState);
       this.uploader = new Uploader(
          this.squint,
          () => this.takePicture()
@@ -344,22 +328,15 @@ export class SquintApp implements IApp {
       })
 
       let button = cameraMenu.addItem('Capabilities...', () => {
-         if (this.video.srcObject) {
-            let stream = this.video.srcObject as MediaStream;
-            let track = stream.getVideoTracks()[0];
-            if (track.getCapabilities) {
-               let capabilities = track.getCapabilities();
-               let msg = 'Camera Capabilities:\n';
-               for (let key in capabilities) {
-                  if (key === 'deviceId' || key === 'groupId') {
-                     continue;
-                  }
-                  msg += this.capabilityToString(capabilities, key) + '\n';
-               }
-               alert(msg);
-               console.log(JSON.stringify(capabilities, null, ' '));
+         let capabilities = this.camera.getCapabilities();
+         let msg = 'Camera Capabilities:\n';
+         for (let key in capabilities) {
+            if (key === 'deviceId' || key === 'groupId') {
+               continue;
             }
+            msg += Camera.capabilityToString(capabilities, key) + '\n';
          }
+         alert(msg);
       })
 
       this.jpegQuality = cameraMenu.addSlider({
@@ -407,40 +384,6 @@ export class SquintApp implements IApp {
       this.userNameMenuItemDiv.id = 'UserNameItemDiv';
    }
 
-   private numToString(num: number): string {
-      if (Number.isInteger(num)) {
-         return num.toString();
-      }
-      else {
-         return num.toFixed(3);
-      }
-   }
-
-   private capabilityToString(capabilities: MediaTrackCapabilities, name: string): string {
-      let obj = (<any>capabilities)[name];
-      let str = name + ': ';
-      if (typeof obj === 'object') {
-         if (obj['min'] !== undefined) {
-            str += this.numToString(obj['min'] as number) + ' to ' + this.numToString(obj['max'] as number);
-         }
-         else if (obj instanceof Array) {
-            for (let i = 0; i < obj.length; i++) {
-               if (i > 0) {
-                  str += ', ';
-               }
-               str += JSON.stringify(obj[i]);
-            }
-         }
-         else {
-            str += JSON.stringify(obj);
-         }
-      }
-      else {
-         str += JSON.stringify(obj);
-      }
-      return str;
-   }
-
    private onDownload(blob: Blob) {
 
       if (!blob) {
@@ -470,86 +413,12 @@ export class SquintApp implements IApp {
       img.src = URL.createObjectURL(blob);
    }
 
-   private setConstraints() {
-
-      let constraints: any;
-      if (this.desired.deviceId && this.desired.deviceId.trim().length > 0) {
-         constraints = {
-            video: {
-               width: { ideal: 10 * 1000 },
-               height: { ideal: 10 * 1000 },
-               facingMode: this.desired.facingMode,
-               deviceId: this.desired.deviceId,
-            },
-            audio: false,
-         };
-      }
-      else {
-         //debug('no device id, falling back to any camera');
-         constraints = {
-            video: {
-               width: { ideal: 10 * 1000 },
-               height: { ideal: 10 * 1000 },
-               facingMode: this.desired.facingMode,
-            },
-            audio: false,
-         };
-      }
-
-      console.log('---getUserMedia() requesting\n' + JSON.stringify(constraints, null, ' '));
-      navigator.mediaDevices.getUserMedia(constraints)
-         .then((stream) => {
-            console.log('---getUserMedia().then() ' + stream);
-            //alert('---getUserMedia().then() ' + stream + ' ' + stream.getVideoTracks()[0].getSettings().width);
-
-            if (stream === null) {
-               alert('Could not create video stream');
-            }
-            else {
-               // let the Video object know that the user has know granted user permission
-               // to use the camera
-               Camera.videoEnabled = true;
-
-               let track = stream.getVideoTracks()[0];
-               let settings = track.getSettings();
-
-               if (Math.max(settings.width, settings.height) > 1000) {
-                  this.cameraScale.value = Math.min(1000 / settings.width, 1000 / settings.height);
-               }
-
-               console.log('actual video size: ' + settings.width + ' x ' + settings.height);
-               this.updateVideoSize(settings.width, settings.height);
-
-               console.log('setting video.srcObject to ' + stream);
-               this.video.srcObject = stream;
-               this.video.play()
-                  .then(() => {
-                     console.log('playing');
-                     this.buildAdvancedSubMenu(track);
-                     this.updateVideoSize(this.video.videoWidth, this.video.videoHeight);
-                  })
-                  .catch((err) => {
-                     console.log('error playing: ' + err);
-                  });
-               if (!this.uploader) {
-                  this.startSession();
-               }
-            }
-         })
-         .catch((reason) => {
-            alert('video error: ' + reason);
-         });
-   }
-
    private buildAdvancedSubMenu(track: MediaStreamTrack) {
-      console.log('clearing menu');
       this.advancedSubMenu.clear();
       this.advancedConstraints = [];
 
       let capabilities = track.getCapabilities() as IVideoTrackAdvancedCapabilities;
       let settings = track.getSettings() as IVideoTrackAdvancedSettings;
-
-      console.log('building advanced menu: ' + JSON.stringify(capabilities, null, ' '));
 
       let whiteBalanceMode: IConstraintItem = {
          constraint: 'whiteBalanceMode',
@@ -637,12 +506,11 @@ export class SquintApp implements IApp {
             for (let slider of sliders) {
                slider.enabled = !checkbox.checked;
             }
-            this.applyConstraints();
+            this.camera.applyAdvancedConstraints(this.advancedConstraints);
          },
          checked: (<any>settings)[checkboxSetup.constraint] === 'continuous',
       });
 
-      console.log('adding checkbox: ' + checkboxSetup.constraint);
       this.advancedConstraints.push({
          constraint: checkboxSetup.constraint,
          value: () => { return checkbox.checked ? 'continuous' : 'manual'; }
@@ -672,10 +540,9 @@ export class SquintApp implements IApp {
          max: range.max,
          value: settings[item.constraint] as number,
          onGetText: (slider) => { return slider.value.toFixed(); },
-         oninput: () => { this.applyConstraints(); }
+         oninput: () => { this.camera.applyAdvancedConstraints(this.advancedConstraints); }
       })
 
-      console.log('adding slider: ' + item.constraint);
       this.advancedConstraints.push({
          constraint: item.constraint,
          value: () => { return slider.value; }
@@ -683,54 +550,40 @@ export class SquintApp implements IApp {
       return slider;
    }
 
-   private applyConstraints() {
-      let stream = this.video.srcObject as MediaStream;
-      let track = stream.getVideoTracks()[0];
-
-      let constraints = { advanced: [] = [] } as any;
-      let constraint: any = {};
-      for (let item of this.advancedConstraints) {
-         constraint[item.constraint] = item.value();
-      }
-
-      console.log('setting advanced constraints: ' + JSON.stringify(constraint, null, ' '));
-      constraints.advanced.push(constraint);
-
-      track.applyConstraints(<MediaTrackConstraints><any>(constraints))
-         .catch((err) => {
-            debug('Cannot apply constraints: ' + err);
-         });
-   }
-
    private enableVideo(enable: boolean) {
 
       // stop the last video
-      this.stopTracks();
+      this.camera.stop();
 
       this.enableCameraCtrls(enable);
 
       if (enable) {
-         this.video.style.display = 'block';
-         this.setConstraints();
+         this.camera.video.style.display = 'block';
+         this.camera.start(this.desired)
+            .then((track: MediaStreamTrack) => {
+               let settings = track.getSettings();
+               if (Math.max(settings.width, settings.height) > 1000) {
+                  this.cameraScale.value = Math.min(1000 / settings.width, 1000 / settings.height);
+               }
+
+               this.updateVideoSize(settings.width, settings.height);
+
+               this.buildAdvancedSubMenu(track);
+               this.updateVideoSize(this.camera.video.videoWidth, this.camera.video.videoHeight);
+
+               if (!this.uploader) {
+                  this.startSession();
+               }
+
+            })
+            .catch((reason) => {
+               alert(reason);
+            });
       }
       else {
          this.stopUploader();
-         this.video.style.display = 'none';
-         console.log('clearing menu');
+         this.camera.video.style.display = 'none';
          this.advancedSubMenu.clear();
-      }
-   }
-
-   private stopTracks() {
-      if (this.video.srcObject) {
-         console.log('stopping tracks');
-         // Using the camera is not robust. Applying constraints to change things
-         // like which camera is in use only works sometimes. The most robust I can
-         // make it is to close the video element and create a new one.
-         let stream = this.video.srcObject as MediaStream;
-         stream.getTracks().forEach((track: MediaStreamTrack) => {
-            track.stop();
-         });
       }
    }
 
@@ -740,7 +593,7 @@ export class SquintApp implements IApp {
          console.error('takePicture() after close');
       }
 
-      return this.camera.takePicture(this.video, this.cameraScale.value, this.jpegQuality.value)
+      return this.camera.takePicture(this.cameraScale.value, this.jpegQuality.value)
          .then((blob: Blob) => {
             // draw what was uploaded, i.e. simulate a download
             this.drawBlob(blob);
@@ -754,15 +607,15 @@ export class SquintApp implements IApp {
    }
 
    private updateVideoSize(videoWidth: number, videoHeight: number) {
-      if (getComputedStyle(this.video).display !== 'none') {
-         let videoSize = Math.max(this.video.clientWidth, this.video.clientHeight);
+      if (getComputedStyle(this.camera.video).display !== 'none') {
+         let videoSize = Math.max(this.camera.video.clientWidth, this.camera.video.clientHeight);
          if (videoWidth > videoHeight) {
-            this.video.style.width = videoSize + 'px';
-            this.video.style.height = (videoSize * videoHeight / videoWidth) + 'px';
+            this.camera.video.style.width = videoSize + 'px';
+            this.camera.video.style.height = (videoSize * videoHeight / videoWidth) + 'px';
          }
          else {
-            this.video.style.height = videoSize + 'px';
-            this.video.style.width = (videoSize * videoWidth / videoHeight) + 'px';
+            this.camera.video.style.height = videoSize + 'px';
+            this.camera.video.style.width = (videoSize * videoWidth / videoHeight) + 'px';
          }
       }
    }
