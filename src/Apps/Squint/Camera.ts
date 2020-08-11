@@ -1,7 +1,7 @@
-import { debug } from "./SquintApp";
+import { debug, SquintStrings } from "./SquintApp";
 import { iOS } from "../../Util/Globals";
 
-export interface IVideoResolution {
+export interface IVideoConstraint {
    label: string,
    width?: number,
    height?: number,
@@ -65,14 +65,49 @@ export interface IVideoTrackAdvancedCapabilities {
    zoom?: IMediaSettingsRange;
 }
 
-export class Video {
+export class Camera {
+
+   private canvas: HTMLCanvasElement;
+
+   public constructor() {
+      this.canvas = document.createElement('canvas');
+   }
+
+   public takePicture(
+      video: HTMLVideoElement,
+      scale: number,
+      jpegQuality: number
+   ): Promise<Blob> {
+
+      if (video.readyState != 4) {
+         return Promise.reject(SquintStrings.CAMERA_NOT_READY);
+      }
+
+      this.canvas.width = video.videoWidth * scale;
+      this.canvas.height = video.videoHeight * scale;
+
+      //console.log('capturing image: ' + canvas.width + 'x' + canvas.height);
+      const context = this.canvas.getContext('2d');
+      context.drawImage(video, 0, 0, this.canvas.width, this.canvas.height);
+
+      // upload
+      return new Promise<Blob>((resolve, reject) => {
+         this.canvas.toBlob(
+            (blob) => {
+               resolve(blob)
+            },
+            'image/jpeg',
+            jpegQuality);
+      });
+   }
+
 
    public static videoEnabled = false;
 
-   public static getCameras(onFound: (resolution: IVideoResolution) => void) {
+   public static getCameras(onFound: (resolution: IVideoConstraint) => void) {
       navigator.mediaDevices.enumerateDevices()
          .then((devices) => {
-            if (iOS() && Video.videoEnabled === false) {
+            if (iOS() && Camera.videoEnabled === false) {
 
                // iPhones and iPads don't allow you to enumerate cameras until the user
                // has given permission and that doesn't happen until the first time

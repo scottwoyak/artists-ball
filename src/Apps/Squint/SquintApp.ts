@@ -1,7 +1,7 @@
 import 'webrtc-adapter';
 import { IApp } from '../../IApp';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
-import { IVideoResolution, Video, IMediaSettingsRange, IVideoTrackAdvancedCapabilities, IVideoTrackAdvancedSettings, AdvancedConstraintMode, AdvancedConstraintName } from './Video';
+import { IVideoConstraint, Camera, IMediaSettingsRange, IVideoTrackAdvancedCapabilities, IVideoTrackAdvancedSettings, AdvancedConstraintMode, AdvancedConstraintName } from './Camera';
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
@@ -42,9 +42,11 @@ export class SquintApp implements IApp {
    private div: HTMLDivElement;
    private userNameMenuItemDiv: HTMLDivElement;
    private img: HTMLImageElement;
+
+   private camera = new Camera();
    private canvas: HTMLCanvasElement;
    private video: HTMLVideoElement;
-   private desired: IVideoResolution = {
+   private desired: IVideoConstraint = {
       label: '',
       width: 0,
       height: 0,
@@ -60,8 +62,8 @@ export class SquintApp implements IApp {
    private saturate: Slider;
    private blur: Slider;
    private zoom: Slider;
-   private quality: Slider;
-   private resolution: Slider;
+   private jpegQuality: Slider;
+   private cameraScale: Slider;
    private cameraCtrls: ICtrl[] = [];
 
    private advancedConstraints: IConstraintHolder[] = [];
@@ -321,20 +323,20 @@ export class SquintApp implements IApp {
       let cameraMenu = menubar.addSubMenu('Camera');
 
       let firstItem = true;
-      Video.getCameras((resolution) => {
+      Camera.getCameras((constraint) => {
 
          let radioButton = cameraMenu.addRadiobutton(
             {
-               label: resolution.label,
+               label: constraint.label,
                oncheck: () => {
-                  this.desired = resolution;
+                  this.desired = constraint;
                   this.enableVideo(true);
                },
                checked: firstItem,
                group: 'CamerasGroup',
             });
          if (firstItem) {
-            this.desired = resolution;
+            this.desired = constraint;
             firstItem = false;
          }
 
@@ -360,23 +362,23 @@ export class SquintApp implements IApp {
          }
       })
 
-      this.quality = cameraMenu.addSlider({
+      this.jpegQuality = cameraMenu.addSlider({
          label: 'JPeg Photo Quality',
          min: 0.1,
          max: 1,
          value: 0.5,
          onGetText: (slider) => (100 * slider.value).toFixed() + '%',
       });
-      this.cameraCtrls.push(this.quality);
+      this.cameraCtrls.push(this.jpegQuality);
 
-      this.resolution = cameraMenu.addSlider({
+      this.cameraScale = cameraMenu.addSlider({
          label: 'Camera Resolution',
          min: 0.1,
          max: 1,
          value: 0.5,
          onGetText: (slider) => (100 * slider.value).toFixed() + '%',
       });
-      this.cameraCtrls.push(this.resolution);
+      this.cameraCtrls.push(this.cameraScale);
 
       this.advancedSubMenu = cameraMenu.addSubMenu('Advanced');
 
@@ -506,13 +508,13 @@ export class SquintApp implements IApp {
             else {
                // let the Video object know that the user has know granted user permission
                // to use the camera
-               Video.videoEnabled = true;
+               Camera.videoEnabled = true;
 
                let track = stream.getVideoTracks()[0];
                let settings = track.getSettings();
 
                if (Math.max(settings.width, settings.height) > 1000) {
-                  this.resolution.value = Math.min(1000 / settings.width, 1000 / settings.height);
+                  this.cameraScale.value = Math.min(1000 / settings.width, 1000 / settings.height);
                }
 
                console.log('actual video size: ' + settings.width + ' x ' + settings.height);
@@ -738,30 +740,13 @@ export class SquintApp implements IApp {
          console.error('takePicture() after close');
       }
 
-      if (this.video.readyState != 4) {
-         return Promise.reject(SquintStrings.CAMERA_NOT_READY);
-      }
+      return this.camera.takePicture(this.video, this.cameraScale.value, this.jpegQuality.value)
+         .then((blob: Blob) => {
+            // draw what was uploaded, i.e. simulate a download
+            this.drawBlob(blob);
+            return blob;
+         });
 
-      let canvas = document.createElement('canvas');
-      canvas.width = this.video.videoWidth * this.resolution.value;
-      canvas.height = this.video.videoHeight * this.resolution.value;
-
-      //console.log('capturing image: ' + canvas.width + 'x' + canvas.height);
-      const context = canvas.getContext('2d');
-      context.drawImage(this.video, 0, 0, canvas.width, canvas.height);
-
-      // upload
-      return new Promise<Blob>((resolve, reject) => {
-         canvas.toBlob(
-            (blob) => {
-               // draw what was uploaded, i.e. simulate a download
-               this.drawBlob(blob);
-
-               resolve(blob)
-            },
-            'image/jpeg',
-            this.quality.value);
-      });
    }
 
    private onResize() {
