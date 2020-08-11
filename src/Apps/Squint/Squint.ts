@@ -1,11 +1,7 @@
 import { SquintWsUrl as SquintWsUrl } from "./Servers";
 import { debug } from "./SquintApp";
-import { SquintSocket, ISquintMessage } from "./SquintSocket";
-
-export interface IConnectionInfo {
-   userName: string,
-   connectionId?: string,
-}
+import { SquintSocket } from "./SquintSocket";
+import { ISquintMessage, IConnectionInfo } from "./SquintMessage";
 
 export type ImageHandler = (img: Blob) => void;
 export type SessionListHandler = (session: IConnectionInfo[]) => void;
@@ -30,6 +26,13 @@ export class Squint {
    public onReconnecting: ReconnectingHandler;
    public onReconnected: ReconnectedHandler;
    public onUpdateConnectionInfo: UpdateConnectionInfoHandler;
+
+   public get connectionInfo(): IConnectionInfo {
+      return {
+         connectionId: this.ss.connectionId,
+         userName: this.userName
+      }
+   }
 
    public constructor() {
       window.addEventListener('unload', () => {
@@ -173,13 +176,23 @@ export class Squint {
                   connectionId: msg.connectionId,
                })
             }
-
          }
+            break;
 
          case 'SessionList':
             if (this.onSessionList) {
                this.onSessionList(msg.sessions);
             }
+            break;
+
+         case 'ChatMessage': {
+            console.log('XXX chat message received: ' + JSON.stringify(msg, null, ' '));
+         }
+            break;
+
+         case 'ViewerList': {
+            console.log('XXX ViewerList message received: ' + JSON.stringify(msg, null, ' '));
+         }
             break;
 
          case undefined:
@@ -236,10 +249,20 @@ export class Squint {
       })
    }
 
-   public updateConnectionInfo(info: IConnectionInfo) {
+   public updateConnectionInfo(userName: string) {
+      this.userName = userName;
       this.send({
          subject: 'UpdateConnectionInfo',
-         userName: info.userName,
+         userName: this.connectionInfo.userName,
+         connectionId: this.connectionInfo.connectionId,
       })
+   }
+
+   public sendChatMessage(msg: string) {
+      this.send({
+         subject: 'ChatMessage',
+         message: msg,
+         connection: this.connectionInfo,
+      });
    }
 }

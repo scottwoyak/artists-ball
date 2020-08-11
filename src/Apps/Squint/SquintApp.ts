@@ -17,6 +17,8 @@ import { ReconnectingDialog } from './ReconnectingDialog';
 import { WelcomeDialog } from './WelcomeDialog';
 import { Cookie } from '../../Util/Cookie';
 import { UserNameDialog } from './UserNameDialog';
+import { ListBox } from '../../GUI/ListBox';
+import { GUI } from '../../GUI/GUI';
 
 export class SquintStrings {
    public static readonly CAMERA_NOT_READY = 'Camera not ready';
@@ -37,6 +39,9 @@ export class SquintApp implements IApp {
    private div: HTMLDivElement;
    private userNameMenuItemDiv: HTMLDivElement;
    private img = document.createElement('img');
+
+   private viewersDiv: HTMLDivElement;
+   private viewersListBox: ListBox;
 
    private camera: Camera;
    private canvas: HTMLCanvasElement;
@@ -85,7 +90,7 @@ export class SquintApp implements IApp {
          this.userNameMenuItemDiv.innerText = 'Hi ' + userName;
 
          if (this.squint && this.squint.connected) {
-            this.squint.updateConnectionInfo({ userName: userName });
+            this.squint.updateConnectionInfo(userName);
          };
       }
    }
@@ -166,6 +171,11 @@ export class SquintApp implements IApp {
       this.camera = new Camera(this.div);
       this.camera.video.style.display = 'none';
 
+      /*
+      this.viewersDiv = GUI.create('div', 'ViewersDiv', this.div);
+      this.viewersListBox = new ListBox(this.viewersDiv, 'ViewersListBox');
+      */
+
       this.handler = new PointerEventHandler(this.canvas);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
       this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
@@ -192,6 +202,9 @@ export class SquintApp implements IApp {
                (<any>this.squint.ss).ws.close(3000);
                break;
 
+            case 't':
+               this.squint.sendChatMessage('My chat message');
+               break;
          }
       }
    }

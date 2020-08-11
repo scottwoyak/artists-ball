@@ -1,21 +1,5 @@
+import { ISquintMessage, ISquintHelloFromServerMessage } from "./SquintMessage";
 import { debug } from "./SquintApp";
-
-export interface ISquintMessage {
-   [prop: string]: any,
-   subject:
-   'UpdateConnectionInfo' |
-   'CreateSession' |
-   'SessionList' |
-   'Subscribe' |
-   'ReadyForNextImage' |
-   'Reconnected' |
-   'Hello',
-}
-
-export interface IConnectionInfo {
-   userName: string,
-   connectionId?: string,
-}
 
 export type ImageHandler = (img: Blob) => void;
 export type MessageHandler = (msg: ISquintMessage) => void;
@@ -181,6 +165,7 @@ export class SquintSocket {
                try {
                   let msg = JSON.parse(messageEvent.data) as ISquintMessage;
                   if (msg.subject && msg.subject === 'Hello') {
+                     msg = msg as ISquintHelloFromServerMessage;
                      console.log('Squint connection established. ID=' + msg.id);
                      resolve(new SquintSocket(ws, msg.id));
                   }

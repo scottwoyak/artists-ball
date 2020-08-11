@@ -1,9 +1,10 @@
 import { ListBox } from "../../GUI/ListBox";
 import { Version } from "./Version";
-import { Squint, IConnectionInfo } from "./Squint";
+import { Squint } from "./Squint";
 import { GUI } from "../../GUI/GUI";
 import { UserNameDialog } from "./UserNameDialog";
 import { Dialog } from "../../GUI/Dialog";
+import { IConnectionInfo } from "./SquintMessage";
 
 export type ViewSessionHandler = (connectionId: string) => void;
 export type StartSessionHandler = () => void;
@@ -79,10 +80,7 @@ export class StartDialog extends Dialog {
       //
       let viewPanelDiv = GUI.create('div', 'ViewPanelDiv', this.bodyDiv);
 
-      this.viewListBox = new ListBox<string>(
-         viewPanelDiv, {
-         id: 'ViewListBox'
-      });
+      this.viewListBox = new ListBox<string>(viewPanelDiv, 'ViewListBox');
       this.viewListBox.onSelectedChanged = () => {
          goViewButton.disabled = (this.viewListBox.selected === null);
       }

@@ -1,12 +1,5 @@
 import { ICtrl } from "./ICtrl";
 
-/**
- * Interface for data passed to the ListBox constructor
- */
-export interface IListBoxSetup {
-   id?: string,
-}
-
 export interface IListBoxItem<T> {
    div: HTMLDivElement,
    userData: T,
@@ -48,10 +41,10 @@ export class ListBox<T = any> implements ICtrl {
     * @param parent The parent html object.
     * @param setup The setup data object
     */
-   public constructor(parent: HTMLElement, setup: IListBoxSetup) {
+   public constructor(parent: HTMLElement, id?: string) {
 
       this.box = document.createElement('div');
-      this.box.id = setup.id;
+      this.box.id = id;
       this.box.className = 'ListBox';
       parent.appendChild(this.box);
 
