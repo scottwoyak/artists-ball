@@ -36,7 +36,7 @@ export class SquintApp implements IApp {
    private handler: PointerEventHandler;
    private div: HTMLDivElement;
    private userNameMenuItemDiv: HTMLDivElement;
-   private img: HTMLImageElement;
+   private img = document.createElement('img');
 
    private camera: Camera;
    private canvas: HTMLCanvasElement;
@@ -397,20 +397,24 @@ export class SquintApp implements IApp {
 
    private drawBlob(blob: Blob) {
       this.downloadFPS.tick();
-      let img = document.createElement('img');
-      img.onload = () => {
-         this.img = img;
-         this.imgSize = blob.size;
-         // TODO how do we know that this connection is the same as the one that
-         // initiated the request?
-         if (this.squint.connected) {
-            this.drawImg();
+      if (this.img.onload === null) {
+         this.img.onload = () => {
+            this.imgSize = blob.size;
+            // TODO how do we know that this connection is the same as the one that
+            // initiated the request?
+            if (this.squint.connected) {
+               this.drawImg();
+            }
+
+            URL.revokeObjectURL(this.img.src);
          }
       }
-      img.onerror = (reason) => {
-         alert('cannot load image: ' + reason);
+      if (this.img.onerror === null) {
+         this.img.onerror = (reason) => {
+            alert('Cannot load image: ' + reason);
+         }
       }
-      img.src = URL.createObjectURL(blob);
+      this.img.src = URL.createObjectURL(blob);
    }
 
    private buildAdvancedSubMenu(track: MediaStreamTrack) {
