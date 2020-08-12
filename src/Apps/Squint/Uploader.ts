@@ -25,7 +25,6 @@ export class Uploader {
    }
 
    public constructor(squint: Squint, onDataNeeded: DataNeededHandler) {
-      console.log('starting uploader');
       this.squint = squint;
       this.onDataNeeded = onDataNeeded;
 
@@ -34,7 +33,6 @@ export class Uploader {
 
    public stop() {
       if (this.running) {
-         console.log('stopping uploader');
          this.running = false;
       }
    }

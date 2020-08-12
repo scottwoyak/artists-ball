@@ -5,6 +5,8 @@ import { ISquintMessage, IConnectionInfo } from "./SquintMessage";
 
 export type ImageHandler = (img: Blob) => void;
 export type SessionListHandler = (session: IConnectionInfo[]) => void;
+export type ViewerListHandler = (session: IConnectionInfo[]) => void;
+export type ChatMessageHandler = (source: IConnectionInfo, msg: string) => void;
 export type ReconnectingHandler = () => void;
 export type ReconnectedHandler = (success: boolean) => void;
 
@@ -20,6 +22,8 @@ export class Squint {
 
    public onImage: ImageHandler;
    public onSessionList: SessionListHandler;
+   public onViewerList: ViewerListHandler;
+   public onChatMessage: ChatMessageHandler;
 
    public onError: (event: Event) => void;
    public onClose: () => void;
@@ -179,19 +183,24 @@ export class Squint {
          }
             break;
 
-         case 'SessionList':
+         case 'SessionList': {
             if (this.onSessionList) {
                this.onSessionList(msg.sessions);
             }
+         }
             break;
 
          case 'ChatMessage': {
-            console.log('XXX chat message received: ' + JSON.stringify(msg, null, ' '));
+            if (this.onChatMessage) {
+               this.onChatMessage(msg.connection, msg.message);
+            }
          }
             break;
 
          case 'ViewerList': {
-            console.log('XXX ViewerList message received: ' + JSON.stringify(msg, null, ' '));
+            if (this.onViewerList) {
+               this.onViewerList(msg.viewers);
+            }
          }
             break;
 

@@ -1,15 +1,15 @@
-.ListBox {
+.ListBoxClass {
   background-color: white;
   overflow-y: scroll;
   cursor: pointer;
 }
 
-.ListBoxItem:hover {
+.ListBoxItemClass:hover {
   background-color: powderblue;
 }
 
-.ListBoxItemSelected,
-.ListBoxItemSelected:hover {
+.ListBoxItemSelectedClass,
+.ListBoxItemSelectedClass:hover {
   background-color: steelblue;
   color: white;
 }

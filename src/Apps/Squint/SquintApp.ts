@@ -5,7 +5,7 @@ import { IVideoConstraint, Camera, IMediaSettingsRange, IVideoTrackAdvancedCapab
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
-import { iOS, toSizeStr, isMobile } from '../../Util/Globals';
+import { toSizeStr, isMobile } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar, SubMenu } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
@@ -15,10 +15,10 @@ import { Squint } from './Squint';
 import { FPS } from '../../Util/FPS';
 import { ReconnectingDialog } from './ReconnectingDialog';
 import { WelcomeDialog } from './WelcomeDialog';
-import { Cookie } from '../../Util/Cookie';
 import { UserNameDialog } from './UserNameDialog';
-import { ListBox } from '../../GUI/ListBox';
 import { GUI } from '../../GUI/GUI';
+import { ViewersPanel } from './ViewersPanel';
+import { Checkbox } from '../../GUI/Checkbox';
 
 export class SquintStrings {
    public static readonly CAMERA_NOT_READY = 'Camera not ready';
@@ -34,14 +34,18 @@ interface IConstraintItem {
    label: string,
 }
 
+enum StorageItems {
+   UserName = 'UserName',
+   VideoWindow = 'VideoWindow',
+   ViewerWindow = 'ViewerWindow'
+}
+
 export class SquintApp implements IApp {
    private handler: PointerEventHandler;
    private div: HTMLDivElement;
    private userNameMenuItemDiv: HTMLDivElement;
-   private img = document.createElement('img');
-
-   private viewersDiv: HTMLDivElement;
-   private viewersListBox: ListBox;
+   private img: HTMLImageElement;
+   private viewersPanel: ViewersPanel;
 
    private camera: Camera;
    private canvas: HTMLCanvasElement;
@@ -79,12 +83,12 @@ export class SquintApp implements IApp {
    private consoleCapture = new ConsoleCapture();
 
    private get userName(): string {
-      return Cookie.get('UserName');
+      return localStorage.getItem(StorageItems.UserName);
    }
 
    private set userName(userName: string) {
       let oldUserName = this.userName;
-      Cookie.set('UserName', userName, 365 * 24 * 60 * 60);
+      localStorage.setItem(StorageItems.UserName, userName);
 
       if (userName !== oldUserName) {
          this.userNameMenuItemDiv.innerText = 'Hi ' + userName;
@@ -98,15 +102,8 @@ export class SquintApp implements IApp {
    public constructor() {
 
       document.title += (' ' + Version.Build);
-      //alert(document.title);
-      let msg = '';
-      if (iOS()) {
-         msg += '. Running on Apple';
-      }
-      msg += '\nuserAgent: ' + navigator.userAgent;
-      msg += '\nplatform: ' + navigator.platform;
 
-      //Cookie.delete('UserName'); // simulates starting up the first time
+      //localStorage.removeItem(StorageItems.UserName); // simulates starting up the first time
    }
 
    public create(div: HTMLDivElement) {
@@ -160,9 +157,7 @@ export class SquintApp implements IApp {
          }
       }
 
-      this.div = document.createElement('div');
-      this.div.className = 'FlexContainer';
-      div.appendChild(this.div);
+      this.div = GUI.create('div', 'BodyDiv', div);
 
       this.canvas = document.createElement('canvas');
       this.canvas.id = 'Canvas';
@@ -171,10 +166,8 @@ export class SquintApp implements IApp {
       this.camera = new Camera(this.div);
       this.camera.video.style.display = 'none';
 
-      /*
-      this.viewersDiv = GUI.create('div', 'ViewersDiv', this.div);
-      this.viewersListBox = new ListBox(this.viewersDiv, 'ViewersListBox');
-      */
+      this.viewersPanel = new ViewersPanel(this.squint, this.div);
+
 
       this.handler = new PointerEventHandler(this.canvas);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
@@ -189,22 +182,23 @@ export class SquintApp implements IApp {
       }
       else {
          // refresh the expiration date
-         Cookie.updateExpiration('UserName', 365 * 24 * 60 * 60);
          this.startDialog.visible = true;
       }
 
 
-      document.onkeypress = async (event: KeyboardEvent) => {
-         switch (event.key) {
+      document.onkeydown = async (event: KeyboardEvent) => {
+         if (this.squint.connected) {
+            switch (event.key) {
 
-            case 'x':
-               // simulate killing the connection
-               (<any>this.squint.ss).ws.close(3000);
-               break;
+               case 'x':
+                  // simulate killing the connection
+                  (<any>this.squint.ss).ws.close(3000);
+                  break;
 
-            case 't':
-               this.squint.sendChatMessage('My chat message');
-               break;
+               case 't':
+                  this.squint.sendChatMessage('My chat message');
+                  break;
+            }
          }
       }
    }
@@ -385,6 +379,16 @@ export class SquintApp implements IApp {
          item.innerText = this.consoleCapture.show ? 'Hide Log' : 'Show Log';
       });
 
+
+
+      let windowsMenu = menubar.addSubMenu('Windows');
+
+      windowsMenu.addCheckbox({
+         label: 'Viewers/Chat',
+         oncheck: (checkbox) => { this.viewersPanel.visible = checkbox.checked },
+         checked: () => { return this.viewersPanel.visible; }
+      });
+
       this.userNameMenuItemDiv = menubar.addItem('Hi ' + (this.userName ?? ''),
          () => {
             new UserNameDialog(
@@ -410,24 +414,24 @@ export class SquintApp implements IApp {
 
    private drawBlob(blob: Blob) {
       this.downloadFPS.tick();
-      if (this.img.onload === null) {
-         this.img.onload = () => {
-            this.imgSize = blob.size;
-            // TODO how do we know that this connection is the same as the one that
-            // initiated the request?
-            if (this.squint.connected) {
-               this.drawImg();
-            }
+      let img = document.createElement('img');
 
-            URL.revokeObjectURL(this.img.src);
+      img.src = URL.createObjectURL(blob);
+      img.onload = () => {
+         // TODO how do we know that this connection is the same as the one that
+         // initiated the request?
+         if (this.squint.connected) {
+            this.img = img;
+            this.imgSize = blob.size;
+
+            this.drawImg();
          }
+
+         URL.revokeObjectURL(img.src);
       }
-      if (this.img.onerror === null) {
-         this.img.onerror = (reason) => {
-            alert('Cannot load image: ' + reason);
-         }
+      img.onerror = (reason) => {
+         alert('Cannot load image: ' + reason);
       }
-      this.img.src = URL.createObjectURL(blob);
    }
 
    private buildAdvancedSubMenu(track: MediaStreamTrack) {
@@ -647,7 +651,7 @@ export class SquintApp implements IApp {
       this.canvas.width = viewWidth;
       this.canvas.height = viewHeight - menubarHeight;
 
-      if (this.img) {
+      if (this.squint.connected) {
          this.drawImg();
       }
    }

@@ -44,9 +44,71 @@
   flex: 1 1 80px;
 }
 
+/* menu item */
 #SquintApp #UserNameItemDiv {
   position: absolute;
   right: 0px;
+}
+
+#SquintApp #Video {
+  display: "none";
+  position: absolute;
+  left: 10px;
+  top: 50px;
+  width: 20%;
+  border: solid 1px;
+  border-color: white;
+}
+
+#SquintApp #Canvas {
+  font-size: 40px;
+}
+
+#SquintApp #ViewersPanelDiv {
+  position: absolute;
+  right: 10px;
+  top: 50px;
+  width: 20%;
+  height: 60%;
+  border: solid;
+  border-color: lightgray;
+  border-width: 5px;
+  background-color: lightgray;
+  margin: 5px;
+  display: flex;
+  flex-direction: column;
+  font-size: smaller;
+}
+
+#SquintApp #ViewersPanelDiv .TitleClass {
+  color: white;
+  background-color: lightskyblue;
+}
+
+#SquintApp #ViewersPanelDiv #ViewersListBox {
+  flex: 1 1 auto; /* grow */
+}
+
+#SquintApp #ViewersPanelDiv #ChatListBox {
+  flex: 1 1 auto; /* grow */
+}
+
+#SquintApp #ViewersPanelDiv #ChatInputText {
+}
+
+#SquintApp #ViewersPanelDiv .ListBoxClass {
+  cursor: default;
+  margin-bottom: 5px;
+}
+
+#SquintApp #ViewersPanelDiv .ListBoxItemClass:hover {
+  background-color: white;
+}
+
+#SquintApp #ViewersPanelDiv .ListBoxItemSelectedClass,
+.ListBoxItemSelectedClass:hover {
+  background-color: white;
+  color: black;
 }
 
 #SquintApp .DialogBackgroundClass {
@@ -310,20 +372,6 @@
 #SquintApp #UserNameDialogDiv #UserNameTextInput {
   margin-right: 10px;
   margin-left: 10px;
-}
-
-#SquintApp #Video {
-  display: "none";
-  position: absolute;
-  left: 10px;
-  top: 50px;
-  width: 20%;
-  border: solid 1px;
-  border-color: white;
-}
-
-#SquintApp #Canvas {
-  font-size: 40px;
 }
 
 /* cool animation from https://loading.io/css/ */
