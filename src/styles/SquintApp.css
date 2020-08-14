@@ -75,7 +75,7 @@
   border-width: 5px;
   background-color: lightgray;
   margin: 0px;
-  display: flex;
+  display: none;
   flex-direction: column;
   font-size: smaller;
   border-radius: 4px;
@@ -114,6 +114,28 @@
 .ListBoxItemSelectedClass:hover {
   background-color: white;
   color: black;
+}
+
+#SquintApp #NotificationDiv {
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+  left: 50%;
+  height: 30px;
+  display: flex;
+  align-items: right;
+  opacity: 0;
+  animation: fadeOut ease 3s;
+  text-shadow: 0 0 3px #ffffff; /* white glow */
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 #SquintApp .DialogBackgroundClass {

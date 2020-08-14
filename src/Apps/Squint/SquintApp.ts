@@ -1,7 +1,7 @@
 import 'webrtc-adapter';
 import { IApp } from '../../IApp';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
-import { IVideoConstraint, Camera, IMediaSettingsRange, IVideoTrackAdvancedCapabilities, IVideoTrackAdvancedSettings, AdvancedConstraintMode, AdvancedConstraintName, IAdvancedConstraint } from './Camera';
+import { IVideoConstraint, Camera, IMediaSettingsRange, IVideoTrackAdvancedCapabilities, IVideoTrackAdvancedSettings, AdvancedConstraintName, IAdvancedConstraint } from './Camera';
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
@@ -18,6 +18,7 @@ import { WelcomeDialog } from './WelcomeDialog';
 import { UserNameDialog } from './UserNameDialog';
 import { GUI } from '../../GUI/GUI';
 import { ViewersPanel } from './ViewersPanel';
+import { IConnectionInfo } from './SquintMessage';
 
 export class SquintStrings {
    public static readonly CAMERA_NOT_READY = 'Camera not ready';
@@ -45,6 +46,7 @@ export class SquintApp implements IApp {
    private userNameMenuItemDiv: HTMLDivElement;
    private img: HTMLImageElement;
    private viewersPanel: ViewersPanel;
+   private notificationDiv: HTMLDivElement;
 
    private camera: Camera;
    private canvas: HTMLCanvasElement;
@@ -119,6 +121,11 @@ export class SquintApp implements IApp {
          handler: (() => { this.closeConnection(); })
       });
 
+      this.squint.on({
+         name: SquintEvent.ChatMessage,
+         handler: ((connection, msg) => { this.onChatMessage(connection, msg); })
+      });
+
       this.startDialog = new StartDialog(
          div,
          this.squint,
@@ -176,6 +183,7 @@ export class SquintApp implements IApp {
 
       this.viewersPanel = new ViewersPanel(this.squint, this.div);
 
+      this.notificationDiv = GUI.create('div', 'NotificationDiv', this.div);
 
       this.handler = new PointerEventHandler(this.canvas);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
@@ -193,7 +201,6 @@ export class SquintApp implements IApp {
          this.startDialog.visible = true;
       }
 
-
       document.onkeydown = async (event: KeyboardEvent) => {
          if (this.squint.connected) {
             switch (event.key) {
@@ -201,10 +208,6 @@ export class SquintApp implements IApp {
                case 'x':
                   // simulate killing the connection
                   (<any>this.squint.ss).ws.close(3000);
-                  break;
-
-               case 't':
-                  this.squint.sendChatMessage('My chat message');
                   break;
             }
          }
@@ -788,5 +791,12 @@ export class SquintApp implements IApp {
       this.yOffset -= delta.y;
 
       this.drawImg();
+   }
+
+   private onChatMessage(connection: IConnectionInfo, msg: string) {
+      this.notificationDiv.innerHTML = '<b>' + connection.userName + '</b>: ' + msg;
+      // force the animation to run by removing and adding the element
+      this.div.removeChild(this.notificationDiv);
+      this.div.appendChild(this.notificationDiv);
    }
 }
