@@ -43,6 +43,7 @@ export class Uploader {
       if (this.boostFps) {
          calcMs = 0.5 * calcMs;
       }
+      calcMs = Math.min(calcMs, 300);
 
       // the actual rate, or a max FPS of 10
       return Math.max(1000 / MAX_FPS, calcMs);
