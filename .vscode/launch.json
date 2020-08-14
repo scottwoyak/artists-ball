@@ -15,21 +15,21 @@
          "type": "chrome",
          "request": "launch",
          "name": "cs:valhalla",
-         "url": "https://192.168.86.23?squint",
+         "url": "https://192.168.86.23",
          "webRoot": "${workspaceFolder}"
       },
       {
          "type": "chrome",
          "request": "launch",
          "name": "cs:localhost",
-         "url": "http://localhost?squint",
+         "url": "http://localhost",
          "webRoot": "${workspaceFolder}"
       },
       {
          "type": "chrome",
          "request": "launch",
          "name": "cs:hotspot",
-         "url": "https://192.168.43.170?squint",
+         "url": "https://192.168.43.170",
          "webRoot": "${workspaceFolder}"
       },
       {

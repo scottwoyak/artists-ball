@@ -111,6 +111,17 @@ export class Vec2 extends Vec {
    public distance(other: Vec2): number {
       return Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
    }
+
+   /**
+    * Creates a string representation of the vector
+    * 
+    * @param digits The number of decimal places to display. This value is passed to toFixed().
+    * @param divider The string to separate each number.
+    * @returns A string representation.
+    */
+   public toString(digits: number = 2, divider = ','): string {
+      return this.x.toFixed(digits) + divider + this.y.toFixed(digits);
+   }
 }
 
 /**

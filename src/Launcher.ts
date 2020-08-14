@@ -16,7 +16,7 @@ export class Launcher {
    private menubar: Menubar;
 
    public constructor() {
-      this.launch(AppType.Viewer);
+      this.launch(AppType.Squint);
    }
 
    public launch(type: AppType) {
@@ -38,10 +38,6 @@ export class Launcher {
       let query;
       if (window.location.search) {
          query = window.location.search.substr(1);
-      }
-
-      if (window.location.search.indexOf('squint') >= 0) {
-         type = AppType.Squint;
       }
 
       switch (type) {

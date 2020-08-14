@@ -47,44 +47,49 @@ export class PointerEventHandler {
 
          this.ctrlKey = event.ctrlKey;
 
-         // prevent the browser from using the event
-         event.preventDefault();
+         if (event.target instanceof HTMLInputElement === false) {
+            // prevent the browser from using the event
+            event.preventDefault();
 
-         // if this is the first touch
-         if (event.touches.length === 1) {
+            // if this is the first touch
+            if (event.touches.length === 1) {
 
-            // record the primary touch id
-            this.primaryTouchId = event.touches[0].identifier;
+               // record the primary touch id
+               this.primaryTouchId = event.touches[0].identifier;
 
-            // send out onDown() and potentially onDblClick() events
-            let pos = this.getPos(event.touches[0]);
+               // send out onDown() and potentially onDblClick() events
+               let pos = this.getPos(event.touches[0]);
 
-            let time = Date.now();
-            if (time - this.lastTouchTime < DBL_CLICK_TIME) {
-               this.ourDblClick(pos);
+               let time = Date.now();
+               if (time - this.lastTouchTime < DBL_CLICK_TIME) {
+                  this.ourDblClick(pos);
+               }
+               else {
+                  document.addEventListener('touchmove', touchmove);
+                  document.addEventListener('touchend', touchend);
+
+                  this.ourOnDown(pos);
+               }
+               this.lastTouchTime = time;
             }
-            else {
-               this.ourOnDown(pos);
+            // if this is the second touch
+            else if (event.touches.length === 2 && this.primaryTouchId >= 0) {
+
+               // record the secondary touch id. It will always be the second element when
+               // there are only two elements
+               this.secondaryTouchId = event.touches[1].identifier;
+
+               // set values for gestures
+               let distance = this.computeTouchDistance(event);
+               this.initialTouchDistance = distance;
+               this.lastTouchDistance = distance;
+               this.lastTouchAngle = this.computeTouchAngle(event);
+               this.lastTouchCenter = this.computeTouchCenter(event);
             }
-            this.lastTouchTime = time;
-         }
-         // if this is the second touch
-         else if (event.touches.length === 2 && this.primaryTouchId >= 0) {
-
-            // record the secondary touch id. It will always be the second element when
-            // there are only two elements
-            this.secondaryTouchId = event.touches[1].identifier;
-
-            // set values for gestures
-            let distance = this.computeTouchDistance(event);
-            this.initialTouchDistance = distance;
-            this.lastTouchDistance = distance;
-            this.lastTouchAngle = this.computeTouchAngle(event);
-            this.lastTouchCenter = this.computeTouchCenter(event);
          }
       });
 
-      element.addEventListener('touchmove', (event: TouchEvent) => {
+      let touchmove = (event: TouchEvent) => {
 
          this.ctrlKey = event.ctrlKey;
 
@@ -119,16 +124,18 @@ export class PointerEventHandler {
                let touch = this.getTouch(event, this.primaryTouchId);
                let pos = this.getPos(touch);
                this.ourOnDrag(pos);
+               this.lastPos = this.getPos(touch);
             }
          }
-      });
+      };
 
-      element.addEventListener('touchend', (event: TouchEvent) => {
+      let touchend = (event: TouchEvent) => {
 
          this.ctrlKey = event.ctrlKey;
 
          // prevent the browser from using the event
-         event.preventDefault();
+         // needed to select an input element
+         //event.preventDefault();
 
          if (this.secondaryTouchId >= 0) {
             if (this.getTouch(event, this.secondaryTouchId) === null) {
@@ -149,6 +156,9 @@ export class PointerEventHandler {
                this.primaryTouchId = -1;
 
                this.ourOnUp();
+
+               document.removeEventListener('touchmove', touchmove);
+               document.removeEventListener('touchend', touchend);
             }
          }
 
@@ -158,47 +168,52 @@ export class PointerEventHandler {
             this.lastTouchAngle = -1;
             this.lastTouchCenter = new Vec2([-1, -1]);
          }
-      });
-
-      element.onmousedown = (event: MouseEvent) => {
-
-         this.ctrlKey = event.ctrlKey;
-
-         let pos = new Vec2([(<any>event).layerX, (<any>event).layerY]);
-         this.ourOnDown(pos);
-
-         // disable selection because dragging is used for rotating the camera and moving objects
-         return false;
-      }
-
-      element.onmousemove = (event: MouseEvent) => {
-
-         this.ctrlKey = event.ctrlKey;
-
-         let pos = new Vec2([(<any>event).layerX, (<any>event).layerY]);
-         if (this.mouseDown) {
-            this.ourOnDrag(pos);
-         }
-      }
-
-      element.onmouseup = (event: MouseEvent) => {
-
-         this.ctrlKey = event.ctrlKey;
-
-         this.ourOnUp();
       };
 
-      element.onmouseleave = (event) => {
-         this.mouseDown = false;
-      }
-
-      element.ondblclick = (event: MouseEvent) => {
+      element.addEventListener('mousedown', (event: MouseEvent) => {
 
          this.ctrlKey = event.ctrlKey;
 
-         let pos = new Vec2([(<any>event).layerX, (<any>event).layerY]);
+         if (event.target instanceof HTMLInputElement === false) {
+            let pos = this.getPos(event);
+            this.ourOnDown(pos);
+
+            let onmousemove = (event: MouseEvent) => {
+
+               this.ctrlKey = event.ctrlKey;
+
+               let pos = this.getPos(event);
+               if (this.mouseDown) {
+                  this.ourOnDrag(pos);
+                  this.lastPos = this.getPos(event);
+               }
+            };
+
+            let onmouseup = (event: MouseEvent) => {
+
+               this.ctrlKey = event.ctrlKey;
+
+               this.ourOnUp();
+
+               document.removeEventListener('mousemove', onmousemove);
+               document.removeEventListener('mouseup', onmouseup);
+            };
+
+            document.addEventListener('mousemove', onmousemove);
+            document.addEventListener('mouseup', onmouseup);
+
+            // disable selection because we're doing something else with dragging
+            return false;
+         }
+      });
+
+      element.addEventListener('dblclick', (event: MouseEvent) => {
+
+         this.ctrlKey = event.ctrlKey;
+
+         let pos = this.getPos(event);
          this.ourDblClick(pos);
-      }
+      });
    }
 
    private getTouch(event: TouchEvent, id: number): Touch {
@@ -214,9 +229,9 @@ export class PointerEventHandler {
       return null;
    }
 
-   private getPos(touch: Touch): Vec2 {
+   private getPos(touchOrEvent: Touch | MouseEvent): Vec2 {
       let rect = this.element.getBoundingClientRect();
-      return new Vec2([touch.clientX - rect.x, touch.clientY - rect.y]);
+      return new Vec2([touchOrEvent.clientX - rect.x, touchOrEvent.clientY - rect.y]);
    }
 
    private getTouches(event: TouchEvent): { primaryTouch: Touch, secondaryTouch: Touch } {
@@ -298,7 +313,6 @@ export class PointerEventHandler {
          let delta = new Vec2([pos.x - this.lastPos.x, pos.y - this.lastPos.y]);
          this.onDrag(pos.clone(), delta);
       }
-      this.lastPos = pos.clone();
    }
 
    private ourDblClick(pos: Vec2) {

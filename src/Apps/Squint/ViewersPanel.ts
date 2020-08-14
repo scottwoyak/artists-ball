@@ -2,36 +2,19 @@ import { ListBox } from "../../GUI/ListBox";
 import { Squint } from "./Squint";
 import { GUI } from "../../GUI/GUI";
 import { IConnectionInfo } from "./SquintMessage";
+import { Vec2 } from "../../Util3D/Vec";
+import { ResizeablePanel } from "./ResizeablePanel";
 
-export class ViewersPanel {
-   private div: HTMLDivElement;
+export class ViewersPanel extends ResizeablePanel {
 
    private viewersListBox: ListBox;
    private chatListBox: ListBox;
 
    private squint: Squint;
 
-   public get visible(): boolean {
-      return (getComputedStyle(this.div).display !== 'none');
-   }
-
-   public set visible(flag: boolean) {
-      if (flag === this.visible) {
-         return;
-      }
-
-      if (flag) {
-         this.div.style.display = 'flex';
-      }
-      else {
-         this.div.style.display = 'none';
-      }
-   }
-
    public constructor(squint: Squint, parent: HTMLElement) {
+      super(parent, 'ViewersPanelDiv', 'Flex');
       this.squint = squint;
-      this.div = GUI.create('div', 'ViewersPanelDiv', parent);
-
 
       let viewersTitleDiv = GUI.create('div', 'ViewersTitleDiv', this.div);
       viewersTitleDiv.className = 'TitleClass';
@@ -67,6 +50,7 @@ export class ViewersPanel {
          this.onChatMessage(src, msg);
       }
    }
+
 
    private onViewerList(list: IConnectionInfo[]) {
       this.viewersListBox.clear();
