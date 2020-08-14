@@ -1,4 +1,5 @@
 import { Stopwatch } from "../../Util/Stopwatch";
+import { FPS } from "../../Util/FPS";
 
 class Transfer {
    public bytes: number;
@@ -12,6 +13,7 @@ class Transfer {
 export class BandwidthTracker {
 
    private transfers: Transfer[] = [];
+   private _fps = new FPS();
 
    public get numSamples(): number {
       return this.transfers.length;
@@ -40,11 +42,17 @@ export class BandwidthTracker {
       }
    }
 
+   public get fps(): number {
+      return this._fps.rate;
+   }
+
    /**
     * Call this data is transfered
     */
    public onTransfer(bytes: number) {
       this.transfers.push({ bytes: bytes, stopwatch: new Stopwatch() });
+      this._fps.tick();
+
       while (
          this.transfers.length > 20 ||
          (this.transfers.length > 2 && (this.transfers[0].stopwatch.elapsedS > 3))

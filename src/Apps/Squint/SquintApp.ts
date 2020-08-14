@@ -19,6 +19,7 @@ import { UserNameDialog } from './UserNameDialog';
 import { GUI } from '../../GUI/GUI';
 import { ViewersPanel } from './ViewersPanel';
 import { IConnectionInfo } from './SquintMessage';
+import { BandwidthTracker } from './BandwidthTracker';
 
 export class SquintStrings {
    public static readonly CAMERA_NOT_READY = 'Camera not ready';
@@ -59,7 +60,7 @@ export class SquintApp implements IApp {
       deviceId: '',
    };
    private uploader: Uploader;
-   private downloadFPS = new FPS();
+   private downloadTracker = new BandwidthTracker();
 
    private brightness: Slider;
    private contrast: Slider;
@@ -76,7 +77,6 @@ export class SquintApp implements IApp {
    private xOffset = 0;
    private yOffset = 0;
 
-   private imgSize = 0;
    private squint: Squint;
 
    private startDialog: StartDialog;
@@ -423,7 +423,6 @@ export class SquintApp implements IApp {
    }
 
    private drawBlob(blob: Blob) {
-      this.downloadFPS.tick();
       let img = document.createElement('img');
 
       img.src = URL.createObjectURL(blob);
@@ -432,7 +431,7 @@ export class SquintApp implements IApp {
          // initiated the request?
          if (this.squint.connected) {
             this.img = img;
-            this.imgSize = blob.size;
+            this.downloadTracker.onTransfer(blob.size);
 
             this.drawImg();
          }
@@ -738,25 +737,29 @@ export class SquintApp implements IApp {
       msg = imgWidth + 'x' + imgHeight;
       ctx.fillText(msg, 0, canvasHeight - (3 * fontSize + 5));
 
+      let fps: number;
+      let bandwidth: number;
       if (this.uploader) {
-         msg = 'upload: ' + this.uploader.fps.toFixed(1) + ' fps';
-         ctx.fillText(msg, 0, canvasHeight - (2 * fontSize + 5));
-
-         let bandwidth = this.uploader.bandwidth;
-         if (bandwidth < 5) {
-            msg = 'bandwidth: ' + this.uploader.bandwidth.toFixed(2) + ' Mbsp';
-         }
-         else {
-            msg = 'bandwidth: ' + this.uploader.bandwidth.toFixed(1) + ' Mbsp';
-         }
-         ctx.fillText(msg, 0, canvasHeight - (fontSize + 5));
+         bandwidth = this.uploader.megaBitsPerSec;
+         fps = this.uploader.fps;
       }
       else {
-         msg = 'download: ' + this.downloadFPS.rate.toFixed(1) + ' fps';
-         ctx.fillText(msg, 0, canvasHeight - (fontSize + 5));
+         bandwidth = this.downloadTracker.megaBitsPerSec;
+         fps = this.downloadTracker.fps;
       }
 
-      msg = toSizeStr(this.imgSize);
+      msg = fps.toFixed(1) + ' fps';
+      ctx.fillText(msg, 0, canvasHeight - (2 * fontSize + 5));
+
+      if (bandwidth < 5) {
+         msg = 'bandwidth: ' + bandwidth.toFixed(2) + ' Mbsp';
+      }
+      else {
+         msg = 'bandwidth: ' + bandwidth.toFixed(1) + ' Mbsp';
+      }
+      ctx.fillText(msg, 0, canvasHeight - (fontSize + 5));
+
+      msg = toSizeStr(this.downloadTracker.lastTransferBytes);
       ctx.fillText(msg, 0, canvasHeight - 5);
    }
 

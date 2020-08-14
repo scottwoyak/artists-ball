@@ -10,7 +10,6 @@ export type DataNeededHandler = () => Promise<Blob>;
 
 export class Uploader {
    private onDataNeeded: DataNeededHandler;
-   private fpsTracker = new FPS();
 
    private running = true;
    private busy = false;
@@ -21,10 +20,10 @@ export class Uploader {
    private hadToWait = false;
 
    public get fps(): number {
-      return this.fpsTracker.rate;
+      return this.bandwidthTracker.fps;
    }
 
-   public get bandwidth(): number {
+   public get megaBitsPerSec(): number {
       return this.bandwidthTracker.megaBitsPerSec;
    }
 
@@ -115,7 +114,6 @@ export class Uploader {
                if (this.squint.connected) {
                   this.squint.sendImage(blob);
                   this.bandwidthTracker.onTransfer(blob.size);
-                  this.fpsTracker.tick();
                }
 
             }).catch((err) => {
