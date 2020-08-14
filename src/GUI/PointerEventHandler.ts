@@ -156,9 +156,6 @@ export class PointerEventHandler {
                this.primaryTouchId = -1;
 
                this.ourOnUp();
-
-               document.removeEventListener('touchmove', touchmove);
-               document.removeEventListener('touchend', touchend);
             }
          }
 
@@ -167,6 +164,11 @@ export class PointerEventHandler {
             this.lastTouchDistance = -1;
             this.lastTouchAngle = -1;
             this.lastTouchCenter = new Vec2([-1, -1]);
+         }
+
+         if (this.secondaryTouchId === -1 && this.primaryTouchId === -1) {
+            document.removeEventListener('touchmove', touchmove);
+            document.removeEventListener('touchend', touchend);
          }
       };
 
@@ -250,6 +252,12 @@ export class PointerEventHandler {
 
       let touches = this.getTouches(event);
 
+      if (!touches.primaryTouch) {
+         debugger;
+      }
+      if (!touches.secondaryTouch) {
+         debugger;
+      }
       let x1 = touches.primaryTouch.screenX;
       let y1 = touches.primaryTouch.screenY;
       let x2 = touches.secondaryTouch.screenX;
