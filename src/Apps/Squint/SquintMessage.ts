@@ -5,10 +5,6 @@ export interface ISquintChatMessage {
    message: string,
 }
 
-export interface ISquintCreateSessionMessage {
-   subject: 'CreateSession',
-}
-
 export interface ISquintHelloFromClientMessage {
    subject: 'Hello',
    userName: string,
@@ -54,7 +50,6 @@ export interface ISquintViewerListMessage {
 // for type inference in TypeScript
 export type ISquintMessage =
    ISquintChatMessage |
-   ISquintCreateSessionMessage |
    ISquintHelloFromClientMessage |
    ISquintHelloFromServerMessage |
    ISquintReadyForNextImageMessage |

@@ -244,13 +244,6 @@ export class Squint {
       });
    }
 
-   // TODO do we really need to wait for a response?
-   public createSession() {
-      this.send({
-         subject: 'CreateSession',
-      });
-   }
-
    public subscribe(connectionId: string) {
       this.send({
          subject: 'Subscribe',

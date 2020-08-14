@@ -18,7 +18,6 @@ import { WelcomeDialog } from './WelcomeDialog';
 import { UserNameDialog } from './UserNameDialog';
 import { GUI } from '../../GUI/GUI';
 import { ViewersPanel } from './ViewersPanel';
-import { Checkbox } from '../../GUI/Checkbox';
 
 export class SquintStrings {
    public static readonly CAMERA_NOT_READY = 'Camera not ready';
@@ -228,7 +227,6 @@ export class SquintApp implements IApp {
    }
 
    private startSession() {
-      this.squint.createSession();
       this.startUploader();
    }
 
