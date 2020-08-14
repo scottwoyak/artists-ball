@@ -3,6 +3,9 @@ import { debug, SquintStrings } from "./SquintApp";
 import { Squint } from "./Squint";
 import { Stopwatch } from "../../Util/Stopwatch";
 import { UploadRateTracker } from "./UploadRateTracker";
+import { BandwidthTracker } from "./BandwidthTracker";
+
+const MAX_FPS = 10;
 
 export type DataNeededHandler = () => Promise<Blob>;
 
@@ -14,14 +17,37 @@ export class Uploader {
    private busy = false;
    private squint: Squint;
    private timer = new Stopwatch();
-   private uploadTracker = new UploadRateTracker();
+   private bandwidthTracker = new BandwidthTracker();
+   private boostFps = false;
+   private hadToWait = false;
 
    public get fps(): number {
       return this.fpsTracker.rate;
    }
 
    public get bandwidth(): number {
-      return this.uploadTracker.bandwidth;
+      return this.bandwidthTracker.megaBitsPerSec;
+   }
+
+   private get recommendedMsPerFrame(): number {
+      // if we haven't computed a bandwidth yet, just go with 10 FPS
+      if (this.bandwidthTracker.numSamples === 0) {
+         return 1000 / MAX_FPS;
+      }
+
+      // convert bytes to bits to get Mbps
+      let lastSizeBits = 8 * this.bandwidthTracker.lastTransferBytes;
+      let bitsPerMs = (1000 * 1000) * this.bandwidthTracker.megaBitsPerSec / 1000;
+
+      let calcMs = lastSizeBits / bitsPerMs;
+
+      if (this.boostFps) {
+         calcMs = 0.5 * calcMs;
+      }
+
+      // the actual rate, or a max FPS of 10
+      return Math.max(1000 / MAX_FPS, calcMs);
+
    }
 
    public constructor(squint: Squint, onDataNeeded: DataNeededHandler) {
@@ -59,21 +85,26 @@ export class Uploader {
          this.upload(1000);
          return;
       }
-      if (this.timer.elapsedMs < this.uploadTracker.recommendedMsPerFrame) {
-         this.upload(this.uploadTracker.recommendedMsPerFrame - this.timer.elapsedMs);
+      if (this.timer.elapsedMs < this.recommendedMsPerFrame) {
+         this.upload(this.recommendedMsPerFrame - this.timer.elapsedMs);
          return;
       }
       else {
          this.timer.restart();
       }
 
+      // if this is the first time we get here and buffer is ready, boost.
+      if (this.hadToWait === false && this.squint.bufferReady) {
+         this.boostFps = true;
+      }
+
       if (!this.squint.bufferReady) {
-         this.uploadTracker.onBufferFull();
+         this.hadToWait = true;
          requestAnimationFrame(() => { this.upload() });
          return;
       }
 
-      this.uploadTracker.onReady();
+      this.hadToWait = false;
       this.busy = true;
 
       try {
@@ -83,7 +114,7 @@ export class Uploader {
 
                if (this.squint.connected) {
                   this.squint.sendImage(blob);
-                  this.uploadTracker.onUpload(blob.size);
+                  this.bandwidthTracker.onTransfer(blob.size);
                   this.fpsTracker.tick();
                }
 
