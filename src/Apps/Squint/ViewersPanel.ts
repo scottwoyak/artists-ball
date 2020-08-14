@@ -1,8 +1,7 @@
 import { ListBox } from "../../GUI/ListBox";
-import { Squint } from "./Squint";
+import { Squint, SquintEvent } from "./Squint";
 import { GUI } from "../../GUI/GUI";
 import { IConnectionInfo } from "./SquintMessage";
-import { Vec2 } from "../../Util3D/Vec";
 import { ResizeablePanel } from "./ResizeablePanel";
 
 export class ViewersPanel extends ResizeablePanel {
@@ -40,15 +39,27 @@ export class ViewersPanel extends ResizeablePanel {
          event.stopPropagation();
       }
 
+      this.squint.on({
+         name: SquintEvent.ViewerList,
+         handler: (list: IConnectionInfo[]) => {
+            this.onViewerList(list);
+         }
+      });
 
+      this.squint.on({
+         name: SquintEvent.ChatMessage,
+         handler: (src: IConnectionInfo, msg: string) => {
+            this.onChatMessage(src, msg);
+         }
+      });
 
-      this.squint.onViewerList = (list: IConnectionInfo[]) => {
-         this.onViewerList(list);
-      }
-
-      this.squint.onChatMessage = (src: IConnectionInfo, msg: string) => {
-         this.onChatMessage(src, msg);
-      }
+      this.squint.on({
+         name: SquintEvent.Close,
+         handler: () => {
+            this.chatListBox.clear();
+            this.viewersListBox.clear();
+         }
+      })
    }
 
 

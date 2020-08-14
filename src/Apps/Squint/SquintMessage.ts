@@ -1,12 +1,21 @@
-
+export enum SquintMessageSubject {
+   ChatMessage = 'ChatMessage',
+   Hello = 'Hello',
+   ReadyForNextImage = 'ReadyForNextImage',
+   Reconnected = 'Reconnected',
+   SessionList = 'SessionList',
+   Subscribe = 'Subscribe',
+   UpdateConnectionInfo = 'UpdateConnectionInfo',
+   ViewerList = 'ViewerList',
+}
 export interface ISquintChatMessage {
-   subject: 'ChatMessage',
+   subject: SquintMessageSubject.ChatMessage,
    connection: IConnectionInfo,
    message: string,
 }
 
 export interface ISquintHelloFromClientMessage {
-   subject: 'Hello',
+   subject: SquintMessageSubject.Hello,
    userName: string,
    reconnectId: string,
    userAgent: string,
@@ -14,36 +23,36 @@ export interface ISquintHelloFromClientMessage {
 }
 
 export interface ISquintHelloFromServerMessage {
-   subject: 'Hello',
+   subject: SquintMessageSubject.Hello,
    id: string,
 }
 
 export interface ISquintReadyForNextImageMessage {
-   subject: 'ReadyForNextImage',
+   subject: SquintMessageSubject.ReadyForNextImage,
 }
 
 export interface ISquintReconnectedMessage {
-   subject: 'Reconnected',
+   subject: SquintMessageSubject.Reconnected,
 }
 
 export interface ISquintSessionListMessage {
-   subject: 'SessionList',
+   subject: SquintMessageSubject.SessionList,
    sessions: IConnectionInfo[],
 }
 
 export interface ISquintSubscribeMessage {
-   subject: 'Subscribe',
+   subject: SquintMessageSubject.Subscribe,
    connectionId: string,
 }
 
 export interface ISquintUpdateConnectionInfoMessage {
-   subject: 'UpdateConnectionInfo',
+   subject: SquintMessageSubject.UpdateConnectionInfo,
    userName: string,
    connectionId: string,
 }
 
 export interface ISquintViewerListMessage {
-   subject: 'ViewerList',
+   subject: SquintMessageSubject.ViewerList,
    viewers: IConnectionInfo[],
 }
 

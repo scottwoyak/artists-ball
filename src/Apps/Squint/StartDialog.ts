@@ -1,6 +1,6 @@
 import { ListBox } from "../../GUI/ListBox";
 import { Version } from "./Version";
-import { Squint } from "./Squint";
+import { Squint, SquintEvent } from "./Squint";
 import { GUI } from "../../GUI/GUI";
 import { UserNameDialog } from "./UserNameDialog";
 import { Dialog } from "../../GUI/Dialog";
@@ -44,7 +44,12 @@ export class StartDialog extends Dialog {
       super(parent, 'Start');
 
       this.squint = squint;
-      this.squint.onSessionList = (sessions) => this.onSessionList(sessions);
+      this.squint.on(
+         {
+            name: SquintEvent.SessionList,
+            handler: (sessions) => this.onSessionList(sessions),
+         }
+      );
       this.onStartView = onViewSession;
       this.onStartSession = onStartSession;
       this.onGetUserName = onGetUserName;
@@ -164,12 +169,19 @@ export class StartDialog extends Dialog {
       let userName = this.onGetUserName();
       this.squint.connect(Squint.url, userName)
          .then(() => {
-            this.squint.onSessionList = (sessions: IConnectionInfo[]) => {
-               this.onSessionList(sessions);
-            }
-            this.squint.onUpdateConnectionInfo = (info: IConnectionInfo) => {
-               this.onUpdateConnectionInfo(info);
-            }
+            this.squint.on({
+               name: SquintEvent.SessionList,
+               handler: (sessions: IConnectionInfo[]) => {
+                  this.onSessionList(sessions);
+               }
+            });
+
+            this.squint.on({
+               name: SquintEvent.UpdateConnectionInfo,
+               handler: (info: IConnectionInfo) => {
+                  this.onUpdateConnectionInfo(info);
+               }
+            });
 
             this.connectingDiv.style.display = 'none';
             this.connectingAnimationDiv.style.display = 'none';

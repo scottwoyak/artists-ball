@@ -11,7 +11,7 @@ import { Menubar, SubMenu } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
 import { StartDialog } from './StartDialog';
 import { Version } from './Version';
-import { Squint } from './Squint';
+import { Squint, SquintEvent } from './Squint';
 import { FPS } from '../../Util/FPS';
 import { ReconnectingDialog } from './ReconnectingDialog';
 import { WelcomeDialog } from './WelcomeDialog';
@@ -109,12 +109,15 @@ export class SquintApp implements IApp {
 
       div.id = 'SquintApp';
       this.squint = new Squint();
-      this.squint.onImage = (blob) => this.onDownload(blob);
+      this.squint.on({
+         name: SquintEvent.Image,
+         handler: ((blob: Blob) => { this.onDownload(blob); })
+      });
 
-      this.squint.onClose = () => {
-         this.closeConnection();
-      }
-      this.squint.onError = (msg) => alert('onError: ' + msg);
+      this.squint.on({
+         name: SquintEvent.Close,
+         handler: (() => { this.closeConnection(); })
+      });
 
       this.startDialog = new StartDialog(
          div,
@@ -135,26 +138,32 @@ export class SquintApp implements IApp {
 
       let reconnectingDlg = new ReconnectingDialog(div);
       let timeout: number;
-      this.squint.onReconnecting = () => {
-         console.log('connection lost, reconnecting...');
-         timeout = window.setTimeout(() => {
+      this.squint.on({
+         name: SquintEvent.Reconnecting,
+         handler: () => {
+            console.log('connection lost, reconnecting...');
+            timeout = window.setTimeout(() => {
+               timeout = null;
+               reconnectingDlg.visible = true;
+            }, 200);
+         }
+      });
+      this.squint.on({
+         name: SquintEvent.Reconnected,
+         handler: (success: boolean) => {
+            console.log('reconnected: success=' + success);
+            if (timeout) {
+               clearTimeout(timeout);
+            }
             timeout = null;
-            reconnectingDlg.visible = true;
-         }, 200);
-      }
-      this.squint.onReconnected = (success: boolean) => {
-         console.log('reconnected: success=' + success);
-         if (timeout) {
-            clearTimeout(timeout);
-         }
-         timeout = null;
 
-         reconnectingDlg.visible = false;
+            reconnectingDlg.visible = false;
 
-         if (this.startDialog.visible) {
-            this.startDialog.connect();
+            if (this.startDialog.visible) {
+               this.startDialog.connect();
+            }
          }
-      }
+      });
 
       this.div = GUI.create('div', 'BodyDiv', div);
 
