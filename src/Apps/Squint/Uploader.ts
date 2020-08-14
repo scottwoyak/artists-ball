@@ -2,7 +2,6 @@ import { FPS } from "../../Util/FPS";
 import { debug, SquintStrings } from "./SquintApp";
 import { Squint } from "./Squint";
 import { Stopwatch } from "../../Util/Stopwatch";
-import { UploadRateTracker } from "./UploadRateTracker";
 import { BandwidthTracker } from "./BandwidthTracker";
 
 const MAX_FPS = 10;
