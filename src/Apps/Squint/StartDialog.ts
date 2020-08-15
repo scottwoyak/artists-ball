@@ -44,12 +44,20 @@ export class StartDialog extends Dialog {
       super(parent, 'Start');
 
       this.squint = squint;
-      this.squint.on(
-         {
-            name: SquintEvent.SessionList,
-            handler: (sessions) => this.onSessionList(sessions),
+      this.squint.on({
+         name: SquintEvent.SessionList,
+         handler: (sessions: IConnectionInfo[]) => {
+            this.onSessionList(sessions);
          }
-      );
+      });
+
+      this.squint.on({
+         name: SquintEvent.UpdateConnectionInfo,
+         handler: (info: IConnectionInfo) => {
+            this.onUpdateConnectionInfo(info);
+         }
+      });
+
       this.onStartView = onViewSession;
       this.onStartSession = onStartSession;
       this.onGetUserName = onGetUserName;
@@ -149,7 +157,10 @@ export class StartDialog extends Dialog {
       this.onShow = () => {
          this.userNameButton.innerText = 'Hi ' + this.onGetUserName();
          this.enable = false;
-         this.connect();
+
+         if (this.squint.connected === false) {
+            this.connect();
+         }
       }
    }
 
@@ -169,19 +180,6 @@ export class StartDialog extends Dialog {
       let userName = this.onGetUserName();
       this.squint.connect(Squint.url, userName)
          .then(() => {
-            this.squint.on({
-               name: SquintEvent.SessionList,
-               handler: (sessions: IConnectionInfo[]) => {
-                  this.onSessionList(sessions);
-               }
-            });
-
-            this.squint.on({
-               name: SquintEvent.UpdateConnectionInfo,
-               handler: (info: IConnectionInfo) => {
-                  this.onUpdateConnectionInfo(info);
-               }
-            });
 
             this.connectingDiv.style.display = 'none';
             this.connectingAnimationDiv.style.display = 'none';
@@ -192,7 +190,7 @@ export class StartDialog extends Dialog {
             alert(err);
             setTimeout(() => {
                this.connect();
-            }, 5000);
+            }, 1000);
          });
    }
 

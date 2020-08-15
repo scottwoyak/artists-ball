@@ -165,10 +165,6 @@ export class SquintApp implements IApp {
             timeout = null;
 
             reconnectingDlg.visible = false;
-
-            if (this.startDialog.visible) {
-               this.startDialog.connect();
-            }
          }
       });
 

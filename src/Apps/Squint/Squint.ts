@@ -155,7 +155,7 @@ export class Squint {
             this.emit(SquintEvent.Close);
          }
          else {
-            console.log('warn: websocket closed with code: ' + code);
+            console.log('warn: websocket closed with code: ' + code + ', trying to reconnect');
             this.tryToReconnect(connectionId);
          }
       }
@@ -178,19 +178,30 @@ export class Squint {
       };
    }
 
-   private tryToReconnect(connectionId: string) {
+   private tryToReconnect(connectionId: string, retryCount = 1) {
       this._reconnecting = true;
-      this.eventManager.emit(SquintEvent.Reconnecting);
+      if (retryCount === 1) {
+         this.eventManager.emit(SquintEvent.Reconnecting);
+      }
+      console.log('reconnect try ' + retryCount)
       this.reconnect(SquintWsUrl, connectionId)
          .then(() => {
             this._reconnecting = false;
             this.eventManager.emit(SquintEvent.Reconnected, true);
          })
          .catch((err) => {
-            this._reconnecting = false;
-            this.ss = null;
-            this.eventManager.emit(SquintEvent.Reconnected, false);
-            this.emit(SquintEvent.Close);
+            console.log('retry err: ' + JSON.stringify(err, null, ' '));
+            if (retryCount < 10) {
+               setTimeout(() => {
+                  this.tryToReconnect(connectionId, retryCount + 1);
+               }, 1000);
+            }
+            else {
+               this._reconnecting = false;
+               this.ss = null;
+               this.eventManager.emit(SquintEvent.Reconnected, false);
+               this.emit(SquintEvent.Close);
+            }
          });
    }
 
