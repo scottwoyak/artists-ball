@@ -149,22 +149,28 @@ export class SquintApp implements IApp {
          name: SquintEvent.Reconnecting,
          handler: () => {
             console.log('connection lost, reconnecting...');
+            this.showNotification('connection lost, reconnecting');
+            /*
             timeout = window.setTimeout(() => {
                timeout = null;
                reconnectingDlg.visible = true;
             }, 200);
+            */
          }
       });
       this.squint.on({
          name: SquintEvent.Reconnected,
          handler: (success: boolean) => {
             console.log('reconnected: success=' + success);
+            /*
             if (timeout) {
                clearTimeout(timeout);
             }
             timeout = null;
 
             reconnectingDlg.visible = false;
+            */
+            this.showNotification('reconnected');
          }
       });
 
@@ -793,7 +799,12 @@ export class SquintApp implements IApp {
    }
 
    private onChatMessage(connection: IConnectionInfo, msg: string) {
-      this.notificationDiv.innerHTML = '<b>' + connection.userName + '</b>: ' + msg;
+      this.showNotification('<b>' + connection.userName + '</b>: ' + msg);
+   }
+
+   private showNotification(html: string) {
+      this.notificationDiv.innerHTML = html;
+
       // force the animation to run by removing and adding the element
       this.div.removeChild(this.notificationDiv);
       this.div.appendChild(this.notificationDiv);

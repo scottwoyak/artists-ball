@@ -34,7 +34,7 @@ export class EventManager {
                handler(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]);
             }
             catch (err) {
-               console.error('Unhandled exception: ' + err);
+               console.error('Unhandled exception: ' + err + '\n' + JSON.stringify(err, null, ' '));
             }
          }
       }
