@@ -191,7 +191,7 @@ export class Squint {
          })
          .catch((err) => {
             console.log('retry err: ' + JSON.stringify(err, null, ' '));
-            if (retryCount < 10) {
+            if (retryCount < 3) {
                setTimeout(() => {
                   this.tryToReconnect(connectionId, retryCount + 1);
                }, 1000);

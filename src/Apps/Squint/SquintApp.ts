@@ -12,8 +12,6 @@ import { ConsoleCapture } from '../../Util/ConsoleCapture';
 import { StartDialog } from './StartDialog';
 import { Version } from './Version';
 import { Squint, SquintEvent } from './Squint';
-import { FPS } from '../../Util/FPS';
-import { ReconnectingDialog } from './ReconnectingDialog';
 import { WelcomeDialog } from './WelcomeDialog';
 import { UserNameDialog } from './UserNameDialog';
 import { GUI } from '../../GUI/GUI';
@@ -143,34 +141,25 @@ export class SquintApp implements IApp {
          }
       );
 
-      let reconnectingDlg = new ReconnectingDialog(div);
-      let timeout: number;
       this.squint.on({
          name: SquintEvent.Reconnecting,
          handler: () => {
             console.log('connection lost, reconnecting...');
             this.showNotification('connection lost, reconnecting');
-            /*
-            timeout = window.setTimeout(() => {
-               timeout = null;
-               reconnectingDlg.visible = true;
-            }, 200);
-            */
          }
       });
       this.squint.on({
          name: SquintEvent.Reconnected,
          handler: (success: boolean) => {
             console.log('reconnected: success=' + success);
-            /*
-            if (timeout) {
-               clearTimeout(timeout);
-            }
-            timeout = null;
 
-            reconnectingDlg.visible = false;
-            */
-            this.showNotification('reconnected');
+            if (success === false) {
+               this.showNotification('Could not reconnect');
+               this.console.visible = true;
+            }
+            else {
+               this.showNotification('reconnected');
+            }
          }
       });
 
@@ -231,7 +220,7 @@ export class SquintApp implements IApp {
 
       this.stopUploader();
       this.enableVideo(false);
-      this.startDialog.visible = true;
+      // put this back this.startDialog.visible = true;
 
       let ctx = this.canvas.getContext('2d');
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
