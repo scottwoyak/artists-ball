@@ -118,12 +118,11 @@
 
 #SquintApp #NotificationDiv {
   position: absolute;
-  right: 0px;
+  right: 10px;
   bottom: 0px;
   left: 50%;
   height: 30px;
-  display: flex;
-  align-items: right;
+  text-align: right;
   opacity: 0;
   animation: fadeOut ease 3s;
   -webkit-animation: fadeOut ease 3s;

@@ -78,7 +78,6 @@ export class Squint {
 
    private setSS(ss: SquintSocket) {
 
-      console.log(this + ' xxx storing ss');
       this.ss = ss;
 
       ss.onClose = (code: number) => {
@@ -88,13 +87,9 @@ export class Squint {
             this.emit(SquintEvent.Close);
          }
          else {
-            console.log(this + 'warn: websocket closed with code: ' + code + ', trying to reconnect');
-            console.log(this + ' connected: ' + this.connected);
+            console.log(this + ' Websocket closed with code: ' + code + ', trying to reconnect');
             this._reconnecting = true;
-            setTimeout(() => {
-               console.log(this + ' onClose() xxx: ' + this.connected);
-               this.tryToReconnect(connectionId);
-            }, 1000);
+            this.tryToReconnect(connectionId);
          }
       }
 
@@ -121,23 +116,21 @@ export class Squint {
       if (retryCount === 1) {
          this.emit(SquintEvent.Reconnecting);
       }
-      console.log(this + ' reconnect try ' + retryCount + ' ' + this.connected)
+      console.log(this + ' Reconnect try ' + retryCount + ' ' + this.connected)
       this.reconnect(SquintWsUrl, connectionId)
          .then(() => {
-            console.log(this + ' ---' + retryCount + ' reconnect.then() ' + this.connected);
             this._reconnecting = false;
             this.emit(SquintEvent.Reconnected, true);
          })
          .catch((err) => {
-            console.log(this + ' ---' + retryCount + ' reconnect.catch() ' + JSON.stringify(err, null, ' '));
+            console.log(this + ' Reconnect try ' + retryCount + ' failed: ' + err);
             if (retryCount < 3) {
                setTimeout(() => {
                   this.tryToReconnect(connectionId, retryCount + 1);
                }, 1000);
-               console.log(this + ' ---' + retryCount + ' trying again in 1 sec');
             }
             else {
-               console.log(this + ' ---' + retryCount + ' not trying again');
+               console.log(this + ' Unable to reconnect. Passing along failure.');
                this._reconnecting = false;
                this.ss = null;
                this.emit(SquintEvent.Reconnected, false);
@@ -237,7 +230,7 @@ export class Squint {
          this.ss.sendImage(blob);
       }
       else {
-         console.log('skipping upload, buffer not empty: ' + this.ss.bufferedAmount);
+         console.error('Skipping upload, buffer not empty: ' + this.ss.bufferedAmount);
       }
    }
 

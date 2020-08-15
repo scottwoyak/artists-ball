@@ -94,7 +94,6 @@ export class Camera {
    ): Promise<Blob> {
 
       if (this.video.readyState != 4) {
-         console.log('xxx camera not ready');
          return Promise.reject(SquintStrings.CAMERA_NOT_READY);
       }
       //console.log('video ready state: ' + this.video.readyState);
@@ -161,10 +160,8 @@ export class Camera {
 
                   const track = stream.getVideoTracks()[0];
 
-                  console.log('xxx playing video');
                   this.video.play()
                      .then(() => {
-                        console.log('xxx play()');
                         resolve(track);
                      })
                      .catch((err) => {
@@ -179,7 +176,6 @@ export class Camera {
    }
 
    public stop(): void {
-      console.log('xxx stopping camera');
       if (this.video.srcObject) {
          // Using the camera is not robust. Applying constraints to change things
          // like which camera is in use only works sometimes. The most robust I can
@@ -188,8 +184,6 @@ export class Camera {
          stream.getTracks().forEach((track: MediaStreamTrack) => {
             track.stop();
          });
-
-         console.log('video state after stop: ' + this.video.readyState);
       }
    }
 

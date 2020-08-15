@@ -150,7 +150,7 @@ export class SquintApp implements IApp {
          name: SquintEvent.Reconnecting,
          handler: () => {
             console.log('connection lost, reconnecting...');
-            this.showNotification('connection lost, reconnecting');
+            this.showNotification('Connection lost, reconnecting');
          }
       });
       this.squint.on({
@@ -160,10 +160,9 @@ export class SquintApp implements IApp {
 
             if (success === false) {
                this.showNotification('Could not reconnect');
-               this.console.visible = true;
             }
             else {
-               this.showNotification('reconnected');
+               this.showNotification('Reconnected');
             }
          }
       });
@@ -225,7 +224,7 @@ export class SquintApp implements IApp {
 
       this.stopUploader();
       this.enableVideo(false);
-      // put this back this.startDialog.visible = true;
+      this.startDialog.visible = true;
 
       const ctx = this.canvas.getContext('2d');
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
