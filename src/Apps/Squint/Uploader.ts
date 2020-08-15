@@ -132,8 +132,8 @@ export class Uploader {
             });
       }
       catch (err) {
-         console.error('Unexpected exception in Uploader.onDataNeeded(): ' + err);
-         this.stop();
+         console.error('Unexpected exception in Uploader.onDataNeeded(): ' + err + '\n' + JSON.stringify(err, null, ' '));
+         //this.stop();
       }
    }
 }
