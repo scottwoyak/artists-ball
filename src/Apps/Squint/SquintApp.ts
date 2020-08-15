@@ -386,13 +386,6 @@ export class SquintApp implements IApp {
          this.closeConnection();
       });
 
-      let item = sessionMenu.addItem('Show Log', () => {
-         this.console.visible = !this.console.visible;
-         item.innerText = this.console.visible ? 'Hide Log' : 'Show Log';
-      });
-
-
-
       sessionMenu.addCheckbox({
          label: 'Viewers/Chat',
          oncheck: (checkbox) => { this.viewersPanel.visible = checkbox.checked },
