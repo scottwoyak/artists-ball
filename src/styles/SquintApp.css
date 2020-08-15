@@ -126,10 +126,19 @@
   align-items: right;
   opacity: 0;
   animation: fadeOut ease 3s;
+  -webkit-animation: fadeOut ease 3s;
   text-shadow: 0 0 3px #ffffff; /* white glow */
 }
 
 @keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes fadeOut {
   0% {
     opacity: 1;
   }
