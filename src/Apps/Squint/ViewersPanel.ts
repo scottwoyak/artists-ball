@@ -1,8 +1,9 @@
 import { ListBox } from "../../GUI/ListBox";
-import { Squint, SquintEvent } from "./Squint";
+import { Squint } from "./Squint";
 import { GUI } from "../../GUI/GUI";
 import { IConnectionInfo } from "./SquintMessage";
 import { ResizeablePanel } from "./ResizeablePanel";
+import { SquintEvent } from "./SquintEvents";
 
 export class ViewersPanel extends ResizeablePanel {
 

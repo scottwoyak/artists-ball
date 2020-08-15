@@ -1,10 +1,11 @@
 import { ListBox } from "../../GUI/ListBox";
 import { Version } from "./Version";
-import { Squint, SquintEvent } from "./Squint";
+import { Squint } from "./Squint";
 import { GUI } from "../../GUI/GUI";
 import { UserNameDialog } from "./UserNameDialog";
 import { Dialog } from "../../GUI/Dialog";
 import { IConnectionInfo } from "./SquintMessage";
+import { SquintEvent } from "./SquintEvents";
 
 export type ViewSessionHandler = (connectionId: string) => void;
 export type StartSessionHandler = () => void;

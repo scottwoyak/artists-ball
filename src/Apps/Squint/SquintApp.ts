@@ -11,13 +11,14 @@ import { Menubar, SubMenu } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
 import { StartDialog } from './StartDialog';
 import { Version } from './Version';
-import { Squint, SquintEvent } from './Squint';
+import { Squint } from './Squint';
 import { WelcomeDialog } from './WelcomeDialog';
 import { UserNameDialog } from './UserNameDialog';
 import { GUI } from '../../GUI/GUI';
 import { ViewersPanel } from './ViewersPanel';
 import { IConnectionInfo } from './SquintMessage';
 import { BandwidthTracker } from './BandwidthTracker';
+import { SquintEvent } from './SquintEvents';
 
 export class SquintStrings {
    public static readonly CAMERA_NOT_READY = 'Camera not ready';

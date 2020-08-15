@@ -18,6 +18,10 @@ export class SquintSocket {
    public static readonly NORMAL_CLOSURE = 1000;
 
    public get readyStateStr(): string {
+      if (this.ws === null) {
+         return 'NULL';
+      }
+
       switch (this.ws.readyState) {
          case WebSocket.OPEN:
             return 'OPEN';
@@ -52,10 +56,17 @@ export class SquintSocket {
          this.ws.onmessage = null;
          this.ws.onopen = null;
          this.ws = null;
-         this.onClose(event.code);
+         if (this.onClose) {
+            this.onClose(event.code);
+         }
       }
 
       ws.onerror = (event: Event) => {
+         this.ws.onclose = null;
+         this.ws.onerror = null;
+         this.ws.onmessage = null;
+         this.ws.onopen = null;
+         this.ws = null;
          if (this.onClose) {
             this.onClose(SquintSocket.ERROR_CLOSURE);
          }
@@ -90,7 +101,7 @@ export class SquintSocket {
    }
 
    public get connected(): boolean {
-      return (this.ws && this.ws.readyState === WebSocket.OPEN);
+      return (this.ws !== null && this.ws.readyState === WebSocket.OPEN);
    }
 
    public get bufferReady(): boolean {
