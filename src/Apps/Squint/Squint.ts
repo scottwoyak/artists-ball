@@ -157,8 +157,10 @@ export class Squint {
          }
          else {
             console.log('warn: websocket closed with code: ' + code + ', trying to reconnect');
+            console.log('connected: ' + this.connected);
             this._reconnecting = true;
             setTimeout(() => {
+               console.log('connected xxx: ' + this.connected);
                this.tryToReconnect(connectionId);
             }, 1000);
          }
@@ -169,7 +171,7 @@ export class Squint {
             debug('ss.onImage() message received, but socket not open');
          }
 
-         this.eventManager.emit(SquintEvent.Image, blob);
+         this.emit(SquintEvent.Image, blob);
       }
 
       ss.onMessage = (msg: ISquintMessage) => {
@@ -185,14 +187,14 @@ export class Squint {
    private tryToReconnect(connectionId: string, retryCount = 1) {
       this._reconnecting = true;
       if (retryCount === 1) {
-         this.eventManager.emit(SquintEvent.Reconnecting);
+         this.emit(SquintEvent.Reconnecting);
       }
-      console.log('reconnect try ' + retryCount)
+      console.log('reconnect try ' + retryCount + ' ' + this.connected)
       this.reconnect(SquintWsUrl, connectionId)
          .then(() => {
-            console.log('---' + retryCount + ' reconnect.then()');
+            console.log('---' + retryCount + ' reconnect.then() ' + this.connected);
             this._reconnecting = false;
-            this.eventManager.emit(SquintEvent.Reconnected, true);
+            this.emit(SquintEvent.Reconnected, true);
          })
          .catch((err) => {
             console.log('---' + retryCount + ' reconnect.catch() ' + JSON.stringify(err, null, ' '));
@@ -206,7 +208,7 @@ export class Squint {
                console.log('---' + retryCount + ' not trying again');
                this._reconnecting = false;
                this.ss = null;
-               this.eventManager.emit(SquintEvent.Reconnected, false);
+               this.emit(SquintEvent.Reconnected, false);
                this.emit(SquintEvent.Close);
             }
          });
@@ -242,13 +244,13 @@ export class Squint {
       this.ss.close();
       this.ss = null;
 
-      this.eventManager.emit(SquintEvent.Close);
+      this.emit(SquintEvent.Close);
    }
 
    private processMessage(msg: ISquintMessage) {
       switch (msg.subject) {
          case SquintMessageSubject.UpdateConnectionInfo: {
-            this.eventManager.emit(
+            this.emit(
                SquintEvent.UpdateConnectionInfo,
                {
                   userName: msg.userName,

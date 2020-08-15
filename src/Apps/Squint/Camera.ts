@@ -97,24 +97,24 @@ export class Camera {
          console.log('xxx camera not ready');
          return Promise.reject(SquintStrings.CAMERA_NOT_READY);
       }
-      console.log('video ready state: ' + this.video.readyState);
+      //console.log('video ready state: ' + this.video.readyState);
 
       if (this.video.videoHeight === 0 || this.video.videoWidth === 0) {
          return Promise.reject('XX Video Size = 0');
       }
 
-      console.log('xxx setting canvas size: ' + scale + ' ' + this.video.videoWidth * scale + 'x' + this.video.videoHeight * scale);
+      //console.log('xxx setting canvas size: ' + scale + ' ' + this.video.videoWidth * scale + 'x' + this.video.videoHeight * scale);
       this.canvas.width = this.video.videoWidth * scale;
       this.canvas.height = this.video.videoHeight * scale;
 
       console.log('xxx draw image');
       const context = this.canvas.getContext('2d');
-      console.log('xxx got context');
+      //console.log('xxx got context');
       context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-      console.log('xxx drawImage success');
+      //console.log('xxx drawImage success');
 
       return new Promise<Blob>((resolve, reject) => {
-         console.log('xxx canvasToBlob ' + jpegQuality);
+         //console.log('xxx canvasToBlob ' + jpegQuality);
          this.canvas.toBlob(
             (blob) => {
                resolve(blob)
