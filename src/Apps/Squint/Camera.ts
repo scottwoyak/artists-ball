@@ -97,8 +97,13 @@ export class Camera {
          console.log('xxx camera not ready');
          return Promise.reject(SquintStrings.CAMERA_NOT_READY);
       }
+      console.log('video ready state: ' + this.video.readyState);
 
-      console.log('xxx setting canvas size: ' + this.video.videoWidth * scale + 'x' + this.video.videoHeight * scale);
+      if (this.video.videoHeight === 0 || this.video.videoWidth === 0) {
+         return Promise.reject('XX Video Size = 0');
+      }
+
+      console.log('xxx setting canvas size: ' + scale + ' ' + this.video.videoWidth * scale + 'x' + this.video.videoHeight * scale);
       this.canvas.width = this.video.videoWidth * scale;
       this.canvas.height = this.video.videoHeight * scale;
 
@@ -108,7 +113,6 @@ export class Camera {
       context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
       console.log('xxx drawImage success');
 
-      // upload
       return new Promise<Blob>((resolve, reject) => {
          console.log('xxx canvasToBlob ' + jpegQuality);
          this.canvas.toBlob(
@@ -162,8 +166,10 @@ export class Camera {
 
                   let track = stream.getVideoTracks()[0];
 
+                  console.log('xxx playing video');
                   this.video.play()
                      .then(() => {
+                        console.log('xxx play()');
                         resolve(track);
                      })
                      .catch((err) => {
@@ -178,6 +184,7 @@ export class Camera {
    }
 
    public stop() {
+      console.log('xxx stopping camera');
       if (this.video.srcObject) {
          // Using the camera is not robust. Applying constraints to change things
          // like which camera is in use only works sometimes. The most robust I can
@@ -186,6 +193,8 @@ export class Camera {
          stream.getTracks().forEach((track: MediaStreamTrack) => {
             track.stop();
          });
+
+         console.log('video state after stop: ' + this.video.readyState);
       }
    }
 
