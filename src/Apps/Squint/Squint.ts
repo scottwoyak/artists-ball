@@ -156,7 +156,10 @@ export class Squint {
          }
          else {
             console.log('warn: websocket closed with code: ' + code + ', trying to reconnect');
-            this.tryToReconnect(connectionId);
+            this._reconnecting = true;
+            setTimeout(() => {
+               this.tryToReconnect(connectionId);
+            }, 5000);
          }
       }
 
