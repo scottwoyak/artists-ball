@@ -1,3 +1,5 @@
+const NUM_COLS = 150;
+
 export class ConsoleCapture {
 
    private textArea: HTMLTextAreaElement;
@@ -10,7 +12,7 @@ export class ConsoleCapture {
       this.textArea.style.display = flag ? 'block' : 'none';
    }
 
-   public constructor(id = 'Console', numCols = 150) {
+   public constructor(id = 'Console', numCols = NUM_COLS) {
       this.textArea = document.createElement('textarea');
       this.textArea.id = id;
       this.textArea.cols = numCols;
@@ -65,8 +67,9 @@ export class ConsoleCapture {
    private append(msg: string) {
       let fullmsg = this.textArea.value;
 
+      msg = msg.substr(0, 100 * NUM_COLS)
       fullmsg = msg + '\n\n' + fullmsg;
-      fullmsg = fullmsg.substr(0, 1024 * 1024);
+      fullmsg = fullmsg.substr(0, 10 * 1000 * NUM_COLS);
 
       this.textArea.value = fullmsg;
    }
