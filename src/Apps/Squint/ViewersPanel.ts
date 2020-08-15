@@ -1,9 +1,9 @@
-import { ListBox } from "../../GUI/ListBox";
-import { Squint } from "./Squint";
-import { GUI } from "../../GUI/GUI";
-import { IConnectionInfo } from "./SquintMessage";
-import { ResizeablePanel } from "./ResizeablePanel";
-import { SquintEvent } from "./SquintEvents";
+import { ListBox } from '../../GUI/ListBox';
+import { Squint } from './Squint';
+import { GUI } from '../../GUI/GUI';
+import { IConnectionInfo } from './SquintMessage';
+import { ResizeablePanel } from './ResizeablePanel';
+import { SquintEvent } from './SquintEvents';
 
 export class ViewersPanel extends ResizeablePanel {
 
@@ -16,19 +16,19 @@ export class ViewersPanel extends ResizeablePanel {
       super(parent, 'ViewersPanelDiv', 'Flex');
       this.squint = squint;
 
-      let viewersTitleDiv = GUI.create('div', 'ViewersTitleDiv', this.div);
+      const viewersTitleDiv = GUI.create('div', 'ViewersTitleDiv', this.div);
       viewersTitleDiv.className = 'TitleClass';
       viewersTitleDiv.innerText = 'Viewers';
 
       this.viewersListBox = new ListBox(this.div, 'ViewersListBox');
 
-      let chatTitleDiv = GUI.create('div', 'ChatTitleDiv', this.div);
+      const chatTitleDiv = GUI.create('div', 'ChatTitleDiv', this.div);
       chatTitleDiv.className = 'TitleClass';
       chatTitleDiv.innerText = 'Chat';
 
       this.chatListBox = new ListBox(this.div, 'ChatListBox');
 
-      let chatTextInput = GUI.create('input', 'ChatTextInput', this.div);
+      const chatTextInput = GUI.create('input', 'ChatTextInput', this.div);
       chatTextInput.type = 'text';
       chatTextInput.placeholder = 'Type chat message here';
 
@@ -66,13 +66,13 @@ export class ViewersPanel extends ResizeablePanel {
 
    private onViewerList(list: IConnectionInfo[]) {
       this.viewersListBox.clear();
-      for (let viewer of list) {
+      for (const viewer of list) {
          this.viewersListBox.addItem(viewer.userName, viewer.connectionId);
       }
    }
 
    private onChatMessage(src: IConnectionInfo, msg: string) {
-      let item = this.chatListBox.addItem();
+      const item = this.chatListBox.addItem();
       item.innerHTML = '<b>' + src.userName + '</b>: ' + msg;
    }
 }

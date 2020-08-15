@@ -1,11 +1,11 @@
-import { ListBox } from "../../GUI/ListBox";
-import { Version } from "./Version";
-import { Squint } from "./Squint";
-import { GUI } from "../../GUI/GUI";
-import { UserNameDialog } from "./UserNameDialog";
-import { Dialog } from "../../GUI/Dialog";
-import { IConnectionInfo } from "./SquintMessage";
-import { SquintEvent } from "./SquintEvents";
+import { ListBox } from '../../GUI/ListBox';
+import { Version } from './Version';
+import { Squint } from './Squint';
+import { GUI } from '../../GUI/GUI';
+import { UserNameDialog } from './UserNameDialog';
+import { Dialog } from '../../GUI/Dialog';
+import { IConnectionInfo } from './SquintMessage';
+import { SquintEvent } from './SquintEvents';
 
 export type ViewSessionHandler = (connectionId: string) => void;
 export type StartSessionHandler = () => void;
@@ -64,8 +64,8 @@ export class StartDialog extends Dialog {
       this.onGetUserName = onGetUserName;
       this.onSetUserName = onSetUserName;
 
-      let dialogTitleDiv = GUI.create('div', 'DialogTitleDiv', this.dialogDiv);
-      let titleDiv = GUI.create('div', 'TitleDiv', dialogTitleDiv);
+      const dialogTitleDiv = GUI.create('div', 'DialogTitleDiv', this.dialogDiv);
+      const titleDiv = GUI.create('div', 'TitleDiv', dialogTitleDiv);
       titleDiv.className = 'DialogTitleClass';
       titleDiv.innerText = 'Squint v0.1.' + Version.Build;
 
@@ -92,23 +92,23 @@ export class StartDialog extends Dialog {
       //
       // View a session panel
       //
-      let viewPanelDiv = GUI.create('div', 'ViewPanelDiv', this.bodyDiv);
+      const viewPanelDiv = GUI.create('div', 'ViewPanelDiv', this.bodyDiv);
 
       this.viewListBox = new ListBox<string>(viewPanelDiv, 'ViewListBox');
       this.viewListBox.onSelectedChanged = () => {
          goViewButton.disabled = (this.viewListBox.selected === null);
       }
 
-      let buttonDiv = GUI.create('div', 'ButtonDiv', viewPanelDiv);
+      const buttonDiv = GUI.create('div', 'ButtonDiv', viewPanelDiv);
       buttonDiv.className = 'ButtonDivClass';
 
-      let goViewButton = GUI.create('button', 'ViewButton', buttonDiv);
+      const goViewButton = GUI.create('button', 'ViewButton', buttonDiv);
       goViewButton.className = 'ButtonClass';
       goViewButton.innerText = 'View a camera...';
       goViewButton.disabled = true;
       goViewButton.onclick = () => {
          this.visible = false;
-         let connectionId = this.viewListBox.selected;
+         const connectionId = this.viewListBox.selected;
          this.onStartView(connectionId);
       }
 
@@ -118,8 +118,8 @@ export class StartDialog extends Dialog {
       //
       // Or panel
       //
-      let orPanelDiv = GUI.create('div', 'OrPanelDiv', this.bodyDiv);
-      let orDiv = GUI.create('div', 'OrDiv', orPanelDiv);
+      const orPanelDiv = GUI.create('div', 'OrPanelDiv', this.bodyDiv);
+      const orDiv = GUI.create('div', 'OrDiv', orPanelDiv);
       orDiv.innerText = 'OR';
 
 
@@ -128,23 +128,23 @@ export class StartDialog extends Dialog {
       //
       // Host a session panel
       //
-      let hostPanelDiv = GUI.create('div', 'HostPanelDiv', this.bodyDiv);
+      const hostPanelDiv = GUI.create('div', 'HostPanelDiv', this.bodyDiv);
 
       // camera icon css
-      let iconDiv = GUI.create('div', 'IconDiv', hostPanelDiv);
+      const iconDiv = GUI.create('div', 'IconDiv', hostPanelDiv);
       iconDiv.className = 'icon';
-      let cameraIconDiv = GUI.create('div', 'CameraDiv', iconDiv);
+      const cameraIconDiv = GUI.create('div', 'CameraDiv', iconDiv);
       cameraIconDiv.className = 'camera-icon';
-      let circleSmallDiv = GUI.create('div', 'CircleSmallDiv', cameraIconDiv);
+      const circleSmallDiv = GUI.create('div', 'CircleSmallDiv', cameraIconDiv);
       circleSmallDiv.className = 'camera-circle';
-      let circleBigDiv = GUI.create('div', 'CircleBigDiv', cameraIconDiv);
+      const circleBigDiv = GUI.create('div', 'CircleBigDiv', cameraIconDiv);
       circleBigDiv.className = 'camera-btn';
 
 
-      buttonDiv = GUI.create('div', 'ButtonDiv', hostPanelDiv);
-      buttonDiv.className = 'ButtonDivClass';
+      const buttonDiv2 = GUI.create('div', 'ButtonDiv', hostPanelDiv);
+      buttonDiv2.className = 'ButtonDivClass';
 
-      this.goHostButton = GUI.create('button', 'HostButton', buttonDiv);
+      this.goHostButton = GUI.create('button', 'HostButton', buttonDiv2);
       this.goHostButton.className = 'ButtonClass';
       this.goHostButton.innerText = 'Share your camera...';
       this.goHostButton.onclick = () => {
@@ -165,7 +165,7 @@ export class StartDialog extends Dialog {
       }
    }
 
-   public connect() {
+   public connect(): void {
       if (this.squint.connected) {
          console.error('StartDialog.connect() called, but already connected');
          return;
@@ -178,7 +178,7 @@ export class StartDialog extends Dialog {
 
       // TODO what if the connection closes after connecting with the start dialog open?
 
-      let userName = this.onGetUserName();
+      const userName = this.onGetUserName();
       this.squint.connect(Squint.url, userName)
          .then(() => {
 
@@ -204,7 +204,7 @@ export class StartDialog extends Dialog {
    }
 
    private onUpdateConnectionInfo(info: IConnectionInfo) {
-      for (let item of this.viewListBox.items) {
+      for (const item of this.viewListBox.items) {
          if (item.userData === info.connectionId) {
             item.div.innerText = info.userName;
          }

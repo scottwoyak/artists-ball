@@ -1,9 +1,9 @@
-import { SquintWsUrl as SquintWsUrl } from "./Servers";
-import { debug } from "./SquintApp";
-import { SquintSocket } from "./SquintSocket";
-import { ISquintMessage, IConnectionInfo, SquintMessageSubject } from "./SquintMessage";
-import { EventManager } from "./EventManager";
-import { ISquintEventHandler, SquintEvent } from "./SquintEvents";
+import { SquintWsUrl as SquintWsUrl } from './Servers';
+import { debug } from './SquintApp';
+import { SquintSocket } from './SquintSocket';
+import { ISquintMessage, IConnectionInfo, SquintMessageSubject } from './SquintMessage';
+import { EventManager } from './EventManager';
+import { ISquintEventHandler, SquintEvent } from './SquintEvents';
 
 
 export class Squint {
@@ -63,14 +63,15 @@ export class Squint {
       */
    }
 
-   public on(handler: ISquintEventHandler) {
+   public on(handler: ISquintEventHandler): void {
       this.eventManager.on(handler.name, handler.handler);
    }
 
-   public remove(handler: ISquintEventHandler) {
+   public remove(handler: ISquintEventHandler): void {
       this.eventManager.remove(handler.name, handler.handler);
    }
 
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
    private emit(name: SquintEvent, ...args: any[]) {
       this.eventManager.emit(name, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[8], args[9]);
    }
@@ -81,7 +82,7 @@ export class Squint {
       this.ss = ss;
 
       ss.onClose = (code: number) => {
-         let connectionId = ss.connectionId;
+         const connectionId = ss.connectionId;
          this.ss = null;
          if (code === SquintSocket.NORMAL_CLOSURE) {
             this.emit(SquintEvent.Close);
@@ -166,7 +167,7 @@ export class Squint {
          });
    }
 
-   public close() {
+   public close(): void {
       if (!this.connected) {
          debug('Squint.close() called but no connection exists');
          return;
@@ -226,7 +227,7 @@ export class Squint {
       this.ss.send(msg);
    }
 
-   public sendImage(blob: Blob) {
+   public sendImage(blob: Blob): void {
       if (!this.connected) {
          debug('Squint.sendImage() called, but not connected');
          return;
@@ -240,20 +241,20 @@ export class Squint {
       }
    }
 
-   public requestNextImage() {
+   public requestNextImage(): void {
       this.send({
          subject: SquintMessageSubject.ReadyForNextImage,
       });
    }
 
-   public subscribe(connectionId: string) {
+   public subscribe(connectionId: string): void {
       this.send({
          subject: SquintMessageSubject.Subscribe,
          connectionId: connectionId,
       })
    }
 
-   public updateConnectionInfo(userName: string) {
+   public updateConnectionInfo(userName: string): void {
       this.userName = userName;
       this.send({
          subject: SquintMessageSubject.UpdateConnectionInfo,
@@ -262,7 +263,7 @@ export class Squint {
       })
    }
 
-   public sendChatMessage(msg: string) {
+   public sendChatMessage(msg: string): void {
       this.send({
          subject: SquintMessageSubject.ChatMessage,
          message: msg,
@@ -270,7 +271,7 @@ export class Squint {
       });
    }
 
-   public toString() {
+   public toString(): string {
       if (this.ss) {
          return '[' + this.ss.readyStateStr + ']';
       }

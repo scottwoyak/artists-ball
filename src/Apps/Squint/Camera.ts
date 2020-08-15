@@ -1,5 +1,5 @@
-import { debug, SquintStrings } from "./SquintApp";
-import { iOS } from "../../Util/Globals";
+import { debug, SquintStrings } from './SquintApp';
+import { iOS } from '../../Util/Globals';
 
 export interface IVideoConstraint {
    label: string,
@@ -103,18 +103,13 @@ export class Camera {
          return Promise.reject('XX Video Size = 0');
       }
 
-      //console.log('xxx setting canvas size: ' + scale + ' ' + this.video.videoWidth * scale + 'x' + this.video.videoHeight * scale);
       this.canvas.width = this.video.videoWidth * scale;
       this.canvas.height = this.video.videoHeight * scale;
 
-      console.log('xxx draw image');
       const context = this.canvas.getContext('2d');
-      //console.log('xxx got context');
       context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-      //console.log('xxx drawImage success');
 
       return new Promise<Blob>((resolve, reject) => {
-         //console.log('xxx canvasToBlob ' + jpegQuality);
          this.canvas.toBlob(
             (blob) => {
                resolve(blob)
@@ -126,7 +121,7 @@ export class Camera {
 
    public start(desired: MediaTrackConstraints): Promise<MediaStreamTrack> {
 
-      let constraints: any;
+      let constraints: MediaStreamConstraints;
       if (desired.deviceId && desired.deviceId.toString().trim().length > 0) {
          constraints = {
             video: {
@@ -164,7 +159,7 @@ export class Camera {
 
                   this.video.srcObject = stream;
 
-                  let track = stream.getVideoTracks()[0];
+                  const track = stream.getVideoTracks()[0];
 
                   console.log('xxx playing video');
                   this.video.play()
@@ -183,13 +178,13 @@ export class Camera {
       });
    }
 
-   public stop() {
+   public stop(): void {
       console.log('xxx stopping camera');
       if (this.video.srcObject) {
          // Using the camera is not robust. Applying constraints to change things
          // like which camera is in use only works sometimes. The most robust I can
          // make it is to close the video element and create a new one.
-         let stream = this.video.srcObject as MediaStream;
+         const stream = this.video.srcObject as MediaStream;
          stream.getTracks().forEach((track: MediaStreamTrack) => {
             track.stop();
          });
@@ -198,13 +193,13 @@ export class Camera {
       }
    }
 
-   public applyAdvancedConstraints(advancedConstraints: IAdvancedConstraint[]) {
-      let stream = this.video.srcObject as MediaStream;
-      let track = stream.getVideoTracks()[0];
+   public applyAdvancedConstraints(advancedConstraints: IAdvancedConstraint[]): void {
+      const stream = this.video.srcObject as MediaStream;
+      const track = stream.getVideoTracks()[0];
 
-      let constraints = { advanced: [] = [] } as any;
-      let constraint: any = {};
-      for (let item of advancedConstraints) {
+      const constraints = { advanced: [] = [] } as any;
+      const constraint: any = {};
+      for (const item of advancedConstraints) {
          constraint[item.constraint] = item.value();
       }
 
@@ -219,8 +214,8 @@ export class Camera {
 
    public getCapabilities(): MediaTrackCapabilities {
       if (this.video.srcObject) {
-         let stream = this.video.srcObject as MediaStream;
-         let track = stream.getVideoTracks()[0];
+         const stream = this.video.srcObject as MediaStream;
+         const track = stream.getVideoTracks()[0];
          if (track.getCapabilities) {
             return track.getCapabilities();
          }
@@ -239,7 +234,7 @@ export class Camera {
    }
 
    public static capabilityToString(capabilities: MediaTrackCapabilities, name: string): string {
-      let obj = (<any>capabilities)[name];
+      const obj = (<any>capabilities)[name];
       let str = name + ': ';
       if (typeof obj === 'object') {
          if (obj['min'] !== undefined) {
@@ -266,7 +261,7 @@ export class Camera {
 
    private static videoEnabled = false;
 
-   public static getCameras(onFound: (resolution: IVideoConstraint) => void) {
+   public static getCameras(onFound: (resolution: IVideoConstraint) => void): void {
       navigator.mediaDevices.enumerateDevices()
          .then((devices) => {
             if (iOS() && Camera.videoEnabled === false) {
@@ -292,7 +287,7 @@ export class Camera {
                let str = '';
                let count = 0;
                for (let i = 0; i < devices.length; i++) {
-                  let device = devices[i];
+                  const device = devices[i];
                   if (device.kind === 'videoinput') {
                      count++;
                      str += '"' + device.deviceId + '": ' + device.label + '\n';
@@ -303,10 +298,10 @@ export class Camera {
 
                let cameraCount = 1;
                for (let i = 0; i < devices.length; i++) {
-                  let device = devices[i];
+                  const device = devices[i];
                   if (device.kind === 'videoinput') {
 
-                     let actual = {
+                     const actual = {
                         label: 'camera ' + cameraCount++,
                         deviceId: device.deviceId,
                      }

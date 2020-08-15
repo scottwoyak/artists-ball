@@ -1,6 +1,6 @@
-import { GUI } from "../../GUI/GUI";
-import { SquintHttpUrl } from "./Servers";
-import { Dialog } from "../../GUI/Dialog";
+import { GUI } from '../../GUI/GUI';
+import { SquintHttpUrl } from './Servers';
+import { Dialog } from '../../GUI/Dialog';
 
 export type okHandler = (userName: string) => void;
 
@@ -12,19 +12,19 @@ export class WelcomeDialog extends Dialog {
    ) {
       super(parent, 'Welcome');
 
-      let titleDiv = GUI.create('div', 'TitleDiv', this.dialogDiv);
+      const titleDiv = GUI.create('div', 'TitleDiv', this.dialogDiv);
       titleDiv.className = 'DialogTitleClass';
       titleDiv.innerText = 'Welcome to Squint!';
 
-      let bodyDiv = GUI.create('div', 'BodyDiv', this.dialogDiv);
-      let img = GUI.create('img', 'SquintImg', bodyDiv);
+      const bodyDiv = GUI.create('div', 'BodyDiv', this.dialogDiv);
+      const img = GUI.create('img', 'SquintImg', bodyDiv);
       img.src = SquintHttpUrl + 'squint.jpg';
 
-      let userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', bodyDiv);
-      let userNameLabel = GUI.create('label', 'UserNameLabel', userNameGroupDiv);
+      const userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', bodyDiv);
+      const userNameLabel = GUI.create('label', 'UserNameLabel', userNameGroupDiv);
       userNameLabel.htmlFor = 'UserNameInput';
       userNameLabel.innerText = 'Name:';
-      let userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);
+      const userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);
       userNameTextInput.type = 'text';
       userNameTextInput.placeholder = 'Your Name';
 
@@ -44,10 +44,10 @@ export class WelcomeDialog extends Dialog {
          userNameTextInput.focus();
       }
 
-      let okButton = GUI.create('button', 'OkButton', userNameGroupDiv);
+      const okButton = GUI.create('button', 'OkButton', userNameGroupDiv);
       okButton.innerText = 'Start Squinting...';
       okButton.onclick = () => {
-         let userName = userNameTextInput.value.trim();
+         const userName = userNameTextInput.value.trim();
          if (userName.length > 0) {
             this.visible = false;
             onOk(userNameTextInput.value.trim());

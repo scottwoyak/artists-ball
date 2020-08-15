@@ -1,4 +1,4 @@
-import { IConnectionInfo } from "./SquintMessage";
+import { IConnectionInfo } from './SquintMessage';
 
 export type CloseHandler = () => void;
 export type ImageHandler = (img: Blob) => void;

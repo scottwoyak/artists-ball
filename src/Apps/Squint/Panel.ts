@@ -1,4 +1,4 @@
-import { GUI } from "../../GUI/GUI";
+import { GUI } from '../../GUI/GUI';
 
 export class Panel {
    protected div: HTMLDivElement;

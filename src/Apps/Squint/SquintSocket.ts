@@ -1,5 +1,5 @@
-import { ISquintMessage, ISquintHelloFromServerMessage } from "./SquintMessage";
-import { debug } from "./SquintApp";
+import { ISquintMessage, ISquintHelloFromServerMessage } from './SquintMessage';
+import { debug } from './SquintApp';
 
 export type ImageHandler = (img: Blob) => void;
 export type MessageHandler = (msg: ISquintMessage) => void;
@@ -85,7 +85,7 @@ export class SquintSocket {
          }
          else if (typeof message.data === 'string') {
             try {
-               let msg = JSON.parse(message.data) as ISquintMessage;
+               const msg = JSON.parse(message.data) as ISquintMessage;
                if (this.onMessage) {
                   this.onMessage(msg);
                }
@@ -113,7 +113,7 @@ export class SquintSocket {
       return this.ws.bufferedAmount === 0;
    }
 
-   public close() {
+   public close(): void {
       if (!this.connected) {
          debug('SquintSocket.close() called but no connection exists');
          return;
@@ -129,7 +129,7 @@ export class SquintSocket {
    }
 
 
-   public send(msg: ISquintMessage) {
+   public send(msg: ISquintMessage): void {
       if (!this.connected) {
          debug('SquintSocket.send() called, but not connected');
          return;
@@ -138,7 +138,7 @@ export class SquintSocket {
       this.ws.send(JSON.stringify(msg));
    }
 
-   public sendImage(blob: Blob) {
+   public sendImage(blob: Blob): void {
       if (!this.connected) {
          debug('SquintSocket.sendImage() called, but not connected');
          return;
@@ -152,7 +152,7 @@ export class SquintSocket {
       return new Promise((resolve, reject) => {
 
          // create temporary handlers that process the server handshake
-         let ws = new WebSocket(url);
+         const ws = new WebSocket(url);
 
          ws.onopen = () => {
             // send handshake message
@@ -167,7 +167,7 @@ export class SquintSocket {
             );
          };
 
-         ws.onclose = (event) => {
+         ws.onclose = (event: CloseEvent) => {
             reject('Cannot connect to server: ' + event.code);
          }
          ws.onerror = (event: Event) => {
@@ -177,7 +177,7 @@ export class SquintSocket {
          ws.onmessage = (messageEvent) => {
             if (reconnectId) {
                try {
-                  let msg = JSON.parse(messageEvent.data) as ISquintMessage;
+                  const msg = JSON.parse(messageEvent.data) as ISquintMessage;
                   if (msg.subject && msg.subject === 'Reconnected') {
                      resolve(new SquintSocket(ws, reconnectId));
                   }

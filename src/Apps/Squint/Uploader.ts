@@ -1,8 +1,7 @@
-import { FPS } from "../../Util/FPS";
-import { debug, SquintStrings } from "./SquintApp";
-import { Squint } from "./Squint";
-import { Stopwatch } from "../../Util/Stopwatch";
-import { BandwidthTracker } from "./BandwidthTracker";
+import { debug, SquintStrings } from './SquintApp';
+import { Squint } from './Squint';
+import { Stopwatch } from '../../Util/Stopwatch';
+import { BandwidthTracker } from './BandwidthTracker';
 
 const MAX_FPS = 10;
 
@@ -34,8 +33,8 @@ export class Uploader {
       }
 
       // convert bytes to bits to get Mbps
-      let lastSizeBits = 8 * this.bandwidthTracker.lastTransferBytes;
-      let bitsPerMs = (1000 * 1000) * this.bandwidthTracker.megaBitsPerSec / 1000;
+      const lastSizeBits = 8 * this.bandwidthTracker.lastTransferBytes;
+      const bitsPerMs = (1000 * 1000) * this.bandwidthTracker.megaBitsPerSec / 1000;
 
       let calcMs = lastSizeBits / bitsPerMs;
 

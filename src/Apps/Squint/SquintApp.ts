@@ -22,7 +22,7 @@ import { SquintEvent } from './SquintEvents';
 
 export class SquintStrings {
    public static readonly CAMERA_NOT_READY = 'Camera not ready';
-};
+}
 
 export function debug(msg: string): void {
    console.error(msg);
@@ -87,7 +87,7 @@ export class SquintApp implements IApp {
    }
 
    private set userName(userName: string) {
-      let oldUserName = this.userName;
+      const oldUserName = this.userName;
       localStorage.setItem(StorageItems.UserName, userName);
 
       if (userName !== oldUserName) {
@@ -95,7 +95,7 @@ export class SquintApp implements IApp {
 
          if (this.squint && this.squint.connected) {
             this.squint.updateConnectionInfo(userName);
-         };
+         }
       }
    }
 
@@ -106,7 +106,11 @@ export class SquintApp implements IApp {
       //localStorage.removeItem(StorageItems.UserName); // simulates starting up the first time
    }
 
-   public create(div: HTMLDivElement) {
+   delete(): void {
+      // nothing to do here
+   }
+
+   public create(div: HTMLDivElement): void {
 
       div.id = 'SquintApp';
       this.squint = new Squint();
@@ -206,15 +210,15 @@ export class SquintApp implements IApp {
       }
    }
 
-   private showWelcomeDialog() {
-      let welcomeDialog = new WelcomeDialog(this.div, (userName) => {
+   private showWelcomeDialog(): void {
+      const welcomeDialog = new WelcomeDialog(this.div, (userName) => {
          this.userName = userName;
          this.startDialog.visible = true;
       });
       welcomeDialog.visible = true;
    }
 
-   public closeConnection() {
+   public closeConnection(): void {
       if (this.squint.connected) {
          this.squint.close();
       }
@@ -223,25 +227,22 @@ export class SquintApp implements IApp {
       this.enableVideo(false);
       // put this back this.startDialog.visible = true;
 
-      let ctx = this.canvas.getContext('2d');
+      const ctx = this.canvas.getContext('2d');
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
    }
 
-   public delete() {
-   }
-
-   private startSession() {
+   private startSession(): void {
       this.startUploader();
    }
 
-   private startUploader() {
+   private startUploader(): void {
       this.uploader = new Uploader(
          this.squint,
          () => this.takePicture()
       );
    }
 
-   private stopUploader() {
+   private stopUploader(): void {
       if (this.uploader) {
          this.uploader.stop();
          this.uploader = null;
@@ -257,9 +258,9 @@ export class SquintApp implements IApp {
       }
    }
 
-   public buildMenu(menubar: Menubar) {
+   public buildMenu(menubar: Menubar): void {
 
-      let viewMenu = menubar.addSubMenu('View');
+      const viewMenu = menubar.addSubMenu('View');
 
       this.brightness = viewMenu.addSlider({
          label: 'Brightness',
@@ -313,12 +314,12 @@ export class SquintApp implements IApp {
 
 
 
-      let cameraMenu = menubar.addSubMenu('Camera');
+      const cameraMenu = menubar.addSubMenu('Camera');
 
       let firstItem = true;
       Camera.getCameras((constraint) => {
 
-         let radioButton = cameraMenu.addRadiobutton(
+         const radioButton = cameraMenu.addRadiobutton(
             {
                label: constraint.label,
                oncheck: () => {
@@ -336,10 +337,10 @@ export class SquintApp implements IApp {
          this.cameraCtrls.push(radioButton);
       })
 
-      let button = cameraMenu.addItem('Capabilities...', () => {
-         let capabilities = this.camera.getCapabilities();
+      cameraMenu.addItem('Capabilities...', () => {
+         const capabilities = this.camera.getCapabilities();
          let msg = 'Camera Capabilities:\n';
-         for (let key in capabilities) {
+         for (const key in capabilities) {
             if (key === 'deviceId' || key === 'groupId') {
                continue;
             }
@@ -370,7 +371,7 @@ export class SquintApp implements IApp {
 
       this.enableCameraCtrls(false);
 
-      let sessionMenu = menubar.addSubMenu('Session');
+      const sessionMenu = menubar.addSubMenu('Session');
 
       sessionMenu.addItem('Stop', () => {
          this.closeConnection();
@@ -412,7 +413,7 @@ export class SquintApp implements IApp {
    }
 
    private drawBlob(blob: Blob) {
-      let img = document.createElement('img');
+      const img = document.createElement('img');
 
       img.src = URL.createObjectURL(blob);
       img.onload = () => {
@@ -436,42 +437,42 @@ export class SquintApp implements IApp {
       this.advancedSubMenu.clear();
       this.advancedConstraints = [];
 
-      let capabilities = track.getCapabilities() as IVideoTrackAdvancedCapabilities;
-      let settings = track.getSettings() as IVideoTrackAdvancedSettings;
+      const capabilities = track.getCapabilities() as IVideoTrackAdvancedCapabilities;
+      const settings = track.getSettings() as IVideoTrackAdvancedSettings;
 
-      let whiteBalanceMode: IConstraintItem = {
+      const whiteBalanceMode: IConstraintItem = {
          constraint: 'whiteBalanceMode',
          label: 'Auto White Blance'
       }
-      let colorTemperature: IConstraintItem = {
+      const colorTemperature: IConstraintItem = {
          constraint: 'colorTemperature',
          label: 'Temperature'
       }
-      let exposureMode: IConstraintItem = {
+      const exposureMode: IConstraintItem = {
          constraint: 'exposureMode',
          label: 'Auto Exposure'
       }
-      let exposureCompensation: IConstraintItem = {
+      const exposureCompensation: IConstraintItem = {
          constraint: 'exposureCompensation',
          label: 'F-Stop'
       }
-      let exposureTime: IConstraintItem = {
+      const exposureTime: IConstraintItem = {
          constraint: 'exposureTime',
          label: 'Exposure'
       }
-      let iso: IConstraintItem = {
+      const iso: IConstraintItem = {
          constraint: 'iso',
          label: 'ISO'
       }
-      let focusMode: IConstraintItem = {
+      const focusMode: IConstraintItem = {
          constraint: 'focusMode',
          label: 'Auto Focus'
       }
-      let focusDistance: IConstraintItem = {
+      const focusDistance: IConstraintItem = {
          constraint: 'focusDistance',
          label: 'Focus'
       }
-      let zoom: IConstraintItem = {
+      const zoom: IConstraintItem = {
          constraint: 'zoom',
          label: 'Zoom'
       }
@@ -518,16 +519,16 @@ export class SquintApp implements IApp {
       sliderSetups: IConstraintItem[]
    ) {
 
-      let sliders: Slider[] = [];
-      let checkbox = this.advancedSubMenu.addCheckbox({
+      const sliders: Slider[] = [];
+      const checkbox = this.advancedSubMenu.addCheckbox({
          label: checkboxSetup.label,
          oncheck: (checkbox) => {
-            for (let slider of sliders) {
+            for (const slider of sliders) {
                slider.enabled = !checkbox.checked;
             }
             this.camera.applyAdvancedConstraints(this.advancedConstraints);
          },
-         checked: (<any>settings)[checkboxSetup.constraint] === 'continuous',
+         checked: settings[checkboxSetup.constraint] === 'continuous',
       });
 
       this.advancedConstraints.push({
@@ -535,10 +536,10 @@ export class SquintApp implements IApp {
          value: () => { return checkbox.checked ? 'continuous' : 'manual'; }
       });
 
-      for (let item of sliderSetups) {
+      for (const item of sliderSetups) {
 
          if (capabilities[item.constraint]) {
-            let slider = this.addAdvancedSlider(settings, capabilities, item);
+            const slider = this.addAdvancedSlider(settings, capabilities, item);
             slider.enabled = !checkbox.checked;
 
             sliders.push(slider);
@@ -552,8 +553,8 @@ export class SquintApp implements IApp {
       item: IConstraintItem,
    ): Slider {
 
-      let range = capabilities[item.constraint] as IMediaSettingsRange;
-      let slider = this.advancedSubMenu.addSlider({
+      const range = capabilities[item.constraint] as IMediaSettingsRange;
+      const slider = this.advancedSubMenu.addSlider({
          label: item.label,
          min: range.min,
          max: range.max,
@@ -580,7 +581,7 @@ export class SquintApp implements IApp {
          this.camera.video.style.display = 'block';
          this.camera.start(this.desired)
             .then((track: MediaStreamTrack) => {
-               let settings = track.getSettings();
+               const settings = track.getSettings();
                if (Math.max(settings.width, settings.height) > 1000) {
                   this.cameraScale.value = Math.min(1000 / settings.width, 1000 / settings.height);
                }
@@ -627,7 +628,7 @@ export class SquintApp implements IApp {
 
    private updateVideoSize(videoWidth: number, videoHeight: number) {
       if (getComputedStyle(this.camera.video).display !== 'none') {
-         let videoSize = Math.max(this.camera.video.clientWidth, this.camera.video.clientHeight);
+         const videoSize = Math.max(this.camera.video.clientWidth, this.camera.video.clientHeight);
          if (videoWidth > videoHeight) {
             this.camera.video.style.width = videoSize + 'px';
             this.camera.video.style.height = (videoSize * videoHeight / videoWidth) + 'px';
@@ -640,11 +641,11 @@ export class SquintApp implements IApp {
    }
 
    private updateSizes() {
-      let menubarHeight = document.getElementById('Menubar').clientHeight;
+      const menubarHeight = document.getElementById('Menubar').clientHeight;
 
       this.console.setEdges(0, 0, menubarHeight, 0);
-      let viewWidth = document.documentElement.clientWidth;
-      let viewHeight = document.documentElement.clientHeight;
+      const viewWidth = document.documentElement.clientWidth;
+      const viewHeight = document.documentElement.clientHeight;
 
       this.canvas.width = viewWidth;
       this.canvas.height = viewHeight - menubarHeight;
@@ -667,13 +668,13 @@ export class SquintApp implements IApp {
          return;
       }
 
-      let canvasWidth = this.canvas.width;
-      let canvasHeight = this.canvas.height;
-      let canvasAR = canvasWidth / canvasHeight;
+      const canvasWidth = this.canvas.width;
+      const canvasHeight = this.canvas.height;
+      const canvasAR = canvasWidth / canvasHeight;
 
-      let imgWidth = this.img.width;
-      let imgHeight = this.img.height;
-      let imgAR = imgWidth / imgHeight;
+      const imgWidth = this.img.width;
+      const imgHeight = this.img.height;
+      const imgAR = imgWidth / imgHeight;
 
       let width: number;
       let height: number;
@@ -698,10 +699,10 @@ export class SquintApp implements IApp {
       }
       */
 
-      let x = (canvasWidth - width) / 2.0 + this.xOffset;
-      let y = (canvasHeight - height) / 2.0 - this.yOffset;
+      const x = (canvasWidth - width) / 2.0 + this.xOffset;
+      const y = (canvasHeight - height) / 2.0 - this.yOffset;
 
-      let ctx = this.canvas.getContext('2d');
+      const ctx = this.canvas.getContext('2d');
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
       ctx.imageSmoothingEnabled = true;
@@ -720,7 +721,7 @@ export class SquintApp implements IApp {
       ctx.font = '10px sans-serif';
       ctx.fillText(Squint.url, 0, 10);
 
-      let fontSize = isMobile ? 20 : 10;
+      const fontSize = isMobile ? 20 : 10;
       ctx.font = fontSize + 'px sans-serif';
 
       msg = imgWidth + 'x' + imgHeight;
@@ -756,7 +757,7 @@ export class SquintApp implements IApp {
 
       // TODO: center scaling about your two fingers
 
-      let factor = change;
+      const factor = change;
       this.zoom.value *= factor;
       this.xOffset *= factor;
       this.yOffset *= factor;

@@ -4,20 +4,20 @@ export class EventManager {
 
    private handlers = new Map<string, EventHandler[]>();
 
-   public on(name: string, handler: EventHandler) {
-      let arr = this.handlers.get(name);
+   public on(name: string, handler: EventHandler): void {
+      const arr = this.handlers.get(name);
 
       if (arr) {
          arr.push(handler);
       }
       else {
-         let arr = [];
+         const arr = [];
          arr.push(handler);
          this.handlers.set(name, arr);
       }
    }
 
-   public remove(name: string, handler: EventHandler) {
+   public remove(name: string, handler: EventHandler): void {
       let arr = this.handlers.get(name);
 
       if (arr) {
@@ -26,10 +26,10 @@ export class EventManager {
       }
    }
 
-   public emit(name: string, ...args: any[]) {
-      let arr = this.handlers.get(name);
+   public emit(name: string, ...args: any[]): void {
+      const arr = this.handlers.get(name);
       if (arr) {
-         for (let handler of arr) {
+         for (const handler of arr) {
             try {
                handler(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]);
             }

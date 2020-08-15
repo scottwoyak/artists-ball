@@ -1,5 +1,5 @@
-import { GUI } from "../../GUI/GUI";
-import { Dialog } from "../../GUI/Dialog";
+import { GUI } from '../../GUI/GUI';
+import { Dialog } from '../../GUI/Dialog';
 
 export type okHandler = (userName: string) => void;
 
@@ -13,11 +13,11 @@ export class UserNameDialog extends Dialog {
       // UserNameBackgroundDiv and UserNameDialogDiv
       super(parent, 'UserName');
 
-      let userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', this.dialogDiv);
-      let userNameLabel = GUI.create('label', 'UserNameLabel', userNameGroupDiv);
+      const userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', this.dialogDiv);
+      const userNameLabel = GUI.create('label', 'UserNameLabel', userNameGroupDiv);
       userNameLabel.htmlFor = 'UserNameInput';
       userNameLabel.innerText = 'Name:';
-      let userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);
+      const userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);
       userNameTextInput.type = 'text';
       userNameTextInput.placeholder = 'Your Name';
       userNameTextInput.value = currentUserName;
@@ -39,7 +39,7 @@ export class UserNameDialog extends Dialog {
          userNameTextInput.select();
       }
 
-      let okButton = GUI.create('button', 'OkButton', userNameGroupDiv);
+      const okButton = GUI.create('button', 'OkButton', userNameGroupDiv);
       okButton.className = 'ButtonClass';
       okButton.innerText = 'OK';
       okButton.onclick = () => {

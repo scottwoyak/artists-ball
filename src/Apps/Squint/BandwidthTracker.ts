@@ -1,5 +1,5 @@
-import { Stopwatch } from "../../Util/Stopwatch";
-import { FPS } from "../../Util/FPS";
+import { Stopwatch } from '../../Util/Stopwatch';
+import { FPS } from '../../Util/FPS';
 
 class Transfer {
    public bytes: number;
@@ -20,7 +20,7 @@ export class BandwidthTracker {
    }
 
    public get lastTransferBytes(): number {
-      let numSamples = this.transfers.length;
+      const numSamples = this.transfers.length;
       return this.transfers[numSamples - 1].bytes;
    }
 
@@ -34,7 +34,7 @@ export class BandwidthTracker {
       else {
          // sum the bytes
          let total = 0;
-         for (let transfer of this.transfers) {
+         for (const transfer of this.transfers) {
             total += transfer.bytes;
          }
 
@@ -49,7 +49,7 @@ export class BandwidthTracker {
    /**
     * Call this data is transfered
     */
-   public onTransfer(bytes: number) {
+   public onTransfer(bytes: number): void {
       this.transfers.push({ bytes: bytes, stopwatch: new Stopwatch() });
       this._fps.tick();
 
