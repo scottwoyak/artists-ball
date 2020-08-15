@@ -94,13 +94,15 @@ export class Camera {
    ): Promise<Blob> {
 
       if (this.video.readyState != 4) {
+         console.log('xxx camera not ready');
          return Promise.reject(SquintStrings.CAMERA_NOT_READY);
       }
 
+      console.log('xxx setting canvas size');
       this.canvas.width = this.video.videoWidth * scale;
       this.canvas.height = this.video.videoHeight * scale;
 
-      //console.log('capturing image: ' + canvas.width + 'x' + canvas.height);
+      console.log('xxx draw image');
       const context = this.canvas.getContext('2d');
       context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
 

@@ -45,7 +45,6 @@ export class PointerEventHandler {
       // element.ontouch isn't supported on desktop devices so use addEventListener instead
       element.addEventListener('touchstart', (event: TouchEvent) => {
 
-         console.log('xxx touchStart');
          this.ctrlKey = event.ctrlKey;
 
          if (event.target instanceof HTMLInputElement === false) {
@@ -92,7 +91,6 @@ export class PointerEventHandler {
 
       let touchmove = (event: TouchEvent) => {
 
-         console.log('touchMove');
          this.ctrlKey = event.ctrlKey;
 
          // prevent the browser from using the event

@@ -2,11 +2,11 @@ export class ConsoleCapture {
 
    private textArea: HTMLTextAreaElement;
 
-   public get show(): boolean {
+   public get visible(): boolean {
       return getComputedStyle(this.textArea).display === 'block';
    }
 
-   public set show(flag: boolean) {
+   public set visible(flag: boolean) {
       this.textArea.style.display = flag ? 'block' : 'none';
    }
 

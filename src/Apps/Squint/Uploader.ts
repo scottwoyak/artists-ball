@@ -6,10 +6,10 @@ import { BandwidthTracker } from "./BandwidthTracker";
 
 const MAX_FPS = 10;
 
-export type DataNeededHandler = () => Promise<Blob>;
+export type TakePictureHandler = () => Promise<Blob>;
 
 export class Uploader {
-   private onDataNeeded: DataNeededHandler;
+   private takePicture: TakePictureHandler;
 
    private running = true;
    private busy = false;
@@ -49,9 +49,9 @@ export class Uploader {
 
    }
 
-   public constructor(squint: Squint, onDataNeeded: DataNeededHandler) {
+   public constructor(squint: Squint, takePicture: TakePictureHandler) {
       this.squint = squint;
-      this.onDataNeeded = onDataNeeded;
+      this.takePicture = takePicture;
 
       this.upload();
    }
@@ -107,8 +107,9 @@ export class Uploader {
       this.busy = true;
 
       try {
+         console.log('XXX uploader takePicture');
          let nextDelay = 0;
-         this.onDataNeeded()
+         this.takePicture()
             .then((blob: Blob) => {
 
                if (this.squint.connected) {

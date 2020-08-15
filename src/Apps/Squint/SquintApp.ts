@@ -81,7 +81,7 @@ export class SquintApp implements IApp {
 
    private startDialog: StartDialog;
 
-   private consoleCapture = new ConsoleCapture();
+   private console = new ConsoleCapture();
 
    private get userName(): string {
       return localStorage.getItem(StorageItems.UserName);
@@ -387,18 +387,22 @@ export class SquintApp implements IApp {
       });
 
       let item = sessionMenu.addItem('Show Log', () => {
-         this.consoleCapture.show = !this.consoleCapture.show;
-         item.innerText = this.consoleCapture.show ? 'Hide Log' : 'Show Log';
+         this.console.visible = !this.console.visible;
+         item.innerText = this.console.visible ? 'Hide Log' : 'Show Log';
       });
 
 
 
-      let windowsMenu = menubar.addSubMenu('Windows');
-
-      windowsMenu.addCheckbox({
+      sessionMenu.addCheckbox({
          label: 'Viewers/Chat',
          oncheck: (checkbox) => { this.viewersPanel.visible = checkbox.checked },
          checked: () => { return this.viewersPanel.visible; }
+      });
+
+      sessionMenu.addCheckbox({
+         label: 'Logs',
+         oncheck: (checkbox) => { this.console.visible = checkbox.checked },
+         checked: () => { return this.console.visible; }
       });
 
       this.userNameMenuItemDiv = menubar.addItem('Hi ' + (this.userName ?? ''),
@@ -655,7 +659,7 @@ export class SquintApp implements IApp {
    private updateSizes() {
       let menubarHeight = document.getElementById('Menubar').clientHeight;
 
-      this.consoleCapture.setEdges(0, 0, menubarHeight, 0);
+      this.console.setEdges(0, 0, menubarHeight, 0);
       let viewWidth = document.documentElement.clientWidth;
       let viewHeight = document.documentElement.clientHeight;
 
