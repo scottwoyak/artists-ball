@@ -146,6 +146,7 @@ export class Squint {
 
    private setSS(ss: SquintSocket) {
 
+      console.log('xxx storing ss');
       this.ss = ss;
 
       ss.onClose = (code: number) => {
@@ -159,7 +160,7 @@ export class Squint {
             this._reconnecting = true;
             setTimeout(() => {
                this.tryToReconnect(connectionId);
-            }, 5000);
+            }, 1000);
          }
       }
 
@@ -189,17 +190,20 @@ export class Squint {
       console.log('reconnect try ' + retryCount)
       this.reconnect(SquintWsUrl, connectionId)
          .then(() => {
+            console.log('---' + retryCount + ' reconnect.then()');
             this._reconnecting = false;
             this.eventManager.emit(SquintEvent.Reconnected, true);
          })
          .catch((err) => {
-            console.log('retry err: ' + JSON.stringify(err, null, ' '));
+            console.log('---' + retryCount + ' reconnect.catch() ' + JSON.stringify(err, null, ' '));
             if (retryCount < 3) {
                setTimeout(() => {
                   this.tryToReconnect(connectionId, retryCount + 1);
                }, 1000);
+               console.log('---' + retryCount + ' trying again in 1 sec');
             }
             else {
+               console.log('---' + retryCount + ' not trying again');
                this._reconnecting = false;
                this.ss = null;
                this.eventManager.emit(SquintEvent.Reconnected, false);
