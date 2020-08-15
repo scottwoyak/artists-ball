@@ -107,7 +107,7 @@ export class Uploader {
       this.busy = true;
 
       try {
-         console.log('XXX uploader takePicture');
+         console.log(this.squint + ' XXX uploader takePicture');
          let nextDelay = 0;
          this.takePicture()
             .then((blob: Blob) => {
@@ -133,6 +133,7 @@ export class Uploader {
             });
       }
       catch (err) {
+         console.log(this.squint);
          console.error('Unexpected exception in Uploader.onDataNeeded(): ' + err + '\n' + JSON.stringify(err, null, ' '));
          //this.stop();
       }

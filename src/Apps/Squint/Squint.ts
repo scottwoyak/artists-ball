@@ -146,7 +146,7 @@ export class Squint {
 
    private setSS(ss: SquintSocket) {
 
-      console.log('xxx storing ss');
+      console.log(this + ' xxx storing ss');
       this.ss = ss;
 
       ss.onClose = (code: number) => {
@@ -156,11 +156,11 @@ export class Squint {
             this.emit(SquintEvent.Close);
          }
          else {
-            console.log('warn: websocket closed with code: ' + code + ', trying to reconnect');
-            console.log('connected: ' + this.connected);
+            console.log(this + 'warn: websocket closed with code: ' + code + ', trying to reconnect');
+            console.log(this + ' connected: ' + this.connected);
             this._reconnecting = true;
             setTimeout(() => {
-               console.log('connected xxx: ' + this.connected);
+               console.log(this + ' connected xxx: ' + this.connected);
                this.tryToReconnect(connectionId);
             }, 1000);
          }
@@ -189,23 +189,23 @@ export class Squint {
       if (retryCount === 1) {
          this.emit(SquintEvent.Reconnecting);
       }
-      console.log('reconnect try ' + retryCount + ' ' + this.connected)
+      console.log(this + ' reconnect try ' + retryCount + ' ' + this.connected)
       this.reconnect(SquintWsUrl, connectionId)
          .then(() => {
-            console.log('---' + retryCount + ' reconnect.then() ' + this.connected);
+            console.log(this + ' ---' + retryCount + ' reconnect.then() ' + this.connected);
             this._reconnecting = false;
             this.emit(SquintEvent.Reconnected, true);
          })
          .catch((err) => {
-            console.log('---' + retryCount + ' reconnect.catch() ' + JSON.stringify(err, null, ' '));
+            console.log(this + ' ---' + retryCount + ' reconnect.catch() ' + JSON.stringify(err, null, ' '));
             if (retryCount < 3) {
                setTimeout(() => {
                   this.tryToReconnect(connectionId, retryCount + 1);
                }, 1000);
-               console.log('---' + retryCount + ' trying again in 1 sec');
+               console.log(this + ' ---' + retryCount + ' trying again in 1 sec');
             }
             else {
-               console.log('---' + retryCount + ' not trying again');
+               console.log(this + ' ---' + retryCount + ' not trying again');
                this._reconnecting = false;
                this.ss = null;
                this.emit(SquintEvent.Reconnected, false);
@@ -337,5 +337,14 @@ export class Squint {
          message: msg,
          connection: this.connectionInfo,
       });
+   }
+
+   private toString() {
+      if (this.ss) {
+         return '[' + this.ss.readyStateStr + ']';
+      }
+      else {
+         return '[null]';
+      }
    }
 }

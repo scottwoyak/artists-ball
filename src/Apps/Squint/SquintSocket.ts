@@ -17,6 +17,25 @@ export class SquintSocket {
    public static readonly ERROR_CLOSURE = -1;
    public static readonly NORMAL_CLOSURE = 1000;
 
+   public get readyStateStr(): string {
+      switch (this.ws.readyState) {
+         case WebSocket.OPEN:
+            return 'OPEN';
+
+         case WebSocket.CLOSED:
+            return 'CLOSED';
+
+         case WebSocket.CONNECTING:
+            return 'CONNECTING';
+
+         case WebSocket.CLOSING:
+            return 'CLOSING';
+
+         default:
+            return 'UNKNOWN';
+      }
+   }
+
    public get bufferedAmount(): number {
       return this.ws.bufferedAmount;
    }
