@@ -1,3 +1,43 @@
+#SquintApp {
+  /* generated at https://www.w3schools.com/w3css/w3css_color_generator.asp */
+  --blue1: #fafdfd;
+  --blue2: #eff7fa;
+  --blue3: #deeff5;
+  --blue4: #cee7f0;
+  --blue5: #bde0eb;
+  --blue6: #add8e6;
+  --blue7: #8ec9dc;
+  --blue8: #6fbad3;
+  --blue9: #51abc9;
+  --blue10: #3999b9;
+  --blue11: #2f7f9a;
+
+  --pink1: #fffbfb;
+  --pink2: #fff1f3;
+  --pink3: #ffe2e7;
+  --pink4: #ffd4db;
+  --pink5: #ffc6ce;
+  --pink6: #ffb6c1;
+  --pink7: #ff8c9d;
+  --pink8: #ff6078;
+  --pink9: #ff3452;
+  --pink10: #ff082d;
+  --pink11: #db0021;
+
+  --view-bg-color: var(--blue6);
+  --view-button-color: var(--blue4);
+  --view-button-color-hover: var(--blue3);
+  --view-button-color-disabled: var(--blue4);
+  --view-button-textcolor-disabled: rgb(180, 180, 180);
+  --host-bg-color: var(--pink6);
+  --host-button-color: var(--pink4);
+  --host-button-color-hover: var(--pink3);
+
+  --corner-radius-large: 0.8em;
+  --corner-radius-medium: 0.6em;
+  --corner-radius-small: 0.4em;
+}
+
 #SquintApp #Panel {
   flex: 0 0 300px;
   display: block;
@@ -6,16 +46,6 @@
 
 #SquintApp #Canvas {
   flex-grow: 1;
-}
-
-#SquintApp .Picture {
-  background-color: lightblue;
-  padding: 10px;
-}
-
-#SquintApp .Camera {
-  background-color: lightpink;
-  padding: 10px;
 }
 
 #SquintApp .SliderLabel .disabled {
@@ -78,15 +108,15 @@
   display: none;
   flex-direction: column;
   font-size: smaller;
-  border-radius: 4px;
+  border-radius: var(--corner-radius-small);
   cursor: move;
 }
 
 #SquintApp #ViewersPanelDiv .TitleClass {
   color: white;
   background-color: lightskyblue;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
+  border-top-left-radius: var(--corner-radius-small);
+  border-top-right-radius: var(--corner-radius-small);
   padding: 4px;
 }
 
@@ -104,16 +134,6 @@
 #SquintApp #ViewersPanelDiv .ListBoxClass {
   cursor: default;
   margin-bottom: 5px;
-}
-
-#SquintApp #ViewersPanelDiv .ListBoxItemClass:hover {
-  background-color: white;
-}
-
-#SquintApp #ViewersPanelDiv .ListBoxItemSelectedClass,
-.ListBoxItemSelectedClass:hover {
-  background-color: white;
-  color: black;
 }
 
 #SquintApp #NotificationDiv {
@@ -164,45 +184,31 @@
   flex: 1 1 auto;
 }
 
-#SquintApp .ButtonClass {
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-  background-color: lightgray;
-  padding-left: 8px;
-  padding-right: 8px;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  user-select: none;
-}
-
-#SquintApp .ButtonClass:hover {
-  background-color: rgb(231, 231, 231);
-}
-
-#SquintApp .ButtonClass:disabled {
-  background-color: rgba(255, 255, 255, 0.5);
-  color: rgb(180, 180, 180);
-}
-
 /********************************************************************
  *
  * Welcome Dialog
  *
  ********************************************************************/
 #SquintApp #WelcomeDialogDiv {
-  width: 500px;
-  height: 520px;
+  width: 25em;
+  height: 25em;
   background-color: white;
-  border-radius: 10px;
+  border-radius: var(--corner-radius-medium);
   display: flex;
   flex-direction: column;
 }
 
+/* non-phone displays */
+@media (max-resolution: 192dpi) {
+  #SquintApp #WelcomeDialogDiv {
+    width: 30em;
+    height: 30em;
+  }
+}
+
 #SquintApp #WelcomeDialogDiv #TitleDiv {
   font-weight: bold;
-  font-size: 30px;
-  height: 70px;
+  font-size: 1.75em;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -213,15 +219,15 @@
 }
 
 #SquintApp #WelcomeDialogDiv #UserNameGroupDiv {
-  height: 75px;
+  height: 3em;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 #SquintApp #WelcomeDialogDiv #UserNameTextInput {
-  margin-right: 10px;
-  margin-left: 10px;
+  margin-right: 1em;
+  margin-left: 1em;
 }
 
 /********************************************************************
@@ -235,12 +241,12 @@
   width: 60%;
   height: 60%;
   background-color: white;
-  border-radius: 20px;
+  border-radius: var(--corner-radius-large);
 }
 
 #SquintApp #StartDialogDiv #DialogTitleDiv {
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  border-top-left-radius: var(--corner-radius-large);
+  border-top-right-radius: var(--corner-radius-large);
   background-color: lightgray;
   padding-left: 10px;
   padding-right: 10px;
@@ -258,15 +264,11 @@
   zoom: 0.2;
 }
 
-#SquintApp #WelcomeDialogDiv .ButtonClass:disabled {
-  background-color: rgb(231, 231, 231);
-}
-
 #SquintApp #StartDialogDiv #DialogBodyDiv {
   display: flex;
   background-color: white;
-  border-bottom-right-radius: 10px;
-  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: var(--corner-radius-medium);
+  border-bottom-left-radius: var(--corner-radius-medium);
   flex: 1 1;
   position: relative;
 }
@@ -281,13 +283,23 @@
   margin: 10px;
   display: flex;
   flex-direction: column;
-  background-color: lightblue;
-  border-radius: 10px;
+  background-color: var(--view-bg-color);
+  border-radius: var(--corner-radius-medium);
 }
 
 #SquintApp #StartDialogDiv #ViewButton {
   flex: 0 1 20px;
   margin-top: 10px;
+  background-color: var(--view-button-color);
+}
+
+#SquintApp #StartDialogDiv #ViewButton:hover {
+  background-color: var(--view-button-color-hover);
+}
+
+#SquintApp #StartDialogDiv #ViewButton:disabled {
+  background-color: var(--view-button-color-disabled);
+  color: var(--view-button-textcolor-disabled);
 }
 
 #SquintApp #StartDialogDiv #ViewListBox {
@@ -311,12 +323,20 @@
   margin: 10px;
   display: flex;
   flex-direction: column;
-  background-color: lightpink;
-  border-radius: 10px;
+  background-color: var(--host-bg-color);
+  border-radius: var(--corner-radius-medium);
 }
 
 #SquintApp #StartDialogDiv #HostImageDiv {
   flex: 1 0 auto; /* stretch */
+}
+
+#SquintApp #StartDialogDiv #HostButton {
+  background-color: var(--host-button-color);
+}
+
+#SquintApp #StartDialogDiv #HostButton:hover {
+  background-color: var(--host-button-color-hover);
 }
 
 #SquintApp #StartDialogDiv #NameInputText {
@@ -331,7 +351,7 @@
   width: 40%;
   height: 20%;
   background-color: white;
-  border-radius: 20px;
+  border-radius: var(--corner-radius-large);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -349,7 +369,7 @@
   background: #626262;
   height: 60px;
   width: 90px;
-  border-radius: 10px;
+  border-radius: var(--corner-radius-medium);
   position: relative;
   display: flex;
   justify-content: center;
@@ -390,7 +410,7 @@
   width: 400px;
   height: 100px;
   background-color: white;
-  border-radius: 10px;
+  border-radius: var(--corner-radius-medium);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -462,18 +482,10 @@
   }
 }
 
+/*
 @media only screen and (max-device-width: 800px) {
   #SquintApp * {
     font-size: 25pt;
-  }
-
-  #SquintApp .ButtonClass {
-    border-radius: 8px;
-    background-color: lightgray;
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-top: 8px;
-    padding-bottom: 8px;
   }
 
   #SquintApp #Video {
@@ -481,44 +493,13 @@
     width: 30%;
   }
 
-  #SquintApp #StartDialogDiv #HostPanelDiv {
-    padding: 20px;
-    margin: 20px;
-    border-radius: 20px;
-  }
-  #SquintApp #StartDialogDiv #ViewPanelDiv {
-    padding: 20px;
-    margin: 20px;
-    border-radius: 20px;
-  }
-
   #SquintApp .SliderLabel {
     flex: 0 0 120px;
-  }
-
-  #SquintApp #WelcomeDialogDiv {
-    width: 900px;
-    height: 900px;
-    border-radius: 20px;
-  }
-
-  #SquintApp #WelcomeDialogDiv #TitleDiv {
-    font-size: 60px;
-  }
-
-  #SquintApp #WelcomeDialogDiv #UserNameGroupDiv {
-    height: 100px;
-  }
-
-  #SquintApp #WelcomeDialogDiv #UserNameTextInput {
-    margin-right: 20px;
-    margin-left: 20px;
   }
 
   #SquintApp #StartDialogDiv {
     width: 70%;
     height: 70%;
-    border-radius: 40px;
   }
 
   #SquintApp #StartDialogDiv #ConnectingAnimationDiv {
@@ -533,9 +514,5 @@
     width: 750px;
     height: 150px;
   }
-
-  #SquintApp #UserNameDialogDiv #UserNameTextInput {
-    margin-right: 20px;
-    margin-left: 20px;
-  }
 }
+*/

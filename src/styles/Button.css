@@ -1,0 +1,15 @@
+.ButtonClass {
+  border: none;
+  cursor: pointer;
+  border-radius: 0.4em;
+  background-color: lightgray;
+  user-select: none;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+}
+
+.ButtonClass:hover:enabled {
+  background-color: rgb(231, 231, 231);
+}

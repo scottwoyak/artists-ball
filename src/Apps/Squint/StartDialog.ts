@@ -82,7 +82,7 @@ export class StartDialog extends Dialog {
             parent,
             onGetUserName(),
             (userName: string) => {
-               onSetUserName(userName);
+               this.onSetUserName(userName);
                this.userNameButton.innerText = 'Hi ' + userName;
             });
       }
@@ -111,6 +111,7 @@ export class StartDialog extends Dialog {
          const connectionId = this.viewListBox.selected;
          this.onStartView(connectionId);
       }
+
 
 
 

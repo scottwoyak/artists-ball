@@ -21,9 +21,6 @@ export class WelcomeDialog extends Dialog {
       img.src = SquintHttpUrl + 'squint.jpg';
 
       const userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', bodyDiv);
-      const userNameLabel = GUI.create('label', 'UserNameLabel', userNameGroupDiv);
-      userNameLabel.htmlFor = 'UserNameInput';
-      userNameLabel.innerText = 'Name:';
       const userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);
       userNameTextInput.type = 'text';
       userNameTextInput.placeholder = 'Your Name';

@@ -4,6 +4,11 @@
   cursor: pointer;
 }
 
+.ListBoxItemClass {
+  padding: 0.25em;
+  user-select: none;
+}
+
 .ListBoxItemClass:hover {
   background-color: powderblue;
 }

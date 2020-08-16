@@ -79,12 +79,30 @@ body::-webkit-scrollbar {
 @import "Checkbox.css";
 @import "Radiobutton.css";
 @import "ListBox.css";
+@import "Button.css";
+
+/* laptops and computers */
+* {
+  font-size: 13px;
+}
+
+/* phones and ipads in landscape */
+@media (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape),
+  (min-resolution: 192dpi) and (orientation: landscape) {
+  * {
+    font-size: 16px;
+  }
+}
+
+/* phones and ipads in portrait */
+@media (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait),
+  (min-resolution: 192dpi) and (orientation: portrait) {
+  * {
+    font-size: 32px;
+  }
+}
 
 @media only screen and (max-device-width: 800px) {
-  * {
-    font-size: 40px;
-  }
-
   .Panel #ExitButton {
     width: 40px;
   }
