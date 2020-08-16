@@ -56,24 +56,6 @@
   background: linear-gradient(135deg, lightgray, lightgray);
 }
 
-#SquintApp .CheckboxDiv {
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
-#SquintApp .RadiobuttonDiv {
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
-#SquintApp .SliderLabel {
-  flex: 0 0 80px;
-}
-
-#SquintApp .SliderRange {
-  flex: 1 1 80px;
-}
-
 /* menu item */
 #SquintApp #UserNameItemDiv {
   position: absolute;
@@ -83,15 +65,15 @@
 #SquintApp #Video {
   display: "none";
   position: absolute;
-  left: 10px;
-  top: 50px;
+  left: 1em;
+  top: 4em;
   width: 20%;
   border: solid 1px;
   border-color: white;
 }
 
 #SquintApp #Canvas {
-  font-size: 40px;
+  font-size: 1em;
 }
 
 #SquintApp #ViewersPanelDiv {
@@ -138,10 +120,10 @@
 
 #SquintApp #NotificationDiv {
   position: absolute;
-  right: 10px;
+  right: 1em;
   bottom: 0px;
   left: 50%;
-  height: 30px;
+  height: 2 em;
   text-align: right;
   opacity: 0;
   animation: fadeOut ease 3s;
@@ -177,11 +159,6 @@
   height: 100%; /* Full height */
   background-color: rgb(0, 0, 0, 0.4);
   display: none;
-}
-
-#SquintApp .DialogTitleClass {
-  font-weight: bold;
-  flex: 1 1 auto;
 }
 
 /********************************************************************
@@ -244,20 +221,44 @@
   border-radius: var(--corner-radius-large);
 }
 
+@media (orientation: portrait) {
+  #SquintApp #StartDialogDiv {
+    width: 70%;
+    height: 70%;
+  }
+
+  #SquintApp #StartDialogDiv #DialogBodyDiv {
+    flex-direction: row;
+  }
+}
+@media (orientation: portrait) {
+  #SquintApp #StartDialogDiv #DialogBodyDiv {
+    flex-direction: column;
+  }
+}
+
 #SquintApp #StartDialogDiv #DialogTitleDiv {
   border-top-left-radius: var(--corner-radius-large);
   border-top-right-radius: var(--corner-radius-large);
   background-color: lightgray;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 5px;
-  padding-bottom: 5px;
+  padding-left: 0.7em;
+  padding-right: 0.7em;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
   display: flex;
+}
+
+#SquintApp #StartDialogDiv #TitleDiv {
+  font-weight: bold;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: left;
 }
 
 #SquintApp #StartDialogDiv #ConnectingTextDiv {
   color: white;
-  padding-right: 10px;
+  padding-right: 1em;
 }
 
 #SquintApp #StartDialogDiv #ConnectingAnimationDiv {
@@ -279,8 +280,8 @@
 
 #SquintApp #StartDialogDiv #ViewPanelDiv {
   flex: auto;
-  padding: 10px;
-  margin: 10px;
+  padding: 0.5em;
+  margin: 0.5em;
   display: flex;
   flex-direction: column;
   background-color: var(--view-bg-color);
@@ -288,8 +289,8 @@
 }
 
 #SquintApp #StartDialogDiv #ViewButton {
-  flex: 0 1 20px;
-  margin-top: 10px;
+  flex: 0 1 auto;
+  margin-top: 0.25em;
   background-color: var(--view-button-color);
 }
 
@@ -303,7 +304,8 @@
 }
 
 #SquintApp #StartDialogDiv #ViewListBox {
-  margin-top: 10px;
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
   flex: 1 1 auto;
 }
 
@@ -314,13 +316,13 @@
 }
 
 #SquintApp #StartDialogDiv #OrDiv {
-  padding: 10px;
+  padding: 1em;
 }
 
 #SquintApp #StartDialogDiv #HostPanelDiv {
   flex: auto;
-  padding: 10px;
-  margin: 10px;
+  padding: 0.5em;
+  margin: 0.5em;
   display: flex;
   flex-direction: column;
   background-color: var(--host-bg-color);
@@ -344,19 +346,6 @@
   width: 0;
 }
 
-#SquintApp #StartDialogDiv #MessageDiv {
-  position: absolute;
-  top: 40%;
-  left: 30%;
-  width: 40%;
-  height: 20%;
-  background-color: white;
-  border-radius: var(--corner-radius-large);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 #SquintApp #StartDialogDiv .icon {
   flex: 1 0 auto; /* stretch */
   display: flex;
@@ -367,8 +356,8 @@
 
 #SquintApp #StartDialogDiv .icon .camera-icon {
   background: #626262;
-  height: 60px;
-  width: 90px;
+  height: 4em;
+  width: 6em;
   border-radius: var(--corner-radius-medium);
   position: relative;
   display: flex;
@@ -376,29 +365,29 @@
   align-items: center;
 }
 #SquintApp #StartDialogDiv .icon .camera-icon .camera-circle {
-  width: 30px;
-  height: 30px;
-  border: 8px solid #fff;
+  width: 2em;
+  height: 2em;
+  border: 0.5em solid #fff;
   border-radius: 50%;
 }
 #SquintApp #StartDialogDiv .icon .camera-icon .camera-btn {
-  width: 10px;
-  height: 10px;
+  width: 0.5em;
+  height: 0.5em;
   background: #fff;
   border-radius: 50%;
   position: absolute;
-  right: 10px;
-  top: 10px;
+  right: 0.5em;
+  top: 0.5em;
 }
 #SquintApp #StartDialogDiv .icon .camera-icon:after {
   content: "";
   position: absolute;
-  top: -5px;
+  top: -0.4em;
   background: #626262;
-  width: 40px;
-  height: 10px;
-  border-top-right-radius: 20px;
-  border-top-left-radius: 20px;
+  width: 3em;
+  height: 0.7em;
+  border-top-right-radius: 1.5em;
+  border-top-left-radius: 1.5em;
 }
 
 /********************************************************************
@@ -407,8 +396,8 @@
  *
  ********************************************************************/
 #SquintApp #UserNameDialogDiv {
-  width: 400px;
-  height: 100px;
+  width: 25em;
+  height: 7em;
   background-color: white;
   border-radius: var(--corner-radius-medium);
   display: flex;
@@ -425,8 +414,8 @@
 }
 
 #SquintApp #UserNameDialogDiv #UserNameTextInput {
-  margin-right: 10px;
-  margin-left: 10px;
+  margin-right: 0.5em;
+  margin-left: 0.5em;
 }
 
 /* cool animation from https://loading.io/css/ */
@@ -467,52 +456,5 @@
 }
 
 #SquintApp .MenuItem .SliderValueSpan {
-  display: block;
+  display: flex;
 }
-
-@media (orientation: landscape) {
-  #SquintApp #DialogBodyDiv {
-    flex-direction: row;
-  }
-}
-
-@media (orientation: portrait) {
-  #SquintApp #DialogBodyDiv {
-    flex-direction: column;
-  }
-}
-
-/*
-@media only screen and (max-device-width: 800px) {
-  #SquintApp * {
-    font-size: 25pt;
-  }
-
-  #SquintApp #Video {
-    top: 100px;
-    width: 30%;
-  }
-
-  #SquintApp .SliderLabel {
-    flex: 0 0 120px;
-  }
-
-  #SquintApp #StartDialogDiv {
-    width: 70%;
-    height: 70%;
-  }
-
-  #SquintApp #StartDialogDiv #ConnectingAnimationDiv {
-    zoom: 0.4;
-  }
-
-  #SquintApp #StartDialogDiv .icon {
-    zoom: 3;
-  }
-
-  #SquintApp #UserNameDialogDiv {
-    width: 750px;
-    height: 150px;
-  }
-}
-*/

@@ -1,25 +1,25 @@
 .SliderDiv {
   display: flex;
   align-items: stretch;
-  margin-top: 7px;
-  margin-bottom: 7px;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 
 .SliderLabel {
-  flex: 0 0 125px;
+  flex: 0 0 8em;
   text-align: right;
 }
 
 .SliderRange {
-  flex: 1 1 200px;
+  flex: 1 1 13em;
   -webkit-appearance: none;
   outline: none;
-  border-radius: 15px;
-  height: 15px;
-  margin-top: 3px;
-  margin-left: 5px;
-  margin-right: 5px;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3) inset;
+  border-radius: 1em;
+  height: 0.8em;
+  margin-top: 0.2em;
+  margin-left: 0.3em;
+  margin-right: 0.3em;
+  box-shadow: 0 0.1em 0.1em rgba(0, 0, 0, 0.3) inset;
   border: gray;
   border-style: solid;
   border-width: 0.5px;
@@ -30,8 +30,8 @@
   -webkit-appearance: none;
   appearance: none;
   box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-  width: 20px;
-  height: 20px;
+  width: 1.3em;
+  height: 1.3em;
   border-radius: 50%;
   border-width: 0.5px;
   border-style: solid;
@@ -41,8 +41,8 @@
 
 .SliderRange::-moz-range-thumb {
   box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-  width: 20px;
-  height: 20px;
+  width: 1.3em;
+  height: 1.3em;
   border-radius: 50%;
   border-width: 0.5px;
   border-style: solid;
@@ -53,11 +53,11 @@
 
 .SliderColorSpan {
   vertical-align: text-bottom;
-  flex: 0 0 15px;
-  width: 15px;
-  height: 15px;
-  margin-right: 5px;
-  margin-top: 2px;
+  flex: 0 0 1em;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.3em;
+  margin-top: 0.1em;
   border-radius: 50%;
   border: gray;
   border-style: solid;
@@ -65,7 +65,9 @@
 }
 
 .SliderValueSpan {
-  flex: 0 0 60px;
+  flex: 0 0 3em;
+  display: flex;
+  align-items: center;
 }
 
 #Slider .disabled {
@@ -80,55 +82,4 @@
 #Slider .disabled::-moz-range-thumb {
   background: linear-gradient(135deg, lightgray, darkgray);
   border-color: gray;
-}
-
-@media only screen and (max-device-width: 800px) {
-  .SliderDiv {
-    margin-top: 12px;
-    margin-bottom: 12px;
-  }
-
-  .SliderLabel {
-    flex: 0 0 250px;
-  }
-
-  .SliderRange {
-    flex: 1 1 400px;
-    border-radius: 30px;
-    height: 30px;
-    margin-top: 6px;
-    margin-left: 10px;
-    margin-right: 10px;
-    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.3) inset;
-    border-width: 1px;
-  }
-
-  .SliderRange::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    box-shadow: 2px 2px 2px #000000, 0px 0px 2px #0d0d0d;
-    width: 40px;
-    height: 40px;
-    border-width: 1px;
-  }
-
-  .SliderRange::-moz-range-thumb {
-    box-shadow: 2px 2px 2px #000000, 0px 0px 1px #0d0d0d;
-    width: 40px;
-    height: 40px;
-    border-width: 1px;
-  }
-
-  .SliderColorSpan {
-    flex: 0 0 30px;
-    width: 30px;
-    height: 30px;
-    margin-right: 10px;
-    margin-top: 4px;
-    border-width: 2px;
-  }
-
-  .SliderValueSpan {
-    flex: 0 0 120px;
-  }
 }

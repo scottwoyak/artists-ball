@@ -1,8 +1,8 @@
 .Menubar {
-  left: 0px;
-  top: 0px;
-  right: 0px;
-  padding-left: 10px;
+  left: 0em;
+  top: 0em;
+  right: 0em;
+  padding-left: 0.5em;
   color: black;
   background-color: rgba(var(--main-color), 0.25);
   border: none;
@@ -11,7 +11,7 @@
 
 .Menubar > .MenuItem {
   color: black;
-  padding: 8px;
+  padding: 0.5em;
   text-decoration: none;
   display: inline-block;
   cursor: pointer;
@@ -21,21 +21,21 @@
   display: none;
   position: fixed;
   background-color: rgba(230, 230, 230, 0.9);
-  width: 200px;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  width: 15em;
+  box-shadow: 0px 0.5em 1em 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
 }
 
 .MenuItem {
   color: black;
-  padding: 8px;
+  padding: 0.5em;
   text-decoration: none;
   display: block;
   cursor: pointer;
 }
 
 .MenuItem .SliderRange {
-  width: 175px;
+  width: 12em;
 }
 
 .MenuItem:hover {
@@ -55,22 +55,4 @@
 
 .MenuItem .Checkbox {
   float: left;
-}
-
-@media only screen and (max-device-width: 800px) {
-  .Menu {
-    width: 400px;
-  }
-
-  .Menubar > .MenuItem {
-    padding: 16px;
-  }
-
-  .MenuItem {
-    padding: 16px;
-  }
-
-  .MenuItem .SliderRange {
-    width: 350px;
-  }
 }

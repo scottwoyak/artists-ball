@@ -2,6 +2,32 @@
   font-family: Verdana;
 }
 
+/*
+ * Our strategy for handling multiple devices is to set the font size and 
+ * then scale everything else based on em's
+ */
+
+/* laptops and computers */
+* {
+  font-size: 13px;
+}
+
+/* phones and ipads in landscape */
+@media (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape),
+  (min-resolution: 192dpi) and (orientation: landscape) {
+  * {
+    font-size: 16px;
+  }
+}
+
+/* phones and ipads in portrait */
+@media (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait),
+  (min-resolution: 192dpi) and (orientation: portrait) {
+  * {
+    font-size: 32px;
+  }
+}
+
 :root {
   --main-color: 114, 117, 134;
 }
@@ -80,27 +106,6 @@ body::-webkit-scrollbar {
 @import "Radiobutton.css";
 @import "ListBox.css";
 @import "Button.css";
-
-/* laptops and computers */
-* {
-  font-size: 13px;
-}
-
-/* phones and ipads in landscape */
-@media (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape),
-  (min-resolution: 192dpi) and (orientation: landscape) {
-  * {
-    font-size: 16px;
-  }
-}
-
-/* phones and ipads in portrait */
-@media (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait),
-  (min-resolution: 192dpi) and (orientation: portrait) {
-  * {
-    font-size: 32px;
-  }
-}
 
 @media only screen and (max-device-width: 800px) {
   .Panel #ExitButton {
