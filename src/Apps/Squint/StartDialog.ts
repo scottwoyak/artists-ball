@@ -25,13 +25,12 @@ export class StartDialog extends Dialog {
    private onGetUserName: GetUserNameHandler;
    private onSetUserName: SetUserNameHandler;
 
-   public get enable(): boolean {
-      return (getComputedStyle(this.bodyDiv).pointerEvents === 'none');
-   }
-   public set enable(flag: boolean) {
-      // TODO move this all to an "Enabled" style
-      this.bodyDiv.style.pointerEvents = flag ? 'auto' : 'none';
-      this.bodyDiv.style.filter = flag ? '' : 'grayscale(1) contrast(0.4)';
+   private set showConnectingMsg(flag: boolean) {
+      this.bodyDiv.style.pointerEvents = flag ? 'none' : 'auto';
+      this.bodyDiv.style.filter = flag ? 'grayscale(1) contrast(0.4)' : '';
+      this.connectingDiv.style.display = flag ? 'block' : 'none';
+      this.connectingAnimationDiv.style.display = flag ? 'block' : 'none';
+      this.userNameButton.style.display = flag ? 'none' : 'block';
    }
 
    public constructor(
@@ -56,6 +55,33 @@ export class StartDialog extends Dialog {
          name: SquintEvent.UpdateConnectionInfo,
          handler: (info: IConnectionInfo) => {
             this.onUpdateConnectionInfo(info);
+         }
+      });
+
+      let timeout: number;
+      this.squint.on({
+         name: SquintEvent.Reconnecting,
+         handler: () => {
+            timeout = window.setTimeout(() => {
+               timeout = -1;
+               // give the system a little time to reconnect before showing a message
+               this.showConnectingMsg = true;
+            }, 500);
+         }
+      });
+
+      this.squint.on({
+         name: SquintEvent.Reconnected,
+         handler: (success: boolean) => {
+            if (timeout !== -1) {
+               window.clearTimeout(timeout);
+            }
+            if (success) {
+               this.showConnectingMsg = false;
+            }
+            else {
+               this.connect();
+            }
          }
       });
 
@@ -158,7 +184,6 @@ export class StartDialog extends Dialog {
 
       this.onShow = () => {
          this.userNameButton.innerText = 'Hi ' + this.onGetUserName();
-         this.enable = false;
 
          if (this.squint.connected === false) {
             this.connect();
@@ -172,24 +197,16 @@ export class StartDialog extends Dialog {
          return;
       }
 
-      this.connectingDiv.style.display = 'block';
-      this.connectingAnimationDiv.style.display = 'block';
-      this.userNameButton.style.display = 'none';
+      this.showConnectingMsg = true;
       this.viewListBox.clear();
-
-      // TODO what if the connection closes after connecting with the start dialog open?
 
       const userName = this.onGetUserName();
       this.squint.connect(Squint.url, userName)
          .then(() => {
-
-            this.connectingDiv.style.display = 'none';
-            this.connectingAnimationDiv.style.display = 'none';
-            this.userNameButton.style.display = 'block';
-            this.enable = true;
+            this.showConnectingMsg = false;
          })
          .catch((err) => {
-            alert(err);
+            console.log('Cannot connect to server, trying again in 1 sec: ' + err);
             setTimeout(() => {
                this.connect();
             }, 1000);
