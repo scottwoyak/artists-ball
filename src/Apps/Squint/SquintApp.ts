@@ -83,8 +83,8 @@ export class SquintApp implements IApp {
 
    private console = new ConsoleCapture();
 
-   private hasUserName(): boolean {
-      return localStorage.getItem(StorageItems.UserName) !== null;
+   private get hasUserName(): boolean {
+      return (localStorage.getItem(StorageItems.UserName) !== null);
    }
 
    private get userName(): string {
@@ -200,11 +200,10 @@ export class SquintApp implements IApp {
       window.addEventListener('resize', () => this.onResize());
       this.updateSizes();
 
-      if (!this.hasUserName) {
+      if (this.hasUserName === false) {
          this.showWelcomeDialog();
       }
       else {
-         // refresh the expiration date
          this.startDialog.visible = true;
       }
 
@@ -452,78 +451,81 @@ export class SquintApp implements IApp {
       this.advancedSubMenu.clear();
       this.advancedConstraints = [];
 
-      const capabilities = track.getCapabilities() as IVideoTrackAdvancedCapabilities;
-      const settings = track.getSettings() as IVideoTrackAdvancedSettings;
+      // getCapabilities() not supported on Firefox
+      if (track.getCapabilities) {
+         const capabilities = track.getCapabilities() as IVideoTrackAdvancedCapabilities;
+         const settings = track.getSettings() as IVideoTrackAdvancedSettings;
 
-      const whiteBalanceMode: IConstraintItem = {
-         constraint: 'whiteBalanceMode',
-         label: 'Auto White Blance'
-      }
-      const colorTemperature: IConstraintItem = {
-         constraint: 'colorTemperature',
-         label: 'Temperature'
-      }
-      const exposureMode: IConstraintItem = {
-         constraint: 'exposureMode',
-         label: 'Auto Exposure'
-      }
-      const exposureCompensation: IConstraintItem = {
-         constraint: 'exposureCompensation',
-         label: 'F-Stop'
-      }
-      const exposureTime: IConstraintItem = {
-         constraint: 'exposureTime',
-         label: 'Exposure'
-      }
-      const iso: IConstraintItem = {
-         constraint: 'iso',
-         label: 'ISO'
-      }
-      const focusMode: IConstraintItem = {
-         constraint: 'focusMode',
-         label: 'Auto Focus'
-      }
-      const focusDistance: IConstraintItem = {
-         constraint: 'focusDistance',
-         label: 'Focus'
-      }
-      const zoom: IConstraintItem = {
-         constraint: 'zoom',
-         label: 'Zoom'
-      }
+         const whiteBalanceMode: IConstraintItem = {
+            constraint: 'whiteBalanceMode',
+            label: 'Auto White Blance'
+         }
+         const colorTemperature: IConstraintItem = {
+            constraint: 'colorTemperature',
+            label: 'Temperature'
+         }
+         const exposureMode: IConstraintItem = {
+            constraint: 'exposureMode',
+            label: 'Auto Exposure'
+         }
+         const exposureCompensation: IConstraintItem = {
+            constraint: 'exposureCompensation',
+            label: 'F-Stop'
+         }
+         const exposureTime: IConstraintItem = {
+            constraint: 'exposureTime',
+            label: 'Exposure'
+         }
+         const iso: IConstraintItem = {
+            constraint: 'iso',
+            label: 'ISO'
+         }
+         const focusMode: IConstraintItem = {
+            constraint: 'focusMode',
+            label: 'Auto Focus'
+         }
+         const focusDistance: IConstraintItem = {
+            constraint: 'focusDistance',
+            label: 'Focus'
+         }
+         const zoom: IConstraintItem = {
+            constraint: 'zoom',
+            label: 'Zoom'
+         }
 
-      if (capabilities.whiteBalanceMode && capabilities.colorTemperature) {
-         this.addAdvancedItems(
-            settings,
-            capabilities,
-            whiteBalanceMode,
-            [colorTemperature]
-         );
-      }
+         if (capabilities.whiteBalanceMode && capabilities.colorTemperature) {
+            this.addAdvancedItems(
+               settings,
+               capabilities,
+               whiteBalanceMode,
+               [colorTemperature]
+            );
+         }
 
-      if (
-         capabilities.exposureMode &&
-         (capabilities.exposureCompensation || capabilities.exposureTime || capabilities.iso)
-      ) {
-         this.addAdvancedItems(
-            settings,
-            capabilities,
-            exposureMode,
-            [exposureCompensation, exposureTime, iso]
-         );
-      }
+         if (
+            capabilities.exposureMode &&
+            (capabilities.exposureCompensation || capabilities.exposureTime || capabilities.iso)
+         ) {
+            this.addAdvancedItems(
+               settings,
+               capabilities,
+               exposureMode,
+               [exposureCompensation, exposureTime, iso]
+            );
+         }
 
-      if (capabilities.focusMode && capabilities.focusDistance) {
-         this.addAdvancedItems(
-            settings,
-            capabilities,
-            focusMode,
-            [focusDistance]
-         );
-      }
+         if (capabilities.focusMode && capabilities.focusDistance) {
+            this.addAdvancedItems(
+               settings,
+               capabilities,
+               focusMode,
+               [focusDistance]
+            );
+         }
 
-      if (capabilities.zoom) {
-         this.addAdvancedSlider(settings, capabilities, zoom);
+         if (capabilities.zoom) {
+            this.addAdvancedSlider(settings, capabilities, zoom);
+         }
       }
    }
 
