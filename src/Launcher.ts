@@ -30,9 +30,9 @@ export class Launcher {
 
       this.menubar = new Menubar(this.div);
       const subMenu = this.menubar.addSubMenu('Apps', 'Apps');
-      subMenu.addItem('3D Viewer', () => location.replace(this.getUrl(AppType.Viewer)));
-      subMenu.addItem('Squint', () => location.replace(this.getUrl(AppType.Squint)));
-      subMenu.addItem('Artist\'s Ball', () => location.replace(this.getUrl(AppType.ArtistsBall)));
+      subMenu.addItem('3D Viewer', () => location.href = this.getUrl(AppType.Viewer));
+      subMenu.addItem('Squint', () => location.href = this.getUrl(AppType.Squint));
+      subMenu.addItem('Artist\'s Ball', () => location.href = this.getUrl(AppType.ArtistsBall));
 
       const paramString = location.href.split('?')[1];
       const query = new URLSearchParams(paramString);
@@ -96,22 +96,22 @@ export class Launcher {
    }
 
    private getUrl(type: AppType): string {
-      const origin = location.origin
+      const base = location.href.split('?')[0];
       switch (type) {
          case AppType.ArtistsBall:
-            return origin + '?App=ArtistsBall';
+            return base + '?App=ArtistsBall';
             break;
 
          case AppType.Squint:
-            return origin + '?App=Squint';
+            return base + '?App=Squint';
             break;
 
          case AppType.Viewer:
-            return origin + '?App=Viewer';
+            return base + '?App=Viewer';
             break;
 
          default:
-            return origin;
+            return base;
       }
    }
 }
