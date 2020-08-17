@@ -13,7 +13,7 @@ import { TriangleObjBuilder } from '../../Util3D/TriangleObjBuilder';
 import { TriangleObjFile } from '../../Util3D/TriangleObjFile';
 import { Mat4 } from '../../Util3D/Mat';
 
-let skinTones = [
+const skinTones = [
    new htmlColor([240, 223, 214]),
    new htmlColor([255, 218, 200]),
    new htmlColor([232, 179, 117]),
@@ -51,13 +51,13 @@ export class PathTracerApp implements IApp {
    private lastTimes: number[] = [];
    private readonly MAX_SAMPLES = 500;
 
-   private query: string;
+   private initialFile: string;
 
-   public constructor(query: string) {
-      this.query = query;
+   public constructor(file: string) {
+      this.initialFile = file;
    }
 
-   public create(div: HTMLDivElement) {
+   public create(div: HTMLDivElement): void {
 
       div.id = 'PathTracerApp';
 
@@ -72,7 +72,7 @@ export class PathTracerApp implements IApp {
       let context: WebGLRenderingContext | WebGL2RenderingContext = this.canvas.getContext('webgl2');
 
       if (!context) {
-         context = this.canvas.getContext('webgl') as WebGLRenderingContext;
+         context = this.canvas.getContext('webgl');
       }
 
       if (!context) {
@@ -92,25 +92,25 @@ export class PathTracerApp implements IApp {
 
       this.renderer = new PathTracerRenderer(this.gl);
 
-      let handler = new PointerEventHandler(this.canvas);
+      const handler = new PointerEventHandler(this.canvas);
       handler.onDrag = (pos: Vec2, delta: Vec2) => this.onMove(pos, delta);
       handler.onClick = (pos: Vec2) => this.click(pos.x, pos.y);
       handler.onDown = (pos: Vec2) => this.onDown(pos.x, pos.y);
 
-      this.loadModel(this.query).then((tObj: TriangleObj) => {
+      this.loadModel(this.initialFile).then((tObj: TriangleObj) => {
          this.renderer.setObj(tObj);
          requestAnimationFrame(() => this.tick());
-      })
+      });
 
-      let drawTime = document.createElement('div');
+      const drawTime = document.createElement('div');
       drawTime.id = 'drawTime';
       container.appendChild(drawTime);
 
-      let description = document.createElement('div');
+      const description = document.createElement('div');
       description.id = 'description';
       container.appendChild(description);
 
-      let button = document.createElement('div');
+      const button = document.createElement('div');
       button.id = 'modeButton';
       button.innerHTML = 'View';
       this.pointerMode = PointerMode.View;
@@ -129,7 +129,7 @@ export class PathTracerApp implements IApp {
       }
       container.appendChild(button);
 
-      let progressBar = document.createElement('div');
+      const progressBar = document.createElement('div');
       progressBar.id = 'progressBar';
       container.appendChild(progressBar);
 
@@ -147,11 +147,11 @@ export class PathTracerApp implements IApp {
       });
 
       // build a range of colors
-      let min = 2000;
-      let max = 10000;
-      let colors: htmlColor[] = [];
+      const min = 2000;
+      const max = 10000;
+      const colors: htmlColor[] = [];
       for (let i = 0; i < 10; i++) {
-         let temp = min + (i / 9) * (max - min);
+         const temp = min + (i / 9) * (max - min);
          colors.push(glColorWithTemperature.create(temp).toHtmlColor());
       }
       this.lightColorSlider = new Slider(div, {
@@ -200,39 +200,33 @@ export class PathTracerApp implements IApp {
       });
    }
 
-   public dispose(): void {
-      cancelAnimationFrame(this.animationFrame);
-      this.renderer.dispose();
-   }
-
    public buildMenu(menubar: Menubar): void {
       // no menus
    }
 
-   private loadModel(query: string): Promise<TriangleObj> {
-      if (query && query.toLowerCase() === 'sphere') {
+   private loadModel(file: string): Promise<TriangleObj> {
+      if (file && file.toLowerCase() === 'sphere') {
          this.renderer.uniforms.uBallRadius = 0;
-         let radius = 0.5;
-         let center = new Vec3([0, radius, 0]);
-         let tObj = new TriangleObjBuilder();
+         const radius = 0.5;
+         const center = new Vec3([0, radius, 0]);
+         const tObj = new TriangleObjBuilder();
          tObj.addSphere(8, radius, center);
          return Promise.resolve(tObj);
       }
-      else if (query && query.toLowerCase() === 'cube') {
+      else if (file && file.toLowerCase() === 'cube') {
          this.renderer.uniforms.uBallRadius = 0;
-         let size = 0.8;
-         let center = new Vec3([0, size / 2.0, 0]);
-         let tObj = new TriangleObjBuilder();
+         const size = 0.8;
+         const center = new Vec3([0, size / 2.0, 0]);
+         const tObj = new TriangleObjBuilder();
          tObj.addCube(size, center);
          return Promise.resolve(tObj);
       }
-      else if (query && query.toLowerCase().endsWith('.obj')) {
+      else if (file && file.toLowerCase().endsWith('.obj')) {
          this.renderer.uniforms.uBallRadius = 0;
-         return fetch(query)
+         return fetch(file)
             .then(res => res.text())
             .then(res => {
-               let tObj = new TriangleObjFile(query, res);
-               return tObj;
+               return new TriangleObjFile(file, res);
             });
       }
       else {
@@ -304,7 +298,7 @@ export class PathTracerApp implements IApp {
     */
    private click(x: number, y: number): boolean {
       // TODO handle this within the PathTracer class so that we don't have to hard code view stuff
-      let size = 0.2 * this.canvas.width;
+      const size = 0.2 * this.canvas.width;
 
       if (y < size) {
 
@@ -329,7 +323,7 @@ export class PathTracerApp implements IApp {
    }
 
    private setDescription() {
-      let description = document.getElementById('description');
+      const description = document.getElementById('description');
       switch (this.renderer.renderMode) {
          case RenderMode.Artist:
             description.innerText = '';
@@ -350,20 +344,20 @@ export class PathTracerApp implements IApp {
    }
 
    private updateTexture() {
-      let modelview = Mat4.makeLookAt(
+      const modelview = Mat4.makeLookAt(
          this.renderer.uniforms.uEye,
          new Vec3([0, 1, 0]),  // center point
          new Vec3([0, 1, 0])   // up vector
       );
 
-      let projection = Mat4.makePerspective(55, 1, 0.1, 100);
-      let modelviewProjection = projection.multM(modelview);
+      const projection = Mat4.makePerspective(55, 1, 0.1, 100);
+      const modelviewProjection = projection.multM(modelview);
       this.renderer.updateTexture(modelviewProjection);
-   };
+   }
 
    private displayTexture(): void {
       this.renderer.displayTexture();
-   };
+   }
 
    public restart(): void {
       if (this.renderer) {
@@ -393,10 +387,10 @@ export class PathTracerApp implements IApp {
 
    private updateTimerLabel() {
 
-      let t = window.performance.now();
-      let drawTimeLabel = document.getElementById('drawTime');
+      const t = window.performance.now();
+      const drawTimeLabel = document.getElementById('drawTime');
       if (this.lastTimes.length > 0) {
-         let elapsedMs = (t - this.lastTimes[0]) / this.lastTimes.length;
+         const elapsedMs = (t - this.lastTimes[0]) / this.lastTimes.length;
          drawTimeLabel.innerText = elapsedMs.toFixed(0) + 'ms';
       }
       this.lastTimes.push(t);
@@ -408,8 +402,8 @@ export class PathTracerApp implements IApp {
    }
 
    private updateProgress() {
-      let progress = this.renderer.uniforms.uSample / this.MAX_SAMPLES;
-      let bar = document.getElementById('progressBar') as HTMLElement;
+      const progress = this.renderer.uniforms.uSample / this.MAX_SAMPLES;
+      const bar = document.getElementById('progressBar');
       if (progress >= 0 && progress < 1) {
          bar.style.visibility = 'visible';
          let w = this.canvas.width;

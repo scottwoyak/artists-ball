@@ -1,25 +1,25 @@
-import { Contour, Renderer, LightType, Reset, RenderMode } from "./Renderer";
-import { glColor3 } from "../../gl/glColor";
-import { IApp } from "../../IApp";
-import { OverlayCanvas, TextLocation } from "../../GUI/OverlayCanvas";
-import { PointerEventHandler } from "../../GUI/PointerEventHandler";
-import { PerspectivePanel } from "./PerspectivePanel";
-import { ValuePlanesPanel } from "./ValuePlanesPanel";
-import { hsvColor } from "../../Util/hsvColor";
-import { FPS } from "../../Util/FPS";
-import { ModelLoader } from "./ModelLoader";
-import { htmlColor } from "../../Util/htmlColor";
-import { Vec2, Vec3, Vec4 } from "../../Util3D/Vec";
-import { toRad, isMobile } from "../../Util/Globals";
-import { NormalType } from "../../Util3D/TriangleObj";
-import { Panel } from "../../GUI/Panel";
-import { ValueRange } from "./ValueRange";
-import { Menubar, SubMenu } from "../../GUI/Menu";
-import { createModelsMenu } from "./ModelsMenu";
-import { Radiobutton } from "../../GUI/Radiobutton";
-import { Slider } from "../../GUI/Slider";
-import { Checkbox } from "../../GUI/Checkbox";
-import { TriangleObjBuilder } from "../../Util3D/TriangleObjBuilder";
+import { Contour, Renderer, LightType, Reset, RenderMode } from './Renderer';
+import { glColor3 } from '../../gl/glColor';
+import { IApp } from '../../IApp';
+import { OverlayCanvas, TextLocation } from '../../GUI/OverlayCanvas';
+import { PointerEventHandler } from '../../GUI/PointerEventHandler';
+import { PerspectivePanel } from './PerspectivePanel';
+import { ValuePlanesPanel } from './ValuePlanesPanel';
+import { hsvColor } from '../../Util/hsvColor';
+import { FPS } from '../../Util/FPS';
+import { ModelLoader } from './ModelLoader';
+import { htmlColor } from '../../Util/htmlColor';
+import { Vec2, Vec3, Vec4 } from '../../Util3D/Vec';
+import { toRad, isMobile } from '../../Util/Globals';
+import { NormalType } from '../../Util3D/TriangleObj';
+import { Panel } from '../../GUI/Panel';
+import { ValueRange } from './ValueRange';
+import { Menubar, SubMenu } from '../../GUI/Menu';
+import { createModelsMenu } from './ModelsMenu';
+import { Radiobutton } from '../../GUI/Radiobutton';
+import { Slider } from '../../GUI/Slider';
+import { Checkbox } from '../../GUI/Checkbox';
+import { TriangleObjBuilder } from '../../Util3D/TriangleObjBuilder';
 
 enum PointerMode {
    View,
@@ -50,20 +50,25 @@ export class ViewerApp implements IApp {
    private valuePlanesPanel: ValuePlanesPanel;
    private baseBackgroundColor: hsvColor;
 
-   private dirty: boolean = true;
-   private animate: boolean = false;
+   private dirty = true;
+   private animate = false;
    private animationFrame: number;
    private fps = new FPS();
 
-   private query: string;
+   private initialFile: string;
 
    private loader = new ModelLoader();
 
-   public constructor(query: string) {
-      this.query = query;
+   public constructor(file: string) {
+      if (!file) {
+         const num = Math.round(0.5 + 16 * Math.random());
+         file = 'Pose_0' + num + '.blob';
+      }
+
+      this.initialFile = file;
    }
 
-   public create(div: HTMLDivElement) {
+   public create(div: HTMLDivElement): void {
 
       div.id = 'ViewerApp';
 
@@ -77,33 +82,27 @@ export class ViewerApp implements IApp {
       this.createValuePlanesPanel(div);
       this.updateSize();
 
-      this.loadModel(this.query);
-   }
-
-   public dispose() {
-      cancelAnimationFrame(this.animationFrame);
-      this.perspectivePanel.dispose();
-      this.valuePlanesPanel.dispose();
+      this.loadModel(this.initialFile);
    }
 
    private createViewElements(parent: HTMLElement) {
 
-      let canvas = document.createElement('canvas');
+      const canvas = document.createElement('canvas');
       canvas.id = 'MainCanvas';
       parent.appendChild(canvas);
 
-      let style = getComputedStyle(canvas);
+      const style = getComputedStyle(canvas);
       this.baseBackgroundColor = hsvColor.fromHtmlColor(htmlColor.fromCss(style.backgroundColor));
 
       this.overlay = new OverlayCanvas(parent);
 
       // don't try to make the canvas transparent to the underlying html. This
       // seems to limit the alpha values we can use in our scene.
-      let context = canvas.getContext('webgl', { alpha: false }) as WebGLRenderingContext;
+      const context = canvas.getContext('webgl', { alpha: false });
 
       if (!context) {
          // TODO display a message about not being able to create a WebGL context
-         console.log("Unable to get WebGL context");
+         console.log('Unable to get WebGL context');
       }
       this.gl = context;
 
@@ -151,7 +150,7 @@ export class ViewerApp implements IApp {
          }
       }
 
-      document.onkeypress = async (event: KeyboardEvent) => {
+      document.onkeypress = (event: KeyboardEvent) => {
          switch (event.key) {
 
             case 'a':
@@ -270,13 +269,13 @@ export class ViewerApp implements IApp {
       }
    }
 
-   public buildMenu(menubar: Menubar) {
+   public buildMenu(menubar: Menubar): void {
       createModelsMenu(menubar, (file) => this.loadModel(file));
 
       let subMenu: SubMenu;
       subMenu = menubar.addSubMenu('Tools', 'Tools');
 
-      let contoursSubMenu = subMenu.addSubMenu('Color Contours');
+      const contoursSubMenu = subMenu.addSubMenu('Color Contours');
       contoursSubMenu.addRadiobutton({
          label: 'None',
          group: 'ContourGroup',
@@ -322,7 +321,7 @@ export class ViewerApp implements IApp {
          }
       });
 
-      let highlightSubMenu = subMenu.addSubMenu('Highlights');
+      const highlightSubMenu = subMenu.addSubMenu('Highlights');
 
       highlightSubMenu.addRadiobutton({
          label: 'Show',
@@ -418,7 +417,7 @@ export class ViewerApp implements IApp {
          this.valuePlanesPanel.visible = true;
       });
 
-      let lightSubMenu = subMenu.addSubMenu('Light');
+      const lightSubMenu = subMenu.addSubMenu('Light');
       lightSubMenu.addRadiobutton({
          label: 'Directional Light',
          group: 'LightTypeGroup',
@@ -467,10 +466,10 @@ export class ViewerApp implements IApp {
          oninput: (slider: Slider) => {
             this.renderer.options.valueRange.ambientIntensity = slider.value;
 
-            let range = 0.6;
-            let baseVal = this.baseBackgroundColor.v;
-            let newVal = (baseVal - range / 2) + range * slider.valueAsPercent;
-            let newColor = new hsvColor([this.baseBackgroundColor.h, this.baseBackgroundColor.s, newVal]);
+            const range = 0.6;
+            const baseVal = this.baseBackgroundColor.v;
+            const newVal = (baseVal - range / 2) + range * slider.valueAsPercent;
+            const newColor = new hsvColor([this.baseBackgroundColor.h, this.baseBackgroundColor.s, newVal]);
             (<HTMLCanvasElement>this.gl.canvas).style.backgroundColor = newColor.toHtmlColor().toCss();
 
             this.dirty = true;
@@ -580,15 +579,9 @@ export class ViewerApp implements IApp {
       this.overlay.height = gl.canvas.height;
    }
 
-   private loadModel(query: string) {
+   private loadModel(file: string) {
 
-      // if nothing was specified, load an interesting model
-      if (!query) {
-         const num = Math.round(0.5 + 16 * Math.random());
-         query = 'Pose_0' + num + '.blob';
-      }
-
-      const lc = query.toLowerCase();
+      const lc = file.toLowerCase();
       if (lc.endsWith('.obj') || lc.endsWith('.blob')) {
 
          const statusFunc = (status: string) => {
@@ -596,7 +589,7 @@ export class ViewerApp implements IApp {
             this.overlay.fillText(status);
          }
 
-         this.loader.loadModelFile(query, statusFunc)
+         this.loader.loadModelFile(file, statusFunc)
             .then((tObj) => {
 
                this.perspectivePanel.visible = false;
@@ -606,7 +599,7 @@ export class ViewerApp implements IApp {
                this.perspectivePanel.setModel(tObj);
                this.loader.orient(this.renderer.obj);
 
-               if (query.startsWith('Head') || query.startsWith('Teapot') || query.startsWith('Male_02')) {
+               if (file.startsWith('Head') || file.startsWith('Teapot') || file.startsWith('Male_02')) {
                   this.renderer.options.useCulling = false;
                }
 
@@ -651,7 +644,7 @@ export class ViewerApp implements IApp {
       else {
          // TODO multi line error messages not supported
          this.overlay.clear();
-         this.overlay.fillText('Unknown Model:' + query);
+         this.overlay.fillText('Unknown Model:' + file);
       }
    }
 

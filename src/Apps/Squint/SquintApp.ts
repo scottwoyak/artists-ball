@@ -151,12 +151,6 @@ export class SquintApp implements IApp {
       });
    }
 
-   dispose(): void {
-      if (this.handler) {
-         this.handler.dispose();
-      }
-   }
-
    public create(div: HTMLDivElement): void {
 
       div.id = 'SquintApp';
