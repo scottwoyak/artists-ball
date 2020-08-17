@@ -119,7 +119,7 @@ export class Vec2 extends Vec {
     * @param divider The string to separate each number.
     * @returns A string representation.
     */
-   public toString(digits: number = 2, divider = ','): string {
+   public toString(digits = 2, divider = ','): string {
       return this.x.toFixed(digits) + divider + this.y.toFixed(digits);
    }
 }
@@ -224,7 +224,7 @@ export class Vec3 extends Vec implements IVec3 {
     * @param divider The string to separate each number.
     * @returns A string representation.
     */
-   public toString(digits: number = 2, divider = ','): string {
+   public toString(digits = 2, divider = ','): string {
       return this.x.toFixed(digits) + divider + this.y.toFixed(digits) + divider + this.z.toFixed(digits);
    }
 
@@ -234,7 +234,7 @@ export class Vec3 extends Vec implements IVec3 {
     * @returns The resulting normalized vector.
     */
    public normalize(): Vec3 {
-      let mag = this.magnitude();
+      const mag = this.magnitude();
       if (mag === 0) {
          return new Vec3();
       }
@@ -299,8 +299,8 @@ export class Vec3 extends Vec implements IVec3 {
     * @param other The other vector.
     */
    public cross(other: Vec3): Vec3 {
-      let A = this.values;
-      let B = other.values;
+      const A = this.values;
+      const B = other.values;
       return new Vec3([
          A[1] * B[2] - A[2] * B[1],
          A[2] * B[0] - A[0] * B[2],
@@ -443,7 +443,7 @@ export class Vec4 extends Vec {
     * @returns An x-y-z vector.
     */
    public divideByW(): Vec3 {
-      let w = this.values[3];
+      const w = this.values[3];
       return new Vec3([
          this.values[0] / w,
          this.values[1] / w,
@@ -457,8 +457,8 @@ export class Vec4 extends Vec {
     * @returns The resulting normalized vector.
     */
    public normalize(): Vec4 {
-      let mag = this.magnitude();
-      let ret = this.clone();
+      const mag = this.magnitude();
+      const ret = this.clone();
       if (mag !== 0) {
          for (let i = 0; i < this.values.length; i++) {
             ret.values[i] /= mag;
@@ -474,8 +474,8 @@ export class Vec4 extends Vec {
     * @param vec The Vec3 object
     * @param w The w value for the Vec4
     */
-   public static fromVec3(vec: Vec3, w: number): Vec4 {
-      return new Vec4([vec.x, vec.y, vec.z, 1]);
+   public static fromVec3(vec: Vec3, w = 1): Vec4 {
+      return new Vec4([vec.x, vec.y, vec.z, w]);
    }
 }
 

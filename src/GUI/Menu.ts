@@ -1,8 +1,8 @@
-import { ISliderSetup, Slider } from "./Slider";
-import { Checkbox, ICheckboxSetup } from "./Checkbox";
-import { ICtrl } from "./ICtrl";
-import { IRadiobuttonSetup, Radiobutton } from "./Radiobutton";
-import { isMobile } from "../Util/Globals";
+import { ISliderSetup, Slider } from './Slider';
+import { Checkbox, ICheckboxSetup } from './Checkbox';
+import { ICtrl } from './ICtrl';
+import { IRadiobuttonSetup, Radiobutton } from './Radiobutton';
+import { isMobile } from '../Util/Globals';
 
 export type MenuItemFunction = (item?: HTMLDivElement) => void;
 export type MenuItemFunctionBool = (value: boolean) => void;
@@ -20,14 +20,14 @@ export interface IMenuItemOptions {
  * Common base classes for things that are menus - menubar, pulldown menu, etc
  */
 class Menu {
-   private parent: Menu;
+   private parent: Menu | null;
    private children: Menu[] = [];
    private ctrls: ICtrl[] = [];
 
    // the div that is the container for menu items
    public div: HTMLDivElement;
 
-   protected isMenuItem(element: HTMLElement): boolean {
+   protected isMenuItem(element: HTMLElement | null): boolean {
       while (element) {
          if (element.className === 'MenuItem') {
             return true;
@@ -36,7 +36,7 @@ class Menu {
       }
       return false;
    }
-   protected constructor(parent: Menu, id: string, className: string) {
+   protected constructor(parent: Menu | null, id: string, className: string) {
       this.parent = parent;
 
       this.div = document.createElement('div');
@@ -49,7 +49,7 @@ class Menu {
 
       if (!parent) {
          // if this is the root menu, add a global click handler for closing menus
-         window.addEventListener('mousedown', () => {
+         window.addEventListener('mousedown', (event: MouseEvent) => {
             if (!this.isMenuItem(event.target as HTMLElement)) {
                this.hideDown();
             }
@@ -78,7 +78,7 @@ class Menu {
    }
 
    public hideUp() {
-      let menu: Menu = this;
+      let menu = this as Menu;
       while (menu.parent) {
          menu.hide();
          menu = menu.parent;
@@ -100,7 +100,7 @@ class Menu {
 
    protected internalAddSubMenu(innerHtml: string, id: string, location: MenuLocation): SubMenu {
 
-      let item = document.createElement('div');
+      const item = document.createElement('div');
       item.id = id + 'MenuItem';
       item.className = 'MenuItem';
       item.innerHTML = innerHtml;
@@ -110,7 +110,7 @@ class Menu {
       }
       this.div.appendChild(item);
 
-      let subMenu = new SubMenu(this, id);
+      const subMenu = new SubMenu(this, id);
       this.children.push(subMenu);
       return subMenu;
    }
@@ -129,9 +129,9 @@ class Menu {
       subMenu.show();
 
       // position the new menu
-      let bodyRect = document.body.getBoundingClientRect();
-      let menuItemRect = menuItem.getBoundingClientRect();
-      let subMenuRect = subMenu.div.getBoundingClientRect();
+      const bodyRect = document.body.getBoundingClientRect();
+      const menuItemRect = menuItem.getBoundingClientRect();
+      const subMenuRect = subMenu.div.getBoundingClientRect();
       if (location === MenuLocation.Below) {
          subMenu.div.style.left = menuItemRect.left + 'px'
          subMenu.div.style.top = menuItemRect.bottom + 'px'
@@ -155,7 +155,7 @@ class Menu {
    public addItem(text: string, callback: MenuItemFunction, options?: IMenuItemOptions): HTMLDivElement {
 
       // create a div for this item
-      let item = document.createElement('div');
+      const item = document.createElement('div');
       item.className = 'MenuItem';
       item.innerText = text;
       item.onclick = (event: Event) => {
@@ -178,39 +178,39 @@ class Menu {
    }
 
    public addSlider(setup: ISliderSetup): Slider {
-      let div = this.addItem(
+      const div = this.addItem(
          setup.label,
-         () => { }, // do nothing on click
+         () => { return; }, // do nothing on click
          { closeOnClick: false }
       );
 
-      let ctrl = new Slider(div, setup);
+      const ctrl = new Slider(div, setup);
       this.ctrls.push(ctrl);
 
       return ctrl;
    }
 
    public addCheckbox(setup: ICheckboxSetup): Checkbox {
-      let div = this.addItem(
+      const div = this.addItem(
          '',
-         () => { }, // do nothing on click
+         () => { return }, // do nothing on click
          { closeOnClick: false }
       );
 
-      let ctrl = new Checkbox(div, setup);
+      const ctrl = new Checkbox(div, setup);
       this.ctrls.push(ctrl);
 
       return ctrl;
    }
 
    public addRadiobutton(setup: IRadiobuttonSetup): Radiobutton {
-      let div = this.addItem(
+      const div = this.addItem(
          '',
-         () => { }, // do nothing on click
+         () => { return }, // do nothing on click
          { closeOnClick: false }
       );
 
-      let ctrl = new Radiobutton(div, setup);
+      const ctrl = new Radiobutton(div, setup);
       this.ctrls.push(ctrl);
 
       return ctrl;
@@ -261,11 +261,11 @@ export class SubMenu extends Menu {
          id = text.replace(/\s+/g, '');
       }
 
-      let spanId = id + 'Span';
-      let subMenu = this.internalAddSubMenu(text + '<span id="' + spanId + '" style="float:right">></span>', id, MenuLocation.Right);
+      const spanId = id + 'Span';
+      const subMenu = this.internalAddSubMenu(text + '<span id="' + spanId + '" style="float:right">></span>', id, MenuLocation.Right);
 
-      let span = document.getElementById(spanId) as HTMLSpanElement;
-      let div = span.parentElement as HTMLDivElement;
+      const span = document.getElementById(spanId) as HTMLSpanElement;
+      const div = span.parentElement as HTMLDivElement;
       div.onmouseenter = () => {
          if (isMobile === false) {
             // TODO this event is triggering on a touchscreen laptop when we don't want it to.

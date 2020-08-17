@@ -1,5 +1,5 @@
-import { ICtrl } from "./ICtrl";
-import { getBooleanValue } from "../Util/Globals";
+import { ICtrl } from './ICtrl';
+import { getBooleanValue } from '../Util/Globals';
 
 type BooleanFunc = () => boolean;
 
@@ -17,9 +17,9 @@ export interface IRadiobuttonSetup {
 
 export class Radiobutton implements ICtrl {
    private box: HTMLInputElement;
-   private getState: () => boolean;
+   private getState: (() => boolean) | null = null;
 
-   public get checked() {
+   public get checked(): boolean {
       return this.box.checked;
    }
 
@@ -37,17 +37,17 @@ export class Radiobutton implements ICtrl {
     */
    public constructor(parent: HTMLElement, setup: IRadiobuttonSetup) {
 
-      let id = setup.id ?? 'Radiobutton';
+      const id = setup.id ?? 'Radiobutton';
       if (typeof setup.checked === 'function') {
          this.getState = setup.checked;
       }
 
-      let div = document.createElement('div');
+      const div = document.createElement('div');
       div.id = id;
       div.className = 'RadiobuttonDiv';
       parent.appendChild(div);
 
-      let label = document.createElement('label');
+      const label = document.createElement('label');
       label.id = id + 'Label';
       label.className = 'RadiobuttonLabel';
       label.innerText = setup.label ?? '';
@@ -73,17 +73,17 @@ export class Radiobutton implements ICtrl {
       }
       label.appendChild(this.box);
 
-      let mark = document.createElement('span');
+      const mark = document.createElement('span');
       mark.className = 'RadioCheckmark';
       mark.id = id + 'RadioCheckmark';
       label.appendChild(mark);
    }
 
-   public check(value: boolean = true) {
+   public check(value = true): void {
       this.box.checked = value;
    }
 
-   public refresh() {
+   public refresh(): void {
       if (this.getState) {
          this.box.checked = this.getState();
       }

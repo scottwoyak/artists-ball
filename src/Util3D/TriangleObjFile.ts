@@ -1,6 +1,6 @@
-import { TriangleObj, NormalType } from "./TriangleObj";
-import { StatusFunction } from "../Util/Globals";
-import { Profiler } from "../Util/Profiler";
+import { TriangleObj, NormalType } from './TriangleObj';
+import { StatusFunction } from '../Util/Globals';
+import { Profiler } from '../Util/Profiler';
 
 /**
  * Class that loads a .obj file and creates triangles for it
@@ -13,21 +13,21 @@ export class TriangleObjFile extends TriangleObj {
 
       // record the status function. If one is not supplied, create one that does nothing
       if (!updateStatus) {
-         updateStatus = (status) => { };
+         updateStatus = (status) => { return; };
       }
 
       this.parse(src, updateStatus);
    }
 
    private parseFace(line: string): { iV: number[], iN: number[] } {
-      let ret = {
+      const ret = {
          iV: [] as number[],
          iN: [] as number[],
       }
-      let tokens = line.match(/\S+/g);
-      let numVals = tokens.length - 1;
+      const tokens = line.match(/\S+/g);
+      const numVals = tokens.length - 1;
       for (let i = 0; i < numVals; i++) {
-         let vals = tokens[i + 1].split('/');
+         const vals = tokens[i + 1].split('/');
          ret.iV.push(parseInt(vals[0]) - 1);
          if (vals.length === 3) {
             ret.iN.push(parseInt(vals[2]) - 1);
@@ -41,15 +41,15 @@ export class TriangleObjFile extends TriangleObj {
       updateStatus('Processing');
       let t = Date.now();
 
-      let p2 = new Profiler();
-      let p = new Profiler();
-      let lines = src.split('\n');
+      const p2 = new Profiler();
+      const p = new Profiler();
+      const lines = src.split('\n');
       p.log('split');
 
-      let vertices: number[] = [];
-      let normals: number[] = [];
-      let vIndices: number[] = [];
-      let nIndices: number[] = [];
+      const vertices: number[] = [];
+      const normals: number[] = [];
+      const vIndices: number[] = [];
+      const nIndices: number[] = [];
       let match = true;
       let containsNormals = true;
 
@@ -59,21 +59,21 @@ export class TriangleObjFile extends TriangleObj {
             updateStatus('Processing: ' + (100 * i / lines.length).toFixed() + '%');
             t = Date.now();
          }
-         let line = lines[i];
+         const line = lines[i];
          if (line.startsWith('v ')) {
-            let tokens = line.match(/\S+/g);
+            const tokens = line.match(/\S+/g);
             vertices.push(parseFloat(tokens[1]));
             vertices.push(parseFloat(tokens[2]));
             vertices.push(parseFloat(tokens[3]));
          }
          else if (line.startsWith('vn ')) {
-            let tokens = line.match(/\S+/g);
+            const tokens = line.match(/\S+/g);
             normals.push(parseFloat(tokens[1]));
             normals.push(parseFloat(tokens[2]));
             normals.push(parseFloat(tokens[3]));
          }
          else if (line.startsWith('f ')) {
-            let ret = this.parseFace(line);
+            const ret = this.parseFace(line);
 
             if (containsNormals) {
                if (ret.iV.length !== ret.iN.length) {

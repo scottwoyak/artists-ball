@@ -41,15 +41,15 @@ enum StorageItems {
 }
 
 export class SquintApp implements IApp {
-   private handler: PointerEventHandler;
-   private div: HTMLDivElement;
-   private userNameMenuItemDiv: HTMLDivElement;
-   private img: HTMLImageElement;
-   private viewersPanel: ViewersPanel;
-   private notificationDiv: HTMLDivElement;
+   private handler: PointerEventHandler | undefined;
+   private div: HTMLDivElement | undefined;
+   private userNameMenuItemDiv: HTMLDivElement | undefined;
+   private img: HTMLImageElement | undefined;
+   private viewersPanel: ViewersPanel | undefined;
+   private notificationDiv: HTMLDivElement | undefined;
 
-   private camera: Camera;
-   private canvas: HTMLCanvasElement;
+   private camera: Camera | undefined;
+   private canvas: HTMLCanvasElement | undefined;
    private desired: IVideoConstraint = {
       label: '',
       width: 0,
@@ -58,16 +58,16 @@ export class SquintApp implements IApp {
       facingMode: '',
       deviceId: '',
    };
-   private uploader: Uploader;
+   private uploader: Uploader | undefined;
    private downloadTracker = new BandwidthTracker();
 
-   private brightness: Slider;
-   private contrast: Slider;
-   private saturate: Slider;
-   private blur: Slider;
-   private zoom: Slider;
-   private jpegQuality: Slider;
-   private cameraScale: Slider;
+   private brightness: Slider | undefined;
+   private contrast: Slider | undefined;
+   private saturate: Slider | undefined;
+   private blur: Slider | undefined;
+   private zoom: Slider | undefined;
+   private jpegQuality: Slider | undefined;
+   private cameraScale: Slider | undefined;
    private cameraCtrls: ICtrl[] = [];
 
    private advancedConstraints: IAdvancedConstraint[] = [];
@@ -78,12 +78,20 @@ export class SquintApp implements IApp {
 
    private squint: Squint;
 
-   private startDialog: StartDialog;
+   private startDialog: StartDialog | undefined;
 
    private console = new ConsoleCapture();
 
+   private hasUserName(): boolean {
+      return localStorage.getItem(StorageItems.UserName) !== null;
+   }
+
    private get userName(): string {
-      return localStorage.getItem(StorageItems.UserName);
+      let userName = localStorage.getItem(StorageItems.UserName);
+      if (userName === null) {
+         userName = 'Unknown';
+      }
+      return userName;
    }
 
    private set userName(userName: string) {
@@ -104,15 +112,7 @@ export class SquintApp implements IApp {
       document.title += (' ' + Version.Build);
 
       //localStorage.removeItem(StorageItems.UserName); // simulates starting up the first time
-   }
 
-   delete(): void {
-      // nothing to do here
-   }
-
-   public create(div: HTMLDivElement): void {
-
-      div.id = 'SquintApp';
       this.squint = new Squint();
       this.squint.on({
          name: SquintEvent.Image,
@@ -128,23 +128,6 @@ export class SquintApp implements IApp {
          name: SquintEvent.ChatMessage,
          handler: ((connection, msg) => { this.onChatMessage(connection, msg); })
       });
-
-      this.startDialog = new StartDialog(
-         div,
-         this.squint,
-         (connectionId) => {
-            this.squint.subscribe(connectionId);
-         },
-         () => {
-            this.enableVideo(true);
-         },
-         () => {
-            return this.userName;
-         },
-         (name: string) => {
-            this.userName = name;
-         }
-      );
 
       this.squint.on({
          name: SquintEvent.Reconnecting,
@@ -166,6 +149,35 @@ export class SquintApp implements IApp {
             }
          }
       });
+   }
+
+   dispose(): void {
+      if (this.handler) {
+         this.handler.dispose();
+      }
+   }
+
+   public create(div: HTMLDivElement): void {
+
+      div.id = 'SquintApp';
+
+      this.startDialog = new StartDialog(
+         div,
+         this.squint,
+         (connectionId) => {
+            this.squint.subscribe(connectionId);
+         },
+         () => {
+            this.enableVideo(true);
+         },
+         () => {
+            return this.userName;
+         },
+         (name: string) => {
+            this.userName = name;
+         }
+      );
+
 
       this.div = GUI.create('div', 'BodyDiv', div);
 
@@ -188,7 +200,7 @@ export class SquintApp implements IApp {
       window.addEventListener('resize', () => this.onResize());
       this.updateSizes();
 
-      if (!this.userName) {
+      if (!this.hasUserName) {
          this.showWelcomeDialog();
       }
       else {
@@ -196,7 +208,7 @@ export class SquintApp implements IApp {
          this.startDialog.visible = true;
       }
 
-      document.onkeydown = async (event: KeyboardEvent) => {
+      document.onkeydown = (event: KeyboardEvent) => {
          if (this.squint.connected) {
             switch (event.key) {
 

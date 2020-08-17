@@ -61,8 +61,8 @@ export class PerspectiveCtrl {
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
    }
 
-   public delete() {
-      this.renderer.delete();
+   public dispose(): void {
+      this.renderer.dispose();
    }
 
    private setEyePos(pos: Vec2) {

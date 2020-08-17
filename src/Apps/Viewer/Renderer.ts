@@ -234,16 +234,16 @@ export class Renderer {
       */
    }
 
-   public delete() {
-      this.obj.delete();
-      this.floor.delete();
-      this.ball.delete();
-      this.arrow.delete();
+   public dispose() {
+      this.obj.dispose();
+      this.floor.dispose();
+      this.ball.dispose();
+      this.arrow.dispose();
 
       if (this.shadowFrameBuffer) {
-         this.shadowFrameBuffer.delete();
-         this.shadowColorTexture.delete();
-         this.shadowDepthTexture.delete();
+         this.shadowFrameBuffer.dispose();
+         this.shadowColorTexture.dispose();
+         this.shadowDepthTexture.dispose();
       }
 
       this.obj = null;
@@ -328,7 +328,7 @@ export class Renderer {
 
    public setModel(tObj: TriangleObj) {
       if (this.obj) {
-         this.obj.delete();
+         this.obj.dispose();
       }
       this.obj = new glObject(this.gl, tObj, this.program);
       this.options.camera.sizeProvider = new ObjSizeProvider(this.obj);
@@ -339,7 +339,7 @@ export class Renderer {
       this.obj.autoSize(new Vec3([0, 0, 0]), 2);
 
       if (this.floor) {
-         this.floor.delete;
+         this.floor.dispose;
       }
       let tFloor = new TriangleObjBuilder('Floor');
 
@@ -522,9 +522,9 @@ export class Renderer {
       if (!this.shadowFrameBuffer || size !== this.shadowFrameBuffer.size) {
 
          if (this.shadowFrameBuffer) {
-            this.shadowFrameBuffer.delete();
-            this.shadowColorTexture.delete();
-            this.shadowDepthTexture.delete();
+            this.shadowFrameBuffer.dispose();
+            this.shadowColorTexture.dispose();
+            this.shadowDepthTexture.dispose();
          }
 
          this.shadowFrameBuffer = new glFrameBuffer(gl, size, size);

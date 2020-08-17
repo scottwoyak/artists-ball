@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { debug, SquintStrings } from './SquintApp';
 import { iOS } from '../../Util/Globals';
 
@@ -6,7 +8,7 @@ export interface IVideoConstraint {
    width?: number,
    height?: number,
    frameRate?: number,
-   deviceId: string,
+   deviceId?: string,
    facingMode?: string,
 }
 
@@ -24,8 +26,15 @@ export type AdvancedConstraintName =
    'zoom';
 
 export interface IAdvancedConstraint {
-   constraint: AdvancedConstraintName,
+   [index: string]: string | (() => string) | (() => number);
+   constraint: string; //AdvancedConstraintName,
    value: (() => string) | (() => number),
+}
+
+export interface IAdvancedConstraintValue {
+   [index: string]: string | number;
+   constraint: string; //AdvancedConstraintName,
+   value: string | number,
 }
 
 export interface IMediaSettingsRange {
@@ -34,9 +43,11 @@ export interface IMediaSettingsRange {
    step?: number,
 }
 
-export interface IVideoTrackAdvancedSettings {
+export interface IAdvancedConstraintObject {
+   [index: string]: AdvancedConstraintMode | number | undefined;
+}
 
-   [index: string]: AdvancedConstraintMode | number;
+export interface IVideoTrackAdvancedSettings extends IAdvancedConstraintObject {
 
    whiteBalanceMode?: AdvancedConstraintMode;
    colorTemperature?: number;
@@ -54,7 +65,7 @@ export interface IVideoTrackAdvancedSettings {
 
 export interface IVideoTrackAdvancedCapabilities {
 
-   [index: string]: IMediaSettingsRange | string[];
+   [index: string]: IMediaSettingsRange | string[] | undefined;
 
    whiteBalanceMode?: string[];
    colorTemperature?: IMediaSettingsRange;
@@ -91,7 +102,7 @@ export class Camera {
    public takePicture(
       scale: number,
       jpegQuality: number
-   ): Promise<Blob> {
+   ): Promise<Blob | null> {
 
       if (this.video.readyState != 4) {
          return Promise.reject(SquintStrings.CAMERA_NOT_READY);
@@ -106,9 +117,10 @@ export class Camera {
       this.canvas.height = this.video.videoHeight * scale;
 
       const context = this.canvas.getContext('2d');
+      // @ts-ignore: context isn't null
       context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
 
-      return new Promise<Blob>((resolve, reject) => {
+      return new Promise<Blob | null>((resolve, reject) => {
          this.canvas.toBlob(
             (blob) => {
                resolve(blob)
@@ -191,15 +203,13 @@ export class Camera {
       const stream = this.video.srcObject as MediaStream;
       const track = stream.getVideoTracks()[0];
 
-      const constraints = { advanced: [] = [] } as any;
-      const constraint: any = {};
+      const constraint = {} as IAdvancedConstraintValue;
       for (const item of advancedConstraints) {
          constraint[item.constraint] = item.value();
       }
-
       console.log('setting advanced constraints: ' + JSON.stringify(constraint, null, ' '));
-      constraints.advanced.push(constraint);
 
+      const constraints = { advanced: [constraint] };
       track.applyConstraints(<MediaTrackConstraints><any>(constraints))
          .catch((err) => {
             debug('Cannot apply constraints: ' + err);
@@ -267,13 +277,11 @@ export class Camera {
                onFound({
                   label: 'Front Camera',
                   facingMode: 'user',
-                  deviceId: undefined,
                });
 
                onFound({
                   label: 'Back Camera',
                   facingMode: 'environment',
-                  deviceId: undefined,
                });
 
             }

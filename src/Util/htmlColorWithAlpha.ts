@@ -1,5 +1,5 @@
-import { htmlColor } from "./htmlColor";
-import { toCss } from "./Globals";
+import { htmlColor } from './htmlColor';
+import { toCss } from './Globals';
 
 /**
  * An html color with a transparency value
@@ -9,7 +9,7 @@ export class htmlColorWithAlpha extends htmlColor {
    public static readonly transparent = new htmlColorWithAlpha([0, 0, 0, 0]);
 
    /** The transparency (alpha) value */
-   public a: number = 255;
+   public a = 255;
 
    /**
     * @param color An RGBA color array
@@ -19,11 +19,11 @@ export class htmlColorWithAlpha extends htmlColor {
       super([color[0], color[1], color[2]]);
 
       if (color.length != 4) {
-         throw new Error("Invalid color array length (expected 4 elements)");
+         throw new Error('Invalid color array length (expected 4 elements)');
       }
 
       if (color[4] < 0 || color[4] > 255) {
-         throw new Error("Invalid color 'a' value (expected [0-255])");
+         throw new Error('Invalid color \'a\' value (expected [0-255])');
       }
 
       this.a = color[3];

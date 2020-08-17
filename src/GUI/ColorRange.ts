@@ -1,4 +1,4 @@
-import { htmlColor } from "../Util/htmlColor";
+import { htmlColor } from '../Util/htmlColor';
 
 /**
  * Interpolates and array of colors
@@ -32,12 +32,12 @@ export class ColorRange {
          return this.colors[this.colors.length - 1];
       }
       else {
-         let index = Math.floor((this.colors.length - 1) * value);
-         let partial = (this.colors.length - 1) * value - index;
+         const index = Math.floor((this.colors.length - 1) * value);
+         const partial = (this.colors.length - 1) * value - index;
 
-         let r = Math.round(this.colors[index].r + partial * (this.colors[index + 1].r - this.colors[index].r));
-         let g = Math.round(this.colors[index].g + partial * (this.colors[index + 1].g - this.colors[index].g));
-         let b = Math.round(this.colors[index].b + partial * (this.colors[index + 1].b - this.colors[index].b));
+         const r = Math.round(this.colors[index].r + partial * (this.colors[index + 1].r - this.colors[index].r));
+         const g = Math.round(this.colors[index].g + partial * (this.colors[index + 1].g - this.colors[index].g));
+         const b = Math.round(this.colors[index].b + partial * (this.colors[index + 1].b - this.colors[index].b));
 
          return new htmlColor([r, g, b]);
       }

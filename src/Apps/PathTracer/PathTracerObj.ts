@@ -1,8 +1,8 @@
-import { Volume } from "./Volume";
-import { TriangleObj } from "../../Util3D/TriangleObj";
-import { Vec3 } from "../../Util3D/Vec";
-import { IndexedVec3 } from "../../Util3D/IndexedVec3";
-import { clamp } from "../../Util/Globals";
+import { Volume } from './Volume';
+import { TriangleObj } from '../../Util3D/TriangleObj';
+import { Vec3 } from '../../Util3D/Vec';
+import { IndexedVec3 } from '../../Util3D/IndexedVec3';
+import { clamp } from '../../Util/Globals';
 
 /**
  * Wrapper for TriangleObj used by the PathTracer app. Adds the ability to 
@@ -25,13 +25,13 @@ export class PathTracerObj {
     */
    private autoCenter() {
 
-      let center = this.tObj.box.center;
-      let trans = new Vec3([-center.x, -center.y + this.tObj.height / 2, -center.z]);
+      const center = this.tObj.box.center;
+      const trans = new Vec3([-center.x, -center.y + this.tObj.height / 2, -center.z]);
 
-      let scale = 2 / this.tObj.diagonal;
+      const scale = 2 / this.tObj.diagonal;
 
       for (let i = 0; i < this.tObj.numVertices; i++) {
-         let v = new IndexedVec3(this.tObj.vertices, i);
+         const v = new IndexedVec3(this.tObj.vertices, i);
 
          v.x = (v.x + trans.x) * scale;
          v.y = (v.y + trans.y) * scale;
@@ -46,7 +46,7 @@ export class PathTracerObj {
       this.tObj.box.max.z = (this.tObj.box.max.z + trans.z) * scale;
 
       for (let i = 0; i < this.volumes.length; i++) {
-         let v = this.volumes[i];
+         const v = this.volumes[i];
          v.boxMin.x = (v.boxMin.x + trans.x) * scale;
          v.boxMin.y = (v.boxMin.y + trans.y) * scale;
          v.boxMin.z = (v.boxMin.z + trans.z) * scale;
@@ -76,14 +76,14 @@ export class PathTracerObj {
       }
 
       for (let i = 0; i < this.tObj.numTriangles; i++) {
-         let t = this.tObj.getTriangle(i);
+         const t = this.tObj.getTriangle(i);
          let x = Math.floor(numSteps * (t.minX - this.tObj.box.min.x) / (this.tObj.box.width));
          let y = Math.floor(numSteps * (t.minY - this.tObj.box.min.y) / (this.tObj.box.height));
          let z = Math.floor(numSteps * (t.minZ - this.tObj.box.min.z) / (this.tObj.box.depth));
          x = clamp(x, 0, numSteps - 1);
          y = clamp(y, 0, numSteps - 1);
          z = clamp(z, 0, numSteps - 1);
-         let index = x + y * numSteps + z * numSteps * numSteps;
+         const index = x + y * numSteps + z * numSteps * numSteps;
          this.volumes[index].push(t);
       }
    }

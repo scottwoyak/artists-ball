@@ -1,4 +1,4 @@
-import { ICtrl } from "./ICtrl";
+import { ICtrl } from './ICtrl';
 
 /**
  * Interface for data passed to the Checkbox constructor
@@ -28,7 +28,7 @@ export class Button implements ICtrl {
     */
    public constructor(parent: HTMLElement, setup: IButtonSetup) {
 
-      let div = document.createElement('div');
+      const div = document.createElement('div');
       div.id = setup.id ?? 'Button';
       div.className = 'ButtonDiv';
       parent.appendChild(div);
@@ -46,6 +46,7 @@ export class Button implements ICtrl {
       div.appendChild(this.button);
    }
 
-   public refresh() {
+   public refresh(): void {
+      // nothing to do for buttons
    }
 }

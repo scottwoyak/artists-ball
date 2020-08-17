@@ -3,10 +3,11 @@ export type PanelShowHideFunction = (panel: Panel) => void;
 export class Panel {
 
    public readonly div: HTMLDivElement;
-   public onShow: PanelShowHideFunction;
-   public onHide: PanelShowHideFunction;
+   public onShow: PanelShowHideFunction | null = null;
+   public onHide: PanelShowHideFunction | null = null;
 
-   protected show(value: boolean) {
+   protected show(value: boolean): void {
+      // virtual function
    }
 
    public get visible(): boolean {
@@ -41,7 +42,7 @@ export class Panel {
 
       parent.appendChild(this.div);
 
-      let exitButton = document.createElement('div');
+      const exitButton = document.createElement('div');
       exitButton.id = 'ExitButton';
       exitButton.className = 'DivButton';
       exitButton.innerText = 'X';
@@ -51,7 +52,7 @@ export class Panel {
       this.div.appendChild(exitButton);
    }
 
-   public delete() {
+   public dispose(): void {
       // override this function in derived classes if needed
    }
 }

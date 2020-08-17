@@ -1,4 +1,4 @@
-import { IVec3, Vec3 } from "./Vec";
+import { IVec3, Vec3 } from './Vec';
 
 export class IndexedVec3 implements IVec3 {
 
@@ -13,18 +13,17 @@ export class IndexedVec3 implements IVec3 {
    public get x(): number {
       return this.values[3 * this.index + 0];
    }
-   public get y(): number {
-      return this.values[3 * this.index + 1];
-   }
-   public get z(): number {
-      return this.values[3 * this.index + 2];
-   }
-
    public set x(val: number) {
       this.values[3 * this.index + 0] = val;
    }
+   public get y(): number {
+      return this.values[3 * this.index + 1];
+   }
    public set y(val: number) {
       this.values[3 * this.index + 1] = val;
+   }
+   public get z(): number {
+      return this.values[3 * this.index + 2];
    }
    public set z(val: number) {
       this.values[3 * this.index + 2] = val;

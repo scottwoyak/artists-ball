@@ -1,4 +1,4 @@
-import { Vec4, Vec3 } from "./Vec";
+import { Vec4, Vec3 } from './Vec';
 
 /**
  * An x-y-z-w matrix for use in WebGL applications.
@@ -9,9 +9,9 @@ export class Mat4 {
    public values: number[];
 
    public get scaleFactors(): Vec3 {
-      let sX = (new Vec3([this.get(0, 0), this.get(1, 0), this.get(2, 0)])).magnitude();
-      let sY = (new Vec3([this.get(0, 0), this.get(1, 0), this.get(2, 0)])).magnitude();
-      let sZ = (new Vec3([this.get(0, 0), this.get(1, 0), this.get(2, 0)])).magnitude();
+      const sX = (new Vec3([this.get(0, 0), this.get(1, 0), this.get(2, 0)])).magnitude();
+      const sY = (new Vec3([this.get(0, 0), this.get(1, 0), this.get(2, 0)])).magnitude();
+      const sZ = (new Vec3([this.get(0, 0), this.get(1, 0), this.get(2, 0)])).magnitude();
       return new Vec3([sX, sY, sZ]);
    }
    /**
@@ -88,7 +88,7 @@ export class Mat4 {
     * @return The result of the multiplication. 
     */
    public multV(vec: Vec4): Vec4 {
-      let vals: number[] = [];
+      const vals: number[] = [];
 
       for (let row = 0; row < 4; row++) {
          let sum = 0;
@@ -107,7 +107,7 @@ export class Mat4 {
     * @param w The value to use for w. 0 = ignore translation. 1 = include.
     * @returns The new 3d vec.
     */
-   public multVec3(vec: Vec3, w: number = 1): Vec3 {
+   public multVec3(vec: Vec3, w = 1): Vec3 {
       return this.multV(vec.toVec4(w)).xyz;
    }
 
@@ -119,7 +119,7 @@ export class Mat4 {
     */
    public multM(other: Mat4): Mat4 {
 
-      let result = new Mat4();
+      const result = new Mat4();
 
       for (let row = 0; row < 4; row++) {
          for (let col = 0; col < 4; col++) {
@@ -141,25 +141,25 @@ export class Mat4 {
     */
    public inverse(): Mat4 {
 
-      let result = new Mat4();
+      const result = new Mat4();
 
-      let a00 = this.values[0], a01 = this.values[1], a02 = this.values[2], a03 = this.values[3];
-      let a10 = this.values[4], a11 = this.values[5], a12 = this.values[6], a13 = this.values[7];
-      let a20 = this.values[8], a21 = this.values[9], a22 = this.values[10], a23 = this.values[11];
-      let a30 = this.values[12], a31 = this.values[13], a32 = this.values[14], a33 = this.values[15];
+      const a00 = this.values[0], a01 = this.values[1], a02 = this.values[2], a03 = this.values[3];
+      const a10 = this.values[4], a11 = this.values[5], a12 = this.values[6], a13 = this.values[7];
+      const a20 = this.values[8], a21 = this.values[9], a22 = this.values[10], a23 = this.values[11];
+      const a30 = this.values[12], a31 = this.values[13], a32 = this.values[14], a33 = this.values[15];
 
-      let b00 = a00 * a11 - a01 * a10;
-      let b01 = a00 * a12 - a02 * a10;
-      let b02 = a00 * a13 - a03 * a10;
-      let b03 = a01 * a12 - a02 * a11;
-      let b04 = a01 * a13 - a03 * a11;
-      let b05 = a02 * a13 - a03 * a12;
-      let b06 = a20 * a31 - a21 * a30;
-      let b07 = a20 * a32 - a22 * a30;
-      let b08 = a20 * a33 - a23 * a30;
-      let b09 = a21 * a32 - a22 * a31;
-      let b10 = a21 * a33 - a23 * a31;
-      let b11 = a22 * a33 - a23 * a32;
+      const b00 = a00 * a11 - a01 * a10;
+      const b01 = a00 * a12 - a02 * a10;
+      const b02 = a00 * a13 - a03 * a10;
+      const b03 = a01 * a12 - a02 * a11;
+      const b04 = a01 * a13 - a03 * a11;
+      const b05 = a02 * a13 - a03 * a12;
+      const b06 = a20 * a31 - a21 * a30;
+      const b07 = a20 * a32 - a22 * a30;
+      const b08 = a20 * a33 - a23 * a30;
+      const b09 = a21 * a32 - a22 * a31;
+      const b10 = a21 * a33 - a23 * a31;
+      const b11 = a22 * a33 - a23 * a32;
 
       // Calculate the determinant
       let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
@@ -195,7 +195,7 @@ export class Mat4 {
     * @returns The transposed matrix.
     */
    public transpose(): Mat4 {
-      let result = new Mat4();
+      const result = new Mat4();
 
       for (let row = 0; row < 4; row++) {
          for (let col = 0; col < 4; col++) {
@@ -240,8 +240,8 @@ export class Mat4 {
 
    public static fromRotX(angle: number): Mat4 {
 
-      let c = Math.cos(angle)
-      let s = Math.sin(angle)
+      const c = Math.cos(angle)
+      const s = Math.sin(angle)
       return new Mat4([
          1, 0, 0, 0,
          0, c, s, 0,
@@ -252,8 +252,8 @@ export class Mat4 {
 
    public static fromRotY(angle: number): Mat4 {
 
-      let c = Math.cos(angle)
-      let s = Math.sin(angle)
+      const c = Math.cos(angle)
+      const s = Math.sin(angle)
       return new Mat4([
          c, 0, -s, 0,
          0, 1, 0, 0,
@@ -264,8 +264,8 @@ export class Mat4 {
 
    public static fromRotZ(angle: number): Mat4 {
 
-      let c = Math.cos(angle)
-      let s = Math.sin(angle)
+      const c = Math.cos(angle)
+      const s = Math.sin(angle)
       return new Mat4([
          c, s, 0, 0,
          -s, c, 0, 0,
@@ -317,25 +317,25 @@ export class Mat4 {
     */
    public static makeLookAt(eye: Vec3, center: Vec3, up: Vec3,): Mat4 {
 
-      let a = eye.subtract(center).normalize();
-      let b = up.cross(a).normalize();
-      let c = a.cross(b).normalize();
+      const a = eye.subtract(center).normalize();
+      const b = up.cross(a).normalize();
+      const c = a.cross(b).normalize();
 
-      let m = new Mat4([
+      const m = new Mat4([
          b.x, b.y, b.z, 0,
          c.x, c.y, c.z, 0,
          a.x, a.y, a.z, 0,
          0, 0, 0, 1
       ]);
 
-      var t = new Mat4([
+      const t = new Mat4([
          1, 0, 0, -eye.x,
          0, 1, 0, -eye.y,
          0, 0, 1, -eye.z,
          0, 0, 0, 1
       ]);
 
-      let result = m.multM(t);
+      const result = m.multM(t);
 
       return result;
    }
@@ -354,10 +354,10 @@ export class Mat4 {
       znear: number,
       zfar: number): Mat4 {
 
-      var ymax = znear * Math.tan(fovy * Math.PI / 360.0);
-      var ymin = -ymax;
-      var xmin = ymin * aspect;
-      var xmax = ymax * aspect;
+      const ymax = znear * Math.tan(fovy * Math.PI / 360.0);
+      const ymin = -ymax;
+      const xmin = ymin * aspect;
+      const xmax = ymax * aspect;
 
       return Mat4.makeFrustum(xmin, xmax, ymin, ymax, znear, zfar);
    }
@@ -381,12 +381,12 @@ export class Mat4 {
       znear: number,
       zfar: number): Mat4 {
 
-      var X = 2 * znear / (right - left);
-      var Y = 2 * znear / (top - bottom);
-      var A = (right + left) / (right - left);
-      var B = (top + bottom) / (top - bottom);
-      var C = -(zfar + znear) / (zfar - znear);
-      var D = -2 * zfar * znear / (zfar - znear);
+      const X = 2 * znear / (right - left);
+      const Y = 2 * znear / (top - bottom);
+      const A = (right + left) / (right - left);
+      const B = (top + bottom) / (top - bottom);
+      const C = -(zfar + znear) / (zfar - znear);
+      const D = -2 * zfar * znear / (zfar - znear);
 
       return new Mat4([
          X, 0, A, 0,
@@ -423,10 +423,10 @@ export class Mat4 {
       ]);
    }
 
-   public log(msg: string, digits: number = 2) {
+   public log(msg: string, digits = 2): void {
       console.log(msg);
       for (let r = 0; r < 4; r++) {
-         let line = "";
+         let line = '';
          for (let c = 0; c < 4; c++) {
             line += this.get(r, c).toFixed(digits) + ' ';
          }

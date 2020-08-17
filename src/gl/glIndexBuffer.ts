@@ -3,23 +3,23 @@
  * Wrapper for a WebGl Buffer and Attribute
  */
 export class glIndexBuffer {
-   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
-   private buffer: WebGLBuffer;
+   private gl: WebGLRenderingContext | WebGL2RenderingContext;
+   private buffer: WebGLBuffer | null;
 
    public constructor(glCtx: WebGLRenderingContext | WebGL2RenderingContext) {
       this.gl = glCtx;
-      let gl = this.gl;
+      const gl = this.gl;
 
       this.buffer = gl.createBuffer();
    }
 
-   public delete() {
+   public dispose(): void {
       this.gl.deleteBuffer(this.buffer);
-      this.buffer = undefined;
+      this.buffer = null;
    }
 
-   public upload(values: number[] | Int32Array) {
-      let gl = this.gl;
+   public upload(values: number[] | Int32Array): void {
+      const gl = this.gl;
       this.bind();
 
       if (values instanceof Int32Array) {
@@ -31,8 +31,8 @@ export class glIndexBuffer {
 
    }
 
-   public bind() {
-      let gl = this.gl;
+   public bind(): void {
+      const gl = this.gl;
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffer);
    }
 }

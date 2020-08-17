@@ -19,5 +19,8 @@ export class Color {
       if (color.length === 4) {
          this.a = color[3];
       }
+      else {
+         this.a = 0;
+      }
    }
 }

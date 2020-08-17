@@ -9,8 +9,8 @@ export enum glTextureStyle {
  */
 export class glTexture {
 
-   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
-   public texture: WebGLTexture;
+   private gl: WebGLRenderingContext | WebGL2RenderingContext;
+   public texture: WebGLTexture | undefined;
    public readonly width: number;
    public readonly height: number;
 
@@ -47,8 +47,8 @@ export class glTexture {
       }
    }
 
-   public delete() {
-      let gl = this.gl;
+   public dispose(): void {
+      const gl = this.gl;
 
       if (this.texture) {
          gl.deleteTexture(this.texture);
@@ -58,7 +58,7 @@ export class glTexture {
 
    private createColor(width: number, height: number) {
 
-      let gl = this.gl;
+      const gl = this.gl;
 
       this.texture = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, this.texture);
@@ -82,9 +82,9 @@ export class glTexture {
    }
 
    private createDepth(width: number, height: number) {
-      let gl = this.gl;
+      const gl = this.gl;
 
-      let depth_texture_extension = gl.getExtension('WEBGL_depth_texture');
+      const depth_texture_extension = gl.getExtension('WEBGL_depth_texture');
       if (!depth_texture_extension) {
          alert('This WebGL program requires the use of the WEBGL_depth_texture extension.');
          return;
@@ -112,7 +112,7 @@ export class glTexture {
    }
 
    private createFloat(width: number, height: number) {
-      let gl = this.gl;
+      const gl = this.gl;
 
       let internalFormat: number;
       let format: number;
@@ -120,7 +120,7 @@ export class glTexture {
 
       // create textures
       if (gl instanceof WebGLRenderingContext) {
-         let ext = gl.getExtension('OES_texture_half_float');
+         const ext = gl.getExtension('OES_texture_half_float');
          if (ext) {
             // Thanks Apple. Always got to do things a little differently
             internalFormat = gl.RGBA;

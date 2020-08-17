@@ -1,8 +1,8 @@
-import { ValueRange } from "./ValueRange";
-import { clamp, mix, toRad } from "../../Util/Globals";
+import { ValueRange } from './ValueRange';
+import { clamp, mix, toRad } from '../../Util/Globals';
 
-export let DEFAULT_THRESHOLD1 = 40;
-export let DEFAULT_THRESHOLD2 = 70;
+export const DEFAULT_THRESHOLD1 = 40;
+export const DEFAULT_THRESHOLD2 = 70;
 
 /**
  * Keeps track of 3 values in the light based on threshold angles

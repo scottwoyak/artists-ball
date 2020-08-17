@@ -1,4 +1,4 @@
-import { Stopwatch } from "./Stopwatch";
+import { Stopwatch } from './Stopwatch';
 
 /**
  * Utility class for logging timing messages for profile code
@@ -10,7 +10,7 @@ export class Profiler {
    /**
     * The elapsed time in milliseconds
     */
-   public get elapsedMs() {
+   public get elapsedMs(): number {
       return this.sw.elapsedMs;
    }
 
@@ -19,7 +19,7 @@ export class Profiler {
     * 
     * @param msg The message to print with the time
     */
-   public log(msg: string) {
+   public log(msg: string): void {
       console.log(msg + ' ' + this.elapsedMs.toFixed(1) + ' ms');
       this.sw.restart();
    }

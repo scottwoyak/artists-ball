@@ -1,4 +1,4 @@
-import { glColor3 } from "../../gl/glColor";
+import { glColor3 } from '../../gl/glColor';
 
 /**
  * The items returned from examining the current view
@@ -55,7 +55,7 @@ export class ColorAnalyzer {
       alphaShadow: number
    ): IColorData {
 
-      let data: IColorData = {
+      const data: IColorData = {
          maxChroma: 0,
          avgLightColor: new glColor3([0, 0, 0]),
          lightestLightColor: new glColor3([0, 0, 0]),
@@ -77,25 +77,25 @@ export class ColorAnalyzer {
 
       for (let row = 0; row < this.size; row++) {
          for (let col = 0; col < this.size; col++) {
-            let index = (row * this.size + col) * 4;
-            let r = this.pixels[index + 0];
-            let g = this.pixels[index + 1];
-            let b = this.pixels[index + 2];
-            let a = this.pixels[index + 3];
+            const index = (row * this.size + col) * 4;
+            const r = this.pixels[index + 0];
+            const g = this.pixels[index + 1];
+            const b = this.pixels[index + 2];
+            const a = this.pixels[index + 3];
 
             // ignore values that are not part of the ball
             if (a === 1) {
                continue;
             }
 
-            let avg = (r + g + b) / 3;
-            let chroma = (Math.abs(r - avg) + Math.abs(g - avg) + Math.abs(b - avg)) / (4 / 3);
+            const avg = (r + g + b) / 3;
+            const chroma = (Math.abs(r - avg) + Math.abs(g - avg) + Math.abs(b - avg)) / (4 / 3);
 
             if (chroma > data.maxChroma) {
                data.maxChroma = chroma;
             }
 
-            let color = new glColor3([r, g, b]);
+            const color = new glColor3([r, g, b]);
             if (a == alphaLight) {
                numLightPixels++;
                if (data.lightestLightColor == null) {
@@ -128,7 +128,7 @@ export class ColorAnalyzer {
                data.highlightColor = glColor3.lightest(data.highlightColor, color);
             }
 
-            let terminator = (alphaLight + alphaShadow) / 2.0;
+            const terminator = (alphaLight + alphaShadow) / 2.0;
             if (Math.abs(a - terminator) < 0.1) {
                numTerminatorPixels++;
                data.terminatorColor.r += color.r;

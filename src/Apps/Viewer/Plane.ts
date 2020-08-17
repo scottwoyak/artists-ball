@@ -1,4 +1,4 @@
-import { Vec3 } from "../../Util3D/Vec";
+import { Vec3 } from '../../Util3D/Vec';
 
 /**
  * Represents a plane defined by a*x + b*y + c*z = d
@@ -34,9 +34,9 @@ export class Plane {
     * @returns the Distance.
     */
    public distToPt(pt: Vec3): number {
-      let x = pt.x - this.origin.x;
-      let y = pt.y - this.origin.y;
-      let z = pt.z - this.origin.z;
+      const x = pt.x - this.origin.x;
+      const y = pt.y - this.origin.y;
+      const z = pt.z - this.origin.z;
       return Math.abs(this.a * x + this.b * y + this.c * z + this.d) / this.distanceTerm;
    }
 }

@@ -1,7 +1,7 @@
-import { glProgram } from "./glProgram";
-import { Vec3 } from "../Util3D/Vec";
-import { glColor3, glColor4 } from "./glColor";
-import { Mat4 } from "../Util3D/Mat";
+import { glProgram } from './glProgram';
+import { Vec3 } from '../Util3D/Vec';
+import { glColor3, glColor4 } from './glColor';
+import { Mat4 } from '../Util3D/Mat';
 
 /**
  * Utility class for setting uniform values in a shader
@@ -43,13 +43,13 @@ export class glUniform {
     */
    public set(
       name: string,
-      value: Boolean | number | Vec3 | glColor3 | glColor4 | Mat4,
-      int: boolean = false
-   ) {
+      value: boolean | number | Vec3 | glColor3 | glColor4 | Mat4,
+      int = false
+   ): void {
 
-      let gl = this.gl;
+      const gl = this.gl;
 
-      let loc = gl.getUniformLocation(this.program, name);
+      const loc = gl.getUniformLocation(this.program, name);
       if (loc) {
          if (value instanceof Vec3) {
             gl.uniform3fv(loc, new Float32Array(value.values));
@@ -63,10 +63,10 @@ export class glUniform {
          else if (value instanceof Mat4) {
             gl.uniformMatrix4fv(loc, false, new Float32Array(value.transpose().values));
          }
-         else if (value instanceof Boolean || typeof (value) === 'boolean') {
+         else if (typeof (value) === 'boolean') {
             gl.uniform1i(loc, value ? 1.0 : 0.0);
          }
-         else if (name === "uMode") {
+         else if (name === 'uMode') {
             gl.uniform1i(loc, value);
          }
          else {
@@ -86,7 +86,7 @@ export class glUniform {
     * @param name The variable name
     * @param value The value
     */
-   public seti(name: string, value: number) {
+   public seti(name: string, value: number): void {
       this.set(name, value, true);
    }
 
@@ -95,10 +95,10 @@ export class glUniform {
     * 
     * @param uniforms The object with member values
     */
-   public setAll(uniforms: any) {
+   public setAll(uniforms: any): void {
 
-      for (var name in uniforms) {
-         var value = uniforms[name];
+      for (const name in uniforms) {
+         const value = uniforms[name];
          this.set(name, value);
       }
    }

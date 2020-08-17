@@ -5,18 +5,18 @@ export class SphericalCoord {
    /**
     * The distance from the origin to the point
     */
-   public radius: number = 0;
+   public radius = 0;
 
    /**
     * The elevation from the floor to the point. 0 and 180 are on the
     * floor. 90 points up.
     */
-   public elevationAngle: number = 0;
+   public elevationAngle = 0;
 
    /**
     * The angle, when looking down from the top, to the point. 0 points right.
     */
-   public rotationAngle: number = 0;
+   public rotationAngle = 0;
 
    /**
     * @param radius
@@ -37,13 +37,13 @@ export class SphericalCoord {
     */
    public static fromXYZ(pos: number[]): SphericalCoord {
 
-      let x = pos[0];
-      let y = pos[1];
-      let z = pos[2];
+      const x = pos[0];
+      const y = pos[1];
+      const z = pos[2];
 
-      let radius = Math.sqrt(x * x + y * y + z * z);
-      let rotationAngle = (180 / Math.PI) * Math.atan2(z, x);
-      let elevationAngle = (180 / Math.PI) * Math.asin(y / radius);
+      const radius = Math.sqrt(x * x + y * y + z * z);
+      const rotationAngle = (180 / Math.PI) * Math.atan2(z, x);
+      const elevationAngle = (180 / Math.PI) * Math.asin(y / radius);
 
       return new SphericalCoord(radius, elevationAngle, rotationAngle);
    }
@@ -55,10 +55,10 @@ export class SphericalCoord {
     */
    public toXYZ(): number[] {
 
-      let floorRadius = this.radius * Math.cos((Math.PI / 180) * this.elevationAngle);
-      let x = floorRadius * Math.cos((Math.PI / 180) * this.rotationAngle);
-      let y = this.radius * Math.sin((Math.PI / 180) * this.elevationAngle);
-      let z = floorRadius * Math.sin((Math.PI / 180) * this.rotationAngle);
+      const floorRadius = this.radius * Math.cos((Math.PI / 180) * this.elevationAngle);
+      const x = floorRadius * Math.cos((Math.PI / 180) * this.rotationAngle);
+      const y = this.radius * Math.sin((Math.PI / 180) * this.elevationAngle);
+      const z = floorRadius * Math.sin((Math.PI / 180) * this.rotationAngle);
 
       return [x, y, z];
    }

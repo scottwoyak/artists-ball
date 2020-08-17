@@ -1,5 +1,5 @@
-import { Vec3, IVec3, Vec4 } from "./Vec";
-import { Mat4 } from "./Mat";
+import { Vec3, IVec3, Vec4 } from './Vec';
+import { Mat4 } from './Mat';
 
 export interface IMinMax {
    readonly min: number;
@@ -23,9 +23,9 @@ export class BoundingBox {
    }
 
    public get diagonal(): number {
-      let w = this.width;
-      let h = this.height;
-      let d = this.depth;
+      const w = this.width;
+      const h = this.height;
+      const d = this.depth;
       return Math.sqrt(w * w + h * h + d * d);
    }
 
@@ -38,7 +38,7 @@ export class BoundingBox {
    }
 
    public get corners(): Vec3[] {
-      let corners: Vec3[] = [];
+      const corners: Vec3[] = [];
       corners.push(new Vec3([this.min.x, this.min.y, this.min.z]));
       corners.push(new Vec3([this.min.x, this.min.y, this.max.z]));
       corners.push(new Vec3([this.min.x, this.max.y, this.min.z]));
@@ -76,12 +76,12 @@ export class BoundingBox {
 
    }
 
-   public toString(digits: number) {
+   public toString(digits: number): string {
       return '[' + this.min.toString(digits) + ']' +
          '[' + this.max.toString(digits) + ']';
    }
 
-   public update(v: IVec3) {
+   public update(v: IVec3): void {
       if (isNaN(v.x) || isNaN(v.y) || isNaN(v.z)) {
          //console.log('----------------------------------------------NaN');
          return;
@@ -94,7 +94,7 @@ export class BoundingBox {
       this.max.z = Math.max(this.max.z, v.z);
    }
 
-   public merge(other: BoundingBox) {
+   public merge(other: BoundingBox): void {
       this.min.x = Math.min(this.min.x, other.min.x);
       this.min.y = Math.min(this.min.y, other.min.y);
       this.min.z = Math.min(this.min.z, other.min.z);
@@ -104,9 +104,9 @@ export class BoundingBox {
    }
 
    public multM(mat: Mat4): BoundingBox {
-      let ret = new BoundingBox();
-      let v1 = mat.multV(new Vec4([this.min.x, this.min.y, this.min.z, 1]));
-      let v2 = mat.multV(new Vec4([this.max.x, this.max.y, this.max.z, 1]));
+      const ret = new BoundingBox();
+      const v1 = mat.multV(new Vec4([this.min.x, this.min.y, this.min.z, 1]));
+      const v2 = mat.multV(new Vec4([this.max.x, this.max.y, this.max.z, 1]));
       ret.min.x = Math.min(v1.x, v2.x);
       ret.min.y = Math.min(v1.y, v2.y);
       ret.min.z = Math.min(v1.z, v2.z);

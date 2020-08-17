@@ -1,7 +1,7 @@
-import { Menubar } from "./GUI/Menu";
+import { Menubar } from './GUI/Menu';
 
 export interface IApp {
    create(parent: HTMLElement): void;
-   delete(): void;
+   dispose(): void;
    buildMenu(menubar: Menubar): void;
 }

@@ -1,17 +1,17 @@
-import { htmlColor } from "../../Util/htmlColor";
-import { IApp } from "../../IApp";
-import { PathTracerRenderer, RenderMode } from "./PathTracerRenderer";
-import { SphericalCoord } from "../../Util3D/SphericalCoord";
-import { Slider } from "../../GUI/Slider";
-import { isMobile, clamp } from "../../Util/Globals";
-import { PointerEventHandler } from "../../GUI/PointerEventHandler";
-import { Vec2, Vec3 } from "../../Util3D/Vec";
-import { TriangleObj } from "../../Util3D/TriangleObj";
-import { glColorWithTemperature } from "../../gl/glColorWithTemperature";
-import { Menubar } from "../../GUI/Menu";
-import { TriangleObjBuilder } from "../../Util3D/TriangleObjBuilder";
-import { TriangleObjFile } from "../../Util3D/TriangleObjFile";
-import { Mat4 } from "../../Util3D/Mat";
+import { htmlColor } from '../../Util/htmlColor';
+import { IApp } from '../../IApp';
+import { PathTracerRenderer, RenderMode } from './PathTracerRenderer';
+import { SphericalCoord } from '../../Util3D/SphericalCoord';
+import { Slider } from '../../GUI/Slider';
+import { isMobile, clamp } from '../../Util/Globals';
+import { PointerEventHandler } from '../../GUI/PointerEventHandler';
+import { Vec2, Vec3 } from '../../Util3D/Vec';
+import { TriangleObj } from '../../Util3D/TriangleObj';
+import { glColorWithTemperature } from '../../gl/glColorWithTemperature';
+import { Menubar } from '../../GUI/Menu';
+import { TriangleObjBuilder } from '../../Util3D/TriangleObjBuilder';
+import { TriangleObjFile } from '../../Util3D/TriangleObjFile';
+import { Mat4 } from '../../Util3D/Mat';
 
 let skinTones = [
    new htmlColor([240, 223, 214]),
@@ -77,7 +77,7 @@ export class PathTracerApp implements IApp {
 
       if (!context) {
          // TODO display a message about not being able to create a WebGL context
-         console.log("Unable to get WebGL context");
+         console.log('Unable to get WebGL context');
       }
       this.gl = context;
 
@@ -164,7 +164,7 @@ export class PathTracerApp implements IApp {
          oninput: () => {
             this.setLightColor();
          },
-         onGetText: (slider: Slider) => { return slider.value.toFixed() + "K" }
+         onGetText: (slider: Slider) => { return slider.value.toFixed() + 'K' }
       });
 
       // apply the initial colors
@@ -200,12 +200,13 @@ export class PathTracerApp implements IApp {
       });
    }
 
-   public delete() {
+   public dispose(): void {
       cancelAnimationFrame(this.animationFrame);
-      this.renderer.delete();
+      this.renderer.dispose();
    }
 
-   public buildMenu(menubar: Menubar) {
+   public buildMenu(menubar: Menubar): void {
+      // no menus
    }
 
    private loadModel(query: string): Promise<TriangleObj> {
@@ -331,19 +332,19 @@ export class PathTracerApp implements IApp {
       let description = document.getElementById('description');
       switch (this.renderer.renderMode) {
          case RenderMode.Artist:
-            description.innerText = "";
+            description.innerText = '';
             break;
 
          case RenderMode.Chroma:
-            description.innerText = "Chroma View: red=highest chroma";
+            description.innerText = 'Chroma View: red=highest chroma';
             break;
 
          case RenderMode.Value:
-            description.innerText = "Value View";
+            description.innerText = 'Value View';
             break;
 
          case RenderMode.Bands:
-            description.innerText = "5 Color + Highlight View";
+            description.innerText = '5 Color + Highlight View';
             break;
       }
    }

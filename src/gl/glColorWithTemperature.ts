@@ -1,4 +1,4 @@
-import { glColor3 } from "./glColor";
+import { glColor3 } from './glColor';
 
 /**
  * Class that adds temperature to a Color object
@@ -77,14 +77,14 @@ export class glColorWithTemperature extends glColor3 {
       }
       else {
          for (let i = 0; i < this.colors.length - 1; i++) {
-            let color1 = this.colors[i];
-            let color2 = this.colors[i + 1];
+            const color1 = this.colors[i];
+            const color2 = this.colors[i + 1];
             if (temperature >= color1.temperature && temperature <= color2.temperature) {
-               let ratio = (temperature - color1.temperature) / (color2.temperature - color1.temperature);
+               const ratio = (temperature - color1.temperature) / (color2.temperature - color1.temperature);
 
-               let r = color1.r + ratio * (color2.r - color1.r);
-               let g = color1.g + ratio * (color2.g - color1.g);
-               let b = color1.b + ratio * (color2.b - color1.b);
+               const r = color1.r + ratio * (color2.r - color1.r);
+               const g = color1.g + ratio * (color2.g - color1.g);
+               const b = color1.b + ratio * (color2.b - color1.b);
                return new glColorWithTemperature([r, g, b], temperature);
             }
          }

@@ -1,10 +1,10 @@
-import { glObject } from "./glObject";
-import { Vec3, Vec2 } from "../../Util3D/Vec";
-import { IPerspectiveProvider } from "./PerspectiveCtrl";
-import { INITIAL_EYE } from "./Renderer";
-import { Mat4 } from "../../Util3D/Mat";
-import { toDeg } from "../../Util/Globals";
-import { glSpace } from "../../gl/glSpace";
+import { glObject } from './glObject';
+import { Vec3, Vec2 } from '../../Util3D/Vec';
+import { IPerspectiveProvider } from './PerspectiveCtrl';
+import { INITIAL_EYE } from './Renderer';
+import { Mat4 } from '../../Util3D/Mat';
+import { toDeg } from '../../Util/Globals';
+import { glSpace } from '../../gl/glSpace';
 
 // When viewing an object, view this much more than the object
 const BUFFER_FACTOR = 1.1;
@@ -17,14 +17,14 @@ export interface ISizeProvider {
 export class ObjSizeProvider implements ISizeProvider {
    private obj: glObject;
 
-   public get maxWidth() {
+   public get maxWidth(): number {
       //let xBox = this.obj.getBoundingPts();
-      let xBox = this.obj.getBoundingBox();
+      const xBox = this.obj.getBoundingBox();
       return BUFFER_FACTOR * Math.sqrt(xBox.width * xBox.width + xBox.depth * xBox.depth);
    }
 
-   public get maxHeight() {
-      let xBox = this.obj.getBoundingBox();
+   public get maxHeight(): number {
+      const xBox = this.obj.getBoundingBox();
       return BUFFER_FACTOR * Math.sqrt(xBox.height * xBox.height + xBox.depth * xBox.depth);
    }
 
@@ -88,14 +88,14 @@ export class Camera implements IPerspectiveProvider {
          );
       }
       else {
-         let eye = this.eye;
-         let up = new Vec3([0, 1, 0]);
-         let mat = Mat4.makeLookAt(eye, this.lookAt, up);
+         const eye = this.eye;
+         const up = new Vec3([0, 1, 0]);
+         const mat = Mat4.makeLookAt(eye, this.lookAt, up);
 
          this.fov = 2 * toDeg(Math.atan2(space.height / 2, eye.z));
-         let near = 0.1;
-         let far = 20;
-         let ar = space.width / space.height;
+         const near = 0.1;
+         const far = 20;
+         const ar = space.width / space.height;
          projection = Mat4.makePerspective(this.fov, ar, near, far).multM(mat);
       }
 
@@ -105,11 +105,11 @@ export class Camera implements IPerspectiveProvider {
    //
    // The functions below change our view of the model
    //
-   public zoom(zoom: number) {
+   public zoom(zoom: number): void {
       this.zoomFactor *= zoom;
    }
 
-   public translate(delta: Vec2) {
+   public translate(delta: Vec2): void {
       this.eye.x -= delta.x / this.zoomFactor;
       this.eye.y -= delta.y / this.zoomFactor;
       this.lookAt.x -= delta.x / this.zoomFactor;
@@ -122,7 +122,7 @@ export class Camera implements IPerspectiveProvider {
     */
    public getClipSpace(gl: WebGLRenderingContext): glSpace {
 
-      let ar = gl.canvas.width / gl.canvas.height;
+      const ar = gl.canvas.width / gl.canvas.height;
 
       if (ar > 1) {
          return new glSpace(new Vec3([-ar, -1, 100]), new Vec3([ar, 1, -100]));
@@ -136,11 +136,11 @@ export class Camera implements IPerspectiveProvider {
     * View space is the world coordinate space of what can be currently viewed.
     */
    public getViewSpace(gl: WebGLRenderingContext): glSpace {
-      let winAR = gl.canvas.width / gl.canvas.height;
+      const winAR = gl.canvas.width / gl.canvas.height;
 
-      let objMaxWidth = this.sizeProvider.maxWidth;
-      let objMaxHeight = this.sizeProvider.maxHeight;
-      let objAR = objMaxWidth / objMaxHeight;
+      const objMaxWidth = this.sizeProvider.maxWidth;
+      const objMaxHeight = this.sizeProvider.maxHeight;
+      const objAR = objMaxWidth / objMaxHeight;
 
       let desiredWidth;
       let desiredHeight;
@@ -157,13 +157,13 @@ export class Camera implements IPerspectiveProvider {
       desiredHeight /= this.zoomFactor;
       desiredWidth /= this.zoomFactor;
 
-      let clipSpace = this.getClipSpace(gl);
-      let min = new Vec3([
+      const clipSpace = this.getClipSpace(gl);
+      const min = new Vec3([
          -desiredWidth / 2 - this.lookAt.x,
          -desiredHeight / 2 - this.lookAt.y,
          clipSpace.near + this.lookAt.z,
       ]);
-      let max = new Vec3([
+      const max = new Vec3([
          desiredWidth / 2 - this.lookAt.x,
          desiredHeight / 2 - this.lookAt.y,
          clipSpace.far + this.lookAt.z,

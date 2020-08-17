@@ -35,8 +35,8 @@ export class glProgram {
    /**
     * Calls useProgram() for this program
     */
-   public use() {
-      let gl = this.gl;
+   public use(): void {
+      const gl = this.gl;
       gl.useProgram(this.program);
    }
 
@@ -52,22 +52,22 @@ export class glProgram {
       source: string,
       type: number
    ) {
-      let gl = this.gl;
+      const gl = this.gl;
 
-      let shader = gl.createShader(type);
+      const shader = gl.createShader(type);
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
       if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
          console.log(source);
-         let err = gl.getShaderInfoLog(shader);
+         const err = gl.getShaderInfoLog(shader);
          console.error(err);
          throw 'compile error: ' + err;
       }
       return shader;
    }
 
-   public delete() {
-      let gl = this.gl;
+   public dispose(): void {
+      const gl = this.gl;
       gl.deleteProgram(this.program);
       this.program = null;
    }
@@ -85,13 +85,13 @@ export class glProgram {
       fragmentSource: string
    ) {
 
-      let gl = this.gl;
+      const gl = this.gl;
       this.program = gl.createProgram();
       gl.attachShader(this.program, this.compileShader(vertexSource, gl.VERTEX_SHADER));
       gl.attachShader(this.program, this.compileShader(fragmentSource, gl.FRAGMENT_SHADER));
       gl.linkProgram(this.program);
       if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-         let err = gl.getProgramInfoLog(this.program);
+         const err = gl.getProgramInfoLog(this.program);
          console.error(err);
          throw 'link error: ' + err;
       }

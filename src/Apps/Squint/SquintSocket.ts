@@ -7,12 +7,12 @@ export type CloseHandler = (code: number) => void;
 
 export class SquintSocket {
 
-   private ws: WebSocket;
+   private ws: WebSocket | null = null;
    public readonly connectionId: string;
 
-   public onImage: ImageHandler;
-   public onMessage: MessageHandler;
-   public onClose: CloseHandler;
+   public onImage: ImageHandler | null = null;
+   public onMessage: MessageHandler | null = null;
+   public onClose: CloseHandler | null = null;
 
    public static readonly ERROR_CLOSURE = -1;
    public static readonly NORMAL_CLOSURE = 1000;
@@ -41,7 +41,26 @@ export class SquintSocket {
    }
 
    public get bufferedAmount(): number {
-      return this.ws.bufferedAmount;
+      if (this.ws) {
+         return this.ws.bufferedAmount;
+      }
+      else {
+         debug('SquintSocket.bufferedAmount called, but not connected');
+         return 0;
+      }
+   }
+
+   public get connected(): boolean {
+      return (this.ws !== null && this.ws.readyState === WebSocket.OPEN);
+   }
+
+   public get bufferReady(): boolean {
+      if (!this.connected) {
+         debug('SquintSocket.bufferReady() called after websocket was disconnected');
+         return false;
+      }
+
+      return this.bufferedAmount === 0;
    }
 
    private constructor(ws: WebSocket, connectionId: string) {
@@ -51,10 +70,12 @@ export class SquintSocket {
       ws.onopen = null;
 
       ws.onclose = (event: CloseEvent) => {
-         this.ws.onclose = null;
-         this.ws.onerror = null;
-         this.ws.onmessage = null;
-         this.ws.onopen = null;
+         if (this.ws) {
+            this.ws.onclose = null;
+            this.ws.onerror = null;
+            this.ws.onmessage = null;
+            this.ws.onopen = null;
+         }
          this.ws = null;
          if (this.onClose) {
             this.onClose(event.code);
@@ -62,10 +83,12 @@ export class SquintSocket {
       }
 
       ws.onerror = (event: Event) => {
-         this.ws.onclose = null;
-         this.ws.onerror = null;
-         this.ws.onmessage = null;
-         this.ws.onopen = null;
+         if (this.ws) {
+            this.ws.onclose = null;
+            this.ws.onerror = null;
+            this.ws.onmessage = null;
+            this.ws.onopen = null;
+         }
          this.ws = null;
          if (this.onClose) {
             this.onClose(SquintSocket.ERROR_CLOSURE);
@@ -100,41 +123,31 @@ export class SquintSocket {
       };
    }
 
-   public get connected(): boolean {
-      return (this.ws !== null && this.ws.readyState === WebSocket.OPEN);
-   }
-
-   public get bufferReady(): boolean {
-      if (!this.connected) {
-         debug('SquintSocket.bufferReady() called after websocket was disconnected');
-         return false;
-      }
-
-      return this.ws.bufferedAmount === 0;
-   }
-
    public close(): void {
       if (!this.connected) {
          debug('SquintSocket.close() called but no connection exists');
          return;
       }
 
-      this.ws.onclose = null;
-      this.ws.onerror = null;
-      this.ws.onmessage = null;
-      this.ws.onopen = null;
+      if (this.ws) {
+         this.ws.onclose = null;
+         this.ws.onerror = null;
+         this.ws.onmessage = null;
+         this.ws.onopen = null;
 
-      this.ws.close(SquintSocket.NORMAL_CLOSURE);
+         this.ws.close(SquintSocket.NORMAL_CLOSURE);
+      }
       this.ws = null;
    }
 
 
    public send(msg: ISquintMessage): void {
-      if (!this.connected) {
+      if (!(this.connected)) {
          debug('SquintSocket.send() called, but not connected');
          return;
       }
 
+      // @ts-ignore: can't be null per above check
       this.ws.send(JSON.stringify(msg));
    }
 
@@ -144,10 +157,11 @@ export class SquintSocket {
          return;
       }
 
+      // @ts-ignore: can't be null per above check
       this.ws.send(blob);
    }
 
-   public static connect(url: string, userName: string, reconnectId: string = undefined): Promise<SquintSocket> {
+   public static connect(url: string, userName: string, reconnectId?: string): Promise<SquintSocket> {
 
       return new Promise((resolve, reject) => {
 

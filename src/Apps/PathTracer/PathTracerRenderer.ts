@@ -131,19 +131,19 @@ export class PathTracerRenderer {
       this.toScreenVertexAttribute.upload(this.vertices);
    }
 
-   public setObj(tObj: TriangleObj) {
+   public setObj(tObj: TriangleObj): void {
       this.compileShader(tObj);
    }
 
-   public delete() {
-      this.frameBuffer.delete();
-      this.textures[0].delete();
-      this.textures[1].delete();
+   public dispose(): void {
+      this.frameBuffer.dispose();
+      this.textures[0].dispose();
+      this.textures[1].dispose();
       if (this.vBlock) {
-         this.vBlock.delete();
+         this.vBlock.dispose();
       }
       if (this.tBlock) {
-         this.tBlock.delete();
+         this.tBlock.dispose();
       }
    }
 
@@ -151,7 +151,7 @@ export class PathTracerRenderer {
       let gl = this.gl;
 
       if (this.toTextureProgram) {
-         this.toTextureProgram.delete();
+         this.toTextureProgram.dispose();
          this.toTextureProgram = null;
       }
 

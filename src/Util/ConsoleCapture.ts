@@ -19,46 +19,46 @@ export class ConsoleCapture {
       document.body.appendChild(this.textArea);
 
       // TODO update these all to take the correct arguments for console functions
-      let oldLog = console.log;
+      const oldLog = console.log;
       console.log = (msg: string) => {
          this.append(msg);
          oldLog(msg);
       }
 
-      let oldTrace = console.trace;
+      const oldTrace = console.trace;
       console.trace = (msg: string) => {
          this.append('TRACE ' + msg);
          oldTrace(msg);
       }
 
-      let oldInfo = console.info;
+      const oldInfo = console.info;
       console.info = (msg: string) => {
          this.append('INFO ' + msg);
          oldInfo(msg);
       }
 
-      let oldWarn = console.warn;
+      const oldWarn = console.warn;
       console.warn = (msg: string) => {
          this.append('WARN ' + msg);
          oldWarn(msg);
       }
 
-      let oldError = console.error;
+      const oldError = console.error;
       console.error = (msg: string) => {
          this.append('ERROR ' + msg);
          oldError(msg);
       }
 
-      let oldClear = console.clear;
+      const oldClear = console.clear;
       console.clear = () => {
          this.textArea.textContent = '';
          oldClear();
       }
 
-      let oldOnError = window.onerror;
+      const oldOnError = window.onerror;
       window.onerror = (event: string | Event, source: string, lineno: number, colno: number, error: Error) => {
-         let stackTrace = error && error instanceof Error ? '\n' + error.stack : '';
-         let msg = event + '\n' + source + ' line:' + lineno + ', col:' + colno + stackTrace;
+         const stackTrace = error && error instanceof Error ? '\n' + error.stack : '';
+         const msg = event + '\n' + source + ' line:' + lineno + ', col:' + colno + stackTrace;
          alert(msg);
          this.append(msg);
       }
@@ -74,7 +74,7 @@ export class ConsoleCapture {
       this.textArea.value = fullmsg;
    }
 
-   public setEdges(left: number, right: number, top: number, bottom: number) {
+   public setEdges(left: number, right: number, top: number, bottom: number): void {
       this.textArea.style.left = left + 'px';
       this.textArea.style.right = right + 'px';
       this.textArea.style.top = top + 'px';

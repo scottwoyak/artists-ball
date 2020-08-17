@@ -25,7 +25,7 @@ class BlobSlicer {
     * @returns The sliced Blob.
     */
    public next(len: number): Blob {
-      let b = this.blob.slice(this.start, this.start + len);
+      const b = this.blob.slice(this.start, this.start + len);
       this.start += len;
       return b;
    }
@@ -93,21 +93,21 @@ export class BlobFile {
     */
    public static async extract(blob: Blob): Promise<BlobFile> {
 
-      let blobSlicer = new BlobSlicer(blob);
+      const blobSlicer = new BlobSlicer(blob);
 
       // first extract the number of entries
-      let numEntries = (await blobSlicer.nextInt32Array(4))[0];
+      const numEntries = (await blobSlicer.nextInt32Array(4))[0];
 
       // the the sizes array
-      let sizes = await blobSlicer.nextInt32Array(4 * (numEntries + 1));
+      const sizes = await blobSlicer.nextInt32Array(4 * (numEntries + 1));
 
       // then the info object
-      let jsonInfo = await blobSlicer.nextString(sizes[0]);
+      const jsonInfo = await blobSlicer.nextString(sizes[0]);
 
       // then all the sub blobs
-      let parts: Blob[] = [];
+      const parts: Blob[] = [];
       for (let i = 0; i < numEntries; i++) {
-         let size = sizes[i + 1];
+         const size = sizes[i + 1];
          parts.push(blobSlicer.next(size));
       }
 
@@ -122,12 +122,12 @@ export class BlobFile {
     */
    public static createBlob(info: object, parts: BlobPart[]): Blob {
 
-      let jsonInfo = JSON.stringify(info);
+      const jsonInfo = JSON.stringify(info);
 
       // Build the array of sizes
-      let sizes: number[] = [jsonInfo.length];
+      const sizes: number[] = [jsonInfo.length];
       for (let i = 0; i < parts.length; i++) {
-         let part = parts[i];
+         const part = parts[i];
          if (part instanceof Int32Array) {
             sizes.push(4 * part.length);
          }
@@ -138,14 +138,14 @@ export class BlobFile {
             sizes.push(part.length);
          }
          else {
-            let msg = 'Unsupported Blob Part Type: ' + typeof part;
+            const msg = 'Unsupported Blob Part Type: ' + typeof part;
             console.error(msg);
             throw new Error(msg);
          }
       }
 
       // assemble the blob parts
-      let allParts: BlobPart[] = [];
+      const allParts: BlobPart[] = [];
       allParts.push(new Int32Array([parts.length]));
       allParts.push(new Int32Array(sizes));
       allParts.push(jsonInfo);

@@ -1,5 +1,5 @@
-import { IndexedVec3 } from "./IndexedVec3";
-import { Vec3 } from "./Vec";
+import { IndexedVec3 } from './IndexedVec3';
+import { Vec3 } from './Vec';
 
 /**
  * Minimalist wrapper around a WebGL triangle element
@@ -54,12 +54,12 @@ export class IndexedTriangle {
    }
 
    public computeNormal(): Vec3 {
-      let v1 = this.v1.toVec3();
-      let v2 = this.v2.toVec3();
-      let v3 = this.v3.toVec3();
+      const v1 = this.v1.toVec3();
+      const v2 = this.v2.toVec3();
+      const v3 = this.v3.toVec3();
 
-      let a = v2.subtract(v1);
-      let b = v3.subtract(v2);
+      const a = v2.subtract(v1);
+      const b = v3.subtract(v2);
       return a.cross(b).normalize();
    }
 }

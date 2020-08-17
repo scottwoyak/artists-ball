@@ -1,5 +1,5 @@
-import { ICtrl } from "./ICtrl";
-import { getBooleanValue } from "../Util/Globals";
+import { ICtrl } from './ICtrl';
+import { getBooleanValue } from '../Util/Globals';
 
 /**
  * Interface for data passed to the Checkbox constructor
@@ -14,9 +14,9 @@ export interface ICheckboxSetup {
 
 export class Checkbox implements ICtrl {
    private box: HTMLInputElement;
-   private getState: () => boolean;
+   private getState: (() => boolean) | undefined;
 
-   public get checked() {
+   public get checked(): boolean {
       return this.box.checked;
    }
    public set checked(value: boolean) {
@@ -41,12 +41,14 @@ export class Checkbox implements ICtrl {
          this.getState = setup.checked;
       }
 
-      let div = document.createElement('div');
-      div.id = setup.id;
+      const div = document.createElement('div');
+      if (setup.id) {
+         div.id = setup.id;
+      }
       div.className = 'CheckboxDiv';
       parent.appendChild(div);
 
-      let label = document.createElement('label');
+      const label = document.createElement('label');
       label.id = setup.id + 'Label';
       label.className = 'CheckboxLabel';
       label.innerText = setup.label ?? '';
@@ -64,13 +66,13 @@ export class Checkbox implements ICtrl {
       }
       label.appendChild(this.box);
 
-      let mark = document.createElement('span');
+      const mark = document.createElement('span');
       mark.className = 'Checkmark';
       mark.id = setup.id + 'Checkmark';
       label.appendChild(mark);
    }
 
-   public refresh() {
+   public refresh(): void {
       if (this.getState) {
          this.box.checked = this.getState();
       }

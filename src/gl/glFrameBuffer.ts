@@ -1,12 +1,12 @@
-import { glTexture, glTextureStyle } from "./glTexture";
+import { glTexture, glTextureStyle } from './glTexture';
 
 /**
  * Lightweight WebGL wrapper for a framebuffer
  */
 export class glFrameBuffer {
 
-   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
-   private frameBuffer: WebGLFramebuffer;
+   private gl: WebGLRenderingContext | WebGL2RenderingContext;
+   private frameBuffer: WebGLFramebuffer | null;
    public readonly width: number;
    public readonly height: number;
 
@@ -34,12 +34,12 @@ export class glFrameBuffer {
       this.width = width;
       this.height = height;
 
-      let gl = this.gl;
+      const gl = this.gl;
       this.frameBuffer = gl.createFramebuffer();
    }
 
-   public delete() {
-      let gl = this.gl;
+   public dispose(): void {
+      const gl = this.gl;
 
       if (this.frameBuffer) {
          gl.deleteFramebuffer(this.frameBuffer);
@@ -47,12 +47,12 @@ export class glFrameBuffer {
       }
    }
 
-   public get(): WebGLFramebuffer {
+   public get(): WebGLFramebuffer | null {
       return this.frameBuffer;
    }
 
-   public bind() {
-      let gl = this.gl;
+   public bind(): void {
+      const gl = this.gl;
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
    }
 
@@ -60,13 +60,13 @@ export class glFrameBuffer {
       return new glTexture(this.gl, this.width, this.height, style);
    }
 
-   public attachTexture(attachment: number, texture: WebGLTexture | glTexture) {
+   public attachTexture(attachment: number, texture: WebGLTexture | glTexture): void {
 
       if (texture instanceof glTexture) {
          texture = texture.get();
       }
 
-      let gl = this.gl;
+      const gl = this.gl;
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
       gl.framebufferTexture2D(
          gl.FRAMEBUFFER,
@@ -77,11 +77,11 @@ export class glFrameBuffer {
       );
    }
 
-   public check() {
-      let gl = this.gl;
-      let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+   public check(): void {
+      const gl = this.gl;
+      const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
       if (status !== gl.FRAMEBUFFER_COMPLETE) {
-         let msg = "The created frame buffer is invalid: " + status.toString();
+         const msg = 'The created frame buffer is invalid: ' + status.toString();
          alert(msg);
          console.log(msg);
       }

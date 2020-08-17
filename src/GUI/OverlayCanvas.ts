@@ -11,31 +11,37 @@ export class OverlayCanvas {
    private smallFont: string;
    private largeFont: string;
 
-   public get height() {
+   public get height(): number {
       return this.canvas.height;
    }
    public set height(value: number) {
       this.canvas.height = value;
    }
 
-   public get width() {
+   public get width(): number {
       return this.canvas.width;
    }
    public set width(value: number) {
       this.canvas.width = value;
    }
 
-   public get context() {
-      return this.canvas.getContext('2d');
+   public get context(): CanvasRenderingContext2D {
+      const context = this.canvas.getContext('2d');
+      if (context === null) {
+         throw new Error('Internal Error: context=null');
+      }
+      return context;
    }
 
    public constructor(parent: HTMLElement, id?: string) {
       this.canvas = document.createElement('canvas');
-      this.canvas.id = id;
+      if (id) {
+         this.canvas.id = id;
+      }
       this.canvas.className = 'Overlay';
       parent.appendChild(this.canvas);
 
-      let dummy = document.createElement('div');
+      const dummy = document.createElement('div');
       parent.appendChild(dummy);
       dummy.className = 'Overlay'
       this.largeFont = getComputedStyle(dummy).font;
@@ -44,15 +50,14 @@ export class OverlayCanvas {
       parent.removeChild(dummy);
    }
 
-   public clear() {
-      let ctx = this.canvas.getContext('2d');
-      ctx.clearRect(0, 0, this.width, this.height);
+   public clear(): void {
+      this.context.clearRect(0, 0, this.width, this.height);
    }
 
-   public fillText(msg: string, location: TextLocation = TextLocation.Center) {
-      let ctx = this.canvas.getContext('2d');
+   public fillText(msg: string, location: TextLocation = TextLocation.Center): void {
+      const ctx = this.context;
 
-      let style = getComputedStyle(this.canvas);
+      const style = getComputedStyle(this.canvas);
       ctx.fillStyle = style.color;
 
       let x: number;

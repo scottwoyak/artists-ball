@@ -1,11 +1,11 @@
-import { glProgram } from "./glProgram";
+import { glProgram } from './glProgram';
 
 /**
  * Wrapper for a WebGl Buffer and Attribute
  */
 export class glBuffer {
-   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
-   private buffer: WebGLBuffer;
+   private gl: WebGLRenderingContext | WebGL2RenderingContext;
+   private buffer: WebGLBuffer | null;
    private attributeLocation: number;
 
    public constructor(
@@ -14,7 +14,7 @@ export class glBuffer {
       attributeName: string
    ) {
       this.gl = glCtx;
-      let gl = this.gl;
+      const gl = this.gl;
 
       if (program instanceof glProgram) {
          program = program.get();
@@ -24,20 +24,20 @@ export class glBuffer {
       this.attributeLocation = gl.getAttribLocation(program, attributeName);
    }
 
-   public delete() {
+   public dispose(): void {
       this.gl.deleteBuffer(this.buffer);
-      this.buffer = undefined;
-      this.attributeLocation = undefined;
+      this.buffer = null;
+      this.attributeLocation = -1;
    }
 
-   public upload(vertices: number[]) {
-      let gl = this.gl;
+   public upload(vertices: number[]): void {
+      const gl = this.gl;
       this.bind();
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
    }
 
-   public bind(size = 3) {
-      let gl = this.gl;
+   public bind(size = 3): void {
+      const gl = this.gl;
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
       gl.enableVertexAttribArray(this.attributeLocation);
       gl.vertexAttribPointer(

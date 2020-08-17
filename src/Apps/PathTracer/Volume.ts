@@ -1,5 +1,5 @@
-import { Vec3 } from "../../Util3D/Vec";
-import { IndexedTriangle } from "../../Util3D/IndexedTriangle";
+import { Vec3 } from '../../Util3D/Vec';
+import { IndexedTriangle } from '../../Util3D/IndexedTriangle';
 
 const MAX = 1000; // INFINITY in our rendering world
 
@@ -27,7 +27,7 @@ export class Volume {
     * 
     * @param triangle The triangle to store
     */
-   public push(triangle: IndexedTriangle) {
+   public push(triangle: IndexedTriangle): void {
 
       this.triangles.push(triangle);
       this.boxMin.x = Math.min(this.boxMin.x, triangle.minX);

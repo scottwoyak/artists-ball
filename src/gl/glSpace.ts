@@ -1,4 +1,4 @@
-import { Vec3 } from "../Util3D/Vec";
+import { Vec3 } from '../Util3D/Vec';
 
 /**
  * Utility for holding a clip space. Can be used to hold the viewing space

@@ -9,7 +9,7 @@ import { glTexture } from '../../gl/glTexture';
  */
 export class TextureRenderer {
 
-   private gl: WebGLRenderingContext | WebGL2RenderingContext = null;
+   private gl: WebGLRenderingContext | WebGL2RenderingContext;
    private program: glProgram;
    private vertexBuffer: glBuffer;
 
@@ -35,7 +35,7 @@ export class TextureRenderer {
 
    public render(texture: glTexture, width: number, height: number): void {
 
-      let gl = this.gl;
+      const gl = this.gl;
 
       gl.viewport(
          (gl.canvas.width - width) / 2,

@@ -10,7 +10,7 @@ export class Squint {
 
    public static readonly url = SquintWsUrl;
 
-   public ss: SquintSocket;
+   public ss: SquintSocket | null = null;
    public userName: string;
    private _reconnecting = false;
 
@@ -35,6 +35,7 @@ export class Squint {
          return false;
       }
 
+      // @ts-ignore: cannot be null - we check above
       return this.ss.bufferedAmount === 0;
    }
 
@@ -148,7 +149,7 @@ export class Squint {
       return this.doConnect(url);
    }
 
-   private doConnect(url: string, reconnectId: string = undefined): Promise<void> {
+   private doConnect(url: string, reconnectId?: string): Promise<void> {
 
       if (this.connected) {
          return Promise.reject('Cannot connect to server: previous connection is still open');
@@ -166,6 +167,7 @@ export class Squint {
          return;
       }
 
+      // @ts-ignore: cannot be null - we check above
       this.ss.close();
       this.ss = null;
 
@@ -217,6 +219,7 @@ export class Squint {
          return;
       }
 
+      // @ts-ignore: cannot be null - we check above
       this.ss.send(msg);
    }
 
@@ -227,9 +230,11 @@ export class Squint {
       }
 
       if (this.bufferReady) {
+         // @ts-ignore: cannot be null - we check above
          this.ss.sendImage(blob);
       }
       else {
+         // @ts-ignore: cannot be null - we check above
          console.error('Skipping upload, buffer not empty: ' + this.ss.bufferedAmount);
       }
    }

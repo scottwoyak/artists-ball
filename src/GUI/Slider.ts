@@ -1,8 +1,8 @@
-import { htmlColor } from "../Util/htmlColor";
-import { ICtrl } from "./ICtrl";
-import { ColorRange } from "./ColorRange";
-import { htmlColorWithAlpha } from "../Util/htmlColorWithAlpha";
-import { glColor3 } from "../gl/glColor";
+import { htmlColor } from '../Util/htmlColor';
+import { ICtrl } from './ICtrl';
+import { ColorRange } from './ColorRange';
+import { htmlColorWithAlpha } from '../Util/htmlColorWithAlpha';
+import { glColor3 } from '../gl/glColor';
 
 /**
  * Interface for data passed to the Slider constructor
@@ -83,10 +83,10 @@ export class Slider implements ICtrl {
     */
    public constructor(parent: HTMLElement, setup: ISliderSetup) {
 
-      let id = setup.id ?? 'Slider';
+      const id = setup.id ?? 'Slider';
       this._getText = setup.onGetText;
 
-      let div = document.createElement('div');
+      const div = document.createElement('div');
       div.id = id;
       div.className = 'SliderDiv';
       parent.appendChild(div);
@@ -142,8 +142,8 @@ export class Slider implements ICtrl {
     */
    private updateSpanColor(): void {
       if (this._colors) {
-         let val = (this.value - this.min) / (this.max - this.min);
-         let color = htmlColor.fromColor(this._colors.get(val));
+         const val = (this.value - this.min) / (this.max - this.min);
+         const color = htmlColor.fromColor(this._colors.get(val));
          this._colorSpan.style.backgroundColor = color.toHex()
       }
    }
@@ -239,7 +239,7 @@ export class Slider implements ICtrl {
     */
    public get htmlColor(): htmlColor {
       if (this._colors) {
-         let val = (this.value - this.min) / (this.max - this.min);
+         const val = (this.value - this.min) / (this.max - this.min);
          return this._colors.get(val);
       }
       else {
@@ -254,7 +254,7 @@ export class Slider implements ICtrl {
     */
    public get glColor(): glColor3 {
       if (this._colors) {
-         let val = (this.value - this.min) / (this.max - this.min);
+         const val = (this.value - this.min) / (this.max - this.min);
          return this._colors.get(val).toGlColor();
       }
       else {
@@ -262,7 +262,7 @@ export class Slider implements ICtrl {
       }
    }
 
-   public refresh() {
+   public refresh(): void {
       // TODO implement
    }
 }

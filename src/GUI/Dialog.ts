@@ -1,4 +1,4 @@
-import { GUI } from "./GUI";
+import { GUI } from './GUI';
 
 export type ShowHandler = () => void;
 export type HideHandler = () => void;

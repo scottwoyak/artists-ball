@@ -17,7 +17,7 @@ export class Averager {
 
    public get average(): number {
       let total = 0;
-      let numValues = this.values.length;
+      const numValues = this.values.length;
 
       if (numValues === 0) {
          return Number.NaN;
@@ -31,22 +31,22 @@ export class Averager {
    }
 
    public constructor(maxSamples = 5) {
-      this.maxSamples = maxSamples;
+      this._maxSamples = maxSamples;
    }
 
-   public push(value: number) {
+   public push(value: number): void {
       this.values.push(value);
       this.trimIfNeeded();
    }
 
    private trimIfNeeded() {
       if (this.values.length > this.maxSamples) {
-         let start = this.values.length - this.maxSamples;
+         const start = this.values.length - this.maxSamples;
          this.values = this.values.slice(start);
       }
    }
 
-   public clear() {
+   public clear(): void {
       this.values = [];
    }
 }

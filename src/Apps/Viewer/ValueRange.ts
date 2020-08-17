@@ -4,11 +4,11 @@
  */
 export class ValueRange {
 
-   public static get Standard() {
+   public static get Standard(): ValueRange {
       return new ValueRange(1.0, 0.2, 0.1);
    }
 
-   public static get EmphasizeHighlights() {
+   public static get EmphasizeHighlights(): ValueRange {
       return new ValueRange(1.0, 0.2, 0.75);
    }
 

@@ -1,6 +1,6 @@
-import { Vec3 } from "./Vec";
-import { IMinMax } from "./BoundingBox";
-import { Plane } from "../Apps/Viewer/Plane";
+import { Vec3 } from './Vec';
+import { IMinMax } from './BoundingBox';
+import { Plane } from '../Apps/Viewer/Plane';
 
 /**
  * A set of points used to define the bounding edges of an object. All points are
@@ -18,16 +18,16 @@ export class BoundingPts {
    }
 
    public distToPoint(pt: Vec3): IMinMax {
-      let ret = {
+      const ret = {
          min: Number.MAX_VALUE,
          max: -Number.MAX_VALUE,
       }
 
       this.pts.forEach((pt2: Vec3) => {
-         let x = pt2.x - pt.x;
-         let y = pt2.y - pt.y;
-         let z = pt2.z - pt.z;
-         let d = x * x + y * y + z * z;
+         const x = pt2.x - pt.x;
+         const y = pt2.y - pt.y;
+         const z = pt2.z - pt.z;
+         const d = x * x + y * y + z * z;
          ret.min = Math.min(d, ret.min);
          ret.max = Math.max(d, ret.max);
       });
@@ -40,13 +40,13 @@ export class BoundingPts {
    }
 
    public distToPlane(plane: Plane): IMinMax {
-      let ret = {
+      const ret = {
          min: Number.MAX_VALUE,
          max: -Number.MAX_VALUE,
       }
 
       this.pts.forEach((pt: Vec3) => {
-         let d = plane.distToPt(pt);
+         const d = plane.distToPt(pt);
          ret.min = Math.min(d, ret.min);
          ret.max = Math.max(d, ret.max);
       });

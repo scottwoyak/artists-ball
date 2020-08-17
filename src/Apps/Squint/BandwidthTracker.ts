@@ -1,9 +1,9 @@
 import { Stopwatch } from '../../Util/Stopwatch';
 import { FPS } from '../../Util/FPS';
 
-class Transfer {
-   public bytes: number;
-   public stopwatch: Stopwatch;
+interface Transfer {
+   bytes: number;
+   stopwatch: Stopwatch;
 }
 
 /**

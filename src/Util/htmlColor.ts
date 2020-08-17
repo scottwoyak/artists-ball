@@ -1,6 +1,6 @@
-import { Color } from "./Color";
-import { toCss } from "./Globals";
-import { glColor3 } from "../gl/glColor";
+import { Color } from './Color';
+import { toCss } from './Globals';
+import { glColor3 } from '../gl/glColor';
 
 /**
  * Color class that requires RGB values to be between 0 and 255
@@ -20,16 +20,16 @@ export class htmlColor extends Color {
    public constructor(color: number[]) {
 
       if (color.length != 3) {
-         throw new Error("Invalid color array length (expected 3 elements)");
+         throw new Error('Invalid color array length (expected 3 elements)');
       }
       if (color[0] < 0 || color[0] > 255) {
-         throw new Error("Invalid color 'r' value (expected [0-255])");
+         throw new Error('Invalid color \'r\' value (expected [0-255])');
       }
       if (color[1] < 0 || color[1] > 255) {
-         throw new Error("Invalid color 'g' value (expected [0-255])");
+         throw new Error('Invalid color \'g\' value (expected [0-255])');
       }
       if (color[2] < 0 || color[2] > 255) {
-         throw new Error("Invalid color 'b' value (expected [0-255])");
+         throw new Error('Invalid color \'b\' value (expected [0-255])');
       }
 
       super(color);
@@ -42,8 +42,8 @@ export class htmlColor extends Color {
     * @returns The hex string
     */
    protected componentToHex(c: number): string {
-      var hex = c.toString(16);
-      return hex.length == 1 ? "0" + hex : hex;
+      const hex = c.toString(16);
+      return hex.length == 1 ? '0' + hex : hex;
    }
 
    /**
@@ -52,10 +52,10 @@ export class htmlColor extends Color {
     * @returns A hex string.
     */
    public toHex(): string {
-      let rHex = this.componentToHex(this.r);
-      let gHex = this.componentToHex(this.g);
-      let bHex = this.componentToHex(this.b);
-      return "#" + rHex + gHex + bHex;
+      const rHex = this.componentToHex(this.r);
+      const gHex = this.componentToHex(this.g);
+      const bHex = this.componentToHex(this.b);
+      return '#' + rHex + gHex + bHex;
    }
 
    /**
@@ -74,8 +74,8 @@ export class htmlColor extends Color {
     * @returns The color.
     */
    public static fromCss(css: string): htmlColor {
-      let regex = /\d+/g;
-      let vals = css.match(regex).slice(0, 3);
+      const regex = /\d+/g;
+      const vals = css.match(regex).slice(0, 3);
       return new htmlColor([parseInt(vals[0]), parseInt(vals[1]), parseInt(vals[2])]);
    }
 
@@ -86,15 +86,15 @@ export class htmlColor extends Color {
     * @returns The htmlColor object
     */
    public static fromHex(hex: string): htmlColor {
-      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       if (result) {
-         let r = parseInt(result[1], 16);
-         let g = parseInt(result[2], 16);
-         let b = parseInt(result[3], 16);
+         const r = parseInt(result[1], 16);
+         const g = parseInt(result[2], 16);
+         const b = parseInt(result[3], 16);
          return new htmlColor([r, g, b]);
       }
       else {
-         return null;
+         return new htmlColor([0, 0, 0]);
       }
    }
 
@@ -104,9 +104,9 @@ export class htmlColor extends Color {
     * @param color A generic Color object.
     */
    public static fromColor(color: Color): htmlColor {
-      let r = htmlColor.clamp(color.r);
-      let g = htmlColor.clamp(color.g);
-      let b = htmlColor.clamp(color.b);
+      const r = htmlColor.clamp(color.r);
+      const g = htmlColor.clamp(color.g);
+      const b = htmlColor.clamp(color.b);
       return new htmlColor([r, g, b]);
    }
 
@@ -135,7 +135,7 @@ export class htmlColor extends Color {
     * @returns The gray-scale color.
     */
    public toGray(): htmlColor {
-      let rgb = Math.round((this.r + this.g + this.b) / 3);
+      const rgb = Math.round((this.r + this.g + this.b) / 3);
       return new htmlColor([rgb, rgb, rgb]);
    }
 

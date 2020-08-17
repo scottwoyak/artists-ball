@@ -1,5 +1,5 @@
-import { TriangleObjData, TriangleObj } from "../../Util3D/TriangleObj";
-import { TriangleObjFile } from "../../Util3D/TriangleObjFile";
+import { ITriangleObjData, TriangleObj } from '../../Util3D/TriangleObj';
+import { TriangleObjFile } from '../../Util3D/TriangleObjFile';
 
 /**
  * This is the worker that loads and processes the .obj file
@@ -24,19 +24,19 @@ async function loadFile(file: string) {
    worker.postMessage('Downloading 0%');
 
    try {
-      let chunksAll = await fetchData(file);
-      let data: TriangleObjData;
+      const chunksAll = await fetchData(file);
+      let data: ITriangleObjData;
 
       if (file.toLowerCase().endsWith('.obj')) {
          // decode into a string
-         let res = new TextDecoder("utf-8").decode(chunksAll);
+         const res = new TextDecoder('utf-8').decode(chunksAll);
 
          // turn the .obj string into triangles
-         let tObj = new TriangleObjFile(file, res, (status) => { worker.postMessage(status); });
+         const tObj = new TriangleObjFile(file, res, (status) => { worker.postMessage(status); });
          data = tObj.toData();
       }
       else if (file.toLowerCase().endsWith('.blob')) {
-         let blob = new Blob([chunksAll]);
+         const blob = new Blob([chunksAll]);
          data = await TriangleObj.blobToData(blob);
       }
 
@@ -54,7 +54,7 @@ async function loadFile(file: string) {
 
 async function fetchData(file: string): Promise<Uint8Array> {
 
-   let response = await fetch(file);
+   const response = await fetch(file);
 
    if (response.status != 200) {
       worker.postMessage(response.status + ': ' + file);

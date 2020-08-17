@@ -5,7 +5,7 @@ if (!Blob.prototype.arrayBuffer) {
       // read the Blob the old fashioned way
       return new Promise<ArrayBuffer>((resolve, reject) => {
 
-         let reader = new FileReader();
+         const reader = new FileReader();
 
          // register event handlers
          reader.onloadend = () => {
@@ -31,12 +31,12 @@ if (!Blob.prototype.text) {
       // read the Blob the old fashioned way
       return new Promise<string>((resolve, reject) => {
 
-         let reader = new FileReader();
+         const reader = new FileReader();
 
          // register event handlers
          reader.onloadend = () => {
             // decode into a string
-            let txt = new TextDecoder("utf-8").decode(reader.result as ArrayBuffer);
+            const txt = new TextDecoder('utf-8').decode(reader.result as ArrayBuffer);
             resolve(txt);
          }
 

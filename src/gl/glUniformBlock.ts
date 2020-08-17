@@ -1,7 +1,7 @@
-import { glProgram } from "./glProgram";
+import { glProgram } from './glProgram';
 
 export class glUniformBlock {
-   private gl2: WebGL2RenderingContext = null;
+   private gl2: WebGL2RenderingContext;
    private blockLocation: number;
    private blockBuffer: WebGLBuffer;
 
@@ -13,7 +13,7 @@ export class glUniformBlock {
    ) {
 
       this.gl2 = glCtx;
-      let gl2 = this.gl2;
+      const gl2 = this.gl2;
 
       if (program instanceof glProgram) {
          program = program.get();
@@ -26,14 +26,14 @@ export class glUniformBlock {
       gl2.bindBufferBase(gl2.UNIFORM_BUFFER, blockBinding, this.blockBuffer);
    }
 
-   delete() {
-      let gl2 = this.gl2;
+   dispose(): void {
+      const gl2 = this.gl2;
       gl2.deleteBuffer(this.blockBuffer);
    }
 
-   upload(data: Float32Array | Int32Array) {
+   upload(data: Float32Array | Int32Array): void {
 
-      let gl2 = this.gl2;
+      const gl2 = this.gl2;
       gl2.bindBuffer(gl2.UNIFORM_BUFFER, this.blockBuffer);
       gl2.bufferData(gl2.UNIFORM_BUFFER, data, gl2.STATIC_DRAW);
       gl2.bindBuffer(gl2.UNIFORM_BUFFER, null);

@@ -2,18 +2,26 @@
    "parser": "@typescript-eslint/parser",
    "parserOptions": {
       "ecmaVersion": 2020, // Allows for the parsing of modern ECMAScript features
-      "sourceType": "module" // Allows for the use of imports
+      "sourceType": "module", // Allows for the use of imports
+      "project": "./tsconfig.json"
    },
    "plugins": [
       "@typescript-eslint"
    ],
    "extends": [
-      "plugin:@typescript-eslint/recommended" // Uses the recommended rules from the @typescript-eslint/eslint-plugin
+      "plugin:@typescript-eslint/recommended", // Uses the recommended rules from the @typescript-eslint/eslint-plugin
+      "plugin:@typescript-eslint/recommended-requiring-type-checking"
    ],
    "rules": {
       "quotes": [
          2,
          "single"
+      ],
+      "@typescript-eslint/restrict-plus-operands": [
+         0
+      ],
+      "@typescript-eslint/ban-ts-comment": [
+         0
       ]
    }
 }

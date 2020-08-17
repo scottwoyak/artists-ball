@@ -80,10 +80,10 @@ export class ViewerApp implements IApp {
       this.loadModel(this.query);
    }
 
-   public delete() {
+   public dispose() {
       cancelAnimationFrame(this.animationFrame);
-      this.perspectivePanel.delete();
-      this.valuePlanesPanel.delete();
+      this.perspectivePanel.dispose();
+      this.valuePlanesPanel.dispose();
    }
 
    private createViewElements(parent: HTMLElement) {
@@ -584,14 +584,14 @@ export class ViewerApp implements IApp {
 
       // if nothing was specified, load an interesting model
       if (!query) {
-         let num = Math.round(0.5 + 16 * Math.random());
+         const num = Math.round(0.5 + 16 * Math.random());
          query = 'Pose_0' + num + '.blob';
       }
 
-      let lc = query.toLowerCase();
+      const lc = query.toLowerCase();
       if (lc.endsWith('.obj') || lc.endsWith('.blob')) {
 
-         let statusFunc = (status: string) => {
+         const statusFunc = (status: string) => {
             this.overlay.clear();
             this.overlay.fillText(status);
          }

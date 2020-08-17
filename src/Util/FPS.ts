@@ -1,9 +1,6 @@
 export class FPS {
    private ticks: number[] = [];
 
-   public constructor() {
-   }
-
    private get spanMs(): number {
       if (this.ticks.length < 2) {
          return 0;
@@ -31,7 +28,7 @@ export class FPS {
       }
    }
 
-   public tick() {
+   public tick(): void {
 
       this.ticks.push(window.performance.now());
 

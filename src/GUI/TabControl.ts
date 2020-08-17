@@ -15,17 +15,17 @@ export class TabControl {
 
    public createTab(text: string): HTMLDivElement {
 
-      let tabContentId = text.replace(' ', '');
+      const tabContentId = text.replace(' ', '');
 
       // create the button in the tab
-      let tab = document.createElement('button');
+      const tab = document.createElement('button');
       tab.className = 'Tab';
       tab.innerText = text;
       this.tabsDiv.appendChild(tab);
       this.tabs.push(tab);
 
       // create the div for managing tab content
-      let tabContentDiv = document.createElement('div');
+      const tabContentDiv = document.createElement('div');
       this.parent.appendChild(tabContentDiv);
       tabContentDiv.className = 'TabContent';
       tabContentDiv.id = tabContentId;
@@ -49,7 +49,7 @@ export class TabControl {
 
       // Get all elements with class="tabcontent" and hide them
       for (let i = 0; i < this.tabContentDivs.length; i++) {
-         this.tabContentDivs[i].style.display = "none";
+         this.tabContentDivs[i].style.display = 'none';
       }
 
       // display the tab contents
@@ -57,10 +57,10 @@ export class TabControl {
 
       // Get all elements with class="Tab" and remove the class "active"
       for (let i = 0; i < this.tabs.length; i++) {
-         this.tabs[i].className = this.tabs[i].className.replace(" active", "");
+         this.tabs[i].className = this.tabs[i].className.replace(' active', '');
       }
 
       // Show the current tab, and add an "active" class to the button that opened the tab
-      tab.className += " active";
+      tab.className += ' active';
    }
 }

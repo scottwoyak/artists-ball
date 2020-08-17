@@ -1,7 +1,7 @@
 
 export type StatusFunction = (status: string) => void;
 
-export let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+export const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 export function clamp(value: number, min: number, max: number): number {
    if (value < min) {
@@ -52,8 +52,11 @@ export function toTimeStr(val: number): string {
    }
 }
 
-export function getBooleanValue(value: boolean | (() => boolean)): boolean {
-   if (typeof value === 'boolean') {
+export function getBooleanValue(value: boolean | (() => boolean) | undefined | null): boolean {
+   if (value === undefined || value === null) {
+      return false;
+   }
+   else if (typeof value === 'boolean') {
       return value;
    }
    else if (typeof value === 'function') {
@@ -64,7 +67,7 @@ export function getBooleanValue(value: boolean | (() => boolean)): boolean {
    }
 }
 
-export function iOS() {
+export function iOS(): boolean {
    return [
       'iPad Simulator',
       'iPhone Simulator',
@@ -74,5 +77,5 @@ export function iOS() {
       'iPod'
    ].includes(navigator.platform)
       // iPad on iOS 13 detection
-      || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+      || (navigator.userAgent.includes('Mac') && 'ontouchend' in document)
 }

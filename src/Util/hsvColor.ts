@@ -1,5 +1,5 @@
-import { htmlColor } from "./htmlColor";
-import { glColor3 } from "../gl/glColor";
+import { htmlColor } from './htmlColor';
+import { glColor3 } from '../gl/glColor';
 
 /**
  * Class for representing color values. Values are on a 0-1 scale.
@@ -25,16 +25,16 @@ export class hsvColor {
     * @returns The hsvColor object.
     */
    public static fromHtmlColor(color: htmlColor): hsvColor {
-      let r = color.r;
-      let g = color.g;
-      let b = color.b;
+      const r = color.r;
+      const g = color.g;
+      const b = color.b;
 
-      let max = Math.max(r, g, b);
-      let min = Math.min(r, g, b);
-      let d = max - min;
-      let h;
-      let s = (max === 0 ? 0 : d / max);
-      let v = max / 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const d = max - min;
+      let h = 0;
+      const s = (max === 0 ? 0 : d / max);
+      const v = max / 255;
 
       switch (max) {
          case min: h = 0; break;
@@ -63,12 +63,12 @@ export class hsvColor {
     */
    public toGlColor(): glColor3 {
 
-      var r, g, b, i, f, p, q, t;
-      i = Math.floor(this.h * 6);
-      f = this.h * 6 - i;
-      p = this.v * (1 - this.s);
-      q = this.v * (1 - f * this.s);
-      t = this.v * (1 - (1 - f) * this.s);
+      let r, g, b;
+      const i = Math.floor(this.h * 6);
+      const f = this.h * 6 - i;
+      const p = this.v * (1 - this.s);
+      const q = this.v * (1 - f * this.s);
+      const t = this.v * (1 - (1 - f) * this.s);
       switch (i % 6) {
          case 0: r = this.v, g = t, b = p; break;
          case 1: r = q, g = this.v, b = p; break;
@@ -76,6 +76,7 @@ export class hsvColor {
          case 3: r = p, g = q, b = this.v; break;
          case 4: r = t, g = p, b = this.v; break;
          case 5: r = this.v, g = p, b = q; break;
+         default: r = 0; g = 0; b = 0;
       }
 
       return new glColor3([r, g, b]);

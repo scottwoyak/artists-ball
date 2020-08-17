@@ -59,7 +59,7 @@ export class ValuePlanesCtrl {
       this.onThreshold1Change = onThreshold1Change;
       this.onThreshold2Change = onThreshold2Change;
 
-      let canvas = document.createElement('canvas');
+      const canvas = document.createElement('canvas');
       canvas.id = 'ValuePlanesCanvas';
       canvas.width = CTRL_SIZE;
       canvas.height = CTRL_SIZE;
@@ -67,7 +67,7 @@ export class ValuePlanesCtrl {
 
       // don't try to make the canvas transparent to the underlying html. This
       // seems to limit the alpha values we can use in our scene.
-      let context = canvas.getContext('webgl') as WebGLRenderingContext;
+      const context = canvas.getContext('webgl') as WebGLRenderingContext;
 
       if (!context) {
          // TODO display a message about not being able to create a WebGL context
@@ -86,17 +86,17 @@ export class ValuePlanesCtrl {
       this.handler.onDown = (pos: Vec2) => this.onDown(pos);
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
 
-      let gl = this.gl;
+      const gl = this.gl;
       gl.enable(gl.DEPTH_TEST);
 
       this.program = new glProgram(gl, vertexSource, fragmentSource);
 
-      let tBall = new TriangleObjBuilder('Ball');
+      const tBall = new TriangleObjBuilder('Ball');
       tBall.addSphere(50, BALL_RADIUS, BALL_CENTER);
       tBall.optimize(NormalType.Smooth);
       this.ball = new glObject(gl, tBall, this.program);
 
-      let tArrow = new TriangleObjBuilder('Light Arrow');
+      const tArrow = new TriangleObjBuilder('Light Arrow');
       tArrow.addArrow();
       this.arrow = new glObject(gl, tArrow, this.program);
 
@@ -109,8 +109,8 @@ export class ValuePlanesCtrl {
    }
 
    private hitTest(pos: Vec2) {
-      let d1 = this.p1.distance(pos);
-      let d2 = this.p2.distance(pos);
+      const d1 = this.p1.distance(pos);
+      const d2 = this.p2.distance(pos);
 
       const HIT_RADIUS = NOMINAL_KNOB_RADIUS * (CTRL_SIZE / NOMINAL_DISPLAY_SIZE);
       if (d1 < HIT_RADIUS && d1 <= d2) {
@@ -128,11 +128,11 @@ export class ValuePlanesCtrl {
 
    private onDrag(pos: Vec2, delta: Vec2) {
       if (this.hit > 0) {
-         let hitPt = new Vec2([pos.x + this.mouseOffset.x, pos.y + this.mouseOffset.y]);
+         const hitPt = new Vec2([pos.x + this.mouseOffset.x, pos.y + this.mouseOffset.y]);
          hitPt.x = Math.max(hitPt.x, this.ballCenter.x);
          hitPt.y = Math.min(hitPt.y, this.ballCenter.y);
-         let radius = this.ballCenter.distance(hitPt);
-         let angle = clamp(toDeg(Math.asin((hitPt.x - this.ballCenter.x) / radius)), 0, 90);
+         const radius = this.ballCenter.distance(hitPt);
+         const angle = clamp(toDeg(Math.asin((hitPt.x - this.ballCenter.x) / radius)), 0, 90);
          if (this.hit == 1) {
             this.provider.threshold1 = angle;
             this.onThreshold1Change(angle);
@@ -152,7 +152,7 @@ export class ValuePlanesCtrl {
 
    private setStdUniforms(): glUniform {
 
-      let uni = new glUniform(this.gl, this.program);
+      const uni = new glUniform(this.gl, this.program);
       uni.set('view', Mat4.identity);
       uni.set('projection', Mat4.ortho);
       uni.set('uEye', new Vec3([0, 0, 1]));
@@ -167,7 +167,7 @@ export class ValuePlanesCtrl {
       uni.set('uWhiteColor', glColor3.modelWhite);
       uni.set('uBlackColor', glColor3.modelBlack);
 
-      let contourColors = [
+      const contourColors = [
          this.toGLColor(this.provider.lightLight),
          this.toGLColor(this.provider.midLight),
          this.toGLColor(this.provider.darkLight),
@@ -191,10 +191,10 @@ export class ValuePlanesCtrl {
    }
 
    private drawBall() {
-      let gl = this.gl;
+      const gl = this.gl;
       gl.clear(gl.COLOR_BUFFER_BIT);
 
-      let uni = this.setStdUniforms();
+      const uni = this.setStdUniforms();
 
       // always render with bands
       uni.seti('uRenderMode', RenderMode.ContourPlanes);
@@ -225,7 +225,7 @@ export class ValuePlanesCtrl {
    }
 
    private drawOverlay() {
-      let ctx = this.overlay.getContext('2d');
+      const ctx = this.overlay.getContext('2d');
       this.ballCenter = new Vec2([
          CTRL_SIZE * (1 + BALL_CENTER.x) / 2,
          CTRL_SIZE * (1 - BALL_CENTER.y) / 2
@@ -237,10 +237,10 @@ export class ValuePlanesCtrl {
 
       const KNOB_LENGTH = NOMINAL_KNOB_LENGTH * (CTRL_SIZE / NOMINAL_DISPLAY_SIZE);
       const KNOB_RADIUS = NOMINAL_KNOB_RADIUS * (CTRL_SIZE / NOMINAL_DISPLAY_SIZE);
-      let r = CTRL_SIZE * BALL_RADIUS / 2;
-      let s1 = this.getPt(this.ballCenter, this.provider.threshold1, r);
+      const r = CTRL_SIZE * BALL_RADIUS / 2;
+      const s1 = this.getPt(this.ballCenter, this.provider.threshold1, r);
       this.p1 = this.getPt(this.ballCenter, this.provider.threshold1, r + KNOB_LENGTH);
-      let s2 = this.getPt(this.ballCenter, this.provider.threshold2, r);
+      const s2 = this.getPt(this.ballCenter, this.provider.threshold2, r);
       this.p2 = this.getPt(this.ballCenter, this.provider.threshold2, r + KNOB_LENGTH);
 
       ctx.lineWidth = (1 / 150) * CTRL_SIZE;
@@ -267,8 +267,8 @@ export class ValuePlanesCtrl {
 
    private getPt(center: Vec2, threshold: number, radius: number): Vec2 {
 
-      let oy = radius * Math.sin(toRad(90 - threshold));
-      let ox = radius * Math.cos(toRad(90 - threshold));
+      const oy = radius * Math.sin(toRad(90 - threshold));
+      const ox = radius * Math.cos(toRad(90 - threshold));
 
       return new Vec2([center.x + ox, center.y - oy]);
    }

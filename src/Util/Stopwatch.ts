@@ -1,4 +1,4 @@
-import { toTimeStr } from "./Globals";
+import { toTimeStr } from './Globals';
 
 /**
  * Utility class for tracking time
@@ -31,7 +31,7 @@ export class Stopwatch {
    /**
     * Resets elapsed time to 0
     */
-   public restart() {
+   public restart(): void {
       this.startTime = performance.now();
    }
 }
