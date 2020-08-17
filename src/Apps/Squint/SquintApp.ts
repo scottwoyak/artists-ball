@@ -15,7 +15,7 @@ import { Squint } from './Squint';
 import { WelcomeDialog } from './WelcomeDialog';
 import { UserNameDialog } from './UserNameDialog';
 import { GUI } from '../../GUI/GUI';
-import { ViewersPanel } from './ViewersPanel';
+import { ChatPanel } from './ChatPanel';
 import { IConnectionInfo } from './SquintMessage';
 import { BandwidthTracker } from './BandwidthTracker';
 import { SquintEvent } from './SquintEvents';
@@ -45,7 +45,7 @@ export class SquintApp implements IApp {
    private div: HTMLDivElement | undefined;
    private userNameMenuItemDiv: HTMLDivElement | undefined;
    private img: HTMLImageElement | undefined;
-   private viewersPanel: ViewersPanel | undefined;
+   private viewersPanel: ChatPanel | undefined;
    private notificationDiv: HTMLDivElement | undefined;
    private cameraMenu: SubMenu | undefined;
 
@@ -188,7 +188,7 @@ export class SquintApp implements IApp {
       this.camera = new Camera(this.div);
       this.camera.video.style.display = 'none';
 
-      this.viewersPanel = new ViewersPanel(this.squint, this.div);
+      this.viewersPanel = new ChatPanel(this.squint, this.div);
 
       this.notificationDiv = GUI.create('div', 'NotificationDiv', this.div);
 

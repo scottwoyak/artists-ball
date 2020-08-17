@@ -31,8 +31,8 @@ export class PointerEventHandler {
 
    public lastPos = new Vec2([0, 0]);
    private lastTouchTime = Date.now();
-   private primaryTouchId = -1;
-   private secondaryTouchId = -1;
+   private primaryTouchId: number | null = null;
+   private secondaryTouchId: number | null = null;
    private initialTouchDistance = -1;
    private lastTouchDistance = -1;
    private lastTouchAngle = -1;
@@ -42,9 +42,9 @@ export class PointerEventHandler {
 
       this.element = element;
 
-      element.addEventListener('touchstart', this.touchstart);
-      element.addEventListener('mousedown', this.mousedown);
-      element.addEventListener('dblclick', this.dblclick);
+      this.element.addEventListener('touchstart', this.touchstart);
+      this.element.addEventListener('mousedown', this.mousedown);
+      this.element.addEventListener('dblclick', this.dblclick);
    }
 
    public dispose(): void {
@@ -69,8 +69,8 @@ export class PointerEventHandler {
          const pos = this.getPos(event);
          this.ourOnDown(pos);
 
-         document.addEventListener('mousemove', this.mousemove);
-         document.addEventListener('mouseup', this.mouseup);
+         this.element.addEventListener('mousemove', this.mousemove);
+         this.element.addEventListener('mouseup', this.mouseup);
 
          // disable selection because we're doing something else with dragging
          return false;
@@ -94,8 +94,8 @@ export class PointerEventHandler {
 
       this.ourOnUp();
 
-      document.removeEventListener('mousemove', this.mousemove);
-      document.removeEventListener('mouseup', this.mouseup);
+      this.element.removeEventListener('mousemove', this.mousemove);
+      this.element.removeEventListener('mouseup', this.mouseup);
    };
 
    private touchstart = (event: TouchEvent) => {
@@ -120,15 +120,15 @@ export class PointerEventHandler {
                this.ourDblClick(pos);
             }
             else {
-               document.addEventListener('touchmove', this.touchmove);
-               document.addEventListener('touchend', this.touchend);
+               this.element.addEventListener('touchmove', this.touchmove);
+               this.element.addEventListener('touchend', this.touchend);
 
                this.ourOnDown(pos);
             }
             this.lastTouchTime = time;
          }
          // if this is the second touch
-         else if (event.touches.length === 2 && this.primaryTouchId >= 0) {
+         else if (event.touches.length === 2 && this.primaryTouchId !== null) {
 
             // record the secondary touch id. It will always be the second element when
             // there are only two elements
@@ -152,7 +152,7 @@ export class PointerEventHandler {
       event.preventDefault();
 
       // if the initial two touches are active
-      if (this.primaryTouchId >= 0 && this.secondaryTouchId >= 0) {
+      if (this.primaryTouchId !== null && this.secondaryTouchId !== null) {
 
          // send out gesture events
          const distance = this.computeTouchDistance(event);
@@ -172,7 +172,7 @@ export class PointerEventHandler {
          this.lastTouchCenter = center;
       }
       // if only the initial touch is active
-      else if (this.primaryTouchId >= 0) {
+      else if (this.primaryTouchId !== null) {
 
          // send out the drag event
          if (this.mouseDown) {
@@ -197,9 +197,9 @@ export class PointerEventHandler {
       // needed to select an input element
       //event.preventDefault();
 
-      if (this.secondaryTouchId >= 0) {
+      if (this.secondaryTouchId !== null) {
          if (this.getTouch(event, this.secondaryTouchId) === null) {
-            this.secondaryTouchId = -1;
+            this.secondaryTouchId = null;
 
             // if we lifted the second finger, but not the first, go back
             // to the drag gesture, but adjust the rememberd position to
@@ -211,24 +211,24 @@ export class PointerEventHandler {
          }
       }
 
-      if (this.primaryTouchId >= 0) {
+      if (this.primaryTouchId !== null) {
          if (this.getTouch(event, this.primaryTouchId) === null) {
-            this.primaryTouchId = -1;
+            this.primaryTouchId = null;
 
             this.ourOnUp();
          }
       }
 
-      if (this.secondaryTouchId === -1 || this.primaryTouchId === -1) {
+      if (this.secondaryTouchId === null || this.primaryTouchId === null) {
          this.initialTouchDistance = -1;
          this.lastTouchDistance = -1;
          this.lastTouchAngle = -1;
          this.lastTouchCenter = new Vec2([-1, -1]);
       }
 
-      if (this.secondaryTouchId === -1 && this.primaryTouchId === -1) {
-         document.removeEventListener('touchmove', this.touchmove);
-         document.removeEventListener('touchend', this.touchend);
+      if (this.secondaryTouchId === null && this.primaryTouchId === null) {
+         this.element.removeEventListener('touchmove', this.touchmove);
+         this.element.removeEventListener('touchend', this.touchend);
       }
    };
 
@@ -252,7 +252,7 @@ export class PointerEventHandler {
 
    private getTouches(event: TouchEvent): { primaryTouch: Touch | null, secondaryTouch: Touch | null } {
 
-      if (this.primaryTouchId < 0 || this.secondaryTouchId < 0) {
+      if (this.primaryTouchId === null || this.secondaryTouchId === null) {
          throw Error('Two touches expected');
       }
 

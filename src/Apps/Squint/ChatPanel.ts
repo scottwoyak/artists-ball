@@ -5,7 +5,7 @@ import { IConnectionInfo } from './SquintMessage';
 import { ResizeablePanel } from './ResizeablePanel';
 import { SquintEvent } from './SquintEvents';
 
-export class ViewersPanel extends ResizeablePanel {
+export class ChatPanel extends ResizeablePanel {
 
    private viewersListBox: ListBox;
    private chatListBox: ListBox;
