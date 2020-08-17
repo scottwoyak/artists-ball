@@ -4,6 +4,7 @@
   border-radius: 0.4em;
   background-color: lightgray;
   user-select: none;
+  -webkit-user-select: none;
   padding-left: 0.5em;
   padding-right: 0.5em;
   padding-top: 0.2em;
