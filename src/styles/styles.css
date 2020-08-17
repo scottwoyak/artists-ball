@@ -20,11 +20,19 @@
   }
 }
 
-/* phones and ipads in portrait */
+/* phones in portrait */
 @media (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait),
   (min-resolution: 192dpi) and (orientation: portrait) {
   * {
     font-size: 32px;
+  }
+}
+
+/* ipad in portrait */
+@media (device-aspect-ratio: 3/4) and (orientation: portrait),
+  (min-resolution: 192dpi) and (orientation: portrait) {
+  * {
+    font-size: 22px;
   }
 }
 
