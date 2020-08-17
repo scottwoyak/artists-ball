@@ -47,6 +47,7 @@ export class SquintApp implements IApp {
    private img: HTMLImageElement | undefined;
    private viewersPanel: ViewersPanel | undefined;
    private notificationDiv: HTMLDivElement | undefined;
+   private cameraMenu: SubMenu | undefined;
 
    private camera: Camera | undefined;
    private canvas: HTMLCanvasElement | undefined;
@@ -263,6 +264,7 @@ export class SquintApp implements IApp {
 
 
    private enableCameraCtrls(flag: boolean) {
+      this.cameraMenu.enabled = flag;
       for (let i = 0; i < this.cameraCtrls.length; i++) {
          this.cameraCtrls[i].enabled = flag;
       }
@@ -324,12 +326,15 @@ export class SquintApp implements IApp {
 
 
 
-      const cameraMenu = menubar.addSubMenu('Camera');
+      this.cameraMenu = menubar.addSubMenu('Camera');
+
+      // TODO just fully disable all the menu items instead of the menu itself.
+      this.cameraMenu.enabled = false;
 
       let firstItem = true;
       Camera.getCameras((constraint) => {
 
-         const radioButton = cameraMenu.addRadiobutton(
+         const radioButton = this.cameraMenu.addRadiobutton(
             {
                label: constraint.label,
                oncheck: () => {
@@ -347,7 +352,7 @@ export class SquintApp implements IApp {
          this.cameraCtrls.push(radioButton);
       })
 
-      cameraMenu.addItem('Capabilities...', () => {
+      this.cameraMenu.addItem('Capabilities...', () => {
          const capabilities = this.camera.getCapabilities();
          let msg = 'Camera Capabilities:\n';
          for (const key in capabilities) {
@@ -359,7 +364,7 @@ export class SquintApp implements IApp {
          alert(msg);
       })
 
-      this.jpegQuality = cameraMenu.addSlider({
+      this.jpegQuality = this.cameraMenu.addSlider({
          label: 'JPeg Photo Quality',
          min: 0.1,
          max: 1,
@@ -368,7 +373,7 @@ export class SquintApp implements IApp {
       });
       this.cameraCtrls.push(this.jpegQuality);
 
-      this.cameraScale = cameraMenu.addSlider({
+      this.cameraScale = this.cameraMenu.addSlider({
          label: 'Camera Resolution',
          min: 0.1,
          max: 1,
@@ -377,7 +382,7 @@ export class SquintApp implements IApp {
       });
       this.cameraCtrls.push(this.cameraScale);
 
-      this.advancedSubMenu = cameraMenu.addSubMenu('Advanced');
+      this.advancedSubMenu = this.cameraMenu.addSubMenu('Advanced');
 
       this.enableCameraCtrls(false);
 

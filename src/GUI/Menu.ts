@@ -27,17 +27,37 @@ class Menu {
    // the div that is the container for menu items
    public div: HTMLDivElement;
 
-   protected isMenuItem(element: HTMLElement | null): boolean {
-      while (element) {
-         if (element.className === 'MenuItem') {
-            return true;
+   // the item that launches us
+   private parentItem: HTMLDivElement | null = null;
+
+   public set enabled(flag: boolean) {
+      if (this.parentItem) {
+         if (flag) {
+            this.parentItem.classList.remove('MenuItemDisabledClass');
          }
-         element = element.parentElement;
+         else {
+            this.parentItem.classList.add('MenuItemDisabledClass');
+         }
       }
-      return false;
    }
-   protected constructor(parent: Menu | null, id: string, className: string) {
+
+   public get enabled(): boolean {
+      if (this.parentItem) {
+         return !this.parentItem.classList.contains('MenuItemDisabledClass');
+      }
+      else {
+         return true;
+      }
+   }
+
+   protected constructor(
+      parent: Menu | null,
+      parentItem: HTMLDivElement | null,
+      id: string,
+      className: string
+   ) {
       this.parent = parent;
+      this.parentItem = parentItem;
 
       this.div = document.createElement('div');
       this.div.id = id;
@@ -62,6 +82,16 @@ class Menu {
          });
 
       }
+   }
+
+   protected isMenuItem(element: HTMLElement | null): boolean {
+      while (element) {
+         if (element.className === 'MenuItem') {
+            return true;
+         }
+         element = element.parentElement;
+      }
+      return false;
    }
 
    public show() {
@@ -110,12 +140,16 @@ class Menu {
       }
       this.div.appendChild(item);
 
-      const subMenu = new SubMenu(this, id);
+      const subMenu = new SubMenu(this, item, id);
       this.children.push(subMenu);
       return subMenu;
    }
 
    protected showSubMenu(menuItem: HTMLDivElement, subMenu: SubMenu, location: MenuLocation) {
+
+      if (subMenu.enabled === false) {
+         return;
+      }
 
       // position the menu off screen so that we can query it's height when
       // we make it visible. Then position it properly
@@ -228,7 +262,7 @@ class Menu {
  */
 export class Menubar extends Menu {
    public constructor(parent: HTMLElement) {
-      super(null, 'Menubar', 'Menubar');
+      super(null, null, 'Menubar', 'Menubar');
       parent.appendChild(this.div);
    }
 
@@ -251,8 +285,8 @@ export class Menubar extends Menu {
  */
 export class SubMenu extends Menu {
 
-   public constructor(parent: Menu, id: string) {
-      super(parent, id + 'Menu', 'Menu');
+   public constructor(parent: Menu, parentItem: HTMLDivElement, id: string) {
+      super(parent, parentItem, id + 'Menu', 'Menu');
    }
 
    public addSubMenu(text: string, id?: string): SubMenu {
