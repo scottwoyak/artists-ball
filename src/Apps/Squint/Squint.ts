@@ -269,6 +269,15 @@ export class Squint {
       });
    }
 
+   public log(msg: string): void {
+      if (this.connected) {
+         this.send({
+            subject: SquintMessageSubject.Log,
+            message: msg,
+         });
+      }
+   }
+
    public toString(): string {
       if (this.ss) {
          return '[' + this.ss.readyStateStr + ']';

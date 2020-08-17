@@ -136,6 +136,7 @@ export class SquintApp implements IApp {
             this.showNotification('Connection lost, reconnecting');
          }
       });
+
       this.squint.on({
          name: SquintEvent.Reconnected,
          handler: (success: boolean) => {
@@ -149,6 +150,10 @@ export class SquintApp implements IApp {
             }
          }
       });
+
+      this.console.onMessage = (msg: string) => {
+         this.squint.log(msg);
+      }
    }
 
    public create(div: HTMLDivElement): void {
@@ -203,7 +208,7 @@ export class SquintApp implements IApp {
       }
 
       document.onkeydown = (event: KeyboardEvent) => {
-         if (this.squint.connected) {
+         if (this.squint.connected && event.target instanceof HTMLInputElement === false) {
             switch (event.key) {
 
                case 'x':

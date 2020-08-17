@@ -1,6 +1,7 @@
 export enum SquintMessageSubject {
    ChatMessage = 'ChatMessage',
    Hello = 'Hello',
+   Log = 'Log',
    ReadyForNextImage = 'ReadyForNextImage',
    Reconnected = 'Reconnected',
    SessionList = 'SessionList',
@@ -8,6 +9,7 @@ export enum SquintMessageSubject {
    UpdateConnectionInfo = 'UpdateConnectionInfo',
    ViewerList = 'ViewerList',
 }
+
 export interface ISquintChatMessage {
    subject: SquintMessageSubject.ChatMessage,
    connection: IConnectionInfo,
@@ -25,6 +27,11 @@ export interface ISquintHelloFromClientMessage {
 export interface ISquintHelloFromServerMessage {
    subject: SquintMessageSubject.Hello,
    id: string,
+}
+
+export interface ISquintLogMessage {
+   subject: SquintMessageSubject.Log,
+   message: string,
 }
 
 export interface ISquintReadyForNextImageMessage {
@@ -61,6 +68,7 @@ export type ISquintMessage =
    ISquintChatMessage |
    ISquintHelloFromClientMessage |
    ISquintHelloFromServerMessage |
+   ISquintLogMessage |
    ISquintReadyForNextImageMessage |
    ISquintReconnectedMessage |
    ISquintSessionListMessage |

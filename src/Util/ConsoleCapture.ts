@@ -1,8 +1,14 @@
 const NUM_COLS = 150;
 
+export type MessageHandler = (msg: string) => void;
+
 export class ConsoleCapture {
 
    private textArea: HTMLTextAreaElement;
+
+   // TODO separate this class into two. One for just intercepting console message and
+   // one for being a GUI to see it
+   public onMessage: MessageHandler | null;
 
    public get visible(): boolean {
       return getComputedStyle(this.textArea).display === 'block';
@@ -61,6 +67,7 @@ export class ConsoleCapture {
          const msg = event + '\n' + source + ' line:' + lineno + ', col:' + colno + stackTrace;
          alert(msg);
          this.append(msg);
+         oldOnError(event, source, lineno, colno, error);
       }
    }
 
@@ -72,6 +79,10 @@ export class ConsoleCapture {
       fullmsg = fullmsg.substr(0, 10 * 1000 * NUM_COLS);
 
       this.textArea.value = fullmsg;
+
+      if (this.onMessage) {
+         this.onMessage(msg);
+      }
    }
 
    public setEdges(left: number, right: number, top: number, bottom: number): void {
