@@ -9,6 +9,8 @@
   padding-right: 0.5em;
   padding-top: 0.2em;
   padding-bottom: 0.2em;
+  /* for some reason buttons don't respond to our global font size, so manually set them */
+  font-size: 1em;
 }
 
 .ButtonClass:hover:enabled {

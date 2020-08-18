@@ -117,7 +117,7 @@ export class Squint {
       if (retryCount === 1) {
          this.emit(SquintEvent.Reconnecting);
       }
-      console.log(this + ' Reconnect try ' + retryCount + ' ' + this.connected)
+      console.log(this + ' Reconnect try ' + retryCount)
       this.reconnect(SquintWsUrl, connectionId)
          .then(() => {
             this._reconnecting = false;

@@ -1,40 +1,11 @@
 * {
-  font-family: Verdana;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 /*
  * Our strategy for handling multiple devices is to set the font size and 
  * then scale everything else based on em's
  */
-
-/* laptops and computers */
-* {
-  font-size: 13px;
-}
-
-/* phones and ipads in landscape */
-@media (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape),
-  (min-resolution: 192dpi) and (orientation: landscape) {
-  * {
-    font-size: 16px;
-  }
-}
-
-/* phones in portrait */
-@media (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait),
-  (min-resolution: 192dpi) and (orientation: portrait) {
-  * {
-    font-size: 32px;
-  }
-}
-
-/* ipad in portrait */
-@media (device-aspect-ratio: 3/4) and (orientation: portrait),
-  (min-resolution: 192dpi) and (orientation: portrait) {
-  * {
-    font-size: 22px;
-  }
-}
 
 :root {
   --main-color: 114, 117, 134;
@@ -103,7 +74,7 @@ body::-webkit-scrollbar {
   right: 0px;
   background-color: darkblue;
   color: white;
-  font-size: "12px";
+  font-size: smaller;
   display: none;
 }
 
