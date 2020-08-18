@@ -20,6 +20,11 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+/* for some reason inputs don't respond to our global font size, so manually set them */
+input {
+  font-size: 1em;
+}
+
 .Container {
   position: relative;
 }

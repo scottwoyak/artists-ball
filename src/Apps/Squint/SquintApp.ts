@@ -441,7 +441,7 @@ export class SquintApp implements IApp {
          checked: () => { return this.console.visible; }
       });
 
-      this.userNameMenuItemDiv = menubar.addItem('Hi ' + (this.userName ?? ''),
+      this.userNameMenuItemDiv = menubar.addItem('Hi ' + (this.hasUserName ? this.userName : ''),
          () => {
             new UserNameDialog(
                this.div,
