@@ -4,8 +4,20 @@
 
 /*
  * Our strategy for handling multiple devices is to set the font size and 
- * then scale everything else based on em's
+ * then scale everything else based on em's. The variables below are set
+ * within the Javascript code based on the platform, browser, and orientation
  */
+* {
+  font-size: var(--fontSize);
+}
+
+/* for some reason inputs don't respond to our global font size, so manually set them */
+input {
+  font-size: 1em;
+}
+button {
+  font-size: 1em;
+}
 
 :root {
   --main-color: 114, 117, 134;
@@ -18,11 +30,6 @@ body {
 
 body::-webkit-scrollbar {
   display: none;
-}
-
-/* for some reason inputs don't respond to our global font size, so manually set them */
-input {
-  font-size: 1em;
 }
 
 .Container {

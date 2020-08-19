@@ -157,47 +157,9 @@ export class SquintApp implements IApp {
       }
    }
 
-   private setFontSize() {
-      // supposed to be able to do this stuff with media queries, but I give up! Browsers
-      // behave differently on mobile devices and some alter scaling for portrait and
-      // landscape too!
-      const isMobile = (navigator.userAgent.indexOf('Mobile') > 0);
-      const isFirefox = (navigator.userAgent.indexOf('Firefox') > 0);
-      const isPortrait = (window.orientation !== undefined && window.orientation === 0 || window.orientation === 180);
-      const isIphone = (navigator.userAgent.indexOf('iPhone') > 0);
-
-      let fontSize = 11;
-      if (isFirefox) {
-         fontSize = 11;
-      }
-      else {
-         if (isMobile && isPortrait) {
-            if (isIphone) {
-               fontSize = 28;
-            }
-            else {
-               fontSize = 24;
-            }
-         }
-         else {
-            if (isIphone) {
-               fontSize = 16;
-            }
-            else {
-               fontSize = 11;
-            }
-         }
-      }
-
-      document.body.style.fontSize = fontSize + 'pt';
-   }
-
    public create(div: HTMLDivElement): void {
 
       div.id = 'SquintApp';
-
-      this.setFontSize();
-      window.addEventListener('orientationchange', () => this.setFontSize());
 
       this.startDialog = new StartDialog(
          div,
