@@ -19,6 +19,7 @@ import { ChatPanel } from './ChatPanel';
 import { IConnectionInfo } from './SquintMessage';
 import { BandwidthTracker } from './BandwidthTracker';
 import { SquintEvent } from './SquintEvents';
+import NoSleep from 'nosleep.js';
 
 export class SquintStrings {
    public static readonly CAMERA_NOT_READY = 'Camera not ready';
@@ -83,6 +84,9 @@ export class SquintApp implements IApp {
 
    private console = new ConsoleCapture();
 
+   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+   private noSleep = new NoSleep();
+
    private get hasUserName(): boolean {
       return (localStorage.getItem(StorageItems.UserName) !== null);
    }
@@ -109,6 +113,9 @@ export class SquintApp implements IApp {
    }
 
    public constructor() {
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      this.noSleep.enable();
 
       document.title += (' ' + Version.Build);
 
@@ -155,6 +162,7 @@ export class SquintApp implements IApp {
       this.console.onMessage = (msg: string) => {
          this.squint.log(msg);
       }
+
    }
 
    public create(div: HTMLDivElement): void {
@@ -213,6 +221,7 @@ export class SquintApp implements IApp {
 
                case 'x':
                   // simulate killing the connection
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
                   (<any>this.squint.ss).ws.close(3000);
                   break;
             }
