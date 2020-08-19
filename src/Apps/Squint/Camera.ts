@@ -157,9 +157,6 @@ export class Camera {
       }
 
       return new Promise<MediaStreamTrack>((resolve, reject) => {
-         let msg = 'xxx navigator.mediaDevices.getUserMedia(constraints)\n';
-         msg += 'constraints: ' + JSON.stringify(constraints, null, ' ');
-         console.log(msg);
          navigator.mediaDevices.getUserMedia(constraints)
             .then((stream) => {
 
@@ -171,20 +168,13 @@ export class Camera {
                   // to use the camera
                   Camera.videoEnabled = true;
 
-                  console.log('xxx this.video.srcObject = stream');
                   this.video.srcObject = stream;
-
-                  console.log('xxx getting video track');
                   const track = stream.getVideoTracks()[0];
-
-                  console.log('xxx playing video. this.video=' + this.video);
                   this.video.play()
                      .then(() => {
-                        console.log('xxx resolving');
                         resolve(track);
                      })
                      .catch((err) => {
-                        console.log('xxx rejecting: ' + err);
                         reject(err);
                      });
                }
