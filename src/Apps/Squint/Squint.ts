@@ -70,7 +70,7 @@ export class Squint {
             this.emit(SquintEvent.Close);
          }
          else {
-            console.log(this + ' Websocket closed with code: ' + code + ', trying to reconnect');
+            console.log(this + ' WebSocket closed with code: ' + code + ', trying to reconnect');
             this._reconnecting = true;
             this.tryToReconnect(connectionId);
          }
