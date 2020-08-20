@@ -1,9 +1,17 @@
-import { Stopwatch } from '../../Util/Stopwatch';
 import { FPS } from '../../Util/FPS';
+import { Stopwatch } from '../../Util/Stopwatch';
 
-interface Transfer {
-   bytes: number;
-   stopwatch: Stopwatch;
+class Transfer {
+   public bytes: number;
+   public elapsedS = NaN;
+
+   public constructor(bytes: number) {
+      this.bytes = bytes;
+   }
+
+   public end(elapsedS: number) {
+      this.elapsedS = elapsedS;
+   }
 }
 
 /**
@@ -14,31 +22,47 @@ export class BandwidthTracker {
 
    private transfers: Transfer[] = [];
    private _fps = new FPS();
+   private stopwatch: Stopwatch = new Stopwatch();
+   private activeTransfer: Transfer | null = null;
 
    public get numSamples(): number {
       return this.transfers.length;
    }
 
    public get lastTransferBytes(): number {
-      const numSamples = this.transfers.length;
-      return this.transfers[numSamples - 1].bytes;
+      if (this.activeTransfer !== null) {
+         return this.activeTransfer.bytes;
+      }
+      else {
+         return NaN;
+      }
+   }
+
+   private get elapsedS(): number {
+      let elapsedS = 0;
+      for (const transfer of this.transfers) {
+         elapsedS += transfer.elapsedS;
+      }
+      return elapsedS;
+   }
+
+   private get bytes(): number {
+      let bytes = 0;
+      for (const transfer of this.transfers) {
+         bytes += transfer.bytes;
+      }
+      return bytes
    }
 
    /**
     * bandwidth, Mbps
     */
    public get megaBitsPerSec(): number {
-      if (this.transfers.length === 0) {
+      if (this.transfers.length < 2) {
          return Number.NaN;
       }
       else {
-         // sum the bytes
-         let total = 0;
-         for (const transfer of this.transfers) {
-            total += transfer.bytes;
-         }
-
-         return (8 * total / (1000 * 1000)) / this.transfers[0].stopwatch.elapsedS;
+         return (8 * this.bytes / (1000 * 1000)) / this.elapsedS;
       }
    }
 
@@ -46,16 +70,39 @@ export class BandwidthTracker {
       return this._fps.rate;
    }
 
+   public pause(): void {
+      this.stopwatch.pause();
+   }
+
+   public resume(): void {
+      this.stopwatch.resume();
+   }
+
    /**
     * Call this data is transfered
     */
-   public onTransfer(bytes: number): void {
-      this.transfers.push({ bytes: bytes, stopwatch: new Stopwatch() });
+   public tick(bytes: number): void {
+
+      // create an object for tracking the transfer
+      const transfer = new Transfer(bytes);
+
+      // capture the transfer
+      if (this.activeTransfer !== null) {
+         this.activeTransfer.end(this.stopwatch.elapsedS);
+         this.transfers.push(this.activeTransfer);
+      }
+
+      this.activeTransfer = transfer;
+
+      // start a new transfer
+      this.activeTransfer = new Transfer(bytes);
+      this.stopwatch.restart();
       this._fps.tick();
 
+      // trim existing transfers
       while (
          this.transfers.length > 20 ||
-         (this.transfers.length > 2 && (this.transfers[0].stopwatch.elapsedS > 3))
+         (this.transfers.length > 2 && (this.elapsedS > 3))
       ) {
          this.transfers.shift();
       }

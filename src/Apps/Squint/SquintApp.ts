@@ -164,6 +164,22 @@ export class SquintApp implements IApp {
          this.squint.log(msg);
       }
 
+      document.addEventListener('visibilitychange', () => {
+         if (document.visibilityState === 'visible') {
+            if (this.uploader) {
+               this.uploader.resume();
+            }
+            this.downloadTracker.resume();
+         }
+         else {
+            if (this.uploader) {
+               this.uploader.pause();
+            }
+            this.downloadTracker.pause();
+         }
+      });
+
+
       // How do you know when to close the socket? pageHide on some browsers and beforeunload/unload on
       // others. Safari seems most problematic as the actual SocketClose only randomly makes it back to
       // the server so the server doesn't know it has been a gracefull exit.
@@ -498,7 +514,7 @@ export class SquintApp implements IApp {
          // initiated the request?
          if (this.squint.connected) {
             this.img = img;
-            this.downloadTracker.onTransfer(blob.size);
+            this.downloadTracker.tick(blob.size);
 
             this.drawImg();
          }
@@ -806,10 +822,14 @@ export class SquintApp implements IApp {
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
 
-      ctx.fillText(Squint.url, 0, 10);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(Squint.url, 5, 5);
 
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
       msg = imgWidth + 'x' + imgHeight;
-      ctx.fillText(msg, 0, canvasHeight - (3 * fontSize + 5));
+      ctx.fillText(msg, 5, canvasHeight - (3 * fontSize + 5));
 
       let fps: number;
       let bandwidth: number;
@@ -823,7 +843,7 @@ export class SquintApp implements IApp {
       }
 
       msg = fps.toFixed(1) + ' fps';
-      ctx.fillText(msg, 0, canvasHeight - (2 * fontSize + 5));
+      ctx.fillText(msg, 5, canvasHeight - (2 * fontSize + 5));
 
       if (bandwidth < 5) {
          msg = 'bandwidth: ' + bandwidth.toFixed(2) + ' Mbsp';
@@ -831,10 +851,10 @@ export class SquintApp implements IApp {
       else {
          msg = 'bandwidth: ' + bandwidth.toFixed(1) + ' Mbsp';
       }
-      ctx.fillText(msg, 0, canvasHeight - (fontSize + 5));
+      ctx.fillText(msg, 5, canvasHeight - (fontSize + 5));
 
       msg = toSizeStr(this.downloadTracker.lastTransferBytes);
-      ctx.fillText(msg, 0, canvasHeight - 5);
+      ctx.fillText(msg, 5, canvasHeight - 5);
 
       if (this.squint.remoteCameraPaused) {
          ctx.shadowBlur = 0;

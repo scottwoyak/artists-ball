@@ -11,6 +11,7 @@ export class Uploader {
    private takePicture: TakePictureHandler;
 
    private running = true;
+   private paused = false;
    private busy = false;
    private squint: Squint;
    private timer = new Stopwatch();
@@ -55,10 +56,21 @@ export class Uploader {
       this.upload();
    }
 
-   public stop() {
+   public stop(): void {
       if (this.running) {
          this.running = false;
       }
+   }
+
+   public pause(): void {
+      this.paused = true;
+      this.bandwidthTracker.pause();
+   }
+
+   public resume(): void {
+      this.paused = false;
+      this.bandwidthTracker.resume();
+      this.upload();
    }
 
    private upload(delay = 0) {
@@ -67,6 +79,9 @@ export class Uploader {
          // this can happen for a number of reasons, e.g. while we were waiting for the
          // next animation frame the socket was closed.
          //debug('upload() this.running===false, returning');
+         return;
+      }
+      if (this.paused) {
          return;
       }
       if (this.busy) {
@@ -112,7 +127,7 @@ export class Uploader {
 
                if (this.squint.connected) {
                   this.squint.sendImage(blob);
-                  this.bandwidthTracker.onTransfer(blob.size);
+                  this.bandwidthTracker.tick(blob.size);
                }
 
             }).catch((err) => {

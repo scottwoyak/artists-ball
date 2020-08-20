@@ -173,8 +173,6 @@ export class Camera {
          return Promise.reject(SquintStrings.CAMERA_NOT_READY);
       }
 
-      //console.log('video ready state: ' + this.video.readyState);
-
       if (this.video.videoHeight === 0 || this.video.videoWidth === 0) {
          return Promise.reject('XX Video Size = 0');
       }
@@ -189,7 +187,19 @@ export class Camera {
       return new Promise<Blob | null>((resolve, reject) => {
          this.hiddenCanvas.toBlob(
             (blob) => {
-               resolve(blob)
+
+               // the camera could have stopped since we started this
+               // process. If so, abandon the result as we don't know
+               // when the camera went off
+               if (this.video.readyState != 4) {
+                  return reject(SquintStrings.CAMERA_NOT_READY);
+               }
+               else if (this.paused) {
+                  return reject(SquintStrings.CAMERA_NOT_READY);
+               }
+               else {
+                  resolve(blob)
+               }
             },
             'image/jpeg',
             jpegQuality);

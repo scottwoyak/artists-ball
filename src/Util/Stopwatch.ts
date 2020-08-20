@@ -5,7 +5,28 @@ import { toTimeStr } from './Globals';
  */
 export class Stopwatch {
 
+   private accumulatedMs = 0;
    private startTime = performance.now();
+   private _paused = false;
+
+   public get paused(): boolean {
+      return this._paused;
+   }
+
+   public pause(): void {
+      if (this._paused === false) {
+         this._paused = true;
+         this.accumulatedMs = this.elapsedMs;
+         this.startTime = NaN;
+      }
+   }
+
+   public resume(): void {
+      if (this._paused === true) {
+         this._paused = false;
+         this.startTime = performance.now();
+      }
+   }
 
    /**
     * The elapsed time in as a string
@@ -18,7 +39,7 @@ export class Stopwatch {
     * The elapsed time in milliseconds
     */
    public get elapsedMs(): number {
-      return (performance.now() - this.startTime);
+      return this.accumulatedMs + (performance.now() - this.startTime);
    }
 
    /**
@@ -33,5 +54,7 @@ export class Stopwatch {
     */
    public restart(): void {
       this.startTime = performance.now();
+      this.accumulatedMs = 0;
+      this._paused = false;
    }
 }
