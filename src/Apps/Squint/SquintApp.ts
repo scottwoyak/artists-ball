@@ -164,6 +164,37 @@ export class SquintApp implements IApp {
          this.squint.log(msg);
       }
 
+      window.addEventListener('pagehide', () => {
+         if (this.squint.connected) {
+            // TODO on Safari, the socket close action is not received on the server. It's
+            // as if once the close process starts that WebSocket stuff is just ignored
+            this.squint.log('---------------------------------------------------- pagehide');
+            this.squint.close();
+         }
+      });
+
+      window.addEventListener('beforeunload', () => {
+         if (this.squint.connected) {
+            console.log('beforeunload');
+            this.squint.log('---------------------------------------------------- beforeunload');
+            this.squint.close();
+         }
+      });
+
+      /*
+      window.addEventListener('beforeunload', () => {
+         console.log('beforeunload');
+      });
+   
+      window.addEventListener('pagehide', () => {
+         console.log('pagehide');
+      });
+   
+      window.addEventListener('unload', () => {
+         console.log('unload');
+      });
+      */
+
    }
 
    public create(div: HTMLDivElement): void {

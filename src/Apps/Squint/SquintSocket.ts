@@ -17,6 +17,15 @@ export class SquintSocket {
    public static readonly ERROR_CLOSURE = -1;
    public static readonly NORMAL_CLOSURE = 1000;
 
+   public get url(): string {
+      if (this.ws) {
+         return this.ws.url;
+      }
+      else {
+         return '';
+      }
+   }
+
    public get readyStateStr(): string {
       if (this.ws === null) {
          return 'NULL';

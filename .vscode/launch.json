@@ -37,7 +37,13 @@
          "request": "launch",
          "name": "Firefox:https",
          "url": "https://192.168.86.23?squint",
-         "webRoot": "${workspaceFolder}"
+         "webRoot": "${workspaceFolder}",
+         "pathMappings": [
+            {
+               "url": "webpack:///src",
+               "path": "${workspaceFolder}/src"
+            }
+         ]
       }
    ]
 }

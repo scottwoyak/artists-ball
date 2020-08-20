@@ -46,24 +46,6 @@ export class Squint {
       }
    }
 
-   public constructor() {
-      window.addEventListener('unload', () => {
-         if (this.ss && this.ss.connected) {
-            this.ss.close();
-         }
-      });
-      /*
-      window.addEventListener('beforeunload', () => {
-         console.log('beforeunload');
-      });
-
-      window.addEventListener('pagehide', () => {
-         alert('pagehide');
-         console.log('pagehide');
-      });
-      */
-   }
-
    public on(handler: ISquintEventHandler): void {
       this.eventManager.on(handler.name, handler.handler);
    }
