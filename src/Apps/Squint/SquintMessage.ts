@@ -1,4 +1,5 @@
 export enum SquintMessageSubject {
+   Camera = 'Camera',
    ChatMessage = 'ChatMessage',
    Hello = 'Hello',
    Log = 'Log',
@@ -8,6 +9,11 @@ export enum SquintMessageSubject {
    Subscribe = 'Subscribe',
    UpdateConnectionInfo = 'UpdateConnectionInfo',
    ViewerList = 'ViewerList',
+}
+
+export interface ISquintCameraMessage {
+   subject: SquintMessageSubject.Camera,
+   paused: boolean,
 }
 
 export interface ISquintChatMessage {
@@ -65,6 +71,7 @@ export interface ISquintViewerListMessage {
 
 // for type inference in TypeScript
 export type ISquintMessage =
+   ISquintCameraMessage |
    ISquintChatMessage |
    ISquintHelloFromClientMessage |
    ISquintHelloFromServerMessage |

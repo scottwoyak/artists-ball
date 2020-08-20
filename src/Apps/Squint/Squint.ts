@@ -13,6 +13,7 @@ export class Squint {
    public ss: SquintSocket | null = null;
    public userName: string;
    private _reconnecting = false;
+   private _remoteCameraPaused = false;
 
    private eventManager = new EventManager();
 
@@ -44,6 +45,17 @@ export class Squint {
          connectionId: this.ss.connectionId,
          userName: this.userName
       }
+   }
+
+   public set localCameraPaused(value: boolean) {
+      this.send({
+         subject: SquintMessageSubject.Camera,
+         paused: value,
+      })
+   }
+
+   public get remoteCameraPaused(): boolean {
+      return this._remoteCameraPaused;
    }
 
    public on(handler: ISquintEventHandler): void {
@@ -158,14 +170,16 @@ export class Squint {
 
    private processMessage(msg: ISquintMessage) {
       switch (msg.subject) {
-         case SquintMessageSubject.UpdateConnectionInfo: {
-            this.emit(
-               SquintEvent.UpdateConnectionInfo,
-               {
-                  userName: msg.userName,
-                  connectionId: msg.connectionId,
-               }
-            );
+         case SquintMessageSubject.Camera: {
+            this._remoteCameraPaused = msg.paused;
+            if (msg.paused) {
+               this.eventManager.emit(SquintEvent.CameraPauseResume, msg.paused);
+            }
+         }
+            break;
+
+         case SquintMessageSubject.ChatMessage: {
+            this.emit(SquintEvent.ChatMessage, msg.connection, msg.message);
          }
             break;
 
@@ -174,8 +188,14 @@ export class Squint {
          }
             break;
 
-         case SquintMessageSubject.ChatMessage: {
-            this.emit(SquintEvent.ChatMessage, msg.connection, msg.message);
+         case SquintMessageSubject.UpdateConnectionInfo: {
+            this.emit(
+               SquintEvent.UpdateConnectionInfo,
+               {
+                  userName: msg.userName,
+                  connectionId: msg.connectionId,
+               }
+            );
          }
             break;
 

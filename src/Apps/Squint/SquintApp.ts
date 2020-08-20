@@ -164,24 +164,33 @@ export class SquintApp implements IApp {
          this.squint.log(msg);
       }
 
+      // How do you know when to close the socket? pageHide on some browsers and beforeunload/unload on
+      // others. Safari seems most problematic as the actual SocketClose only randomly makes it back to
+      // the server so the server doesn't know it has been a gracefull exit.
       window.addEventListener('pagehide', () => {
          if (this.squint.connected) {
-            // TODO on Safari, the socket close action is not received on the server. It's
-            // as if once the close process starts that WebSocket stuff is just ignored
-            this.squint.log('---------------------------------------------------- pagehide');
             this.squint.close();
          }
       });
-
       window.addEventListener('beforeunload', () => {
          if (this.squint.connected) {
-            console.log('beforeunload');
-            this.squint.log('---------------------------------------------------- beforeunload');
             this.squint.close();
          }
       });
 
       /*
+      window.addEventListener('pageshow', () => {
+         console.log('pageshow');
+      });
+
+      document.addEventListener('freeze', () => {
+         console.log('freeze');
+      });
+
+      document.addEventListener('resume', () => {
+         console.log('resume');
+      });
+
       window.addEventListener('beforeunload', () => {
          console.log('beforeunload');
       });
@@ -226,7 +235,20 @@ export class SquintApp implements IApp {
       this.div.appendChild(this.canvas);
 
       this.camera = new Camera(this.div);
-      this.camera.video.style.display = 'none';
+      this.camera.visible = false;
+
+      this.camera.onResume = () => {
+         this.squint.localCameraPaused = false;
+      }
+      this.camera.onPaused = () => {
+         this.squint.localCameraPaused = true;
+      }
+      this.squint.on({
+         name: SquintEvent.CameraPauseResume,
+         handler: () => {
+            this.drawImg();
+         }
+      });
 
       this.viewersPanel = new ChatPanel(this.squint, this.div);
 
@@ -636,7 +658,7 @@ export class SquintApp implements IApp {
       this.enableCameraCtrls(enable);
 
       if (enable) {
-         this.camera.video.style.display = 'block';
+         this.camera.visible = true;
          this.camera.start(this.desired)
             .then((track: MediaStreamTrack) => {
                const settings = track.getSettings();
@@ -647,7 +669,7 @@ export class SquintApp implements IApp {
                this.updateVideoSize(settings.width, settings.height);
 
                this.buildAdvancedSubMenu(track);
-               this.updateVideoSize(this.camera.video.videoWidth, this.camera.video.videoHeight);
+               this.updateVideoSize(this.camera.videoWidth, this.camera.videoHeight);
 
                if (!this.uploader) {
                   this.startSession();
@@ -660,7 +682,7 @@ export class SquintApp implements IApp {
       }
       else {
          this.stopUploader();
-         this.camera.video.style.display = 'none';
+         this.camera.visible = false;
          this.advancedSubMenu.clear();
       }
    }
@@ -685,15 +707,15 @@ export class SquintApp implements IApp {
    }
 
    private updateVideoSize(videoWidth: number, videoHeight: number) {
-      if (getComputedStyle(this.camera.video).display !== 'none') {
-         const videoSize = Math.max(this.camera.video.clientWidth, this.camera.video.clientHeight);
+      if (this.camera.visible) {
+         const videoSize = Math.max(this.camera.clientWidth, this.camera.clientHeight);
          if (videoWidth > videoHeight) {
-            this.camera.video.style.width = videoSize + 'px';
-            this.camera.video.style.height = (videoSize * videoHeight / videoWidth) + 'px';
+            this.camera.width = videoSize + 'px';
+            this.camera.height = (videoSize * videoHeight / videoWidth) + 'px';
          }
          else {
-            this.camera.video.style.height = videoSize + 'px';
-            this.camera.video.style.width = (videoSize * videoWidth / videoHeight) + 'px';
+            this.camera.height = videoSize + 'px';
+            this.camera.width = (videoSize * videoWidth / videoHeight) + 'px';
          }
       }
    }
@@ -776,11 +798,15 @@ export class SquintApp implements IApp {
 
       let msg: string;
 
-      ctx.font = '10px sans-serif';
-      ctx.fillText(Squint.url, 0, 10);
-
       const fontSize = isMobile ? 20 : 10;
+      ctx.fillStyle = 'black';
       ctx.font = fontSize + 'px sans-serif';
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = 'white';
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+
+      ctx.fillText(Squint.url, 0, 10);
 
       msg = imgWidth + 'x' + imgHeight;
       ctx.fillText(msg, 0, canvasHeight - (3 * fontSize + 5));
@@ -809,6 +835,25 @@ export class SquintApp implements IApp {
 
       msg = toSizeStr(this.downloadTracker.lastTransferBytes);
       ctx.fillText(msg, 0, canvasHeight - 5);
+
+      if (this.squint.remoteCameraPaused) {
+         ctx.shadowBlur = 0;
+
+         ctx.fillStyle = 'rgba(0,0,0,0.5)';
+         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+         let fontSize = 10;
+         ctx.font = fontSize + 'px sans-serif';
+         const msg = 'Camera Paused';
+         const textMetrics = ctx.measureText(msg);
+         fontSize *= (0.8 * width / textMetrics.width);
+         ctx.font = fontSize + 'px sans-serif';
+
+         ctx.fillStyle = 'rgba(255,255,255,0.5)';
+         ctx.textAlign = 'center';
+         ctx.textBaseline = 'middle';
+         ctx.fillText(msg, canvasWidth / 2, canvasHeight / 2);
+      }
    }
 
    private onScale(scale: number, change: number) {

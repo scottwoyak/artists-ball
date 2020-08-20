@@ -81,13 +81,59 @@ export interface IVideoTrackAdvancedCapabilities {
    zoom?: IMediaSettingsRange;
 }
 
+export type CameraPauseResumeHandler = () => void;
+
 export class Camera {
 
-   private canvas: HTMLCanvasElement;
-   public readonly video: HTMLVideoElement;
+   private hiddenCanvas: HTMLCanvasElement;
+   private video: HTMLVideoElement;
+
+   public onPaused: CameraPauseResumeHandler | null = null;
+   public onResume: CameraPauseResumeHandler | null = null;
+
+   public get paused(): boolean {
+      return (document.visibilityState !== 'visible');
+   }
+
+   public get videoWidth(): number {
+      return this.video.videoWidth;
+   }
+   public get videoHeight(): number {
+      return this.video.videoHeight;
+   }
+
+   public get clientWidth(): number {
+      return this.video.clientWidth;
+   }
+   public get clientHeight(): number {
+      return this.video.clientHeight;
+   }
+
+   public set width(value: string) {
+      this.video.style.width = value;
+   }
+   public set height(value: string) {
+      this.video.style.height = value;
+   }
+
+   public get visible(): boolean {
+      return (getComputedStyle(this.video).display !== 'none');
+   }
+   public set visible(flag: boolean) {
+      if (flag === this.visible) {
+         return;
+      }
+
+      if (flag) {
+         this.video.style.display = 'block';
+      }
+      else {
+         this.video.style.display = 'none';
+      }
+   }
 
    public constructor(parent: HTMLElement) {
-      this.canvas = document.createElement('canvas');
+      this.hiddenCanvas = document.createElement('canvas');
 
       this.video = document.createElement('video');
       this.video.id = 'Video';
@@ -96,7 +142,23 @@ export class Camera {
       this.video.onerror = (err) => {
          alert('video.onerror(): ' + err);
       }
+
       parent.appendChild(this.video);
+
+      document.addEventListener('visibilitychange', () => {
+         if (this.visible) {
+            if (document.visibilityState === 'visible') {
+               if (this.onResume) {
+                  this.onResume();
+               }
+            }
+            else {
+               if (this.onPaused) {
+                  this.onPaused();
+               }
+            }
+         }
+      });
    }
 
    public takePicture(
@@ -107,21 +169,25 @@ export class Camera {
       if (this.video.readyState != 4) {
          return Promise.reject(SquintStrings.CAMERA_NOT_READY);
       }
+      if (this.paused) {
+         return Promise.reject(SquintStrings.CAMERA_NOT_READY);
+      }
+
       //console.log('video ready state: ' + this.video.readyState);
 
       if (this.video.videoHeight === 0 || this.video.videoWidth === 0) {
          return Promise.reject('XX Video Size = 0');
       }
 
-      this.canvas.width = this.video.videoWidth * scale;
-      this.canvas.height = this.video.videoHeight * scale;
+      this.hiddenCanvas.width = this.video.videoWidth * scale;
+      this.hiddenCanvas.height = this.video.videoHeight * scale;
 
-      const context = this.canvas.getContext('2d');
+      const context = this.hiddenCanvas.getContext('2d');
       // @ts-ignore: context isn't null
-      context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+      context.drawImage(this.video, 0, 0, this.hiddenCanvas.width, this.hiddenCanvas.height);
 
       return new Promise<Blob | null>((resolve, reject) => {
-         this.canvas.toBlob(
+         this.hiddenCanvas.toBlob(
             (blob) => {
                resolve(blob)
             },

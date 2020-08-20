@@ -1,5 +1,6 @@
 import { IConnectionInfo } from './SquintMessage';
 
+export type CameraPauseResumeHandler = (paused: boolean) => void;
 export type CloseHandler = () => void;
 export type ImageHandler = (img: Blob) => void;
 export type SessionListHandler = (session: IConnectionInfo[]) => void;
@@ -10,6 +11,7 @@ export type ReconnectedHandler = (success: boolean) => void;
 export type UpdateConnectionInfoHandler = (info: IConnectionInfo) => void;
 
 export enum SquintEvent {
+   CameraPauseResume = 'cameraPauseResume',
    ChatMessage = 'chatMessage',
    Close = 'close',
    Image = 'image',
@@ -18,6 +20,11 @@ export enum SquintEvent {
    SessionList = 'sessionList',
    UpdateConnectionInfo = 'updateConnectionInfo',
    ViewerList = 'viewerList',
+}
+
+export interface ISquintCameraPauseResumeEvent {
+   name: SquintEvent.CameraPauseResume,
+   handler: CameraPauseResumeHandler,
 }
 
 export interface ISquintChatMessageEvent {
@@ -61,6 +68,7 @@ export interface ISquintViewerListEvent {
 }
 
 export type ISquintEventHandler =
+   ISquintCameraPauseResumeEvent |
    ISquintCloseEvent |
    ISquintChatMessageEvent |
    ISquintImageEvent |
