@@ -20,7 +20,7 @@ export interface IMenuItemOptions {
  * Common base classes for things that are menus - menubar, pulldown menu, etc
  */
 class Menu {
-   private parent: Menu | null;
+   private parent: Menu | null = null;
    private children: Menu[] = [];
    private ctrls: ICtrl[] = [];
 
@@ -29,6 +29,26 @@ class Menu {
 
    // the item that launches us
    private parentItem: HTMLDivElement | null = null;
+
+   public set hidden(flag: boolean) {
+      if (this.parentItem) {
+         if (flag) {
+            this.parentItem.classList.add('MenuItemHiddenClass');
+         }
+         else {
+            this.parentItem.classList.remove('MenuItemHiddenClass');
+         }
+      }
+   }
+
+   public get hidden(): boolean {
+      if (this.parentItem) {
+         return this.parentItem.classList.contains('MenuItemHiddenClass');
+      }
+      else {
+         return false;
+      }
+   }
 
    public set enabled(flag: boolean) {
       if (this.parentItem) {

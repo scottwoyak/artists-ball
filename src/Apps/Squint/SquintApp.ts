@@ -50,6 +50,7 @@ export class SquintApp implements IApp {
    private viewersPanel: ChatPanel | undefined;
    private notificationDiv: HTMLDivElement | undefined;
    private cameraMenu: SubMenu | undefined;
+   private remoteCameraMenu: SubMenu | undefined;
 
    private camera: Camera | undefined;
    private canvas: HTMLCanvasElement | undefined;
@@ -124,22 +125,22 @@ export class SquintApp implements IApp {
 
       this.squint = new Squint();
       this.squint.on({
-         name: SquintEvent.Image,
+         event: SquintEvent.Image,
          handler: ((blob: Blob) => { this.onDownload(blob); })
       });
 
       this.squint.on({
-         name: SquintEvent.Close,
+         event: SquintEvent.Close,
          handler: (() => { this.closeConnection(); })
       });
 
       this.squint.on({
-         name: SquintEvent.ChatMessage,
+         event: SquintEvent.ChatMessage,
          handler: ((connection, msg) => { this.onChatMessage(connection, msg); })
       });
 
       this.squint.on({
-         name: SquintEvent.Reconnecting,
+         event: SquintEvent.Reconnecting,
          handler: () => {
             console.log('connection lost, reconnecting...');
             this.showNotification('Connection lost, reconnecting');
@@ -147,7 +148,7 @@ export class SquintApp implements IApp {
       });
 
       this.squint.on({
-         name: SquintEvent.Reconnected,
+         event: SquintEvent.Reconnected,
          handler: (success: boolean) => {
             console.log('reconnected: success=' + success);
 
@@ -157,6 +158,14 @@ export class SquintApp implements IApp {
             else {
                this.showNotification('Reconnected');
             }
+         }
+      });
+
+      this.squint.on({
+         event: SquintEvent.CameraRequest,
+         handler: (resolution: number, jpegQuality: number) => {
+            this.cameraScale.value = resolution
+            this.jpegQuality.value = jpegQuality;
          }
       });
 
@@ -260,7 +269,7 @@ export class SquintApp implements IApp {
          this.squint.localCameraPaused = true;
       }
       this.squint.on({
-         name: SquintEvent.CameraPauseResume,
+         event: SquintEvent.CameraPauseResume,
          handler: () => {
             this.drawImg();
          }
@@ -293,6 +302,12 @@ export class SquintApp implements IApp {
                   // simulate killing the connection
                   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
                   (<any>this.squint.ss).ws.close(3000);
+                  break;
+
+               case '1':
+                  if (event.ctrlKey) {
+                     this.remoteCameraMenu.hidden = !this.remoteCameraMenu.hidden;
+                  }
                   break;
             }
          }
@@ -481,6 +496,39 @@ export class SquintApp implements IApp {
          oncheck: (checkbox) => { this.console.visible = checkbox.checked },
          checked: () => { return this.console.visible; }
       });
+
+
+
+
+
+      this.remoteCameraMenu = menubar.addSubMenu('Remote Camera');
+      this.remoteCameraMenu.hidden = true;
+      const remoteJpegQuality = this.remoteCameraMenu.addSlider({
+         label: 'JPeg Photo Quality',
+         min: 0.1,
+         max: 1,
+         value: 0.5,
+         onGetText: (slider) => (100 * slider.value).toFixed() + '%',
+         oninput: () => {
+            this.squint.sendCameraRequest(remoteResolution.value, remoteJpegQuality.value);
+         }
+      });
+
+      const remoteResolution = this.remoteCameraMenu.addSlider({
+         label: 'Camera Resolution',
+         min: 0.1,
+         max: 1,
+         value: 0.5,
+         onGetText: (slider) => (100 * slider.value).toFixed() + '%',
+         oninput: () => {
+            this.squint.sendCameraRequest(remoteResolution.value, remoteJpegQuality.value);
+         }
+      });
+
+
+
+
+
 
       this.userNameMenuItemDiv = menubar.addItem('Hi ' + (this.hasUserName ? this.userName : ''),
          () => {

@@ -42,6 +42,14 @@
   color: gray;
 }
 
+.Menubar > .MenuItemHiddenClass {
+  display: none;
+}
+
+.MenuItemDisabledClass {
+  display: none;
+}
+
 .MenuItem .SliderRange {
   width: 12em;
 }

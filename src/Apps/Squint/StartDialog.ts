@@ -45,14 +45,14 @@ export class StartDialog extends Dialog {
 
       this.squint = squint;
       this.squint.on({
-         name: SquintEvent.SessionList,
+         event: SquintEvent.SessionList,
          handler: (sessions: IConnectionInfo[]) => {
             this.onSessionList(sessions);
          }
       });
 
       this.squint.on({
-         name: SquintEvent.UpdateConnectionInfo,
+         event: SquintEvent.UpdateConnectionInfo,
          handler: (info: IConnectionInfo) => {
             this.onUpdateConnectionInfo(info);
          }
@@ -60,7 +60,7 @@ export class StartDialog extends Dialog {
 
       let timeout: number;
       this.squint.on({
-         name: SquintEvent.Reconnecting,
+         event: SquintEvent.Reconnecting,
          handler: () => {
             timeout = window.setTimeout(() => {
                timeout = -1;
@@ -71,7 +71,7 @@ export class StartDialog extends Dialog {
       });
 
       this.squint.on({
-         name: SquintEvent.Reconnected,
+         event: SquintEvent.Reconnected,
          handler: (success: boolean) => {
             if (timeout !== -1) {
                window.clearTimeout(timeout);

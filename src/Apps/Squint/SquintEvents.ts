@@ -1,6 +1,7 @@
 import { IConnectionInfo } from './SquintMessage';
 
 export type CameraPauseResumeHandler = (paused: boolean) => void;
+export type CameraRequestHandler = (resolution: number, jpegQuality: number) => void;
 export type CloseHandler = () => void;
 export type ImageHandler = (img: Blob) => void;
 export type SessionListHandler = (session: IConnectionInfo[]) => void;
@@ -12,6 +13,7 @@ export type UpdateConnectionInfoHandler = (info: IConnectionInfo) => void;
 
 export enum SquintEvent {
    CameraPauseResume = 'cameraPauseResume',
+   CameraRequest = 'cameraRequest',
    ChatMessage = 'chatMessage',
    Close = 'close',
    Image = 'image',
@@ -23,52 +25,58 @@ export enum SquintEvent {
 }
 
 export interface ISquintCameraPauseResumeEvent {
-   name: SquintEvent.CameraPauseResume,
+   event: SquintEvent.CameraPauseResume,
    handler: CameraPauseResumeHandler,
 }
 
+export interface ISquintCameraRequestEvent {
+   event: SquintEvent.CameraRequest,
+   handler: CameraRequestHandler,
+}
+
 export interface ISquintChatMessageEvent {
-   name: SquintEvent.ChatMessage,
+   event: SquintEvent.ChatMessage,
    handler: ChatMessageHandler,
 }
 
 export interface ISquintCloseEvent {
-   name: SquintEvent.Close,
+   event: SquintEvent.Close,
    handler: CloseHandler,
 }
 
 export interface ISquintImageEvent {
-   name: SquintEvent.Image,
+   event: SquintEvent.Image,
    handler: ImageHandler,
 }
 
 export interface ISquintReconnectedEvent {
-   name: SquintEvent.Reconnected,
+   event: SquintEvent.Reconnected,
    handler: ReconnectedHandler,
 }
 
 export interface ISquintReconnectingEvent {
-   name: SquintEvent.Reconnecting,
+   event: SquintEvent.Reconnecting,
    handler: ReconnectingHandler,
 }
 
 export interface ISquintSessionListEvent {
-   name: SquintEvent.SessionList,
+   event: SquintEvent.SessionList,
    handler: SessionListHandler,
 }
 
 export interface ISquintUpdateConnectionInfoEvent {
-   name: SquintEvent.UpdateConnectionInfo,
+   event: SquintEvent.UpdateConnectionInfo,
    handler: UpdateConnectionInfoHandler,
 }
 
 export interface ISquintViewerListEvent {
-   name: SquintEvent.ViewerList,
+   event: SquintEvent.ViewerList,
    handler: ViewerListHandler,
 }
 
 export type ISquintEventHandler =
    ISquintCameraPauseResumeEvent |
+   ISquintCameraRequestEvent |
    ISquintCloseEvent |
    ISquintChatMessageEvent |
    ISquintImageEvent |

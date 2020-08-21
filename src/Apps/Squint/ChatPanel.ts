@@ -41,21 +41,21 @@ export class ChatPanel extends ResizeablePanel {
       }
 
       this.squint.on({
-         name: SquintEvent.ViewerList,
+         event: SquintEvent.ViewerList,
          handler: (list: IConnectionInfo[]) => {
             this.onViewerList(list);
          }
       });
 
       this.squint.on({
-         name: SquintEvent.ChatMessage,
+         event: SquintEvent.ChatMessage,
          handler: (src: IConnectionInfo, msg: string) => {
             this.onChatMessage(src, msg);
          }
       });
 
       this.squint.on({
-         name: SquintEvent.Close,
+         event: SquintEvent.Close,
          handler: () => {
             this.chatListBox.clear();
             this.viewersListBox.clear();

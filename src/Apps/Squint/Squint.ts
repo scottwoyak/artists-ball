@@ -59,11 +59,11 @@ export class Squint {
    }
 
    public on(handler: ISquintEventHandler): void {
-      this.eventManager.on(handler.name, handler.handler);
+      this.eventManager.on(handler.event, handler.handler);
    }
 
    public remove(handler: ISquintEventHandler): void {
-      this.eventManager.remove(handler.name, handler.handler);
+      this.eventManager.remove(handler.event, handler.handler);
    }
 
    // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -178,6 +178,11 @@ export class Squint {
          }
             break;
 
+         case SquintMessageSubject.CameraRequest: {
+            this.emit(SquintEvent.CameraRequest, msg.resolution, msg.jpegQuality);
+         }
+            break;
+
          case SquintMessageSubject.ChatMessage: {
             this.emit(SquintEvent.ChatMessage, msg.connection, msg.message);
          }
@@ -278,6 +283,14 @@ export class Squint {
             message: msg,
          });
       }
+   }
+
+   public sendCameraRequest(resolution: number, jpegQuality: number): void {
+      this.send({
+         subject: SquintMessageSubject.CameraRequest,
+         resolution,
+         jpegQuality,
+      })
    }
 
    public toString(): string {
