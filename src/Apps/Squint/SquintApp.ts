@@ -470,7 +470,7 @@ export class SquintApp implements IApp {
          label: 'Camera Resolution',
          min: 0.1,
          max: 1,
-         value: 0.5,
+         value: 1, // will automatically get scaled down when the camera starts
          onGetText: (slider) => (100 * slider.value).toFixed() + '%',
       });
       this.cameraCtrls.push(this.cameraScale);
@@ -726,8 +726,10 @@ export class SquintApp implements IApp {
          this.camera.start(this.desired)
             .then((track: MediaStreamTrack) => {
                const settings = track.getSettings();
-               if (Math.max(settings.width, settings.height) > 1000) {
-                  this.cameraScale.value = Math.min(1000 / settings.width, 1000 / settings.height);
+               const desiredMP = 0.75 * 1000000;
+               const maxMP = settings.width * settings.height;
+               if (maxMP > desiredMP) {
+                  this.cameraScale.value = Math.sqrt(desiredMP / maxMP);
                }
 
                this.updateVideoSize(settings.width, settings.height);
@@ -738,7 +740,6 @@ export class SquintApp implements IApp {
                if (!this.uploader) {
                   this.startSession();
                }
-
             })
             .catch((reason) => {
                alert(reason);
@@ -870,13 +871,27 @@ export class SquintApp implements IApp {
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
 
+      // squint server url
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       ctx.fillText(Squint.url, 5, 5);
 
+
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
+
+      // image size
       msg = imgWidth + 'x' + imgHeight;
+      ctx.fillText(msg, 5, canvasHeight - (4 * fontSize + 5));
+
+      // image size
+      const mp = (imgWidth * imgHeight / 1000000);
+      if (mp < 1.5) {
+         msg = mp.toFixed(2) + 'MP';
+      }
+      else {
+         msg = mp.toFixed(1) + 'MP';
+      }
       ctx.fillText(msg, 5, canvasHeight - (3 * fontSize + 5));
 
       let fps: number;
@@ -890,20 +905,24 @@ export class SquintApp implements IApp {
          fps = this.downloadTracker.fps;
       }
 
+      // FPS
       msg = fps.toFixed(1) + ' fps';
       ctx.fillText(msg, 5, canvasHeight - (2 * fontSize + 5));
 
+      // bandwidth
       if (bandwidth < 5) {
-         msg = 'bandwidth: ' + bandwidth.toFixed(2) + ' Mbsp';
+         msg = bandwidth.toFixed(2) + ' Mbsp';
       }
       else {
-         msg = 'bandwidth: ' + bandwidth.toFixed(1) + ' Mbsp';
+         msg = bandwidth.toFixed(1) + ' Mbsp';
       }
       ctx.fillText(msg, 5, canvasHeight - (fontSize + 5));
 
+      // bytes
       msg = toSizeStr(this.downloadTracker.lastTransferBytes);
       ctx.fillText(msg, 5, canvasHeight - 5);
 
+      // paused message
       if (this.squint.remoteCameraPaused) {
          ctx.shadowBlur = 0;
 
