@@ -181,6 +181,11 @@ export class Camera {
       this.hiddenCanvas.height = this.video.videoHeight * scale;
 
       const context = this.hiddenCanvas.getContext('2d');
+      if (context === null) {
+         debug('Cannot get context 2D');
+         return Promise.reject(SquintStrings.CAMERA_NOT_READY);
+      }
+
       // @ts-ignore: context isn't null
       context.drawImage(this.video, 0, 0, this.hiddenCanvas.width, this.hiddenCanvas.height);
 

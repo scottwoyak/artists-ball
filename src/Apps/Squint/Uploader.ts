@@ -86,6 +86,7 @@ export class Uploader {
       }
       if (this.busy) {
          debug('upload() called before previous call returned');
+         requestAnimationFrame(() => { this.upload(1000) });
          return;
       }
       if (delay > 0) {
@@ -125,9 +126,15 @@ export class Uploader {
          this.takePicture()
             .then((blob: Blob) => {
 
-               if (this.squint.connected) {
-                  this.squint.sendImage(blob);
-                  this.bandwidthTracker.tick(blob.size);
+               if (blob === null) {
+                  nextDelay = 1000;
+                  debug('takePicture generated a null Blob');
+               }
+               else {
+                  if (this.squint.connected) {
+                     this.squint.sendImage(blob);
+                     this.bandwidthTracker.tick(blob.size);
+                  }
                }
 
             }).catch((err) => {
@@ -147,7 +154,8 @@ export class Uploader {
       }
       catch (err) {
          console.error('Unexpected exception in Uploader.onDataNeeded(): ' + err + '\n' + JSON.stringify(err, null, ' '));
-         this.upload(1000);
+         this.busy = false;
+         requestAnimationFrame(() => { this.upload(1000) });
       }
    }
 }
