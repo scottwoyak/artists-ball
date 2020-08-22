@@ -47,7 +47,7 @@ export class SquintApp implements IApp {
    private div: HTMLDivElement | undefined;
    private userNameMenuItemDiv: HTMLDivElement | undefined;
    private img: HTMLImageElement | undefined;
-   private viewersPanel: ChatPanel | undefined;
+   private chatPanel: ChatPanel | undefined;
    private notificationDiv: HTMLDivElement | undefined;
    private cameraMenu: SubMenu | undefined;
    private remoteCameraMenu: SubMenu | undefined;
@@ -289,7 +289,15 @@ export class SquintApp implements IApp {
          }
       });
 
-      this.viewersPanel = new ChatPanel(this.squint, this.div);
+      this.chatPanel = new ChatPanel(this.squint, this.div);
+      if (this.chatPanel.hasSavedSettings) {
+         this.chatPanel.restoreSettings();
+      }
+      else {
+         if (isMobile === false) {
+            this.chatPanel.visible = true;
+         }
+      }
 
       this.notificationDiv = GUI.create('div', 'NotificationDiv', this.div);
 
@@ -319,7 +327,7 @@ export class SquintApp implements IApp {
                   break;
 
                case '1':
-                  if (event.ctrlKey) {
+                  if (event.altKey) {
                      this.remoteCameraMenu.hidden = !this.remoteCameraMenu.hidden;
                   }
                   break;
@@ -501,8 +509,8 @@ export class SquintApp implements IApp {
 
       sessionMenu.addCheckbox({
          label: 'Viewers/Chat',
-         oncheck: (checkbox) => { this.viewersPanel.visible = checkbox.checked },
-         checked: () => { return this.viewersPanel.visible; }
+         oncheck: (checkbox) => { this.chatPanel.visible = checkbox.checked },
+         checked: () => { return this.chatPanel.visible; }
       });
 
       sessionMenu.addCheckbox({

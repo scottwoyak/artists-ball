@@ -1,6 +1,11 @@
 import { GUI } from '../../GUI/GUI';
+import { ObjectWithSettings, ISettings } from './ObjectWithSettings';
 
-export class Panel {
+export interface IPanelSettings extends ISettings {
+   visible?: boolean
+}
+
+export class Panel extends ObjectWithSettings {
    protected div: HTMLDivElement;
    private displayStyleForShowing: string;
 
@@ -19,11 +24,26 @@ export class Panel {
       else {
          this.div.style.display = 'none';
       }
+
+      this.saveSettings();
    }
 
-   protected constructor(parent: HTMLElement, id: string, displayStyleForShowing = 'block') {
+   protected constructor(parent: HTMLElement, id: string, displayStyleForShowing = 'block', settingsKey?: string) {
+      super(settingsKey);
 
       this.div = GUI.create('div', id, parent);
       this.displayStyleForShowing = displayStyleForShowing;
+   }
+
+   protected buildSettingsObj(settings: IPanelSettings): void {
+      super.buildSettingsObj(settings);
+      settings.visible = this.visible;
+   }
+
+   protected onRestore(settings: IPanelSettings): void {
+      super.onRestore(settings);
+      if (settings.visible !== undefined) {
+         this.visible = settings.visible;
+      }
    }
 }

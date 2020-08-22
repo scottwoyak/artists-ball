@@ -13,12 +13,19 @@ export class ChatPanel extends ResizeablePanel {
    private squint: Squint;
 
    public constructor(squint: Squint, parent: HTMLElement) {
-      super(parent, 'ViewersPanelDiv', 'Flex');
+      super(parent, 'ChatPanelDiv', 'Flex', 'ChatPanel');
       this.squint = squint;
 
       const viewersTitleDiv = GUI.create('div', 'ViewersTitleDiv', this.div);
       viewersTitleDiv.className = 'TitleClass';
       viewersTitleDiv.innerText = 'Viewers';
+
+      const closeButton = GUI.create('button', 'ChatPanelCloseButton', viewersTitleDiv);
+      closeButton.className = 'ButtonClass';
+      closeButton.innerText = 'X';
+      closeButton.onclick = () => {
+         this.visible = false;
+      }
 
       this.viewersListBox = new ListBox(this.div, 'ViewersListBox');
 

@@ -79,7 +79,7 @@
   font-size: 1em;
 }
 
-#SquintApp #ViewersPanelDiv {
+#SquintApp #ChatPanelDiv {
   position: absolute;
   right: 1em;
   top: 3em;
@@ -97,7 +97,7 @@
   cursor: move;
 }
 
-#SquintApp #ViewersPanelDiv .TitleClass {
+#SquintApp #ChatPanelDiv .TitleClass {
   color: white;
   background-color: lightskyblue;
   border-top-left-radius: var(--corner-radius-small);
@@ -105,20 +105,32 @@
   padding: 0.5em;
 }
 
-#SquintApp #ViewersPanelDiv #ViewersListBox {
+#SquintApp #ChatPanelDiv #ChatPanelCloseButton {
+  position: absolute;
+  right: 0.5em;
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 0px;
+}
+
+#SquintApp #ChatPanelDiv #ChatPanelCloseButton:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+#SquintApp #ChatPanelDiv #ViewersListBox {
   flex: 1 0 auto; /* grow */
   cursor: move;
 }
 
-#SquintApp #ViewersPanelDiv #ChatListBox {
+#SquintApp #ChatPanelDiv #ChatListBox {
   flex: 1 0 auto; /* grow */
   cursor: move;
 }
 
-#SquintApp #ViewersPanelDiv #ChatInputText {
+#SquintApp #ChatPanelDiv #ChatInputText {
 }
 
-#SquintApp #ViewersPanelDiv .ListBoxClass {
+#SquintApp #ChatPanelDiv .ListBoxClass {
   margin-bottom: 0.5em;
 }
 
@@ -207,6 +219,10 @@
  * Start Dialog
  *
  ********************************************************************/
+#SquintApp #StartDialogBackgroundDiv {
+  background-color: rgb(160, 160, 160);
+}
+
 #SquintApp #StartDialogDiv {
   flex-direction: column;
   display: flex;
