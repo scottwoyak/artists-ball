@@ -1,8 +1,20 @@
+export interface IConnectionInfo {
+   userName: string,
+   connectionId: string,
+}
+
+export interface ISessionInfo {
+   title: string,
+   sessionId: string,
+}
+
 export enum SquintMessageSubject {
-   Camera = 'Camera',
+   CameraPaused = 'CameraPaused',
    CameraRequest = 'CameraRequest',
    ChatMessage = 'ChatMessage',
    Hello = 'Hello',
+   HostDisconnected = 'HostDisconnected',
+   HostReconnected = 'HostReconnected',
    Log = 'Log',
    ReadyForNextImage = 'ReadyForNextImage',
    Reconnected = 'Reconnected',
@@ -12,9 +24,8 @@ export enum SquintMessageSubject {
    ViewerList = 'ViewerList',
 }
 
-export interface ISquintCameraMessage {
-   subject: SquintMessageSubject.Camera,
-   paused: boolean,
+export interface ISquintCameraPausedMessage {
+   subject: SquintMessageSubject.CameraPaused,
 }
 
 export interface ISquintCameraRequestMessage {
@@ -40,6 +51,15 @@ export interface ISquintHelloFromClientMessage {
 export interface ISquintHelloFromServerMessage {
    subject: SquintMessageSubject.Hello,
    id: string,
+}
+
+export interface ISquintHostDisconnectedMessage {
+   subject: SquintMessageSubject.HostDisconnected,
+   shutdownSecs: number, // time remaining in seconds
+}
+
+export interface ISquintHostReconnectedMessage {
+   subject: SquintMessageSubject.HostReconnected,
 }
 
 export interface ISquintLogMessage {
@@ -78,11 +98,13 @@ export interface ISquintViewerListMessage {
 
 // for type inference in TypeScript
 export type ISquintMessage =
-   ISquintCameraMessage |
+   ISquintCameraPausedMessage |
    ISquintCameraRequestMessage |
    ISquintChatMessage |
    ISquintHelloFromClientMessage |
    ISquintHelloFromServerMessage |
+   ISquintHostDisconnectedMessage |
+   ISquintHostReconnectedMessage |
    ISquintLogMessage |
    ISquintReadyForNextImageMessage |
    ISquintReconnectedMessage |
@@ -90,15 +112,4 @@ export type ISquintMessage =
    ISquintSubscribeMessage |
    ISquintUpdateConnectionInfoMessage |
    ISquintViewerListMessage;
-
-export interface IConnectionInfo {
-   userName: string,
-   connectionId: string,
-}
-
-export interface ISessionInfo {
-   title: string,
-   sessionId: string,
-}
-
 

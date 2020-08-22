@@ -14,6 +14,7 @@ export class Squint {
    public userName: string;
    private _reconnecting = false;
    private _remoteCameraPaused = false;
+   private _remoteCameraConnected = true;
 
    private eventManager = new EventManager();
 
@@ -49,13 +50,16 @@ export class Squint {
 
    public set localCameraPaused(value: boolean) {
       this.send({
-         subject: SquintMessageSubject.Camera,
-         paused: value,
+         subject: SquintMessageSubject.CameraPaused,
       })
    }
 
    public get remoteCameraPaused(): boolean {
       return this._remoteCameraPaused;
+   }
+
+   public get remoteCameraConnected(): boolean {
+      return this._remoteCameraConnected;
    }
 
    public on(handler: ISquintEventHandler): void {
@@ -93,6 +97,7 @@ export class Squint {
             debug('ss.onImage() message received, but socket not open');
          }
 
+         this._remoteCameraPaused = false;
          this.emit(SquintEvent.Image, blob);
       }
 
@@ -104,6 +109,67 @@ export class Squint {
          // process the image
          this.processMessage(msg);
       };
+   }
+
+   private processMessage(msg: ISquintMessage) {
+      switch (msg.subject) {
+         case SquintMessageSubject.CameraPaused: {
+            this._remoteCameraPaused = true;
+            this.eventManager.emit(SquintEvent.CameraPause);
+         }
+            break;
+
+         case SquintMessageSubject.CameraRequest: {
+            this.emit(SquintEvent.CameraRequest, msg.resolution, msg.jpegQuality);
+         }
+            break;
+
+         case SquintMessageSubject.ChatMessage: {
+            this.emit(SquintEvent.ChatMessage, msg.connection, msg.message);
+         }
+            break;
+
+         case SquintMessageSubject.HostDisconnected: {
+            this._remoteCameraConnected = false;
+            this.emit(SquintEvent.HostDisconnected, msg.shutdownSecs);
+         }
+            break;
+
+         case SquintMessageSubject.HostReconnected: {
+            this._remoteCameraConnected = true;
+            this.emit(SquintEvent.HostReconnected);
+         }
+            break;
+
+         case SquintMessageSubject.SessionList: {
+            this.emit(SquintEvent.SessionList, msg.sessions);
+         }
+            break;
+
+         case SquintMessageSubject.UpdateConnectionInfo: {
+            this.emit(
+               SquintEvent.UpdateConnectionInfo,
+               {
+                  userName: msg.userName,
+                  connectionId: msg.connectionId,
+               }
+            );
+         }
+            break;
+
+         case SquintMessageSubject.ViewerList: {
+            this.emit(SquintEvent.ViewerList, msg.viewers);
+         }
+            break;
+
+         case undefined:
+            console.error('Invalid Message: \'subject\' not found.\n' + JSON.stringify(msg, null, ' '));
+            break;
+
+         default:
+            console.error('Invalid Message: unknown \'subject\'.\n' + JSON.stringify(msg, null, ' '));
+            break;
+      }
    }
 
    private tryToReconnect(connectionId: string, retryCount = 1) {
@@ -166,58 +232,6 @@ export class Squint {
       this.ss = null;
 
       this.emit(SquintEvent.Close);
-   }
-
-   private processMessage(msg: ISquintMessage) {
-      switch (msg.subject) {
-         case SquintMessageSubject.Camera: {
-            this._remoteCameraPaused = msg.paused;
-            if (msg.paused) {
-               this.eventManager.emit(SquintEvent.CameraPauseResume, msg.paused);
-            }
-         }
-            break;
-
-         case SquintMessageSubject.CameraRequest: {
-            this.emit(SquintEvent.CameraRequest, msg.resolution, msg.jpegQuality);
-         }
-            break;
-
-         case SquintMessageSubject.ChatMessage: {
-            this.emit(SquintEvent.ChatMessage, msg.connection, msg.message);
-         }
-            break;
-
-         case SquintMessageSubject.SessionList: {
-            this.emit(SquintEvent.SessionList, msg.sessions);
-         }
-            break;
-
-         case SquintMessageSubject.UpdateConnectionInfo: {
-            this.emit(
-               SquintEvent.UpdateConnectionInfo,
-               {
-                  userName: msg.userName,
-                  connectionId: msg.connectionId,
-               }
-            );
-         }
-            break;
-
-         case SquintMessageSubject.ViewerList: {
-            this.emit(SquintEvent.ViewerList, msg.viewers);
-         }
-            break;
-
-         case undefined:
-            console.error('Invalid Message: \'subject\' not found.\n' + JSON.stringify(msg, null, ' '));
-            break;
-
-         default:
-            console.error('Invalid Message: unknown \'subject\'.\n' + JSON.stringify(msg, null, ' '));
-            break;
-
-      }
    }
 
    private send(msg: ISquintMessage) {

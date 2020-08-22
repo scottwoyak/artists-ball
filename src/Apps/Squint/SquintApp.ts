@@ -169,6 +169,20 @@ export class SquintApp implements IApp {
          }
       });
 
+      this.squint.on({
+         event: SquintEvent.HostDisconnected,
+         handler: (shutdownSecs: number) => {
+            this.drawImg();
+         }
+      });
+
+      this.squint.on({
+         event: SquintEvent.HostReconnected,
+         handler: () => {
+            this.drawImg();
+         }
+      });
+
       this.console.onMessage = (msg: string) => {
          this.squint.log(msg);
       }
@@ -269,7 +283,7 @@ export class SquintApp implements IApp {
          this.squint.localCameraPaused = true;
       }
       this.squint.on({
-         event: SquintEvent.CameraPauseResume,
+         event: SquintEvent.CameraPause,
          handler: () => {
             this.drawImg();
          }
@@ -923,7 +937,7 @@ export class SquintApp implements IApp {
       ctx.fillText(msg, 5, canvasHeight - 5);
 
       // paused message
-      if (this.squint.remoteCameraPaused) {
+      if (this.squint.remoteCameraPaused || this.squint.remoteCameraConnected === false) {
          ctx.shadowBlur = 0;
 
          ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -931,7 +945,13 @@ export class SquintApp implements IApp {
 
          let fontSize = 10;
          ctx.font = fontSize + 'px sans-serif';
-         const msg = 'Camera Paused';
+         let msg;
+         if (this.squint.remoteCameraConnected === false) {
+            msg = 'Camera Disconnected';
+         }
+         else {
+            msg = 'Camera Paused';
+         }
          const textMetrics = ctx.measureText(msg);
          fontSize *= (0.8 * width / textMetrics.width);
          ctx.font = fontSize + 'px sans-serif';

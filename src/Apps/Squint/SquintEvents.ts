@@ -1,21 +1,25 @@
 import { IConnectionInfo, ISessionInfo } from './SquintMessage';
 
-export type CameraPauseResumeHandler = (paused: boolean) => void;
+export type CameraPauseHandler = () => void;
 export type CameraRequestHandler = (resolution: number, jpegQuality: number) => void;
-export type CloseHandler = () => void;
-export type ImageHandler = (img: Blob) => void;
-export type SessionListHandler = (session: ISessionInfo[]) => void;
-export type ViewerListHandler = (session: IConnectionInfo[]) => void;
 export type ChatMessageHandler = (source: IConnectionInfo, msg: string) => void;
+export type CloseHandler = () => void;
+export type HostDisconnectedHandler = (shutdownSecs: number) => void;
+export type HostReconnectedHandler = () => void;
+export type ImageHandler = (img: Blob) => void;
 export type ReconnectingHandler = () => void;
 export type ReconnectedHandler = (success: boolean) => void;
+export type SessionListHandler = (session: ISessionInfo[]) => void;
 export type UpdateConnectionInfoHandler = (info: IConnectionInfo) => void;
+export type ViewerListHandler = (session: IConnectionInfo[]) => void;
 
 export enum SquintEvent {
-   CameraPauseResume = 'cameraPauseResume',
+   CameraPause = 'cameraPause',
    CameraRequest = 'cameraRequest',
    ChatMessage = 'chatMessage',
    Close = 'close',
+   HostDisconnected = 'hostDisconnected',
+   HostReconnected = 'hostReconnected',
    Image = 'image',
    Reconnecting = 'reconnecting',
    Reconnected = 'reconnected',
@@ -24,9 +28,9 @@ export enum SquintEvent {
    ViewerList = 'viewerList',
 }
 
-export interface ISquintCameraPauseResumeEvent {
-   event: SquintEvent.CameraPauseResume,
-   handler: CameraPauseResumeHandler,
+export interface ISquintCameraPauseEvent {
+   event: SquintEvent.CameraPause,
+   handler: CameraPauseHandler,
 }
 
 export interface ISquintCameraRequestEvent {
@@ -42,6 +46,16 @@ export interface ISquintChatMessageEvent {
 export interface ISquintCloseEvent {
    event: SquintEvent.Close,
    handler: CloseHandler,
+}
+
+export interface ISquintHostDisconnectedEvent {
+   event: SquintEvent.HostDisconnected,
+   handler: HostDisconnectedHandler,
+}
+
+export interface ISquintHostReconnectedEvent {
+   event: SquintEvent.HostReconnected,
+   handler: HostReconnectedHandler,
 }
 
 export interface ISquintImageEvent {
@@ -75,10 +89,12 @@ export interface ISquintViewerListEvent {
 }
 
 export type ISquintEventHandler =
-   ISquintCameraPauseResumeEvent |
+   ISquintCameraPauseEvent |
    ISquintCameraRequestEvent |
    ISquintCloseEvent |
    ISquintChatMessageEvent |
+   ISquintHostDisconnectedEvent |
+   ISquintHostReconnectedEvent |
    ISquintImageEvent |
    ISquintReconnectedEvent |
    ISquintReconnectingEvent |
