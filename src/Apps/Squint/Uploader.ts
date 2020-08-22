@@ -147,7 +147,7 @@ export class Uploader {
       }
       catch (err) {
          console.error('Unexpected exception in Uploader.onDataNeeded(): ' + err + '\n' + JSON.stringify(err, null, ' '));
-         this.stop();
+         this.upload(1000);
       }
    }
 }

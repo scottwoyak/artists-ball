@@ -65,7 +65,8 @@ export class PointerEventHandler {
 
       this.ctrlKey = event.ctrlKey;
 
-      if (event.target instanceof HTMLInputElement === false) {
+      if (event.target instanceof HTMLInputElement === false &&
+         event.target instanceof HTMLButtonElement === false) {
          const pos = this.getPos(event);
          this.ourOnDown(pos);
 
@@ -102,7 +103,8 @@ export class PointerEventHandler {
 
       this.ctrlKey = event.ctrlKey;
 
-      if (event.target instanceof HTMLInputElement === false) {
+      if (event.target instanceof HTMLInputElement === false &&
+         event.target instanceof HTMLButtonElement === false) {
          // prevent the browser from using the event
          event.preventDefault();
 
