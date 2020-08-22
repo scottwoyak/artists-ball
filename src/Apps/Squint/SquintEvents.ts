@@ -1,10 +1,10 @@
-import { IConnectionInfo } from './SquintMessage';
+import { IConnectionInfo, ISessionInfo } from './SquintMessage';
 
 export type CameraPauseResumeHandler = (paused: boolean) => void;
 export type CameraRequestHandler = (resolution: number, jpegQuality: number) => void;
 export type CloseHandler = () => void;
 export type ImageHandler = (img: Blob) => void;
-export type SessionListHandler = (session: IConnectionInfo[]) => void;
+export type SessionListHandler = (session: ISessionInfo[]) => void;
 export type ViewerListHandler = (session: IConnectionInfo[]) => void;
 export type ChatMessageHandler = (source: IConnectionInfo, msg: string) => void;
 export type ReconnectingHandler = () => void;

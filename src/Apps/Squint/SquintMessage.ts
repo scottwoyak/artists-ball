@@ -57,7 +57,7 @@ export interface ISquintReconnectedMessage {
 
 export interface ISquintSessionListMessage {
    subject: SquintMessageSubject.SessionList,
-   sessions: IConnectionInfo[],
+   sessions: ISessionInfo[],
 }
 
 export interface ISquintSubscribeMessage {
@@ -95,4 +95,10 @@ export interface IConnectionInfo {
    userName: string,
    connectionId: string,
 }
+
+export interface ISessionInfo {
+   title: string,
+   sessionId: string,
+}
+
 

@@ -4,10 +4,10 @@ import { Squint } from './Squint';
 import { GUI } from '../../GUI/GUI';
 import { UserNameDialog } from './UserNameDialog';
 import { Dialog } from '../../GUI/Dialog';
-import { IConnectionInfo } from './SquintMessage';
+import { IConnectionInfo, ISessionInfo } from './SquintMessage';
 import { SquintEvent } from './SquintEvents';
 
-export type ViewSessionHandler = (connectionId: string) => void;
+export type ViewSessionHandler = (sessionId: string) => void;
 export type StartSessionHandler = () => void;
 export type GetUserNameHandler = () => string;
 export type SetUserNameHandler = (name: string) => void;
@@ -46,7 +46,7 @@ export class StartDialog extends Dialog {
       this.squint = squint;
       this.squint.on({
          event: SquintEvent.SessionList,
-         handler: (sessions: IConnectionInfo[]) => {
+         handler: (sessions: ISessionInfo[]) => {
             this.onSessionList(sessions);
          }
       });
@@ -213,11 +213,11 @@ export class StartDialog extends Dialog {
          });
    }
 
-   private onSessionList(sessions: IConnectionInfo[]) {
+   private onSessionList(sessions: ISessionInfo[]) {
 
       this.viewListBox.clear();
       for (let i = 0; i < sessions.length; i++) {
-         this.viewListBox.addItem(sessions[i].userName, sessions[i].connectionId);
+         this.viewListBox.addItem(sessions[i].title, sessions[i].sessionId);
       }
    }
 
