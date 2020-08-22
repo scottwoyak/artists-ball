@@ -69,8 +69,8 @@ export class PointerEventHandler {
          const pos = this.getPos(event);
          this.ourOnDown(pos);
 
-         this.element.addEventListener('mousemove', this.mousemove);
-         this.element.addEventListener('mouseup', this.mouseup);
+         window.addEventListener('mousemove', this.mousemove);
+         window.addEventListener('mouseup', this.mouseup);
 
          // disable selection because we're doing something else with dragging
          return false;
@@ -94,8 +94,8 @@ export class PointerEventHandler {
 
       this.ourOnUp();
 
-      this.element.removeEventListener('mousemove', this.mousemove);
-      this.element.removeEventListener('mouseup', this.mouseup);
+      window.removeEventListener('mousemove', this.mousemove);
+      window.removeEventListener('mouseup', this.mouseup);
    };
 
    private touchstart = (event: TouchEvent) => {
