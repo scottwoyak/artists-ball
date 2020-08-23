@@ -153,7 +153,7 @@ export class Uploader {
             });
       }
       catch (err) {
-         console.error('Unexpected exception in Uploader.onDataNeeded(): ' + err + '\n' + JSON.stringify(err, null, ' '));
+         console.error('Unexpected exception in Uploader.upload(): ' + err + '\n' + JSON.stringify(err, null, ' '));
          this.busy = false;
          requestAnimationFrame(() => { this.upload(1000) });
       }

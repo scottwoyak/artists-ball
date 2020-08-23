@@ -1,5 +1,5 @@
 {
-  "name": "artists-ball",
+  "name": "squint",
   "version": "1.0.0",
   "description": "",
   "main": "app.ts",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/scottwoyak/artists-ball.git"
+    "url": "https://github.com/scottwoyak/squint.git"
   },
   "author": "",
   "license": "ISC",
@@ -23,7 +23,7 @@
     "file-saver": "^2.0.2",
     "nosleep.js": "^0.11.0",
     "ts-loader": "^6.2.2",
-    "tslint": "^6.1.3",
+    "typescript": "^4.0.2",
     "webrtc-adapter": "^7.7.0"
   },
   "devDependencies": {
@@ -35,7 +35,6 @@
     "html-webpack-plugin": "^3.2.0",
     "style-loader": "^1.2.1",
     "ts-shader-loader": "^1.0.6",
-    "typescript": "^3.9.7",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0",

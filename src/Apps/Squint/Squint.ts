@@ -11,12 +11,21 @@ export class Squint {
    public static readonly url = SquintWsUrl;
 
    public ss: SquintSocket | null = null;
-   public userName: string;
+   public _userName: string | null = null;
    private _reconnecting = false;
    private _remoteCameraPaused = false;
    private _remoteCameraConnected = true;
 
    private eventManager = new EventManager();
+
+   public get userName(): string {
+      if (this._userName === null) {
+         return 'Unknown';
+      }
+      else {
+         return this._userName;
+      }
+   }
 
    public get connected(): boolean {
       if (this.ss && this.ss.connected) {
@@ -43,8 +52,8 @@ export class Squint {
 
    public get connectionInfo(): IConnectionInfo {
       return {
-         connectionId: this.ss.connectionId,
-         userName: this.userName
+         connectionId: (this.ss !== null) ? this.ss.connectionId : 'WebSocket not connected',
+         userName: this.userName,
       }
    }
 
@@ -205,7 +214,7 @@ export class Squint {
    }
 
    public connect(url: string, userName: string): Promise<void> {
-      this.userName = userName;
+      this._userName = userName;
       return this.doConnect(url);
    }
 
@@ -274,7 +283,7 @@ export class Squint {
    }
 
    public updateConnectionInfo(userName: string): void {
-      this.userName = userName;
+      this._userName = userName;
       this.send({
          subject: SquintMessageSubject.UpdateConnectionInfo,
          userName: this.connectionInfo.userName,

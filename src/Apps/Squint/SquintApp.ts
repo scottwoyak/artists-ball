@@ -1,5 +1,4 @@
 import 'webrtc-adapter';
-import 'context-filter-polyfill';
 import { IApp } from '../../IApp';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
 import { IVideoConstraint, Camera, IMediaSettingsRange, IVideoTrackAdvancedCapabilities, IVideoTrackAdvancedSettings, AdvancedConstraintName, IAdvancedConstraint } from './Camera';
@@ -37,9 +36,7 @@ interface IConstraintItem {
 }
 
 enum StorageItems {
-   UserName = 'UserName',
-   VideoWindow = 'VideoWindow',
-   ViewerWindow = 'ViewerWindow'
+   UserName = 'UserName'
 }
 
 export class SquintApp implements IApp {
@@ -65,7 +62,7 @@ export class SquintApp implements IApp {
    private uploader: Uploader | undefined;
    private downloadTracker = new BandwidthTracker();
 
-   private brightness: Slider | undefined;
+   private brightness?: Slider | undefined;
    private contrast: Slider | undefined;
    private saturate: Slider | undefined;
    private blur: Slider | undefined;
@@ -75,7 +72,7 @@ export class SquintApp implements IApp {
    private cameraCtrls: ICtrl[] = [];
 
    private advancedConstraints: IAdvancedConstraint[] = [];
-   private advancedSubMenu: SubMenu;
+   private advancedSubMenu?: SubMenu;
 
    private xOffset = 0;
    private yOffset = 0;
@@ -425,6 +422,11 @@ export class SquintApp implements IApp {
          onGetText: (slider) => slider.value.toFixed(0),
       });
 
+      // thankyou Safari
+      if (CanvasRenderingContext2D.prototype.filter === undefined) {
+         this.blur.enabled = false;
+      }
+
       this.zoom = viewMenu.addSlider({
          label: 'Zoom',
          min: 1,
@@ -577,7 +579,6 @@ export class SquintApp implements IApp {
 
    private drawBlob(blob: Blob) {
       const img = document.createElement('img');
-
       img.src = URL.createObjectURL(blob);
       img.onload = () => {
          // TODO how do we know that this connection is the same as the one that
@@ -786,7 +787,6 @@ export class SquintApp implements IApp {
             this.drawBlob(blob);
             return blob;
          });
-
    }
 
    private onResize() {
@@ -875,13 +875,62 @@ export class SquintApp implements IApp {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
-      ctx.filter =
-         'brightness(' + this.brightness.value + '%) ' +
-         'contrast(' + this.contrast.value + '%) ' +
-         'saturate(' + this.saturate.value + '%) ' +
-         'blur(' + this.blur.value + 'px) ';
+      if (ctx.filter) {
+         ctx.filter =
+            'contrast(' + this.contrast.value + '%) ' +
+            'brightness(' + this.brightness.value + '%) ' +
+            'saturate(' + this.saturate.value + '%) ' +
+            'blur(' + this.blur.value + 'px) ';
+      }
 
       ctx.drawImage(this.img, x, y, width, height);
+
+      // if filters are not supported on contexts, ummm Safari, do our own
+      if (ctx.filter === undefined) {
+         let imageData = ctx.getImageData(x, y, width, height);
+         let data = imageData.data;
+
+         if (this.contrast.value !== 100) {
+            let amount = this.contrast.value / 100;
+            for (let i = 0; i < data.length; i += 4) {
+               data[i + 0] = ((((data[i + 0] / 255) - .5) * amount) + .5) * 255;
+               data[i + 1] = ((((data[i + 1] / 255) - .5) * amount) + .5) * 255;
+               data[i + 2] = ((((data[i + 2] / 255) - .5) * amount) + .5) * 255;
+            }
+         }
+
+         if (this.brightness.value !== 100) {
+            let amount = this.brightness.value / 100;
+            for (let i = 0; i < data.length; i += 4) {
+               data[i + 0] *= amount;
+               data[i + 1] *= amount;
+               data[i + 2] *= amount;
+            }
+         }
+
+         if (this.saturate.value !== 100) {
+            let amount = this.saturate.value / 100;
+            const lumR = (1 - amount) * .3086;
+            const lumG = (1 - amount) * .6094;
+            const lumB = (1 - amount) * .0820;
+            const shiftW = width << 2;
+            for (let j = 0; j < height; j++) {
+               const offset = j * shiftW;
+               for (let i = 0; i < width; i++) {
+                  const pos = offset + (i << 2);
+                  const r = data[pos + 0];
+                  const g = data[pos + 1];
+                  const b = data[pos + 2];
+
+                  data[pos + 0] = ((lumR + amount) * r) + (lumG * g) + (lumB * b);
+                  data[pos + 1] = (lumR * r) + ((lumG + amount) * g) + (lumB * b);
+                  data[pos + 2] = (lumR * r) + (lumG * g) + ((lumB + amount) * b);
+               }
+            }
+         }
+         ctx.putImageData(imageData, x, y);
+      }
+
 
       let msg: string;
 

@@ -65,7 +65,7 @@ export class ConsoleCapture {
       window.onerror = (event: string | Event, source: string, lineno: number, colno: number, error: Error) => {
          const stackTrace = error && error instanceof Error ? '\n' + error.stack : '';
          const msg = event + '\n' + source + ' line:' + lineno + ', col:' + colno + stackTrace;
-         alert(msg);
+         //alert(msg);
          this.append(msg);
          oldOnError(event, source, lineno, colno, error);
       }

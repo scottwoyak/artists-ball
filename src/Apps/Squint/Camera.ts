@@ -192,7 +192,6 @@ export class Camera {
       return new Promise<Blob | null>((resolve, reject) => {
          this.hiddenCanvas.toBlob(
             (blob) => {
-
                // the camera could have stopped since we started this
                // process. If so, abandon the result as we don't know
                // when the camera went off
