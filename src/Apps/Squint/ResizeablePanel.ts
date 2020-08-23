@@ -14,9 +14,7 @@ export class ResizeablePanel extends Panel {
 
       const handler = new PointerEventHandler(this.div);
       handler.onDrag = (pos: Vec2, delta: Vec2) => {
-         if (window.event.target instanceof HTMLInputElement === false) {
-            this.onDrag(pos, delta);
-         }
+         this.onDrag(pos, delta);
       }
    }
 
