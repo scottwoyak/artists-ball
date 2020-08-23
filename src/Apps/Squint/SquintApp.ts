@@ -20,6 +20,9 @@ import { IConnectionInfo } from './SquintMessage';
 import { BandwidthTracker } from './BandwidthTracker';
 import { SquintEvent } from './SquintEvents';
 import NoSleep from 'nosleep.js';
+import { WebSocketFactory } from './WebSocketFactory';
+
+WebSocketFactory.create = (url: string) => new WebSocket(url);
 
 export class SquintStrings {
    public static readonly CAMERA_NOT_READY = 'Camera not ready';
@@ -422,9 +425,13 @@ export class SquintApp implements IApp {
          onGetText: (slider) => slider.value.toFixed(0),
       });
 
-      // thankyou Safari
-      if (CanvasRenderingContext2D.prototype.filter === undefined) {
-         this.blur.enabled = false;
+      // thank you Safari
+      try {
+         if (!CanvasRenderingContext2D.prototype.filter) {
+            this.blur.enabled = false;
+         }
+      }
+      catch (err) {
       }
 
       this.zoom = viewMenu.addSlider({

@@ -1,5 +1,6 @@
 import { ISquintMessage, ISquintHelloFromServerMessage } from './SquintMessage';
 import { debug } from './SquintApp';
+import { WebSocketFactory, WebSocketReadyState } from './WebSocketFactory';
 
 export type ImageHandler = (img: Blob) => void;
 export type MessageHandler = (msg: ISquintMessage) => void;
@@ -32,16 +33,16 @@ export class SquintSocket {
       }
 
       switch (this.ws.readyState) {
-         case WebSocket.OPEN:
+         case WebSocketReadyState.OPEN:
             return 'OPEN';
 
-         case WebSocket.CLOSED:
+         case WebSocketReadyState.CLOSED:
             return 'CLOSED';
 
-         case WebSocket.CONNECTING:
+         case WebSocketReadyState.CONNECTING:
             return 'CONNECTING';
 
-         case WebSocket.CLOSING:
+         case WebSocketReadyState.CLOSING:
             return 'CLOSING';
 
          default:
@@ -60,7 +61,7 @@ export class SquintSocket {
    }
 
    public get connected(): boolean {
-      return (this.ws !== null && this.ws.readyState === WebSocket.OPEN);
+      return (this.ws !== null && this.ws.readyState === WebSocketReadyState.OPEN);
    }
 
    public get bufferReady(): boolean {
@@ -105,7 +106,7 @@ export class SquintSocket {
       }
 
       ws.onmessage = (message: MessageEvent) => {
-         if (ws.readyState !== WebSocket.OPEN) {
+         if (ws.readyState !== WebSocketReadyState.OPEN) {
             debug('ws.onmessage() message received, but socket not open');
          }
 
@@ -175,7 +176,7 @@ export class SquintSocket {
       return new Promise((resolve, reject) => {
 
          // create temporary handlers that process the server handshake
-         const ws = new WebSocket(url);
+         const ws = WebSocketFactory.create(url);
 
          ws.onopen = () => {
             // send handshake message

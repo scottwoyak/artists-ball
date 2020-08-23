@@ -4,7 +4,8 @@
   "description": "",
   "main": "app.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register -r jsdom-global/register specs/**/*.ts",
+    "testLocalhost": "webpack-dev-server --contentBase . --host localhost --port 80",
     "startValhalla": "webpack-dev-server --https --cert server.crt --key server.key --host 192.168.86.23 --port 443",
     "startHotspot": "webpack-dev-server --https --cert server.crt --key server.key --host 192.168.43.170 --port 443",
     "startLocalhost": "webpack-dev-server --host localhost --port 80",
@@ -17,13 +18,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/chai": "^4.2.12",
+    "@types/mocha": "^8.0.3",
     "@types/nosleep.js": "^0.9.0",
     "@types/webgl2": "0.0.5",
+    "@types/ws": "^7.2.6",
+    "chai": "^4.2.0",
     "file-saver": "^2.0.2",
+    "mocha": "^8.1.1",
+    "mocha-webpack": "^1.1.0",
     "nosleep.js": "^0.11.0",
     "ts-loader": "^6.2.2",
+    "ts-node": "^9.0.0",
     "typescript": "^4.0.2",
-    "webrtc-adapter": "^7.7.0"
+    "webrtc-adapter": "^7.7.0",
+    "ws": "^7.3.1"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.1",
@@ -32,6 +41,8 @@
     "css-loader": "^3.6.0",
     "eslint": "^7.7.0",
     "html-webpack-plugin": "^3.2.0",
+    "jsdom": "16.4.0",
+    "jsdom-global": "3.0.2",
     "style-loader": "^1.2.1",
     "ts-shader-loader": "^1.0.6",
     "webpack": "^4.44.1",
