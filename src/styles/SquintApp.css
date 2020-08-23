@@ -181,6 +181,10 @@
   flex-direction: column;
 }
 
+#SquintApp .DialogBackgroundClass {
+  background-color: rgb(160, 160, 160);
+}
+
 /* non-phone displays */
 @media (max-resolution: 192dpi) {
   #SquintApp #WelcomeDialogDiv {
