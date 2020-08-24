@@ -1,7 +1,7 @@
 import { ListBox } from '../../GUI/ListBox';
 import { Squint } from './Squint';
 import { GUI } from '../../GUI/GUI';
-import { IConnectionInfo } from './SquintMessage';
+import { IConnectionInfoBasic } from './SquintMessage';
 import { ResizeablePanel } from './ResizeablePanel';
 import { SquintEvent } from './SquintEvents';
 
@@ -49,14 +49,14 @@ export class ChatPanel extends ResizeablePanel {
 
       this.squint.on({
          event: SquintEvent.ViewerList,
-         handler: (list: IConnectionInfo[]) => {
+         handler: (list: IConnectionInfoBasic[]) => {
             this.onViewerList(list);
          }
       });
 
       this.squint.on({
          event: SquintEvent.ChatMessage,
-         handler: (src: IConnectionInfo, msg: string) => {
+         handler: (src: IConnectionInfoBasic, msg: string) => {
             this.onChatMessage(src, msg);
          }
       });
@@ -71,14 +71,14 @@ export class ChatPanel extends ResizeablePanel {
    }
 
 
-   private onViewerList(list: IConnectionInfo[]) {
+   private onViewerList(list: IConnectionInfoBasic[]) {
       this.viewersListBox.clear();
       for (const viewer of list) {
          this.viewersListBox.addItem(viewer.userName, viewer.connectionId);
       }
    }
 
-   private onChatMessage(src: IConnectionInfo, msg: string) {
+   private onChatMessage(src: IConnectionInfoBasic, msg: string) {
       const item = this.chatListBox.addItem();
       item.innerHTML = '<b>' + src.userName + '</b>: ' + msg;
    }

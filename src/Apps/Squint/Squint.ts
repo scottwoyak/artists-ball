@@ -1,9 +1,10 @@
 import { SquintWsUrl as SquintWsUrl } from './Servers';
 import { debug } from './SquintApp';
 import { SquintSocket } from './SquintSocket';
-import { ISquintMessage, IConnectionInfo, SquintMessageSubject } from './SquintMessage';
+import { ISquintMessage, SquintMessageSubject, ISquintInfo, IConnectionInfoBasic } from './SquintMessage';
 import { EventManager } from './EventManager';
 import { ISquintEventHandler, SquintEvent } from './SquintEvents';
+import { WebSocketFactory } from './WebSocketFactory';
 
 
 export class Squint {
@@ -50,7 +51,7 @@ export class Squint {
       return this.ss.bufferedAmount === 0;
    }
 
-   public get connectionInfo(): IConnectionInfo {
+   public get connectionInfo(): IConnectionInfoBasic {
       return {
          connectionId: (this.ss !== null) ? this.ss.connectionId : 'WebSocket not connected',
          userName: this.userName,
@@ -314,6 +315,48 @@ export class Squint {
          resolution,
          jpegQuality,
       })
+   }
+
+   public static inspect(url: string): Promise<ISquintInfo> {
+      return new Promise<ISquintInfo>((resolve, reject) => {
+         let ws = WebSocketFactory.create(url);
+
+         ws.onopen = () => {
+            ws.send('inspect');
+         }
+
+         ws.onmessage = (msg) => {
+            ws.onopen = null;
+            ws.onclose = null;
+            ws.onerror = null;
+            ws.onmessage = null;
+
+            try {
+               resolve(JSON.parse(msg.data));
+            }
+            catch (err) {
+               reject('Invalid inspect response: ' + err + '\n' +
+                  'Message: ' + msg.data);
+            }
+         }
+
+         ws.onclose = (event: CloseEvent) => {
+            reject('WebSocket closed with code ' + event.code);
+         }
+
+         ws.onerror = () => {
+            reject('WebSocket error');
+         }
+      });
+
+      /*
+      return new Promise((resolve, reject) => {
+         this.inspectResolutions.push(resolve);
+         this.send({
+            subject: SquintMessageSubject.Inspect
+         });
+      });
+      */
    }
 
    public toString(): string {

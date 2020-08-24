@@ -1,17 +1,17 @@
-import { IConnectionInfo, ISessionInfo } from './SquintMessage';
+import { IConnectionInfoBasic, ISessionInfoBasic } from './SquintMessage';
 
 export type CameraPauseHandler = () => void;
 export type CameraRequestHandler = (resolution: number, jpegQuality: number) => void;
-export type ChatMessageHandler = (source: IConnectionInfo, msg: string) => void;
+export type ChatMessageHandler = (source: IConnectionInfoBasic, msg: string) => void;
 export type CloseHandler = () => void;
 export type HostDisconnectedHandler = (shutdownSecs: number) => void;
 export type HostReconnectedHandler = () => void;
 export type ImageHandler = (img: Blob) => void;
 export type ReconnectingHandler = () => void;
 export type ReconnectedHandler = (success: boolean) => void;
-export type SessionListHandler = (session: ISessionInfo[]) => void;
-export type UpdateConnectionInfoHandler = (info: IConnectionInfo) => void;
-export type ViewerListHandler = (session: IConnectionInfo[]) => void;
+export type SessionListHandler = (session: ISessionInfoBasic[]) => void;
+export type UpdateConnectionInfoHandler = (info: IConnectionInfoBasic) => void;
+export type ViewerListHandler = (session: IConnectionInfoBasic[]) => void;
 
 export enum SquintEvent {
    CameraPause = 'cameraPause',

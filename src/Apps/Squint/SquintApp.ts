@@ -16,11 +16,11 @@ import { WelcomeDialog } from './WelcomeDialog';
 import { UserNameDialog } from './UserNameDialog';
 import { GUI } from '../../GUI/GUI';
 import { ChatPanel } from './ChatPanel';
-import { IConnectionInfo } from './SquintMessage';
 import { BandwidthTracker } from './BandwidthTracker';
 import { SquintEvent } from './SquintEvents';
 import NoSleep from 'nosleep.js';
 import { WebSocketFactory } from './WebSocketFactory';
+import { IConnectionInfoBasic } from './SquintMessage';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -324,6 +324,32 @@ export class SquintApp implements IApp {
                   // simulate killing the connection
                   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
                   (<any>this.squint.ss).ws.close(3000);
+                  break;
+
+               case 'i': {
+                  Squint.inspect(Squint.url)
+                     .then((info) => {
+                        let msg = '';
+                        msg += 'Connections (' + info.connections.length + '):\n';
+                        for (let connection of info.connections) {
+                           msg += '   ' + connection.userName + ' ' + connection.state + '\n';
+                        }
+                        msg += 'Sessions (' + info.sessions.length + '):\n';
+                        for (let session of info.sessions) {
+                           msg += '   ' + session.title + ' host=' + session.host.userName + ' ' + session.host.state + '\n';
+
+                           msg += '   Viewers (' + session.listeners.length + '):\n';
+                           for (let connection of session.listeners) {
+                              msg += '      ' + connection.userName + ' ' + connection.state;
+                           }
+                        }
+
+                        alert(msg);
+                     })
+                     .catch((err) => {
+                        debug('Squint.inspect() failed: ' + err);
+                     });
+               }
                   break;
 
                case '1':
@@ -1060,7 +1086,7 @@ export class SquintApp implements IApp {
       this.drawImg();
    }
 
-   private onChatMessage(connection: IConnectionInfo, msg: string) {
+   private onChatMessage(connection: IConnectionInfoBasic, msg: string) {
       this.showNotification('<b>' + connection.userName + '</b>: ' + msg);
    }
 

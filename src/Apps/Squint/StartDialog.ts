@@ -4,8 +4,8 @@ import { Squint } from './Squint';
 import { GUI } from '../../GUI/GUI';
 import { UserNameDialog } from './UserNameDialog';
 import { Dialog } from '../../GUI/Dialog';
-import { IConnectionInfo, ISessionInfo } from './SquintMessage';
 import { SquintEvent } from './SquintEvents';
+import { ISessionInfoBasic, IConnectionInfoBasic } from './SquintMessage';
 
 export type ViewSessionHandler = (sessionId: string) => void;
 export type StartSessionHandler = () => void;
@@ -46,14 +46,14 @@ export class StartDialog extends Dialog {
       this.squint = squint;
       this.squint.on({
          event: SquintEvent.SessionList,
-         handler: (sessions: ISessionInfo[]) => {
+         handler: (sessions: ISessionInfoBasic[]) => {
             this.onSessionList(sessions);
          }
       });
 
       this.squint.on({
          event: SquintEvent.UpdateConnectionInfo,
-         handler: (info: IConnectionInfo) => {
+         handler: (info: IConnectionInfoBasic) => {
             this.onUpdateConnectionInfo(info);
          }
       });
@@ -213,7 +213,7 @@ export class StartDialog extends Dialog {
          });
    }
 
-   private onSessionList(sessions: ISessionInfo[]) {
+   private onSessionList(sessions: ISessionInfoBasic[]) {
 
       this.viewListBox.clear();
       for (let i = 0; i < sessions.length; i++) {
@@ -221,7 +221,7 @@ export class StartDialog extends Dialog {
       }
    }
 
-   private onUpdateConnectionInfo(info: IConnectionInfo) {
+   private onUpdateConnectionInfo(info: IConnectionInfoBasic) {
       for (const item of this.viewListBox.items) {
          if (item.userData === info.connectionId) {
             item.div.innerText = info.userName;

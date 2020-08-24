@@ -1,11 +1,40 @@
-export interface IConnectionInfo {
+//
+// This file should be the same in both the Squint and SquintServer projects
+//
+
+export enum ConnectionState {
+   Zombie = 'ZOMBIE',
+   Open = 'OPEN',
+   Closed = 'CLOSED',
+   Connecting = 'CONNECTING',
+   Closing = 'CLOSING',
+   Unknown = 'UNKNOWN',
+}
+
+export interface IConnectionInfoBasic {
    userName: string,
    connectionId: string,
 }
 
-export interface ISessionInfo {
+export interface IConnectionInfoFull extends IConnectionInfoBasic {
+   state: ConnectionState
+}
+
+export interface ISessionInfoBasic {
    title: string,
    sessionId: string,
+}
+
+export interface ISessionInfoFull {
+   title: string,
+   sessionId: string,
+   host: IConnectionInfoFull,
+   listeners: IConnectionInfoFull[]
+}
+
+export interface ISquintInfo {
+   connections: IConnectionInfoFull[],
+   sessions: ISessionInfoFull[]
 }
 
 export enum SquintMessageSubject {
@@ -36,7 +65,7 @@ export interface ISquintCameraRequestMessage {
 
 export interface ISquintChatMessage {
    subject: SquintMessageSubject.ChatMessage,
-   connection: IConnectionInfo,
+   connection: IConnectionInfoBasic,
    message: string,
 }
 
@@ -77,7 +106,7 @@ export interface ISquintReconnectedMessage {
 
 export interface ISquintSessionListMessage {
    subject: SquintMessageSubject.SessionList,
-   sessions: ISessionInfo[],
+   sessions: ISessionInfoBasic[],
 }
 
 export interface ISquintSubscribeMessage {
@@ -93,7 +122,7 @@ export interface ISquintUpdateConnectionInfoMessage {
 
 export interface ISquintViewerListMessage {
    subject: SquintMessageSubject.ViewerList,
-   viewers: IConnectionInfo[],
+   viewers: IConnectionInfoBasic[],
 }
 
 // for type inference in TypeScript

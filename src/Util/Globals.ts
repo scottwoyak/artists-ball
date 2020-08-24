@@ -3,6 +3,10 @@ export type StatusFunction = (status: string) => void;
 
 export const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+export let env = {
+   isTesting: false
+}
+
 export function clamp(value: number, min: number, max: number): number {
    if (value < min) {
       return min;
