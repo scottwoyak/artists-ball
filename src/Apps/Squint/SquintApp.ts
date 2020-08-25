@@ -62,7 +62,7 @@ export class SquintApp implements IApp {
       facingMode: '',
       deviceId: '',
    };
-   private uploader: Uploader | undefined;
+   private uploader: Uploader | null = null;
    private downloadTracker = new BandwidthTracker();
 
    private brightness?: Slider | undefined;
@@ -182,6 +182,21 @@ export class SquintApp implements IApp {
             this.drawImg();
          }
       });
+
+      this.squint.on({
+         event: SquintEvent.HostChanged,
+         handler: (newHostConnectionId: string) => {
+            // TODO make sure we're not calling things twice
+            if (newHostConnectionId === this.squint.connectionId) {
+               this.enableVideo(true);
+               this.startUploader();
+            }
+            else {
+               this.stopUploader();
+               this.enableVideo(false);
+            }
+         }
+      })
 
       this.console.onMessage = (msg: string) => {
          this.squint.log(msg);
@@ -388,10 +403,12 @@ export class SquintApp implements IApp {
    }
 
    private startUploader(): void {
-      this.uploader = new Uploader(
-         this.squint,
-         () => this.takePicture()
-      );
+      if (this.uploader === null) {
+         this.uploader = new Uploader(
+            this.squint,
+            () => this.takePicture()
+         );
+      }
    }
 
    private stopUploader(): void {
@@ -538,8 +555,12 @@ export class SquintApp implements IApp {
 
       const sessionMenu = menubar.addSubMenu('Session');
 
-      sessionMenu.addItem('Stop', () => {
+      sessionMenu.addItem('End', () => {
          this.closeConnection();
+      });
+
+      sessionMenu.addItem('Make me Host', () => {
+         this.squint.requestToBeHost();
       });
 
       sessionMenu.addCheckbox({

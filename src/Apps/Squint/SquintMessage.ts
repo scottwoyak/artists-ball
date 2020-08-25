@@ -40,6 +40,8 @@ export enum SquintMessageSubject {
    CameraRequest = 'CameraRequest',
    ChatMessage = 'ChatMessage',
    Hello = 'Hello',
+   HostChanged = 'HostChanged',
+   HostChangeRequest = 'HostChangeRequest',
    HostDisconnected = 'HostDisconnected',
    HostReconnected = 'HostReconnected',
    Log = 'Log',
@@ -78,6 +80,16 @@ export interface ISquintHelloFromClientMessage {
 export interface ISquintHelloFromServerMessage {
    subject: SquintMessageSubject.Hello,
    id: string,
+}
+
+export interface ISquintHostChangedMessage {
+   subject: SquintMessageSubject.HostChanged,
+   sessionId: string,
+   newHostConnectionId: string,
+}
+
+export interface ISquintHostChangeRequestMessage {
+   subject: SquintMessageSubject.HostChangeRequest,
 }
 
 export interface ISquintHostDisconnectedMessage {
@@ -130,6 +142,8 @@ export type ISquintMessage =
    ISquintChatMessage |
    ISquintHelloFromClientMessage |
    ISquintHelloFromServerMessage |
+   ISquintHostChangedMessage |
+   ISquintHostChangeRequestMessage |
    ISquintHostDisconnectedMessage |
    ISquintHostReconnectedMessage |
    ISquintLogMessage |

@@ -4,6 +4,7 @@ export type CameraPauseHandler = () => void;
 export type CameraRequestHandler = (resolution: number, jpegQuality: number) => void;
 export type ChatMessageHandler = (source: IConnectionInfoBasic, msg: string) => void;
 export type CloseHandler = () => void;
+export type HostChangedHandler = (newHostConnectionId: string) => void;
 export type HostDisconnectedHandler = (shutdownSecs: number) => void;
 export type HostReconnectedHandler = () => void;
 export type ImageHandler = (img: Blob) => void;
@@ -18,6 +19,7 @@ export enum SquintEvent {
    CameraRequest = 'cameraRequest',
    ChatMessage = 'chatMessage',
    Close = 'close',
+   HostChanged = 'hostChanged',
    HostDisconnected = 'hostDisconnected',
    HostReconnected = 'hostReconnected',
    Image = 'image',
@@ -46,6 +48,11 @@ export interface ISquintChatMessageEvent {
 export interface ISquintCloseEvent {
    event: SquintEvent.Close,
    handler: CloseHandler,
+}
+
+export interface ISquintHostChangedEvent {
+   event: SquintEvent.HostChanged,
+   handler: HostChangedHandler,
 }
 
 export interface ISquintHostDisconnectedEvent {
@@ -93,6 +100,7 @@ export type ISquintEventHandler =
    ISquintCameraRequestEvent |
    ISquintCloseEvent |
    ISquintChatMessageEvent |
+   ISquintHostChangedEvent |
    ISquintHostDisconnectedEvent |
    ISquintHostReconnectedEvent |
    ISquintImageEvent |

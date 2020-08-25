@@ -134,6 +134,7 @@
   margin-bottom: 0.5em;
 }
 
+#SquintApp #ChatPanelDiv .ListBoxItemClass,
 #SquintApp #ChatPanelDiv .ListBoxItemSelectedClass,
 #SquintApp #ChatPanelDiv .ListBoxItemSelectedClass:hover {
   background-color: white;

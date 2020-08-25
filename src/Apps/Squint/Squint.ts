@@ -143,6 +143,11 @@ export class Squint {
          }
             break;
 
+         case SquintMessageSubject.HostChanged: {
+            this.emit(SquintEvent.HostChanged, msg.newHostConnectionId);
+         }
+            break;
+
          case SquintMessageSubject.HostDisconnected: {
             this._remoteCameraConnected = false;
             this.emit(SquintEvent.HostDisconnected, msg.shutdownSecs);
@@ -321,6 +326,12 @@ export class Squint {
       })
    }
 
+   public requestToBeHost(): void {
+      this.send({
+         subject: SquintMessageSubject.HostChangeRequest
+      });
+   }
+
    public static inspect(url: string): Promise<ISquintInfo> {
       return new Promise<ISquintInfo>((resolve, reject) => {
          let ws = WebSocketFactory.create(url);
@@ -352,15 +363,6 @@ export class Squint {
             reject('WebSocket error');
          }
       });
-
-      /*
-      return new Promise((resolve, reject) => {
-         this.inspectResolutions.push(resolve);
-         this.send({
-            subject: SquintMessageSubject.Inspect
-         });
-      });
-      */
    }
 
    public toString(): string {
