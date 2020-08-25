@@ -225,6 +225,8 @@ export class Squint {
 
    public connect(url: string, userName: string): Promise<void> {
       this._userName = userName;
+      this._remoteCameraConnected = true;
+      this._remoteCameraPaused = true;
       return this.doConnect(url);
    }
 

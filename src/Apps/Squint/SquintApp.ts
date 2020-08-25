@@ -232,6 +232,23 @@ export class SquintApp implements IApp {
          }
       });
 
+      window.addEventListener('pageshow', () => {
+         if (this.squint.connected === false) {
+            this.stopUploader();
+            this.enableVideo(false);
+            this.startDialog.visible = true;
+         }
+         // TODO remove
+         console.log('pageshow');
+      });
+      document.addEventListener('resume', () => {
+         if (this.squint.connected === false) {
+            this.stopUploader();
+            this.enableVideo(false);
+            this.startDialog.visible = true;
+         }
+         console.log('resume');
+      });
       /*
       window.addEventListener('pageshow', () => {
          console.log('pageshow');
