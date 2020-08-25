@@ -1,7 +1,7 @@
 import { ListBox } from '../../GUI/ListBox';
 import { Squint } from './Squint';
 import { GUI } from '../../GUI/GUI';
-import { IConnectionInfoBasic } from './SquintMessage';
+import { IConnectionInfoBasic, ISessionInfoFull } from './SquintMessage';
 import { ResizeablePanel } from './ResizeablePanel';
 import { SquintEvent } from './SquintEvents';
 
@@ -48,9 +48,9 @@ export class ChatPanel extends ResizeablePanel {
       }
 
       this.squint.on({
-         event: SquintEvent.ViewerList,
-         handler: (list: IConnectionInfoBasic[]) => {
-            this.onViewerList(list);
+         event: SquintEvent.SessionInfo,
+         handler: (info: ISessionInfoFull) => {
+            this.onSessionInfo(info);
          }
       });
 
@@ -71,10 +71,11 @@ export class ChatPanel extends ResizeablePanel {
    }
 
 
-   private onViewerList(list: IConnectionInfoBasic[]) {
+   private onSessionInfo(info: ISessionInfoFull) {
       this.viewersListBox.clear();
-      for (const viewer of list) {
-         this.viewersListBox.addItem(viewer.userName, viewer.connectionId);
+      this.viewersListBox.addItem(info.host.userName + ' (host)');
+      for (const viewer of info.viewers) {
+         this.viewersListBox.addItem(viewer.userName);
       }
    }
 

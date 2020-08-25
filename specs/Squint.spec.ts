@@ -7,7 +7,6 @@ import NodeWebSocket from 'ws';
 import { SquintEvent } from '../src/Apps/Squint/SquintEvents';
 import { env } from '../src/Util/Globals';
 import { ConnectionState } from '../src/Apps/Squint/SquintMessage';
-import { resolve } from '../webpack.config';
 
 const TestUrlLocalhost = 'ws://localhost:8080/V1/';
 const TestUrlRemote = 'ws://squintserver-11278.nodechef.com/V1/';
@@ -376,16 +375,16 @@ describe('Squint', function () {
 
             let pass = 1;
             squintViewer1.on({
-               event: SquintEvent.ViewerList,
-               handler: async (viewers) => {
+               event: SquintEvent.SessionInfo,
+               handler: async (sessionInfo) => {
 
                   // should receive multiple notifications
                   // 1 - when the session is created due to the host uploading an image
                   // 2 - when viewer2 subscribes
                   // 3 - when viewer2 closes
                   if (pass === 1) {
-                     expect(viewers.length).to.equal(1);
-                     expect(viewers[0].connectionId).to.equal(squintViewer1.connectionId);
+                     expect(sessionInfo.viewers.length).to.equal(1);
+                     expect(sessionInfo.viewers[0].connectionId).to.equal(squintViewer1.connectionId);
 
                      let info = await Squint.inspect(TestUrlLocalhost);
                      expect(info.sessions.length).to.equal(1);
@@ -395,9 +394,9 @@ describe('Squint', function () {
                      expect(info.sessions[0].viewers[0].state).to.equal(ConnectionState.Open);
                   }
                   else if (pass === 2) {
-                     expect(viewers.length).to.equal(2);
-                     expect(viewers[0].connectionId).to.equal(squintViewer1.connectionId);
-                     expect(viewers[1].connectionId).to.equal(squintViewer2.connectionId);
+                     expect(sessionInfo.viewers.length).to.equal(2);
+                     expect(sessionInfo.viewers[0].connectionId).to.equal(squintViewer1.connectionId);
+                     expect(sessionInfo.viewers[1].connectionId).to.equal(squintViewer2.connectionId);
 
                      let info = await Squint.inspect(TestUrlLocalhost);
                      expect(info.sessions.length).to.equal(1);
@@ -410,8 +409,8 @@ describe('Squint', function () {
                      expect(info.sessions[0].viewers[1].state).to.equal(ConnectionState.Open);
                   }
                   else if (pass === 3) {
-                     expect(viewers.length).to.equal(1);
-                     expect(viewers[0].connectionId).to.equal(squintViewer1.connectionId);
+                     expect(sessionInfo.viewers.length).to.equal(1);
+                     expect(sessionInfo.viewers[0].connectionId).to.equal(squintViewer1.connectionId);
 
                      let info = await Squint.inspect(TestUrlLocalhost);
                      expect(info.sessions.length).to.equal(1);
@@ -448,6 +447,48 @@ describe('Squint', function () {
          return promise;
       });
 
+
+      it('should notify the host when it starts a session', async function () {
+
+         this.timeout(5000);
+
+         let userNameHost = 'TesterHost';
+         let squintHost = await createSquint(userNameHost);
+
+         let info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(1);
+         expect(info.connections[0].userName).to.equal(userNameHost);
+         expect(info.connections[0].connectionId).to.equal(squintHost.connectionId);
+         expect(info.connections[0].state).to.equal(ConnectionState.Open);
+         expect(info.sessions.length).to.equal(0);
+
+         let promise = new Promise((resolve, reject) => {
+
+            squintHost.on({
+               event: SquintEvent.SessionInfo,
+               handler: async (sessionInfo) => {
+
+                  // should receive a notification when the session starts
+                  expect(sessionInfo.host.connectionId).to.equal(squintHost.connectionId);
+                  expect(sessionInfo.host.userName).to.equal(squintHost.userName);
+                  expect(sessionInfo.host.state).to.equal(ConnectionState.Open);
+                  expect(sessionInfo.viewers.length).to.equal(0);
+
+                  let info = await Squint.inspect(TestUrlLocalhost);
+                  expect(info.sessions.length).to.equal(1);
+                  expect(info.sessions[0].viewers.length).to.equal(0);
+
+                  // success!
+                  resolve();
+               }
+            });
+         });
+
+         // create the session
+         squintHost.sendImage(imageBlob);
+
+         return promise;
+      });
    });
 
    describe('images', function () {

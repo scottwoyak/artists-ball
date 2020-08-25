@@ -20,7 +20,7 @@ import { BandwidthTracker } from './BandwidthTracker';
 import { SquintEvent } from './SquintEvents';
 import NoSleep from 'nosleep.js';
 import { WebSocketFactory } from './WebSocketFactory';
-import { IConnectionInfoBasic } from './SquintMessage';
+import { IConnectionInfoBasic, ISquintInfo } from './SquintMessage';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -328,7 +328,7 @@ export class SquintApp implements IApp {
 
                case 'i': {
                   Squint.inspect(Squint.url)
-                     .then((info) => {
+                     .then((info: ISquintInfo) => {
                         let msg = '';
                         msg += 'Connections (' + info.connections.length + '):\n';
                         for (let connection of info.connections) {

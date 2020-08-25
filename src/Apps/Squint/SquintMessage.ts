@@ -25,9 +25,7 @@ export interface ISessionInfoBasic {
    sessionId: string,
 }
 
-export interface ISessionInfoFull {
-   title: string,
-   sessionId: string,
+export interface ISessionInfoFull extends ISessionInfoBasic {
    host: IConnectionInfoFull,
    viewers: IConnectionInfoFull[]
 }
@@ -47,10 +45,10 @@ export enum SquintMessageSubject {
    Log = 'Log',
    ReadyForNextImage = 'ReadyForNextImage',
    Reconnected = 'Reconnected',
+   SessionInfo = 'SessionInfo',
    SessionList = 'SessionList',
    Subscribe = 'Subscribe',
    UpdateConnectionInfo = 'UpdateConnectionInfo',
-   ViewerList = 'ViewerList',
 }
 
 export interface ISquintCameraPausedMessage {
@@ -104,6 +102,11 @@ export interface ISquintReconnectedMessage {
    subject: SquintMessageSubject.Reconnected,
 }
 
+export interface ISquintSessionInfoMessage {
+   subject: SquintMessageSubject.SessionInfo,
+   info: ISessionInfoFull,
+}
+
 export interface ISquintSessionListMessage {
    subject: SquintMessageSubject.SessionList,
    sessions: ISessionInfoBasic[],
@@ -120,11 +123,6 @@ export interface ISquintUpdateConnectionInfoMessage {
    connectionId: string,
 }
 
-export interface ISquintViewerListMessage {
-   subject: SquintMessageSubject.ViewerList,
-   viewers: IConnectionInfoBasic[],
-}
-
 // for type inference in TypeScript
 export type ISquintMessage =
    ISquintCameraPausedMessage |
@@ -137,8 +135,8 @@ export type ISquintMessage =
    ISquintLogMessage |
    ISquintReadyForNextImageMessage |
    ISquintReconnectedMessage |
+   ISquintSessionInfoMessage |
    ISquintSessionListMessage |
    ISquintSubscribeMessage |
-   ISquintUpdateConnectionInfoMessage |
-   ISquintViewerListMessage;
+   ISquintUpdateConnectionInfoMessage;
 

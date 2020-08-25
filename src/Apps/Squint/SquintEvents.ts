@@ -1,4 +1,4 @@
-import { IConnectionInfoBasic, ISessionInfoBasic } from './SquintMessage';
+import { IConnectionInfoBasic, ISessionInfoBasic, ISessionInfoFull } from './SquintMessage';
 
 export type CameraPauseHandler = () => void;
 export type CameraRequestHandler = (resolution: number, jpegQuality: number) => void;
@@ -9,9 +9,9 @@ export type HostReconnectedHandler = () => void;
 export type ImageHandler = (img: Blob) => void;
 export type ReconnectingHandler = () => void;
 export type ReconnectedHandler = (success: boolean) => void;
+export type SessionInfoHandler = (info: ISessionInfoFull) => void;
 export type SessionListHandler = (session: ISessionInfoBasic[]) => void;
 export type UpdateConnectionInfoHandler = (info: IConnectionInfoBasic) => void;
-export type ViewerListHandler = (session: IConnectionInfoBasic[]) => void;
 
 export enum SquintEvent {
    CameraPause = 'cameraPause',
@@ -23,9 +23,9 @@ export enum SquintEvent {
    Image = 'image',
    Reconnecting = 'reconnecting',
    Reconnected = 'reconnected',
+   SessionInfo = 'sessionInfo',
    SessionList = 'sessionList',
    UpdateConnectionInfo = 'updateConnectionInfo',
-   ViewerList = 'viewerList',
 }
 
 export interface ISquintCameraPauseEvent {
@@ -73,6 +73,11 @@ export interface ISquintReconnectingEvent {
    handler: ReconnectingHandler,
 }
 
+export interface ISquintSessionInfoEvent {
+   event: SquintEvent.SessionInfo,
+   handler: SessionInfoHandler,
+}
+
 export interface ISquintSessionListEvent {
    event: SquintEvent.SessionList,
    handler: SessionListHandler,
@@ -81,11 +86,6 @@ export interface ISquintSessionListEvent {
 export interface ISquintUpdateConnectionInfoEvent {
    event: SquintEvent.UpdateConnectionInfo,
    handler: UpdateConnectionInfoHandler,
-}
-
-export interface ISquintViewerListEvent {
-   event: SquintEvent.ViewerList,
-   handler: ViewerListHandler,
 }
 
 export type ISquintEventHandler =
@@ -98,6 +98,6 @@ export type ISquintEventHandler =
    ISquintImageEvent |
    ISquintReconnectedEvent |
    ISquintReconnectingEvent |
+   ISquintSessionInfoEvent |
    ISquintSessionListEvent |
-   ISquintUpdateConnectionInfoEvent |
-   ISquintViewerListEvent;
+   ISquintUpdateConnectionInfoEvent;

@@ -171,8 +171,8 @@ export class Squint {
          }
             break;
 
-         case SquintMessageSubject.ViewerList: {
-            this.emit(SquintEvent.ViewerList, msg.viewers);
+         case SquintMessageSubject.SessionInfo: {
+            this.emit(SquintEvent.SessionInfo, msg.info);
          }
             break;
 
