@@ -324,7 +324,193 @@ describe('Squint', function () {
       });
    });
 
-   describe('viewer list', function () {
+   describe('Sessions', function () {
+      it('should create a session when an image is uploaded', async function () {
+         let userNameHost = 'TesterHost';
+         let squintHost = await createSquint(userNameHost);
+
+         let info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(1);
+         expect(info.connections[0].userName).to.equal(squintHost.userName);
+         expect(info.connections[0].connectionId).to.equal(squintHost.connectionId);
+         expect(info.connections[0].state).to.equal(ConnectionState.Open);
+         expect(info.sessions.length).to.equal(0);
+
+         // create the session
+         squintHost.sendImage(imageBlob);
+
+         // session should be created when an image is sent
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.sessions.length).to.equal(1);
+         expect(info.sessions[0].host.connectionId).to.equal(squintHost.connectionId);
+         expect(info.sessions[0].host.state).to.equal(ConnectionState.Open);
+         expect(info.sessions[0].host.userName).to.equal(squintHost.userName);
+         expect(info.sessions[0].title).to.equal(squintHost.userName);
+         expect(info.sessions[0].viewers.length).to.equal(0);
+      });
+
+      it('should NOT create a session when an image is uploaded from a connection subscribed to an existing session', async function () {
+         let userNameHost = 'TesterHost';
+         let userNameViewer = 'TesterViewer';
+         let squintHost = await createSquint(userNameHost);
+
+         let info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(1);
+         expect(info.connections[0].userName).to.equal(squintHost.userName);
+         expect(info.connections[0].connectionId).to.equal(squintHost.connectionId);
+         expect(info.connections[0].state).to.equal(ConnectionState.Open);
+         expect(info.sessions.length).to.equal(0);
+
+         // create the session
+         squintHost.sendImage(imageBlob);
+
+         // session should be created when an image is sent
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.sessions.length).to.equal(1);
+         expect(info.sessions[0].host.connectionId).to.equal(squintHost.connectionId);
+         expect(info.sessions[0].host.state).to.equal(ConnectionState.Open);
+         expect(info.sessions[0].host.userName).to.equal(squintHost.userName);
+         expect(info.sessions[0].title).to.equal(squintHost.userName);
+         expect(info.sessions[0].viewers.length).to.equal(0);
+
+         // add the second connection
+         let squintViewer = await createSquint(userNameViewer);
+         squintViewer.subscribe(info.sessions[0].sessionId);
+
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(2);
+         expect(info.connections[0].userName).to.equal(squintHost.userName);
+         expect(info.connections[0].connectionId).to.equal(squintHost.connectionId);
+         expect(info.connections[0].state).to.equal(ConnectionState.Open);
+         expect(info.connections[1].userName).to.equal(squintViewer.userName);
+         expect(info.connections[1].connectionId).to.equal(squintViewer.connectionId);
+         expect(info.connections[1].state).to.equal(ConnectionState.Open);
+         expect(info.sessions.length).to.equal(1);
+
+         // this would normally create a session
+         squintViewer.sendImage(imageBlob);
+
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(2);
+         expect(info.connections[0].userName).to.equal(squintHost.userName);
+         expect(info.connections[0].connectionId).to.equal(squintHost.connectionId);
+         expect(info.connections[0].state).to.equal(ConnectionState.Open);
+         expect(info.connections[1].userName).to.equal(squintViewer.userName);
+         expect(info.connections[1].connectionId).to.equal(squintViewer.connectionId);
+         expect(info.connections[1].state).to.equal(ConnectionState.Open);
+         expect(info.sessions.length).to.equal(1);
+      });
+
+      it('should NOT subscribe if already subscribed', async function () {
+         let userNameHost1 = 'TesterHost1';
+         let userNameHost2 = 'TesterHost2';
+         let userNameViewer = 'TesterViewer';
+         let squintHost1 = await createSquint(userNameHost1);
+         let squintHost2 = await createSquint(userNameHost2);
+
+         let info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(2);
+         expect(info.connections[0].userName).to.equal(squintHost1.userName);
+         expect(info.connections[0].connectionId).to.equal(squintHost1.connectionId);
+         expect(info.connections[0].state).to.equal(ConnectionState.Open);
+         expect(info.connections[1].userName).to.equal(squintHost2.userName);
+         expect(info.connections[1].connectionId).to.equal(squintHost2.connectionId);
+         expect(info.connections[1].state).to.equal(ConnectionState.Open);
+         expect(info.sessions.length).to.equal(0);
+
+         // create the sessions
+         squintHost1.sendImage(imageBlob);
+         squintHost2.sendImage(imageBlob);
+
+         // session should be created when an image is sent
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.sessions.length).to.equal(2);
+         expect(info.sessions[0].host.connectionId).to.equal(squintHost1.connectionId);
+         expect(info.sessions[0].host.state).to.equal(ConnectionState.Open);
+         expect(info.sessions[0].host.userName).to.equal(squintHost1.userName);
+         expect(info.sessions[0].title).to.equal(squintHost1.userName);
+         expect(info.sessions[0].viewers.length).to.equal(0);
+         expect(info.sessions[1].host.connectionId).to.equal(squintHost2.connectionId);
+         expect(info.sessions[1].host.state).to.equal(ConnectionState.Open);
+         expect(info.sessions[1].host.userName).to.equal(squintHost2.userName);
+         expect(info.sessions[1].title).to.equal(squintHost2.userName);
+         expect(info.sessions[1].viewers.length).to.equal(0);
+
+         // add the viewer connection
+         let squintViewer = await createSquint(userNameViewer);
+         squintViewer.subscribe(info.sessions[0].sessionId);
+
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(3);
+         expect(info.sessions.length).to.equal(2);
+         expect(info.sessions[0].viewers.length).to.equal(1);
+         expect(info.sessions[1].viewers.length).to.equal(0);
+
+         // try to subscribe to the other host
+         squintViewer.subscribe(info.sessions[1].sessionId);
+
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(3);
+         expect(info.sessions.length).to.equal(2);
+         expect(info.sessions[0].viewers.length).to.equal(1);
+         expect(info.sessions[1].viewers.length).to.equal(0);
+      });
+
+      it('should NOT subscribe if hosting', async function () {
+         let userNameHost1 = 'TesterHost1';
+         let userNameHost2 = 'TesterHost2';
+         let userNameViewer = 'TesterViewer';
+         let squintHost1 = await createSquint(userNameHost1);
+         let squintHost2 = await createSquint(userNameHost2);
+
+         let info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(2);
+         expect(info.connections[0].userName).to.equal(squintHost1.userName);
+         expect(info.connections[0].connectionId).to.equal(squintHost1.connectionId);
+         expect(info.connections[0].state).to.equal(ConnectionState.Open);
+         expect(info.connections[1].userName).to.equal(squintHost2.userName);
+         expect(info.connections[1].connectionId).to.equal(squintHost2.connectionId);
+         expect(info.connections[1].state).to.equal(ConnectionState.Open);
+         expect(info.sessions.length).to.equal(0);
+
+         // create the sessions
+         squintHost1.sendImage(imageBlob);
+         squintHost2.sendImage(imageBlob);
+
+         // session should be created when an image is sent
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.sessions.length).to.equal(2);
+         expect(info.sessions[0].host.connectionId).to.equal(squintHost1.connectionId);
+         expect(info.sessions[0].host.state).to.equal(ConnectionState.Open);
+         expect(info.sessions[0].host.userName).to.equal(squintHost1.userName);
+         expect(info.sessions[0].title).to.equal(squintHost1.userName);
+         expect(info.sessions[0].viewers.length).to.equal(0);
+         expect(info.sessions[1].host.connectionId).to.equal(squintHost2.connectionId);
+         expect(info.sessions[1].host.state).to.equal(ConnectionState.Open);
+         expect(info.sessions[1].host.userName).to.equal(squintHost2.userName);
+         expect(info.sessions[1].title).to.equal(squintHost2.userName);
+         expect(info.sessions[1].viewers.length).to.equal(0);
+
+         // add the viewer connection
+         let squintViewer = await createSquint(userNameViewer);
+         squintViewer.subscribe(info.sessions[0].sessionId);
+
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(3);
+         expect(info.sessions.length).to.equal(2);
+         expect(info.sessions[0].viewers.length).to.equal(1);
+         expect(info.sessions[1].viewers.length).to.equal(0);
+
+         // try to subscribe to the other host
+         squintHost1.subscribe(info.sessions[1].sessionId);
+
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(3);
+         expect(info.sessions.length).to.equal(2);
+         expect(info.sessions[0].viewers.length).to.equal(1);
+         expect(info.sessions[1].viewers.length).to.equal(0);
+      });
+
       it('should notify session members as viewers join and leave', async function () {
 
          this.timeout(5000);
@@ -446,7 +632,6 @@ describe('Squint', function () {
 
          return promise;
       });
-
 
       it('should notify the host when it starts a session', async function () {
 
