@@ -72,8 +72,13 @@ export class ChatPanel extends ResizeablePanel {
 
 
    private onSessionInfo(info: ISessionInfoFull) {
+
       this.viewersListBox.clear();
-      this.viewersListBox.addItem(info.host.userName + ' (host)');
+
+      if (info.host) {
+         this.viewersListBox.addItem(info.host.userName + ' (host)');
+      }
+
       for (const viewer of info.viewers) {
          this.viewersListBox.addItem(viewer.userName);
       }

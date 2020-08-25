@@ -26,7 +26,7 @@ export interface ISessionInfoBasic {
 }
 
 export interface ISessionInfoFull extends ISessionInfoBasic {
-   host: IConnectionInfoFull,
+   host?: IConnectionInfoFull,
    viewers: IConnectionInfoFull[]
 }
 

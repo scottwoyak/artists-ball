@@ -322,7 +322,243 @@ describe('Squint', function () {
          expectConnection(info.sessions[0].host, squintHost);
       });
 
-      it('should stay alive if the host closes but a participant still exists', async function () {
+      it('session should stay alive if the host closes but a listener still exists', async function () {
+
+         this.timeout(20 * 1000);
+
+         let userNameHost = 'TesterHost';
+         let userNameViewer = 'TesterViewer';
+         let squintHost = await createSquint(userNameHost);
+
+         // create the session
+         squintHost.sendImage(imageBlob);
+
+         // get the session id
+         let info = await Squint.inspect(TestUrlLocalhost);
+         let sessionId = info.sessions[0].sessionId;
+
+         // add the second connection
+         let squintViewer = await createSquint(userNameViewer);
+         squintViewer.subscribe(sessionId);
+
+         // close the host - session should stay alive since we have a listener
+         squintHost.close();
+
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(1);
+         expectConnection(info.connections[0], squintViewer);
+         expect(info.sessions.length).to.equal(1);
+         expect(info.sessions[0].viewers.length).to.equal(1);
+         expectConnection(info.sessions[0].viewers[0], squintViewer);
+
+         // now wait and the session should close automatically
+         return new Promise((resolve, reject) => {
+            setTimeout(() => {
+               Squint.inspect(TestUrlLocalhost)
+                  .then((info) => {
+                     expect(info.connections.length).to.equal(0);
+                     expect(info.sessions.length).to.equal(0);
+                     resolve();
+                  })
+                  .catch((err) => {
+                     reject(err);
+                  });
+
+            }, 15 * 1000); // longer than SESSION_TIMEOUT variable for server
+         })
+      });
+
+      it('session should close immediately if the host closes with no listeners', async function () {
+
+         let userNameHost = 'TesterHost';
+         let userNameViewer = 'TesterViewer';
+         let squintHost = await createSquint(userNameHost);
+
+         // create the session
+         squintHost.sendImage(imageBlob);
+
+         // get the session id
+         let info = await Squint.inspect(TestUrlLocalhost);
+         let sessionId = info.sessions[0].sessionId;
+
+         // add the second connection
+         let squintViewer = await createSquint(userNameViewer);
+
+         // close the host - session should stay alive since we have a listener
+         squintHost.close();
+
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(1);
+         expectConnection(info.connections[0], squintViewer);
+         expect(info.sessions.length).to.equal(0);
+      });
+
+      it('session should close immediately if the last listener closes while in timeout mode', async function () {
+         this.timeout(20 * 1000);
+
+         let userNameHost = 'TesterHost';
+         let userNameViewer = 'TesterViewer';
+         let squintHost = await createSquint(userNameHost);
+
+         // create the session
+         squintHost.sendImage(imageBlob);
+
+         // get the session id
+         let info = await Squint.inspect(TestUrlLocalhost);
+         let sessionId = info.sessions[0].sessionId;
+
+         // add the second connection
+         let squintViewer = await createSquint(userNameViewer);
+         squintViewer.subscribe(sessionId);
+
+         // close the host - session should stay alive since we have a listener
+         squintHost.close();
+
+         // prove session is still open
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(1);
+         expectConnection(info.connections[0], squintViewer);
+         expect(info.sessions.length).to.equal(1);
+         expect(info.sessions[0].viewers.length).to.equal(1);
+         expectConnection(info.sessions[0].viewers[0], squintViewer);
+
+         // now close the listener
+         squintViewer.close();
+
+         // session should close
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(0);
+         expect(info.sessions.length).to.equal(0);
+      });
+
+      it('session listeners should receive a Host Disconnected message if the host is closed', async function () {
+         let userNameHost = 'TesterHost';
+         let userNameViewer = 'TesterViewer';
+         let squintHost = await createSquint(userNameHost);
+
+         // create the session
+         squintHost.sendImage(imageBlob);
+
+         // get the session id
+         let info = await Squint.inspect(TestUrlLocalhost);
+         let sessionId = info.sessions[0].sessionId;
+
+         // add the second connection
+         let squintViewer = await createSquint(userNameViewer);
+         squintViewer.subscribe(sessionId);
+
+         let promise = new Promise((resolve, reject) => {
+            squintViewer.on({
+               event: SquintEvent.HostDisconnected,
+               handler: () => {
+
+                  resolve();
+               }
+            })
+         });
+
+         // close the host
+         squintHost.close();
+
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(1);
+         expect(info.sessions.length).to.equal(1);
+
+         return promise;
+      });
+
+      it('session listeners should should receive a SessionInfo message when the host closes', async function () {
+         let userNameHost = 'TesterHost';
+         let userNameViewer = 'TesterViewer';
+         let squintHost = await createSquint(userNameHost);
+
+         // create the session
+         squintHost.sendImage(imageBlob);
+
+         // get the session id
+         let info = await Squint.inspect(TestUrlLocalhost);
+         let sessionId = info.sessions[0].sessionId;
+
+         // add the second connection
+         let squintViewer = await createSquint(userNameViewer);
+         squintViewer.subscribe(sessionId);
+
+         let promise = new Promise((resolve, reject) => {
+            squintViewer.on({
+               event: SquintEvent.SessionInfo,
+               handler: (sessionInfo) => {
+                  expect(sessionInfo.host).to.be.undefined;
+
+                  expect(sessionInfo.viewers.length).to.equal(1);
+                  expectConnection(sessionInfo.viewers[0], squintViewer);
+
+                  resolve();
+               }
+            })
+         });
+
+         // close the host
+         squintHost.close();
+
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(1);
+         expect(info.sessions.length).to.equal(1);
+
+         return promise;
+      });
+
+      it('session listeners should still receive SessionInfo messages after the host has closed', async function () {
+         this.timeout(20 * 1000);
+
+         let userNameHost = 'TesterHost';
+         let userNameViewer1 = 'TesterViewer1';
+         let userNameViewer2 = 'TesterViewer1';
+         let squintHost = await createSquint(userNameHost);
+
+         // create the session
+         squintHost.sendImage(imageBlob);
+
+         // get the session id
+         let info = await Squint.inspect(TestUrlLocalhost);
+         let sessionId = info.sessions[0].sessionId;
+
+         // add the other connections
+         let squintViewer1 = await createSquint(userNameViewer1);
+         squintViewer1.subscribe(sessionId);
+         let squintViewer2 = await createSquint(userNameViewer2);
+         squintViewer2.subscribe(sessionId);
+
+         // close the host - session should stay alive since we have a listener
+         squintHost.close();
+
+         // prove session is still open
+         info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(2);
+         expectConnection(info.connections[0], squintViewer1);
+         expectConnection(info.connections[1], squintViewer2);
+         expect(info.sessions.length).to.equal(1);
+         expect(info.sessions[0].viewers.length).to.equal(2);
+         expectConnection(info.sessions[0].viewers[0], squintViewer1);
+         expectConnection(info.sessions[0].viewers[1], squintViewer2);
+
+         // viewer 2 should receive a message when viewer 1 closes
+         let promise = new Promise((resolve, reject) => {
+            squintViewer2.on({
+               event: SquintEvent.SessionInfo,
+               handler: (sessionInfo) => {
+                  expect(sessionInfo.host).to.be.undefined;
+                  expect(sessionInfo.viewers.length).to.equal(1);
+                  expectConnection(sessionInfo.viewers[0], squintViewer2);
+
+                  resolve();
+               }
+            })
+         });
+
+         // close the listener to trigger the SessionInfo message
+         squintViewer1.close();
+
+         return promise;
       });
 
       it('should allow the host to change', async function () {
@@ -752,10 +988,9 @@ describe('Squint', function () {
 });
 
 // TESTS
+// stress tester
 // multiple uploads
 // zombie mode
 // chat message
 // user name change
 // camera requests
-// session active if host leaves
-// session dies when both host and viewers leave
