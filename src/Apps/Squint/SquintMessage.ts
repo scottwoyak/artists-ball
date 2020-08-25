@@ -29,7 +29,7 @@ export interface ISessionInfoFull {
    title: string,
    sessionId: string,
    host: IConnectionInfoFull,
-   listeners: IConnectionInfoFull[]
+   viewers: IConnectionInfoFull[]
 }
 
 export interface ISquintInfo {
@@ -111,7 +111,7 @@ export interface ISquintSessionListMessage {
 
 export interface ISquintSubscribeMessage {
    subject: SquintMessageSubject.Subscribe,
-   connectionId: string,
+   sessionId: string,
 }
 
 export interface ISquintUpdateConnectionInfoMessage {

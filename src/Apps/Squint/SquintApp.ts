@@ -338,8 +338,8 @@ export class SquintApp implements IApp {
                         for (let session of info.sessions) {
                            msg += '   ' + session.title + ' host=' + session.host.userName + ' ' + session.host.state + '\n';
 
-                           msg += '   Viewers (' + session.listeners.length + '):\n';
-                           for (let connection of session.listeners) {
+                           msg += '   Viewers (' + session.viewers.length + '):\n';
+                           for (let connection of session.viewers) {
                               msg += '      ' + connection.userName + ' ' + connection.state;
                            }
                         }

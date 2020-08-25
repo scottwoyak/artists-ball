@@ -53,9 +53,13 @@ export class Squint {
 
    public get connectionInfo(): IConnectionInfoBasic {
       return {
-         connectionId: (this.ss !== null) ? this.ss.connectionId : 'WebSocket not connected',
+         connectionId: this.connectionId,
          userName: this.userName,
       }
+   }
+
+   public get connectionId(): string {
+      return (this.ss !== null) ? this.ss.connectionId : 'WebSocket not connected'
    }
 
    public set localCameraPaused(value: boolean) {
@@ -276,10 +280,10 @@ export class Squint {
       });
    }
 
-   public subscribe(connectionId: string): void {
+   public subscribe(sessionId: string): void {
       this.send({
          subject: SquintMessageSubject.Subscribe,
-         connectionId: connectionId,
+         sessionId: sessionId,
       })
    }
 
