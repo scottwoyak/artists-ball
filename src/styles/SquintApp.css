@@ -134,6 +134,12 @@
   margin-bottom: 0.5em;
 }
 
+#SquintApp #ChatPanelDiv .ListBoxItemSelectedClass,
+#SquintApp #ChatPanelDiv .ListBoxItemSelectedClass:hover {
+  background-color: white;
+  color: black;
+}
+
 #SquintApp #NotificationDiv {
   position: absolute;
   right: 1em;
