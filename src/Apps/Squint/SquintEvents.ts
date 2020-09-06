@@ -6,7 +6,6 @@ export type ChatMessageHandler = (source: IConnectionInfoBasic, msg: string) => 
 export type CloseHandler = () => void;
 export type HostChangedHandler = (newHostConnectionId: string) => void;
 export type HostDisconnectedHandler = () => void;
-export type HostReconnectedHandler = () => void;
 export type ImageHandler = (img: Blob) => void;
 export type ReconnectingHandler = () => void;
 export type ReconnectedHandler = (success: boolean) => void;
@@ -15,13 +14,12 @@ export type SessionListHandler = (session: ISessionInfoBasic[]) => void;
 export type UpdateConnectionInfoHandler = (info: IConnectionInfoBasic) => void;
 
 export enum SquintEvent {
-   CameraPause = 'cameraPause',
+   CameraPaused = 'cameraPaused',
    CameraRequest = 'cameraRequest',
    ChatMessage = 'chatMessage',
    Close = 'close',
    HostChanged = 'hostChanged',
    HostDisconnected = 'hostDisconnected',
-   HostReconnected = 'hostReconnected',
    Image = 'image',
    Reconnecting = 'reconnecting',
    Reconnected = 'reconnected',
@@ -30,8 +28,8 @@ export enum SquintEvent {
    UpdateConnectionInfo = 'updateConnectionInfo',
 }
 
-export interface ISquintCameraPauseEvent {
-   event: SquintEvent.CameraPause,
+export interface ISquintCameraPausedEvent {
+   event: SquintEvent.CameraPaused,
    handler: CameraPauseHandler,
 }
 
@@ -58,11 +56,6 @@ export interface ISquintHostChangedEvent {
 export interface ISquintHostDisconnectedEvent {
    event: SquintEvent.HostDisconnected,
    handler: HostDisconnectedHandler,
-}
-
-export interface ISquintHostReconnectedEvent {
-   event: SquintEvent.HostReconnected,
-   handler: HostReconnectedHandler,
 }
 
 export interface ISquintImageEvent {
@@ -96,13 +89,12 @@ export interface ISquintUpdateConnectionInfoEvent {
 }
 
 export type ISquintEventHandler =
-   ISquintCameraPauseEvent |
+   ISquintCameraPausedEvent |
    ISquintCameraRequestEvent |
    ISquintCloseEvent |
    ISquintChatMessageEvent |
    ISquintHostChangedEvent |
    ISquintHostDisconnectedEvent |
-   ISquintHostReconnectedEvent |
    ISquintImageEvent |
    ISquintReconnectedEvent |
    ISquintReconnectingEvent |

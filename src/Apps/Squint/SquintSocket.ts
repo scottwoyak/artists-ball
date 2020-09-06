@@ -17,8 +17,8 @@ export class SquintSocket {
    private onMessage: MessageHandler;
    private onClose: CloseHandler;
 
-   public static readonly ERROR_CLOSURE = -1;
-   public static readonly NORMAL_CLOSURE = 1000;
+   public static readonly CLOSE_CODE_ERROR = -1;
+   public static readonly CLOSE_CODE_NORMAL = 1000;
 
    /**
     * For debugging only
@@ -117,7 +117,7 @@ export class SquintSocket {
             this._ws.onopen = null;
          }
          this._ws = null;
-         this.onClose(SquintSocket.ERROR_CLOSURE);
+         this.onClose(SquintSocket.CLOSE_CODE_ERROR);
       }
 
       ws.onmessage = (message: MessageEvent) => {
@@ -159,7 +159,7 @@ export class SquintSocket {
       };
    }
 
-   public close(code = SquintSocket.NORMAL_CLOSURE): void {
+   public close(code = SquintSocket.CLOSE_CODE_NORMAL): void {
       if (!this.connected) {
          debug('SquintSocket.close() called but no connection exists');
          return;

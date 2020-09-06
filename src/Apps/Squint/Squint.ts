@@ -20,6 +20,12 @@ export class Squint {
 
    private eventManager = new EventManager();
 
+   // special code that close the socket with an error code thus causing the
+   // server to go into zombie mode. One code also tells us, the client, to
+   // not try to auto-reconnect. Use these for testing only
+   public static readonly CLOSE_CODE_FAIL_NO_RECONNECT = 3001;
+   public static readonly CLOSE_CODE_FAIL_RECONNECT = 3000;
+
    /**
     * For debugging only
     */
@@ -70,12 +76,6 @@ export class Squint {
       return (this.ss !== null) ? this.ss.connectionId : 'WebSocket not connected'
    }
 
-   public set localCameraPaused(value: boolean) {
-      this.send({
-         subject: SquintMessageSubject.CameraPaused,
-      })
-   }
-
    public get remoteCameraPaused(): boolean {
       return this._remoteCameraPaused;
    }
@@ -101,7 +101,7 @@ export class Squint {
       switch (msg.subject) {
          case SquintMessageSubject.CameraPaused: {
             this._remoteCameraPaused = true;
-            this.eventManager.emit(SquintEvent.CameraPause);
+            this.eventManager.emit(SquintEvent.CameraPaused);
          }
             break;
 
@@ -123,12 +123,6 @@ export class Squint {
          case SquintMessageSubject.HostDisconnected: {
             this._remoteCameraConnected = false;
             this.emit(SquintEvent.HostDisconnected);
-         }
-            break;
-
-         case SquintMessageSubject.HostReconnected: {
-            this._remoteCameraConnected = true;
-            this.emit(SquintEvent.HostReconnected);
          }
             break;
 
@@ -163,7 +157,7 @@ export class Squint {
       }
    }
 
-   public tryToReconnect(connectionId: string, retryCount = 1): void {
+   private tryToReconnect(connectionId: string, retryCount = 1): void {
       this._reconnecting = true;
       if (retryCount === 1) {
          this.emit(SquintEvent.Reconnecting);
@@ -226,7 +220,11 @@ export class Squint {
 
       let onClose = (code: number) => {
          const connectionId = this.ss.connectionId;
-         if (code === SquintSocket.NORMAL_CLOSURE) {
+         if (code === SquintSocket.CLOSE_CODE_NORMAL) {
+            this.ss = null;
+            this.emit(SquintEvent.Close);
+         }
+         else if (code === Squint.CLOSE_CODE_FAIL_NO_RECONNECT) {
             this.ss = null;
             this.emit(SquintEvent.Close);
          }
@@ -244,8 +242,7 @@ export class Squint {
          onClose,
          (ss) => { this.ss = ss; },
          reconnectId,
-      )
-         .then((ss) => { });
+      ) as unknown as Promise<void>;
    }
 
    public close(): void {
@@ -334,6 +331,12 @@ export class Squint {
       })
    }
 
+   public cameraPaused(): void {
+      this.send({
+         subject: SquintMessageSubject.CameraPaused,
+      })
+   }
+
    public requestToBeHost(): void {
       this.send({
          subject: SquintMessageSubject.HostChangeRequest
@@ -371,6 +374,15 @@ export class Squint {
             reject('WebSocket error');
          }
       });
+   }
+
+   public static log(url: string, msg: string): void {
+
+      let ws = WebSocketFactory.create(url);
+
+      ws.onopen = () => {
+         ws.send('log ' + msg);
+      }
    }
 
    public toString(): string {

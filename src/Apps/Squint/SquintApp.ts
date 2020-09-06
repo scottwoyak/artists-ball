@@ -177,13 +177,6 @@ export class SquintApp implements IApp {
       });
 
       this.squint.on({
-         event: SquintEvent.HostReconnected,
-         handler: () => {
-            this.drawImg();
-         }
-      });
-
-      this.squint.on({
          event: SquintEvent.HostChanged,
          handler: (newHostConnectionId: string) => {
             // TODO make sure we're not calling things twice
@@ -308,14 +301,11 @@ export class SquintApp implements IApp {
       this.camera = new Camera(this.div);
       this.camera.visible = false;
 
-      this.camera.onResume = () => {
-         this.squint.localCameraPaused = false;
-      }
       this.camera.onPaused = () => {
-         this.squint.localCameraPaused = true;
+         this.squint.cameraPaused();
       }
       this.squint.on({
-         event: SquintEvent.CameraPause,
+         event: SquintEvent.CameraPaused,
          handler: () => {
             this.drawImg();
          }

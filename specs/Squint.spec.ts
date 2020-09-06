@@ -29,7 +29,7 @@ const imageData = [255, 216, 255, 224, 0, 16, 74, 70, 73, 70, 0, 1, 1, 0, 0, 1, 
    215, 206, 89, 127, 193, 254, 163, 155, 127, 203, 37, 31, 84, 124, 191, 245, 60, 219, 254, 89, 44, 245, 60, 187, 239, 44, 129, 244, 215, 240, 240, 97, 159, 62, 127, 198, 103, 127, 17, 210, 79, 85, 173, 126, 223, 47, 255, 0, 198, 160, 245, 143, 22, 83, 213, 227, 59, 227, 229, 159, 156, 107, 151, 238, 242, 203, 172, 174, 83, 242, 163, 233, 110, 27, 121, 56, 121, 45, 198, 238, 238, 237, 172, 179, 191, 80, 122, 165, 218, 109, 203, 135, 208, 255, 0, 170, 198, 92, 121, 114, 153, 101, 225, 230, 245, 191, 166, 122, 223, 73, 195, 151, 45, 206, 92, 39, 204, 200, 30, 253, 143, 129, 57, 57, 255, 0, 255, 0, 166, 95, 242, 179, 63, 81, 111, 243, 207, 254, 76, 71, 223, 138, 248, 51, 47, 81, 110, 166, 121, 238, 253, 223, 75, 135, 244, 159, 95, 201, 140, 203, 247, 177, 199, 243, 144, 175, 102, 244, 178, 244, 243, 231, 250, 94, 124, 88, 92, 185, 189, 94, 181, 231, 79, 61, 195, 135, 27, 175, 245, 185, 3, 232, 202, 71, 204, 207, 14, 41, 102, 189, 70, 86, 125, 95, 87, 208, 254, 147, 135, 173, 226, 185, 113, 250, 156, 186, 233, 4, 54, 215, 47, 255, 0, 29, 245, 179, 119, 14, 109, 207, 203, 199, 203, 250, 87, 172, 244, 248, 123, 249, 115, 179, 25, 247, 7, 171, 102, 251, 211, 199, 193, 232, 189, 79, 169, 207, 44, 120, 179, 203, 47, 108, 223, 117, 203, 159, 211, 243, 240, 243, 126, 223, 44, 206, 100, 15, 165, 238, 43, 193, 150, 23, 9, 222, 87, 242, 242, 227, 150, 119, 151, 95, 187, 150, 191, 33, 143, 181, 21, 240, 253, 79, 39, 44, 184, 254, 222, 121, 79, 174, 156, 51, 228, 245, 24, 201, 190, 92, 247, 126, 235, 17, 250, 37, 155, 126, 123, 135, 63, 85, 207, 201, 48, 195, 147, 59, 149, 122, 167, 164, 245, 184, 203, 115, 230, 202, 125, 182, 15, 175, 178, 254, 95, 31, 15, 75, 234, 57, 125, 214, 115, 91, 103, 214, 185, 222, 46, 108, 114, 213, 228, 203, 255, 0, 228, 43, 234, 242, 250, 172, 120, 174, 172, 183, 240, 231, 203, 135, 250, 155, 51, 199, 83, 167, 146, 250, 110, 124, 166, 167, 125, 121, 181, 207, 47, 211, 253, 124, 213, 195, 147, 175, 167, 185, 7, 208, 244, 252, 57, 113, 101, 125, 214, 93, 189, 24, 227, 37, 220, 146, 87, 197, 207, 209, 126, 165, 134, 62, 239, 118, 86, 125, 178, 113, 246, 122, 255, 0, 119, 182, 242, 114, 127, 201, 131, 244, 127, 240, 241, 243, 241, 123, 253, 84, 183, 197, 124, 255, 0, 75, 232, 127, 80, 245, 60, 216, 241, 97, 115, 247, 101, 122, 222, 73, 234, 61, 23, 174, 224, 245, 25, 240, 114, 251, 230, 120, 121, 255, 0, 37, 193, 244, 249, 237, 225, 226, 152, 225, 148, 147, 195, 62, 151, 11, 119, 149, 178, 190, 55, 46, 30, 163, 12, 119, 159, 38, 93, 124, 90, 158, 155, 147, 155, 30, 77, 220, 242, 146, 207, 168, 62, 223, 55, 30, 60, 188, 210, 103, 126, 62, 23, 60, 184, 125, 46, 50, 107, 123, 124, 126, 110, 94, 75, 201, 188, 57, 50, 241, 245, 122, 166, 57, 243, 76, 46, 89, 119, 175, 144, 125, 47, 75, 205, 135, 54, 245, 140, 154, 79, 93, 233, 255, 0, 115, 143, 223, 143, 242, 197, 142, 28, 127, 209, 112, 251, 178, 238, 95, 54, 51, 151, 234, 184, 206, 176, 227, 183, 242, 131, 199, 237, 228, 191, 203, 10, 244, 207, 85, 158, 28, 19, 13, 207, 116, 233, 211, 47, 85, 151, 63, 14, 177, 227, 213, 167, 250, 57, 251, 87, 125, 231, 163, 7, 14, 63, 89, 201, 197, 123, 190, 233, 95, 87, 139, 57, 201, 132, 207, 27, 185, 95, 22, 112, 103, 238, 213, 211, 235, 240, 225, 56, 248, 177, 198, 124, 42, 58, 212, 53, 244, 1, 230, 245, 158, 155, 247, 177, 153, 75, 254, 88, 188, 124, 124, 54, 114, 79, 116, 179, 87, 229, 245, 43, 195, 234, 175, 39, 238, 111, 28, 117, 39, 200, 61, 248, 245, 58, 45, 250, 188, 222, 159, 212, 92, 166, 179, 199, 90, 249, 118, 203, 147, 83, 114, 108, 13, 143, 159, 125, 101, 221, 255, 0, 17, 7, 192, 246, 203, 225, 102, 41, 143, 195, 113, 166, 147, 199, 194, 200, 19, 202, 163, 90, 75, 39, 209, 126, 84, 18, 121, 106, 70, 103, 150, 224, 19, 203, 166, 53, 150, 167, 132, 26, 218, 239, 180, 135, 200, 142, 152, 203, 108, 239, 79, 110, 27, 157, 111, 111, 30, 63, 202, 126, 94, 220, 60, 40, 233, 139, 60, 142, 152, 248, 115, 228, 68, 114, 242, 248, 190, 171, 47, 127, 169, 228, 203, 227, 122, 125, 169, 229, 240, 121, 127, 238, 103, 249, 161, 28, 178, 238, 166, 149, 21, 164, 209, 166, 146, 131, 58, 52, 183, 194, 160, 204, 139, 161, 64, 158, 94, 239, 65, 172, 253, 71, 143, 19, 111, 11, 223, 250, 95, 253, 236, 191, 245, 84, 175, 163, 210, 95, 177, 126, 81, 43, 44, 102, 197, 111, 54, 5, 78, 138, 149, 126, 0, 135, 83, 228, 140, 229, 229, 85, 119, 55, 228, 247, 72, 199, 194, 55, 57, 149, 157, 111, 222, 111, 43, 58, 140, 61, 222, 147, 195, 115, 136, 199, 170, 242, 204, 115, 203, 255, 0, 27, 255, 0, 9, 125, 211, 235, 31, 107, 31, 15, 23, 170, 249, 111, 196, 54, 190, 126, 89, 101, 243, 107, 149, 237, 219, 145, 202, 158, 98, 51, 189, 30, 126, 6, 161, 145, 98, 73, 164, 187, 219, 119, 195, 63, 45, 195, 93, 120, 252, 118, 245, 241, 231, 236, 147, 25, 54, 243, 113, 248, 143, 87, 167, 255, 0, 187, 22, 196, 123, 113, 198, 251, 119, 102, 147, 60, 109, 241, 30, 142, 79, 227, 28, 175, 151, 26, 220, 76, 48, 177, 211, 20, 39, 148, 86, 250, 172, 248, 86, 115, 240, 139, 6, 106, 196, 65, 155, 173, 165, 186, 50, 242, 95, 2, 185, 229, 154, 251, 183, 24, 201, 172, 60, 32, 153, 103, 60, 124, 179, 165, 228, 242, 64, 210, 86, 121, 49, 223, 115, 203, 127, 44, 228, 131, 205, 203, 141, 152, 188, 223, 47, 95, 63, 240, 121, 113, 242, 138, 179, 166, 182, 205, 39, 150, 27, 111, 22, 121, 242, 215, 21, 107, 23, 31, 85, 255, 0, 111, 251, 18, 177, 233, 125, 69, 226, 228, 239, 248, 223, 47, 161, 61, 79, 13, 255, 0, 206, 71, 200, 196, 207, 202, 177, 95, 103, 247, 248, 239, 142, 76, 127, 229, 169, 201, 133, 159, 207, 31, 249, 124, 38, 177, 242, 132, 125, 207, 126, 63, 238, 159, 242, 190, 236, 126, 177, 242, 49, 248, 117, 158, 69, 125, 47, 119, 221, 101, 120, 248, 124, 189, 115, 192, 53, 181, 219, 51, 194, 192, 105, 60, 31, 11, 4, 54, 17, 5, 87, 151, 213, 234, 224, 245, 124, 60, 222, 175, 248, 80, 103, 209, 201, 150, 250, 157, 125, 94, 201, 39, 251, 100, 254, 158, 63, 67, 252, 243, 252, 61, 144, 19, 75, 162, 144, 67, 219, 47, 254, 51, 254, 27, 198, 73, 241, 63, 225, 35, 80, 31, 83, 244, 124, 38, 119, 151, 27, 174, 190, 143, 177, 135, 14, 50, 119, 95, 31, 244, 79, 251, 220, 191, 136, 251, 140, 81, 230, 245, 25, 76, 50, 246, 123, 123, 250, 191, 57, 250, 254, 31, 231, 134, 126, 217, 173, 233, 250, 31, 89, 255, 0, 122, 126, 31, 3, 245, 207, 225, 135, 254, 235, 21, 242, 48, 212, 219, 89, 101, 35, 31, 45, 101, 225, 161, 239, 253, 55, 151, 92, 125, 252, 101, 211, 232, 126, 165, 237, 229, 253, 47, 151, 127, 237, 219, 227, 122, 63, 225, 127, 246, 125, 95, 83, 255, 0, 248, 206, 79, 253, 103, 255, 0, 218, 127, 71, 193, 227, 244, 57, 242, 73, 101, 146, 59, 225, 250, 108, 223, 249, 114, 95, 233, 234, 244, 223, 246, 99, 180, 117, 196, 121, 112, 244, 60, 88, 89, 119, 149, 179, 235, 94, 137, 199, 62, 181, 165, 158, 12, 53, 231, 245, 115, 12, 61, 54, 87, 93, 252, 62, 78, 254, 175, 175, 235, 127, 250, 215, 242, 248, 249, 124, 150, 13, 99, 151, 217, 250, 175, 254, 45, 102, 94, 131, 151, 119, 95, 231, 245, 126, 79, 143, 203, 244, 95, 252, 127, 255, 0, 163, 207, 255, 0, 187, 151, 127, 138, 253, 23, 186, 217, 172, 121, 37, 143, 147, 250, 175, 45, 229, 255, 0, 163, 143, 137, 123, 175, 79, 166, 254, 23, 242, 249, 252, 191, 207, 147, 242, 231, 21, 236, 244, 248, 112, 122, 14, 43, 150, 229, 206, 206, 223, 55, 214, 250, 188, 125, 79, 60, 202, 205, 76, 102, 143, 83, 252, 171, 197, 151, 202, 196, 94, 108, 240, 152, 91, 189, 190, 110, 89, 73, 157, 177, 215, 159, 197, 121, 163, 112, 116, 195, 45, 242, 99, 238, 186, 155, 107, 158, 73, 156, 151, 183, 28, 254, 29, 57, 191, 241, 252, 40, 237, 233, 243, 156, 60, 152, 231, 140, 213, 122, 121, 189, 77, 202, 91, 114, 124, 233, 252, 91, 203, 248, 70, 85, 234, 195, 213, 227, 197, 134, 231, 119, 47, 44, 240, 227, 251, 152, 220, 173, 120, 254, 94, 159, 73, 255, 0, 103, 47, 202, 163, 223, 134, 119, 252, 102, 254, 206, 217, 101, 113, 157, 60, 88, 127, 227, 249, 122, 121, 63, 146, 13, 114, 122, 236, 63, 110, 225, 255, 0, 155, 203, 135, 45, 188, 184, 220, 174, 158, 76, 191, 251, 25, 126, 93, 111, 149, 31, 99, 244, 175, 83, 143, 166, 253, 87, 211, 231, 149, 158, 223, 118, 175, 246, 247, 127, 242, 254, 60, 113, 253, 75, 143, 147, 25, 63, 207, 14, 223, 155, 227, 255, 0, 191, 135, 254, 211, 255, 0, 237, 250, 31, 254, 87, 255, 0, 216, 244, 223, 250, 85, 136, 252, 223, 170, 187, 226, 202, 60, 56, 229, 35, 215, 234, 63, 237, 230, 240, 213, 87, 76, 50, 198, 243, 99, 187, 39, 111, 163, 44, 179, 114, 237, 241, 239, 153, 249, 125, 63, 71, 255, 0, 107, 251, 102, 171, 213, 151, 45, 229, 225, 253, 171, 141, 252, 186, 113, 250, 78, 46, 43, 50, 206, 123, 167, 206, 211, 135, 248, 187, 250, 159, 251, 57, 254, 4, 106, 115, 240, 99, 212, 202, 70, 185, 48, 185, 205, 76, 180, 248, 216, 249, 125, 188, 60, 79, 194, 165, 99, 143, 211, 225, 132, 238, 123, 175, 214, 174, 255, 0, 111, 255, 0, 87, 74, 229, 207, 255, 0, 103, 32, 117, 199, 41, 148, 220, 187, 141, 60, 190, 147, 248, 223, 203, 213, 1, 50, 124, 238, 127, 91, 127, 203, 9, 143, 126, 59, 125, 63, 151, 196, 245, 159, 253, 156, 255, 0, 40, 175, 79, 163, 246, 242, 203, 239, 186, 179, 238, 246, 227, 142, 50, 106, 119, 31, 35, 211, 121, 175, 175, 199, 252, 98, 163, 207, 125, 31, 29, 163, 208, 38, 166, 191, 255, 217];
 
 // How do we really make this a Blob in the testing environment?
-const imageBlob = (<Blob><any>imageData);
+const imageBlob = imageData as unknown as Blob;
 
 // replace browser WebSockets (that don't exist here) with Node WebSockets
 WebSocketFactory.create = (url: string) => {
@@ -37,6 +37,20 @@ WebSocketFactory.create = (url: string) => {
 }
 
 describe('Squint', function () {
+
+   let INTERVAL_MS = 0;
+   let SESSION_TIMEOUT_MS = 0;
+   let ZOMBIE_TIMEOUT_MS = 0;
+   let BUFFER_MS = 50;
+
+   beforeEach(async function () {
+      let info = await Squint.inspect(TestUrlLocalhost);
+      INTERVAL_MS = info.intervalMs;
+      SESSION_TIMEOUT_MS = info.sessionTimeoutMs;
+      ZOMBIE_TIMEOUT_MS = info.zombieTimeoutMs;
+
+      Squint.log(TestUrlLocalhost, '\n\n\n<<<<<<<<<< Starting Test: \'' + this.currentTest.title + '\' >>>>>>>>>>>>');
+   });
 
    let squints: Squint[] = [];
    afterEach(async function () {
@@ -50,11 +64,12 @@ describe('Squint', function () {
       }
 
       // wait long enough for all interval messages to get sent
-      let info = await Squint.inspect(TestUrlLocalhost);
-      await sleep(info.intervalMs + 100);
+      await sleep(INTERVAL_MS + BUFFER_MS);
+
+      Squint.log(TestUrlLocalhost, '<<<<<<<<<< Ending Test: \'' + this.currentTest.title + '\' >>>>>>>>>>>>');
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      info = await Squint.inspect(TestUrlLocalhost);
+      let info = await Squint.inspect(TestUrlLocalhost);
       expect(info.connections.length).to.equal(0);
       expect(info.sessions.length).to.equal(0);
    });
@@ -79,6 +94,39 @@ describe('Squint', function () {
                reject(err);
             });
       });
+   }
+
+   async function createSession(): Promise<{
+      squintHost: Squint;
+      squintViewer: Squint;
+      sessionId: string
+   }> {
+
+      let userNameHost = 'TesterHost';
+      let userNameViewer = 'TesterViewer';
+      let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
+      let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
+
+      let info = await Squint.inspect(TestUrlLocalhost);
+      expect(info.connections.length).to.equal(2);
+      expectConnection(info.connections[0], squintHost);
+      expectConnection(info.connections[1], squintViewer);
+      expect(info.sessions.length).to.equal(0);
+
+      // start a session
+      squintHost.sendImage(imageBlob);
+
+      info = await Squint.inspect(TestUrlLocalhost);
+      expect(info.sessions.length).to.equal(1);
+      expect(info.sessions[0].title).to.equal(squintHost.userName);
+      expect(info.sessions[0].viewers.length).to.equal(0);
+      expectConnection(info.sessions[0].host, squintHost);
+      let sessionId = info.sessions[0].sessionId;
+
+      // subscribe
+      squintViewer.subscribe(sessionId);
+
+      return { squintHost, squintViewer, sessionId }
    }
 
    function sleep(delay: number): Promise<void> {
@@ -143,7 +191,7 @@ describe('Squint', function () {
             expect(info.connections.length).to.equal(1);
 
             // break the connection.
-            squint.ws.close(3000);
+            squint.ws.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
 
             // TODO sometimes the reconnect action occurs before the inspect call is made. How to prevent that?
             /*
@@ -165,7 +213,7 @@ describe('Squint', function () {
                      .catch((err) => {
                         reject(err);
                      });
-               }, 50);
+               }, BUFFER_MS);
             });
          });
 
@@ -185,7 +233,7 @@ describe('Squint', function () {
             expect(info.connections[0].state).to.equal(ConnectionState.Open);
 
             // break the connection.
-            ss.close(3000);
+            ss.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
 
             // should be in zombie mode
             info = await Squint.inspect(TestUrlLocalhost);
@@ -206,7 +254,7 @@ describe('Squint', function () {
                      .catch((err) => {
                         reject(err);
                      });
-               }, info.zombieTimeoutMs + 100);
+               }, ZOMBIE_TIMEOUT_MS + BUFFER_MS);
             });
          });
 
@@ -228,7 +276,7 @@ describe('Squint', function () {
             let connectionId = ss.connectionId;
 
             // break the connection.
-            ss.close(3000);
+            ss.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
 
             // should be in zombie mode
             info = await Squint.inspect(TestUrlLocalhost);
@@ -265,7 +313,7 @@ describe('Squint', function () {
             let connectionId = ss.connectionId;
 
             // break the connection.
-            ss.close(3000);
+            ss.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
 
             // should be in zombie mode
             info = await Squint.inspect(TestUrlLocalhost);
@@ -292,7 +340,7 @@ describe('Squint', function () {
                      .catch((err) => {
                         reject(err);
                      });
-               }, info.zombieTimeoutMs + 100);
+               }, ZOMBIE_TIMEOUT_MS + BUFFER_MS);
             });
          });
 
@@ -372,7 +420,7 @@ describe('Squint', function () {
                });
 
                // break the connection
-               squint.ws.close(3000);
+               squint.ws.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
 
                setTimeout(() => {
                   // should have reconnected by now
@@ -390,7 +438,7 @@ describe('Squint', function () {
                      .catch((err) => {
                         reject(err);
                      });
-               }, 100);
+               }, BUFFER_MS);
             });
          });
 
@@ -426,7 +474,7 @@ describe('Squint', function () {
             })
 
             // break the connection
-            ss.ws.close(3000);
+            ss.ws.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
             await sleep(25); // must be less than zombie timeout
 
             // make sure the connection is in zombie mode
@@ -445,7 +493,7 @@ describe('Squint', function () {
             // reconnect
             ss = await SquintSocket.connect(TestUrlLocalhost, userNameViewer, onMessage, onImage, onClose, onInit, ss.connectionId);
 
-            await sleep(100);
+            await sleep(BUFFER_MS);
             expect(chat.length).to.equal(2);
             expect(chat[0]).to.equal('one');
             expect(chat[1]).to.equal('two');
@@ -473,7 +521,7 @@ describe('Squint', function () {
             squintViewer.subscribe(info.sessions[0].sessionId);
    
             // break the connection
-            squintViewer.ws.close(3000);
+            squintViewer.ws.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
    
             return new Promise((resolve, reject) => {
                // imediately send a chat message - we should still receive it on the viewer after reconnect happens
@@ -601,7 +649,7 @@ describe('Squint', function () {
             expectConnection(info.sessions[0].host, squintHost);
 
             // let the initial notification associated with the session creation pass
-            await sleep(info.intervalMs);
+            await sleep(INTERVAL_MS);
 
             // add the second connection
             let squintViewer = new Squint();
@@ -640,6 +688,7 @@ describe('Squint', function () {
          });
 
          it('should notify connections of sessions ending', async function () {
+
             let userNameHost = 'TesterHost';
             let userNameViewer = 'TesterViewer';
 
@@ -700,7 +749,7 @@ describe('Squint', function () {
             squintHost.sendImage(imageBlob);
 
             // sleep to allow Pass 1
-            await sleep(info.intervalMs + 100);
+            await sleep(INTERVAL_MS + BUFFER_MS);
 
             // this should cause Pass 2
             squintHost.close();
@@ -710,7 +759,9 @@ describe('Squint', function () {
       });
 
       describe('Sessions', function () {
+
          it('should create a session when an image is uploaded', async function () {
+
             let userNameHost = 'TesterHost';
             let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
 
@@ -771,7 +822,7 @@ describe('Squint', function () {
                         reject(err);
                      });
 
-               }, info.sessionTimeoutMs + 100);
+               }, SESSION_TIMEOUT_MS + BUFFER_MS);
             })
          });
 
@@ -836,21 +887,9 @@ describe('Squint', function () {
             expect(info.sessions.length).to.equal(0);
          });
 
-         it('session listeners should receive a Host Disconnected message if the host is closed', async function () {
-            let userNameHost = 'TesterHost';
-            let userNameViewer = 'TesterViewer';
-            let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
+         it('session listeners should receive a HostDisconnected message if the host is closed normally', async function () {
 
-            // create the session
-            squintHost.sendImage(imageBlob);
-
-            // get the session id
-            let info = await Squint.inspect(TestUrlLocalhost);
-            let sessionId = info.sessions[0].sessionId;
-
-            // add the second connection
-            let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
-            squintViewer.subscribe(sessionId);
+            let { squintHost, squintViewer } = await createSession();
 
             let promise = new Promise((resolve, reject) => {
                squintViewer.on({
@@ -865,14 +904,167 @@ describe('Squint', function () {
             squintHost.close();
 
             await sleep(20); // sleep so that the socket closes first
-            info = await Squint.inspect(TestUrlLocalhost);
+            let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
             expect(info.sessions.length).to.equal(1);
 
             return promise;
          });
 
+         it('session listeners should receive a HostDisconnected message if the host is closed abnormally and does not reconnect', async function () {
+
+            let { squintHost, squintViewer } = await createSession();
+
+            let promise = new Promise((resolve, reject) => {
+               squintViewer.on({
+                  event: SquintEvent.HostDisconnected,
+                  handler: () => {
+                     resolve();
+                  }
+               })
+            });
+
+            // close the host
+            squintHost.ws.close(Squint.CLOSE_CODE_FAIL_NO_RECONNECT);
+
+            await sleep(ZOMBIE_TIMEOUT_MS + BUFFER_MS); // sleep so that the socket closes first
+
+            let info = await Squint.inspect(TestUrlLocalhost);
+            expect(info.connections.length).to.equal(1);
+            expect(info.sessions.length).to.equal(1);
+
+            return promise;
+         });
+
+         it('session listeners should NOT receive a HostDisconnected message if the host closes abnormally but then reconnects', async function () {
+
+            let { squintHost, squintViewer } = await createSession();
+
+            let disconnectedEvent = false;
+            squintViewer.on({
+               event: SquintEvent.HostDisconnected,
+               handler: () => {
+                  disconnectedEvent = true;
+               }
+            });
+
+            // close the host - will reconnect
+            squintHost.ws.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
+
+            // sleep long enough to assure the zombie mode times out if it does
+            await sleep(ZOMBIE_TIMEOUT_MS + BUFFER_MS);
+
+            let info = await Squint.inspect(TestUrlLocalhost);
+            expect(info.connections.length).to.equal(2);
+            expect(info.sessions.length).to.equal(1);
+            expect(disconnectedEvent).to.be.false;
+         });
+
+         it('session listeners should receive a HostChanged message if the host changes', async function () {
+
+            let { squintHost, squintViewer, sessionId } = await createSession();
+
+            // create the second host and join the session
+            let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
+            squintHost2.subscribe(sessionId);
+            await sleep(INTERVAL_MS + BUFFER_MS); // let the existing SessionList events pass
+
+            let squintHostCount = 0;
+            let squintHost2Count = 0;
+            let squintViewerCount = 0;
+
+            squintHost.on({
+               event: SquintEvent.HostChanged,
+               handler: () => {
+                  squintHostCount++;
+               }
+            });
+            squintHost2.on({
+               event: SquintEvent.HostChanged,
+               handler: () => {
+                  squintHost2Count++;
+               }
+            });
+            squintViewer.on({
+               event: SquintEvent.HostChanged,
+               handler: () => {
+                  squintViewerCount++;
+               }
+            });
+
+            // become the host
+            squintHost2.requestToBeHost();
+
+            let info = await Squint.inspect(TestUrlLocalhost);
+            expect(info.connections.length).to.equal(3);
+            expectConnection(info.connections[0], squintHost);
+            expectConnection(info.connections[1], squintViewer);
+            expectConnection(info.connections[2], squintHost2);
+            expect(info.sessions.length).to.equal(1);
+            expect(info.sessions[0].viewers.length).to.equal(2);
+            expectConnection(info.sessions[0].viewers[0], squintViewer);
+            expectConnection(info.sessions[0].viewers[1], squintHost);
+
+            expect(squintViewerCount).to.equal(1);
+            expect(squintHostCount).to.equal(1);
+            expect(squintHost2Count).to.equal(1);
+         });
+
+         it('session listeners should receive a SessionInfo message if the host changes', async function () {
+
+            let { squintHost, squintViewer, sessionId } = await createSession();
+
+            // create the second host and join the session
+            let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
+            squintHost2.subscribe(sessionId);
+            await sleep(INTERVAL_MS + BUFFER_MS); // let the existing SessionList events pass
+
+            let squintHostCount = 0;
+            let squintHost2Count = 0;
+            let squintViewerCount = 0;
+
+            squintHost.on({
+               event: SquintEvent.SessionInfo,
+               handler: () => {
+                  squintHostCount++;
+               }
+            });
+            squintHost2.on({
+               event: SquintEvent.SessionInfo,
+               handler: () => {
+                  squintHost2Count++;
+               }
+            });
+            squintViewer.on({
+               event: SquintEvent.SessionInfo,
+               handler: () => {
+                  squintViewerCount++;
+               }
+            });
+
+            // become the host
+            squintHost2.requestToBeHost();
+
+            // allow events to fire
+            await sleep(SESSION_TIMEOUT_MS + BUFFER_MS);
+
+            let info = await Squint.inspect(TestUrlLocalhost);
+            expect(info.connections.length).to.equal(3);
+            expectConnection(info.connections[0], squintHost);
+            expectConnection(info.connections[1], squintViewer);
+            expectConnection(info.connections[2], squintHost2);
+            expect(info.sessions.length).to.equal(1);
+            expect(info.sessions[0].viewers.length).to.equal(2);
+            expectConnection(info.sessions[0].viewers[0], squintViewer);
+            expectConnection(info.sessions[0].viewers[1], squintHost);
+
+            expect(squintViewerCount).to.equal(1);
+            expect(squintHostCount).to.equal(1);
+            expect(squintHost2Count).to.equal(1);
+         });
+
          it('session listeners should receive a SessionInfo message when the host closes', async function () {
+
             let userNameHost = 'TesterHost';
             let userNameViewer = 'TesterViewer';
             let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
@@ -922,7 +1114,7 @@ describe('Squint', function () {
 
             // sleep long enough that the initial message associated with the
             // subscription activity is sent
-            await sleep(info.intervalMs + 100);
+            await sleep(INTERVAL_MS + BUFFER_MS);
 
             // close the host - should trigger Pass 2
             squintHost.close();
@@ -959,7 +1151,7 @@ describe('Squint', function () {
             squintHost.close();
 
             // let the close call occur before we inspect
-            await sleep(100);
+            await sleep(BUFFER_MS);
 
             // prove session is still open
             info = await Squint.inspect(TestUrlLocalhost);
@@ -971,7 +1163,7 @@ describe('Squint', function () {
             expectConnection(info.sessions[0].viewers[0], squintViewer1);
             expectConnection(info.sessions[0].viewers[1], squintViewer2);
 
-            await sleep(info.intervalMs + 100);
+            await sleep(INTERVAL_MS + BUFFER_MS);
 
             // viewer 2 should receive a message when viewer 1 closes
             let promise = new Promise((resolve, reject) => {
@@ -999,6 +1191,7 @@ describe('Squint', function () {
          });
 
          it('should allow the host to change', async function () {
+
             let userNameHost = 'TesterHost';
             let userNameViewer = 'TesterViewer';
             let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
@@ -1079,6 +1272,7 @@ describe('Squint', function () {
          });
 
          it('should NOT create a session when an image is uploaded from a connection subscribed to an existing session', async function () {
+
             let userNameHost = 'TesterHost';
             let userNameViewer = 'TesterViewer';
             let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
@@ -1119,6 +1313,7 @@ describe('Squint', function () {
          });
 
          it('should NOT subscribe if already subscribed', async function () {
+
             let userNameHost1 = 'TesterHost1';
             let userNameHost2 = 'TesterHost2';
             let userNameViewer = 'TesterViewer';
@@ -1166,6 +1361,7 @@ describe('Squint', function () {
          });
 
          it('should NOT subscribe if hosting', async function () {
+
             let userNameHost1 = 'TesterHost1';
             let userNameHost2 = 'TesterHost2';
             let userNameViewer = 'TesterViewer';
@@ -1312,8 +1508,8 @@ describe('Squint', function () {
                   setTimeout(() => {
                      // this should cause Pass 3
                      squintViewer2.close();
-                  }, info.intervalMs + 100);
-               }, info.intervalMs + 100);
+                  }, INTERVAL_MS + BUFFER_MS);
+               }, INTERVAL_MS + BUFFER_MS);
             });
 
             return promise;
@@ -1370,33 +1566,18 @@ describe('Squint', function () {
             let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
 
-            let info = await Squint.inspect(TestUrlLocalhost);
-            expect(info.connections.length).to.equal(2);
-            expectConnection(info.connections[0], squintHost);
-            expectConnection(info.connections[1], squintViewer);
-            expect(info.sessions.length).to.equal(0);
-
             // start a session
             squintHost.sendImage(imageBlob);
 
-            info = await Squint.inspect(TestUrlLocalhost);
-            expect(info.sessions.length).to.equal(1);
-            expect(info.sessions[0].title).to.equal(squintHost.userName);
-            expect(info.sessions[0].viewers.length).to.equal(0);
-            expectConnection(info.sessions[0].host, squintHost);
+            let info = await Squint.inspect(TestUrlLocalhost);
             let sessionId = info.sessions[0].sessionId;
 
-            // when squint2 received the image, the test has passed
+            // when squintViewer receives the image, the test has passed
             return new Promise((resolve, reject) => {
                squintViewer.on({
                   event: SquintEvent.Image,
                   handler: () => {
-                     try {
-                        resolve();
-                     }
-                     catch (err) {
-                        reject(err);
-                     }
+                     resolve();
                   }
                });
 
@@ -1406,12 +1587,320 @@ describe('Squint', function () {
          });
 
          it('should send continual images to subscribers', async function () {
+
+            let { squintHost, squintViewer } = await createSession();
+
+            // make sure the initial subscribe image has been received
+            await sleep(BUFFER_MS);
+
+            let imageCount = 0;
+            squintViewer.requestNextImage();
+            squintViewer.on({
+               event: SquintEvent.Image,
+               handler: () => {
+                  imageCount++;
+                  squintViewer.requestNextImage();
+               }
+            });
+
+            // send a bunch of images
+            let sentImageCount = 10;
+            for (let i = 0; i < sentImageCount; i++) {
+               squintHost.sendImage(imageBlob);
+
+               // allow the viewer to request the next image
+               await sleep(10);
+            }
+
+            expect(imageCount).to.equal(sentImageCount);
+         });
+
+         it('should still receive images if the host changes', async function () {
+
+            let { squintHost, squintViewer, sessionId } = await createSession();
+
+            // create a new host and send an image
+            let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
+            squintHost2.subscribe(sessionId);
+            squintHost2.requestToBeHost();
+
+            // let messages fire before we start counting
+            await sleep(BUFFER_MS);
+
+            let imageCount = 0;
+            squintViewer.requestNextImage();
+            squintViewer.on({
+               event: SquintEvent.Image,
+               handler: () => {
+                  imageCount++;
+                  squintViewer.requestNextImage();
+               }
+            });
+
+            // send a bunch of images
+            let sentImageCount = 10;
+            for (let i = 0; i < sentImageCount; i++) {
+               squintHost2.sendImage(imageBlob);
+
+               // allow the viewer to request the next image
+               await sleep(10);
+            }
+
+            expect(imageCount).to.equal(sentImageCount);
+         });
+
+         it('should NOT receive images sent from viewers', async function () {
+
+            let { squintHost, squintViewer, sessionId } = await createSession();
+
+            // add another viewer
+            let squintViewer2 = await createSquint(TestUrlLocalhost, 'TesterViewer2');
+            squintViewer2.subscribe(sessionId);
+
+            // let messages fire before we start counting
+            await sleep(BUFFER_MS);
+
+            let imageCount = 0;
+            squintViewer.requestNextImage();
+            squintViewer.on({
+               event: SquintEvent.Image,
+               handler: () => {
+                  imageCount++;
+                  squintViewer.requestNextImage();
+               }
+            });
+
+            // send a bunch of images
+            let sentImageCount = 10;
+            for (let i = 0; i < sentImageCount; i++) {
+               squintViewer2.sendImage(imageBlob);
+
+               // allow the viewer to request the next image
+               await sleep(10);
+            }
+
+            // the images should all be ignored by the server
+            expect(imageCount).to.equal(0);
+         });
+
+         it('should NOT receive images sent from old hosts', async function () {
+
+            let { squintHost, squintViewer, sessionId } = await createSession();
+
+            // create a new host
+            let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
+            squintHost2.subscribe(sessionId);
+            squintHost2.requestToBeHost();
+
+            // let messages fire before we start counting
+            await sleep(BUFFER_MS);
+
+            let imageCount = 0;
+            squintViewer.requestNextImage();
+            squintViewer.on({
+               event: SquintEvent.Image,
+               handler: () => {
+                  imageCount++;
+                  squintViewer.requestNextImage();
+               }
+            });
+
+            // send a bunch of images
+            let sentImageCount = 10;
+            for (let i = 0; i < sentImageCount; i++) {
+               squintHost.sendImage(imageBlob);
+
+               // allow the viewer to request the next image
+               await sleep(10);
+            }
+
+            // the images should all be ignored by the server
+            expect(imageCount).to.equal(0);
          });
 
          it('should send suspend sending images if the listener is backlogged', async function () {
+
+            // this test is identical to the continual image test except we never call 
+            // ready for next image so no images should be received
+            let { squintHost, squintViewer } = await createSession();
+
+            // make sure the initial subscribe image has been received
+            await sleep(BUFFER_MS);
+
+            let imageCount = 0;
+            //squintViewer.requestNextImage();
+            squintViewer.on({
+               event: SquintEvent.Image,
+               handler: () => {
+                  imageCount++;
+                  //squintViewer.requestNextImage();
+               }
+            });
+
+            // send a bunch of images
+            let sentImageCount = 10;
+            for (let i = 0; i < sentImageCount; i++) {
+               squintHost.sendImage(imageBlob);
+               await sleep(5);
+            }
+
+            expect(imageCount).to.equal(0);
          });
 
 
+
+      });
+
+      describe('camera', function () {
+
+         it('should send CameraPaused events (to viewer, but not host)', async function () {
+
+            let { squintHost, squintViewer } = await createSession();
+
+            // when all session members receive the pause event, the test has passed
+            return new Promise((resolve, reject) => {
+               let viewerEvent = 0;
+               let hostEvent = 0;
+               squintViewer.on({
+                  event: SquintEvent.CameraPaused,
+                  handler: () => {
+                     viewerEvent++;
+                  }
+               });
+
+               squintHost.on({
+                  event: SquintEvent.CameraPaused,
+                  handler: () => {
+                     hostEvent++;
+                  }
+               });
+
+               setTimeout(() => {
+                  try {
+                     expect(viewerEvent).to.equal(1);
+                     expect(hostEvent).to.equal(0);
+                     expect(squintViewer.remoteCameraPaused).to.be.true;
+                     expect(squintHost.remoteCameraPaused).to.be.false; // there is no remote camera, value stays 'false'
+                     resolve();
+                  }
+                  catch (err) {
+                     reject(err);
+                  }
+               }, BUFFER_MS);
+
+               squintHost.cameraPaused();
+            });
+         });
+
+         it('should show the camera as disconnected if the host closes normally', async function () {
+
+            let { squintHost, squintViewer } = await createSession();
+
+            squintHost.close();
+
+            await sleep(ZOMBIE_TIMEOUT_MS + BUFFER_MS);
+
+            expect(squintHost.remoteCameraConnected).to.be.true; // there is no remote camera, value stays 'true'
+            expect(squintViewer.remoteCameraConnected).to.be.false;
+         });
+
+         it('should show the camera as disconnected if the host closes abruptly and does not reconnect', async function () {
+
+            let { squintHost, squintViewer } = await createSession();
+
+            squintHost.ws.close(Squint.CLOSE_CODE_FAIL_NO_RECONNECT);
+
+            await sleep(ZOMBIE_TIMEOUT_MS + BUFFER_MS);
+
+            expect(squintHost.remoteCameraConnected).to.be.true; // there is no remote camera, value stays 'true'
+            expect(squintViewer.remoteCameraConnected).to.be.false;
+         });
+
+         it('should show the camera as connected if the host closes abruptly but reconnects', async function () {
+
+            let { squintHost, squintViewer } = await createSession();
+
+            squintHost.ws.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
+
+            await sleep(BUFFER_MS);
+
+            expect(squintHost.remoteCameraConnected).to.be.true; // there is no remote camera, value stays 'true'
+            expect(squintViewer.remoteCameraConnected).to.be.true;
+         });
+
+         it('should show the camera as connected if the host closes and another connection becomes host', async function () {
+
+            let { squintHost, squintViewer, sessionId } = await createSession();
+
+            squintViewer.requestNextImage();
+
+            // close the host so the state goes to false
+            squintHost.close();
+            await sleep(BUFFER_MS);
+            expect(squintViewer.remoteCameraConnected).to.be.false;
+
+            // TODO there is a state we're not managing - state of when the host connects, but before it sends an image. The
+            // app currently displays "Host Disconnected" but that's no longer the case.
+
+            // create a new host and send an image
+            let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
+            squintHost2.subscribe(sessionId);
+            squintHost2.requestToBeHost();
+            squintHost2.sendImage(imageBlob);
+
+            // let events propagate
+            await sleep(BUFFER_MS);
+
+            // check
+            expect(squintViewer.remoteCameraConnected).to.be.true;
+         });
+
+         it('should get the remoteCameraPaused state when joining a session', async function () {
+
+            let userNameHost = 'TesterHost';
+            let userNameViewer = 'TesterViewer';
+            let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
+            let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
+
+            // start a session
+            squintHost.sendImage(imageBlob);
+            squintHost.cameraPaused();
+
+            let info = await Squint.inspect(TestUrlLocalhost);
+            let sessionId = info.sessions[0].sessionId;
+
+            // subscribe
+            squintViewer.subscribe(sessionId);
+
+            await sleep(BUFFER_MS);
+
+            expect(squintViewer.remoteCameraPaused).to.be.true;
+         });
+
+         it('should reset remoteCameraPaused flag after the next image is sent/received', async function () {
+
+            let { squintHost, squintViewer } = await createSession();
+
+            squintViewer.requestNextImage();
+
+            // pause the camera
+            squintHost.cameraPaused();
+
+            // let the events propagate
+            await sleep(BUFFER_MS);
+
+            // verify
+            expect(squintViewer.remoteCameraPaused).to.be.true;
+
+            // send another image - should unpause
+            squintHost.sendImage(imageBlob);
+
+            // let the events propagate
+            await sleep(BUFFER_MS);
+
+            // verify
+            expect(squintViewer.remoteCameraPaused).to.be.false;
+         });
 
       });
    }
@@ -1423,4 +1912,3 @@ describe('Squint', function () {
 // zombie mode
 // chat message
 // user name change
-// camera requests

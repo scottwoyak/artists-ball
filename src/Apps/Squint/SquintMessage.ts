@@ -46,7 +46,6 @@ export enum SquintMessageSubject {
    HostChanged = 'HostChanged',
    HostChangeRequest = 'HostChangeRequest',
    HostDisconnected = 'HostDisconnected',
-   HostReconnected = 'HostReconnected',
    Log = 'Log',
    ReadyForNextImage = 'ReadyForNextImage',
    Reconnected = 'Reconnected',
@@ -100,10 +99,6 @@ export interface ISquintHostDisconnectedMessage {
    subject: SquintMessageSubject.HostDisconnected
 }
 
-export interface ISquintHostReconnectedMessage {
-   subject: SquintMessageSubject.HostReconnected,
-}
-
 export interface ISquintLogMessage {
    subject: SquintMessageSubject.Log,
    message: string,
@@ -148,7 +143,6 @@ export type ISquintMessage =
    ISquintHostChangedMessage |
    ISquintHostChangeRequestMessage |
    ISquintHostDisconnectedMessage |
-   ISquintHostReconnectedMessage |
    ISquintLogMessage |
    ISquintReadyForNextImageMessage |
    ISquintReconnectedMessage |
