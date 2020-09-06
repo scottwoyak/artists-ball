@@ -32,7 +32,10 @@ export interface ISessionInfoFull extends ISessionInfoBasic {
 
 export interface ISquintInfo {
    connections: IConnectionInfoFull[],
-   sessions: ISessionInfoFull[]
+   sessions: ISessionInfoFull[],
+   sessionTimeoutMs: number,
+   zombieTimeoutMs: number,
+   intervalMs: number,
 }
 
 export enum SquintMessageSubject {
@@ -79,7 +82,8 @@ export interface ISquintHelloFromClientMessage {
 
 export interface ISquintHelloFromServerMessage {
    subject: SquintMessageSubject.Hello,
-   id: string,
+   version: string,
+   connectionId: string,
 }
 
 export interface ISquintHostChangedMessage {
@@ -93,8 +97,7 @@ export interface ISquintHostChangeRequestMessage {
 }
 
 export interface ISquintHostDisconnectedMessage {
-   subject: SquintMessageSubject.HostDisconnected,
-   shutdownSecs: number, // time remaining in seconds
+   subject: SquintMessageSubject.HostDisconnected
 }
 
 export interface ISquintHostReconnectedMessage {

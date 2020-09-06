@@ -9,5 +9,6 @@
       "allowJs": true,
       "sourceMap": true,
       //"strict": true,
+      "moduleResolution": "node"
    }
 }

@@ -16,8 +16,16 @@ export class Squint {
    private _reconnecting = false;
    private _remoteCameraPaused = false;
    private _remoteCameraConnected = true;
+   private _url: string | null;
 
    private eventManager = new EventManager();
+
+   /**
+    * For debugging only
+    */
+   public get ws(): WebSocket {
+      return this.ss.ws;
+   }
 
    public get userName(): string {
       if (this._userName === null) {
@@ -89,42 +97,6 @@ export class Squint {
       this.eventManager.emit(name, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[8], args[9]);
    }
 
-   private setSS(ss: SquintSocket) {
-
-      this.ss = ss;
-
-      ss.onClose = (code: number) => {
-         const connectionId = ss.connectionId;
-         this.ss = null;
-         if (code === SquintSocket.NORMAL_CLOSURE) {
-            this.emit(SquintEvent.Close);
-         }
-         else {
-            console.log(this + ' WebSocket closed with code: ' + code + ', trying to reconnect');
-            this._reconnecting = true;
-            this.tryToReconnect(connectionId);
-         }
-      }
-
-      ss.onImage = (blob: Blob) => {
-         if (!ss.connected) {
-            debug('ss.onImage() message received, but socket not open');
-         }
-
-         this._remoteCameraPaused = false;
-         this.emit(SquintEvent.Image, blob);
-      }
-
-      ss.onMessage = (msg: ISquintMessage) => {
-         if (!ss.connected) {
-            debug('ws.onMessage() message received, but socket not open');
-         }
-
-         // process the image
-         this.processMessage(msg);
-      };
-   }
-
    private processMessage(msg: ISquintMessage) {
       switch (msg.subject) {
          case SquintMessageSubject.CameraPaused: {
@@ -150,7 +122,7 @@ export class Squint {
 
          case SquintMessageSubject.HostDisconnected: {
             this._remoteCameraConnected = false;
-            this.emit(SquintEvent.HostDisconnected, msg.shutdownSecs);
+            this.emit(SquintEvent.HostDisconnected);
          }
             break;
 
@@ -191,13 +163,13 @@ export class Squint {
       }
    }
 
-   private tryToReconnect(connectionId: string, retryCount = 1) {
+   public tryToReconnect(connectionId: string, retryCount = 1): void {
       this._reconnecting = true;
       if (retryCount === 1) {
          this.emit(SquintEvent.Reconnecting);
       }
       console.log(this + ' Reconnect try ' + retryCount)
-      this.reconnect(SquintWsUrl, connectionId)
+      this.doConnect(connectionId)
          .then(() => {
             this._reconnecting = false;
             this.emit(SquintEvent.Reconnected, true);
@@ -219,27 +191,61 @@ export class Squint {
          });
    }
 
-   public reconnect(url: string, reconnectId: string): Promise<void> {
-      return this.doConnect(url, reconnectId);
-   }
-
    public connect(url: string, userName: string): Promise<void> {
       this._userName = userName;
+      this._url = url;
       this._remoteCameraConnected = true;
       this._remoteCameraPaused = false;
-      return this.doConnect(url);
+      return this.doConnect();
    }
 
-   private doConnect(url: string, reconnectId?: string): Promise<void> {
+   private doConnect(reconnectId?: string): Promise<void> {
 
       if (this.connected) {
          return Promise.reject('Cannot connect to server: previous connection is still open');
       }
 
-      return SquintSocket.connect(url, this.userName, reconnectId)
-         .then((ss: SquintSocket) => {
-            this.setSS(ss);
-         });
+      let onMessage = (msg: ISquintMessage) => {
+         if (!this.ss.connected) {
+            debug('ws.onMessage() message received, but socket not open');
+         }
+
+         // process the image
+         this.processMessage(msg);
+      };
+
+      let onImage = (blob: Blob) => {
+         if (!this.ss.connected) {
+            debug('ss.onImage() message received, but socket not open');
+         }
+
+         this._remoteCameraPaused = false;
+         this._remoteCameraConnected = true;
+         this.emit(SquintEvent.Image, blob);
+      }
+
+      let onClose = (code: number) => {
+         const connectionId = this.ss.connectionId;
+         if (code === SquintSocket.NORMAL_CLOSURE) {
+            this.ss = null;
+            this.emit(SquintEvent.Close);
+         }
+         else {
+            console.log(this + ' WebSocket closed with code: ' + code + ', trying to reconnect');
+            this.tryToReconnect(connectionId);
+         }
+      }
+
+      return SquintSocket.connect(
+         this._url,
+         this.userName,
+         onMessage,
+         onImage,
+         onClose,
+         (ss) => { this.ss = ss; },
+         reconnectId,
+      )
+         .then((ss) => { });
    }
 
    public close(): void {
@@ -372,7 +378,7 @@ export class Squint {
          return '[' + this.ss.readyStateStr + ']';
       }
       else {
-         return '[null]';
+         return '[websocket=null]';
       }
    }
 }

@@ -5,7 +5,7 @@ export type CameraRequestHandler = (resolution: number, jpegQuality: number) => 
 export type ChatMessageHandler = (source: IConnectionInfoBasic, msg: string) => void;
 export type CloseHandler = () => void;
 export type HostChangedHandler = (newHostConnectionId: string) => void;
-export type HostDisconnectedHandler = (shutdownSecs: number) => void;
+export type HostDisconnectedHandler = () => void;
 export type HostReconnectedHandler = () => void;
 export type ImageHandler = (img: Blob) => void;
 export type ReconnectingHandler = () => void;

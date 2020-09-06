@@ -6,22 +6,30 @@ import { env } from '../../Util/Globals';
 export type ImageHandler = (img: Blob) => void;
 export type MessageHandler = (msg: ISquintMessage) => void;
 export type CloseHandler = (code: number) => void;
+export type InitHandler = (ss: SquintSocket) => void;
 
 export class SquintSocket {
 
-   private ws: WebSocket | null = null;
+   private _ws: WebSocket | null = null;
    public readonly connectionId: string;
 
-   public onImage: ImageHandler | null = null;
-   public onMessage: MessageHandler | null = null;
-   public onClose: CloseHandler | null = null;
+   private onImage: ImageHandler;
+   private onMessage: MessageHandler;
+   private onClose: CloseHandler;
 
    public static readonly ERROR_CLOSURE = -1;
    public static readonly NORMAL_CLOSURE = 1000;
 
+   /**
+    * For debugging only
+    */
+   public get ws(): WebSocket {
+      return this._ws;
+   }
+
    public get url(): string {
-      if (this.ws) {
-         return this.ws.url;
+      if (this._ws) {
+         return this._ws.url;
       }
       else {
          return '';
@@ -29,11 +37,11 @@ export class SquintSocket {
    }
 
    public get readyStateStr(): string {
-      if (this.ws === null) {
+      if (this._ws === null) {
          return 'NULL';
       }
 
-      switch (this.ws.readyState) {
+      switch (this._ws.readyState) {
          case WebSocketReadyState.OPEN:
             return 'OPEN';
 
@@ -52,8 +60,8 @@ export class SquintSocket {
    }
 
    public get bufferedAmount(): number {
-      if (this.ws) {
-         return this.ws.bufferedAmount;
+      if (this._ws) {
+         return this._ws.bufferedAmount;
       }
       else {
          debug('SquintSocket.bufferedAmount called, but not connected');
@@ -62,7 +70,7 @@ export class SquintSocket {
    }
 
    public get connected(): boolean {
-      return (this.ws !== null && this.ws.readyState === WebSocketReadyState.OPEN);
+      return (this._ws !== null && this._ws.readyState === WebSocketReadyState.OPEN);
    }
 
    public get bufferReady(): boolean {
@@ -74,36 +82,42 @@ export class SquintSocket {
       return this.bufferedAmount === 0;
    }
 
-   private constructor(ws: WebSocket, connectionId: string) {
-      this.ws = ws;
+   private constructor(
+      ws: WebSocket,
+      connectionId: string,
+      onMessage: MessageHandler,
+      onImage: ImageHandler,
+      onClose: CloseHandler
+   ) {
+
+      this._ws = ws;
       this.connectionId = connectionId;
+      this.onMessage = onMessage;
+      this.onImage = onImage;
+      this.onClose = onClose;
 
       ws.onopen = null;
 
       ws.onclose = (event: CloseEvent) => {
-         if (this.ws) {
-            this.ws.onclose = null;
-            this.ws.onerror = null;
-            this.ws.onmessage = null;
-            this.ws.onopen = null;
+         if (this._ws) {
+            this._ws.onclose = null;
+            this._ws.onerror = null;
+            this._ws.onmessage = null;
+            this._ws.onopen = null;
          }
-         this.ws = null;
-         if (this.onClose) {
-            this.onClose(event.code);
-         }
+         this._ws = null;
+         this.onClose(event.code);
       }
 
       ws.onerror = (event: Event) => {
-         if (this.ws) {
-            this.ws.onclose = null;
-            this.ws.onerror = null;
-            this.ws.onmessage = null;
-            this.ws.onopen = null;
+         if (this._ws) {
+            this._ws.onclose = null;
+            this._ws.onerror = null;
+            this._ws.onmessage = null;
+            this._ws.onopen = null;
          }
-         this.ws = null;
-         if (this.onClose) {
-            this.onClose(SquintSocket.ERROR_CLOSURE);
-         }
+         this._ws = null;
+         this.onClose(SquintSocket.ERROR_CLOSURE);
       }
 
       ws.onmessage = (message: MessageEvent) => {
@@ -113,19 +127,21 @@ export class SquintSocket {
 
          // process the image
          if (message.data instanceof Blob) {
-            if (this.onImage) {
-               this.onImage(message.data);
-            }
+            this.onImage(message.data);
          }
          else if (typeof message.data === 'string') {
             try {
-               const msg = JSON.parse(message.data) as ISquintMessage;
-               if (this.onMessage) {
+               let msg = JSON.parse(message.data) as ISquintMessage;
+
+               try {
                   this.onMessage(msg);
+               }
+               catch (err) {
+                  console.log('SquintSocket.onMessage() exception: ' + err);
                }
             }
             catch (err) {
-               console.log('Invalid message not received: Invalid JSON.\n' + message.data);
+               console.log('Invalid message received: Invalid JSON.\n' + err + '\n' + message.data);
             }
          }
          else {
@@ -134,9 +150,7 @@ export class SquintSocket {
             // than a browser. In particular it doesn't support Blobs so when we test sending
             // an image, it is not recognized as a Blob type. Ugh.
             if (env.isTesting) {
-               if (this.onImage) {
-                  this.onImage(message.data);
-               }
+               this.onImage(message.data);
             }
             else {
                debug('SquintSocket: unknown message received: ' + JSON.stringify(message, null, ' ').substring(0, 10000));
@@ -145,23 +159,22 @@ export class SquintSocket {
       };
    }
 
-   public close(): void {
+   public close(code = SquintSocket.NORMAL_CLOSURE): void {
       if (!this.connected) {
          debug('SquintSocket.close() called but no connection exists');
          return;
       }
 
-      if (this.ws) {
-         this.ws.onclose = null;
-         this.ws.onerror = null;
-         this.ws.onmessage = null;
-         this.ws.onopen = null;
+      if (this._ws) {
+         this._ws.onclose = null;
+         this._ws.onerror = null;
+         this._ws.onmessage = null;
+         this._ws.onopen = null;
 
-         this.ws.close(SquintSocket.NORMAL_CLOSURE);
+         this._ws.close(code);
       }
-      this.ws = null;
+      this._ws = null;
    }
-
 
    public send(msg: ISquintMessage): void {
       if (!(this.connected)) {
@@ -170,7 +183,7 @@ export class SquintSocket {
       }
 
       // @ts-ignore: can't be null per above check
-      this.ws.send(JSON.stringify(msg));
+      this._ws.send(JSON.stringify(msg));
    }
 
    public sendImage(blob: Blob): void {
@@ -180,12 +193,20 @@ export class SquintSocket {
       }
 
       // @ts-ignore: can't be null per above check
-      this.ws.send(blob);
+      this._ws.send(blob);
    }
 
-   public static connect(url: string, userName: string, reconnectId?: string): Promise<SquintSocket> {
+   public static connect(
+      url: string,
+      userName: string,
+      onMessage: MessageHandler,
+      onImage: ImageHandler,
+      onClose: CloseHandler,
+      onInit: InitHandler,
+      reconnectId?: string
+   ): Promise<SquintSocket> {
 
-      return new Promise((resolve, reject) => {
+      return new Promise<SquintSocket>((resolve, reject) => {
 
          // create temporary handlers that process the server handshake
          const ws = WebSocketFactory.create(url);
@@ -215,7 +236,15 @@ export class SquintSocket {
                try {
                   const msg = JSON.parse(messageEvent.data) as ISquintMessage;
                   if (msg.subject && msg.subject === 'Reconnected') {
-                     resolve(new SquintSocket(ws, reconnectId));
+                     let ss = new SquintSocket(
+                        ws,
+                        reconnectId,
+                        onMessage,
+                        onImage,
+                        onClose
+                     );
+                     onInit(ss);
+                     resolve(ss);
                   }
                   else {
                      debug('Expected Reconnected response, got: ' + JSON.stringify(msg, null, ' '));
@@ -232,8 +261,19 @@ export class SquintSocket {
                   let msg = JSON.parse(messageEvent.data) as ISquintMessage;
                   if (msg.subject && msg.subject === 'Hello') {
                      msg = msg as ISquintHelloFromServerMessage;
-                     console.log('Squint connection established. ID=' + msg.id);
-                     resolve(new SquintSocket(ws, msg.id));
+                     console.log('Squint connection established. ID=' + msg.connectionId);
+                     let ss = new SquintSocket(
+                        ws,
+                        msg.connectionId,
+                        onMessage,
+                        onImage,
+                        onClose
+                     );
+                     // there is a very tricky potential bug here. After resolve() is called,
+                     // but before the associated then() method is called, a message may be
+                     // received on the socket. That's why we need the onInit() handler
+                     onInit(ss);
+                     resolve(ss);
                   }
                   else {
                      debug('Expected Hello response, got: ' + JSON.stringify(msg, null, ' '));

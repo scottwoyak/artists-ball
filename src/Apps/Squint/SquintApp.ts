@@ -171,7 +171,7 @@ export class SquintApp implements IApp {
 
       this.squint.on({
          event: SquintEvent.HostDisconnected,
-         handler: (shutdownSecs: number) => {
+         handler: () => {
             this.drawImg();
          }
       });
@@ -354,8 +354,7 @@ export class SquintApp implements IApp {
 
                case 'x':
                   // simulate killing the connection
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-                  (<any>this.squint.ss).ws.close(3000);
+                  this.squint.ws.close(3000);
                   break;
 
                case 'i': {
