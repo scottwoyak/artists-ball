@@ -41,7 +41,7 @@ describe('Squint', function () {
    let INTERVAL_MS = 0;
    let SESSION_TIMEOUT_MS = 0;
    let ZOMBIE_TIMEOUT_MS = 0;
-   let BUFFER_MS = 50;
+   let BUFFER_MS = 25;
 
    beforeEach(async function () {
       let info = await Squint.inspect(TestUrlLocalhost);
@@ -175,7 +175,7 @@ describe('Squint', function () {
             squint.close();
 
             // check results
-            await sleep(20); // sleep so that the socket closes first
+            await sleep(BUFFER_MS); // sleep so that the socket closes first
             info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(0);
             expect(info.sessions.length).to.equal(0);
@@ -801,7 +801,7 @@ describe('Squint', function () {
             // close the host - session should stay alive since we have a listener
             squintHost.close();
 
-            await sleep(20); // sleep so that the socket closes first
+            await sleep(BUFFER_MS); // sleep so that the socket closes first
             info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
             expectConnection(info.connections[0], squintViewer);
@@ -841,7 +841,7 @@ describe('Squint', function () {
             // close the host - session should stay alive since we have a listener
             squintHost.close();
 
-            await sleep(20); // sleep so that the socket closes first
+            await sleep(BUFFER_MS); // sleep so that the socket closes first
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
             expectConnection(info.connections[0], squintViewer);
@@ -869,7 +869,7 @@ describe('Squint', function () {
             squintHost.close();
 
             // prove session is still open
-            await sleep(20); // sleep so that the socket closes first
+            await sleep(BUFFER_MS); // sleep so that the socket closes first
             info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
             expectConnection(info.connections[0], squintViewer);
@@ -881,7 +881,7 @@ describe('Squint', function () {
             squintViewer.close();
 
             // session should close
-            await sleep(20); // sleep so that the socket closes first
+            await sleep(BUFFER_MS); // sleep so that the socket closes first
             info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(0);
             expect(info.sessions.length).to.equal(0);
@@ -903,7 +903,7 @@ describe('Squint', function () {
             // close the host
             squintHost.close();
 
-            await sleep(20); // sleep so that the socket closes first
+            await sleep(BUFFER_MS); // sleep so that the socket closes first
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
             expect(info.sessions.length).to.equal(1);
@@ -1119,7 +1119,7 @@ describe('Squint', function () {
             // close the host - should trigger Pass 2
             squintHost.close();
 
-            await sleep(20); // sleep so that the socket closes first
+            await sleep(BUFFER_MS); // sleep so that the socket closes first
             info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
             expect(info.sessions.length).to.equal(1);
