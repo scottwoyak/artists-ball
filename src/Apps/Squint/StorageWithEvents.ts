@@ -27,4 +27,8 @@ export class StorageWithEvents {
    public get(item: StorageItem): string {
       return localStorage.getItem(item);
    }
+
+   public has(item: StorageItem): boolean {
+      return this.get(item) !== null;
+   }
 }

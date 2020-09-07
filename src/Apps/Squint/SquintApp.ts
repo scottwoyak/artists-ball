@@ -78,7 +78,7 @@ export class SquintApp implements IApp {
    private xOffset = 0;
    private yOffset = 0;
 
-   private squint: Squint;
+   private squint = new Squint();
 
    private startDialog: StartDialog | undefined;
 
@@ -86,22 +86,6 @@ export class SquintApp implements IApp {
 
    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
    private noSleep = new NoSleep();
-
-   private get hasUserName(): boolean {
-      return (this.storage.get(StorageItem.UserName) !== null);
-   }
-
-   private get userName(): string {
-      let userName = this.storage.get(StorageItem.UserName);
-      if (userName === null) {
-         userName = 'Unknown';
-      }
-      return userName;
-   }
-
-   private set userName(userName: string) {
-      this.storage.set(StorageItem.UserName, userName);
-   }
 
    public constructor() {
 
@@ -112,7 +96,6 @@ export class SquintApp implements IApp {
 
       //localStorage.removeItem(StorageItems.UserName); // simulates starting up the first time
 
-      this.squint = new Squint();
       this.squint.on({
          event: SquintEvent.Image,
          handler: ((blob: Blob) => { this.onDownload(blob); })
@@ -187,10 +170,7 @@ export class SquintApp implements IApp {
       this.storage.on(StorageItem.UserName, (userName) => {
 
          this.userNameMenuItemDiv.innerText = 'Hi ' + userName;
-
-         if (this.squint && this.squint.connected) {
-            this.squint.updateConnectionInfo(userName);
-         }
+         this.squint.userName = userName;
       });
 
       document.addEventListener('visibilitychange', () => {
@@ -324,7 +304,7 @@ export class SquintApp implements IApp {
       window.addEventListener('resize', () => this.onResize());
       this.updateSizes();
 
-      if (this.hasUserName === false) {
+      if (this.storage.has(StorageItem.UserName) === false) {
          this.showWelcomeDialog();
       }
       else {
@@ -378,7 +358,7 @@ export class SquintApp implements IApp {
 
    private showWelcomeDialog(): void {
       const welcomeDialog = new WelcomeDialog(this.div, (userName) => {
-         this.userName = userName;
+         this.storage.set(StorageItem.UserName, userName);
          this.startDialog.visible = true;
       });
       welcomeDialog.visible = true;
@@ -608,7 +588,7 @@ export class SquintApp implements IApp {
 
 
       this.userNameMenuItemDiv = menubar.addItem(
-         'Hi ' + (this.hasUserName ? this.userName : ''),
+         'Hi ' + (this.storage.has(StorageItem.UserName) ? this.storage.get(StorageItem.UserName) : ''),
          () => {
             new UserNameDialog(this.div, this.storage);
          });

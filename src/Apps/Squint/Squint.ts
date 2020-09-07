@@ -42,6 +42,15 @@ export class Squint {
       }
    }
 
+   public set userName(userName: string) {
+      if (this._userName !== userName) {
+         this._userName = userName;
+         if (this.connected) {
+            this.updateConnectionInfo(userName);
+         }
+      }
+   }
+
    public get connected(): boolean {
       if (this.ss && this.ss.connected) {
          return true;
@@ -131,9 +140,9 @@ export class Squint {
          }
             break;
 
-         case SquintMessageSubject.UpdateConnectionInfo: {
+         case SquintMessageSubject.ConnectionInfoUpdate: {
             this.emit(
-               SquintEvent.UpdateConnectionInfo,
+               SquintEvent.ConnectionInfoUpdate,
                {
                   userName: msg.userName,
                   connectionId: msg.connectionId,
@@ -297,10 +306,10 @@ export class Squint {
       })
    }
 
-   public updateConnectionInfo(userName: string): void {
+   private updateConnectionInfo(userName: string): void {
       this._userName = userName;
       this.send({
-         subject: SquintMessageSubject.UpdateConnectionInfo,
+         subject: SquintMessageSubject.ConnectionInfoUpdate,
          userName: this.connectionInfo.userName,
          connectionId: this.connectionInfo.connectionId,
       })
@@ -341,6 +350,10 @@ export class Squint {
       this.send({
          subject: SquintMessageSubject.HostChangeRequest
       });
+
+      // reset flags
+      this._remoteCameraConnected = true;
+      this._remoteCameraPaused = false;
    }
 
    public static inspect(url: string): Promise<ISquintInfo> {

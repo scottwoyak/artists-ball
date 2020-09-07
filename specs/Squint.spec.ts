@@ -41,7 +41,7 @@ describe('Squint', function () {
    let INTERVAL_MS = 0;
    let SESSION_TIMEOUT_MS = 0;
    let ZOMBIE_TIMEOUT_MS = 0;
-   let BUFFER_MS = 25;
+   let BUFFER_MS = 50;
 
    beforeEach(async function () {
       let info = await Squint.inspect(TestUrlLocalhost);
@@ -1010,13 +1010,14 @@ describe('Squint', function () {
             expect(squintHost2Count).to.equal(1);
          });
 
-         it('session listeners should receive a SessionInfo message if the host changes', async function () {
+         it('session listeners should receive a SessionInfo message if the host is changed', async function () {
 
             let { squintHost, squintViewer, sessionId } = await createSession();
 
             // create the second host and join the session
             let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
             squintHost2.subscribe(sessionId);
+
             await sleep(INTERVAL_MS + BUFFER_MS); // let the existing SessionList events pass
 
             let squintHostCount = 0;
@@ -1057,9 +1058,67 @@ describe('Squint', function () {
             expect(info.sessions[0].viewers.length).to.equal(2);
             expectConnection(info.sessions[0].viewers[0], squintViewer);
             expectConnection(info.sessions[0].viewers[1], squintHost);
+            expectConnection(info.sessions[0].host, squintHost2);
 
             expect(squintViewerCount).to.equal(1);
             expect(squintHostCount).to.equal(1);
+            expect(squintHost2Count).to.equal(1);
+         });
+
+         it('session listeners should receive a SessionInfo message if a host-less session gains a host', async function () {
+
+            let { squintHost, squintViewer, sessionId } = await createSession();
+
+            // create the second host and join the session
+            let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
+            squintHost2.subscribe(sessionId);
+
+            // disconnect the current host
+            squintHost.close();
+
+            // allow events to fire
+            await sleep(INTERVAL_MS + BUFFER_MS);
+
+            let squintHostCount = 0;
+            let squintHost2Count = 0;
+            let squintViewerCount = 0;
+
+            squintHost.on({
+               event: SquintEvent.SessionInfo,
+               handler: () => {
+                  squintHostCount++;
+               }
+            });
+            squintHost2.on({
+               event: SquintEvent.SessionInfo,
+               handler: () => {
+                  squintHost2Count++;
+               }
+            });
+            squintViewer.on({
+               event: SquintEvent.SessionInfo,
+               handler: () => {
+                  squintViewerCount++;
+               }
+            });
+
+            // become the host
+            squintHost2.requestToBeHost();
+
+            // allow events to fire
+            await sleep(INTERVAL_MS + BUFFER_MS);
+
+            let info = await Squint.inspect(TestUrlLocalhost);
+            expect(info.connections.length).to.equal(2);
+            expectConnection(info.connections[0], squintViewer);
+            expectConnection(info.connections[1], squintHost2);
+            expect(info.sessions.length).to.equal(1);
+            expect(info.sessions[0].viewers.length).to.equal(1);
+            expectConnection(info.sessions[0].viewers[0], squintViewer);
+            expectConnection(info.sessions[0].host, squintHost2);
+
+            expect(squintViewerCount).to.equal(1);
+            expect(squintHostCount).to.equal(0);
             expect(squintHost2Count).to.equal(1);
          });
 
@@ -1190,7 +1249,7 @@ describe('Squint', function () {
             return promise;
          });
 
-         it('should allow the host to change', async function () {
+         it('sessions should allow the host to change', async function () {
 
             let userNameHost = 'TesterHost';
             let userNameViewer = 'TesterViewer';
@@ -1271,45 +1330,140 @@ describe('Squint', function () {
             return Promise.all([promise1, promise2]);
          });
 
-         it('should NOT create a session when an image is uploaded from a connection subscribed to an existing session', async function () {
+         it('should notify session listeners & host if the host changes name', async function () {
 
-            let userNameHost = 'TesterHost';
-            let userNameViewer = 'TesterViewer';
-            let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
+            let { squintHost, squintViewer } = await createSession();
+            let squintOther = await createSquint(TestUrlLocalhost, 'TesterOther');
 
-            let info = await Squint.inspect(TestUrlLocalhost);
-            expect(info.connections.length).to.equal(1);
-            expectConnection(info.connections[0], squintHost);
-            expect(info.sessions.length).to.equal(0);
+            // clear out the initial event
+            await sleep(INTERVAL_MS + BUFFER_MS);
 
-            // create the session
-            squintHost.sendImage(imageBlob);
+            let newName = 'TesterNewName';
 
-            // session should be created when an image is sent
-            info = await Squint.inspect(TestUrlLocalhost);
-            expect(info.sessions.length).to.equal(1);
-            expectConnection(info.sessions[0].host, squintHost);
-            expect(info.sessions[0].title).to.equal(squintHost.userName);
-            expect(info.sessions[0].viewers.length).to.equal(0);
+            let promises: Promise<void>[] = [];
+            promises.push(
+               new Promise<void>((resolve, reject) => {
+                  squintHost.on({
+                     event: SquintEvent.ConnectionInfoUpdate,
+                     handler: (info) => {
+                        try {
+                           expect(info.userName).to.equal(newName);
+                           resolve();
+                        }
+                        catch (err) {
+                           reject(err);
+                        }
+                     }
+                  });
+               })
+            );
+            promises.push(
+               new Promise<void>((resolve, reject) => {
+                  squintViewer.on({
+                     event: SquintEvent.ConnectionInfoUpdate,
+                     handler: (info) => {
+                        try {
+                           expect(info.userName).to.equal(newName);
+                           resolve();
+                        }
+                        catch (err) {
+                           reject(err);
+                        }
+                     }
+                  });
+               })
+            );
+            promises.push(
+               new Promise<void>((resolve, reject) => {
+                  squintOther.on({
+                     event: SquintEvent.ConnectionInfoUpdate,
+                     handler: () => {
+                        reject('Non session connections should not receive the message');
+                     }
+                  });
 
-            // add the second connection
-            let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
-            squintViewer.subscribe(info.sessions[0].sessionId);
+                  sleep(BUFFER_MS)
+                     .then(() => {
+                        resolve();
+                     })
+                     .catch((err) => {
+                        reject(err);
+                     });
+               })
+            );
 
-            info = await Squint.inspect(TestUrlLocalhost);
-            expect(info.connections.length).to.equal(2);
-            expectConnection(info.connections[0], squintHost);
-            expectConnection(info.connections[1], squintViewer);
-            expect(info.sessions.length).to.equal(1);
+            // change name
+            squintHost.userName = newName;
 
-            // this would normally create a session
-            squintViewer.sendImage(imageBlob);
+            return Promise.all(promises);
+         });
 
-            info = await Squint.inspect(TestUrlLocalhost);
-            expect(info.connections.length).to.equal(2);
-            expectConnection(info.connections[0], squintHost);
-            expectConnection(info.connections[1], squintViewer);
-            expect(info.sessions.length).to.equal(1);
+         it('should notify session listeners & host if a listener changes name', async function () {
+
+            let { squintHost, squintViewer } = await createSession();
+            let squintOther = await createSquint(TestUrlLocalhost, 'TesterOther');
+
+            // clear out the initial event
+            await sleep(INTERVAL_MS + BUFFER_MS);
+
+            let newName = 'TesterNewName';
+
+            let promises: Promise<void>[] = [];
+            promises.push(
+               new Promise<void>((resolve, reject) => {
+                  squintHost.on({
+                     event: SquintEvent.ConnectionInfoUpdate,
+                     handler: (info) => {
+                        try {
+                           expect(info.userName).to.equal(newName);
+                           resolve();
+                        }
+                        catch (err) {
+                           reject(err);
+                        }
+                     }
+                  });
+               })
+            );
+            promises.push(
+               new Promise<void>((resolve, reject) => {
+                  squintViewer.on({
+                     event: SquintEvent.ConnectionInfoUpdate,
+                     handler: (info) => {
+                        try {
+                           expect(info.userName).to.equal(newName);
+                           resolve();
+                        }
+                        catch (err) {
+                           reject(err);
+                        }
+                     }
+                  });
+               })
+            );
+            promises.push(
+               new Promise<void>((resolve, reject) => {
+                  squintOther.on({
+                     event: SquintEvent.ConnectionInfoUpdate,
+                     handler: () => {
+                        reject('Non session connections should not receive the message');
+                     }
+                  });
+
+                  sleep(BUFFER_MS)
+                     .then(() => {
+                        resolve();
+                     })
+                     .catch((err) => {
+                        reject(err);
+                     });
+               })
+            );
+
+            // change name
+            squintViewer.userName = newName;
+
+            return Promise.all(promises);
          });
 
          it('should NOT subscribe if already subscribed', async function () {
@@ -1902,9 +2056,42 @@ describe('Squint', function () {
             expect(squintViewer.remoteCameraPaused).to.be.false;
          });
 
+         it('should reset camera flags after you become host', async function () {
+
+            let { squintHost, squintViewer } = await createSession();
+
+            squintViewer.requestNextImage();
+
+            // pause the camera
+            squintHost.cameraPaused();
+
+            // let the events propagate
+            await sleep(BUFFER_MS);
+
+            // disconnect
+            squintHost.close();
+
+            // let the events propagate
+            await sleep(BUFFER_MS);
+
+            // verify
+            expect(squintViewer.remoteCameraPaused).to.be.true;
+            expect(squintViewer.remoteCameraConnected).to.be.false;
+
+            // make the viewer the host - should reset flags
+            squintViewer.requestToBeHost();
+
+            // let the events propagate
+            await sleep(BUFFER_MS);
+
+            // verify
+            expect(squintViewer.remoteCameraPaused).to.be.false;
+            expect(squintViewer.remoteCameraConnected).to.be.true;
+         });
       });
    }
 });
+
 
 // TESTS
 // stress tester

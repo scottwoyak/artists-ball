@@ -188,7 +188,7 @@
   flex-direction: column;
 }
 
-#SquintApp .DialogBackgroundClass {
+#SquintApp #WelcomeDialogBackgroundDiv {
   background-color: rgb(160, 160, 160);
 }
 

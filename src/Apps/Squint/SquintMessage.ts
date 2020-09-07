@@ -42,6 +42,7 @@ export enum SquintMessageSubject {
    CameraPaused = 'CameraPaused',
    CameraRequest = 'CameraRequest',
    ChatMessage = 'ChatMessage',
+   ConnectionInfoUpdate = 'ConnectionInfoUpdate',
    Hello = 'Hello',
    HostChanged = 'HostChanged',
    HostChangeRequest = 'HostChangeRequest',
@@ -52,7 +53,6 @@ export enum SquintMessageSubject {
    SessionInfo = 'SessionInfo',
    SessionList = 'SessionList',
    Subscribe = 'Subscribe',
-   UpdateConnectionInfo = 'UpdateConnectionInfo',
 }
 
 export interface ISquintCameraPausedMessage {
@@ -69,6 +69,12 @@ export interface ISquintChatMessage {
    subject: SquintMessageSubject.ChatMessage,
    connection: IConnectionInfoBasic,
    message: string,
+}
+
+export interface ISquintConnectionInfoUpdateMessage {
+   subject: SquintMessageSubject.ConnectionInfoUpdate,
+   userName: string,
+   connectionId: string,
 }
 
 export interface ISquintHelloFromClientMessage {
@@ -127,17 +133,12 @@ export interface ISquintSubscribeMessage {
    sessionId: string,
 }
 
-export interface ISquintUpdateConnectionInfoMessage {
-   subject: SquintMessageSubject.UpdateConnectionInfo,
-   userName: string,
-   connectionId: string,
-}
-
 // for type inference in TypeScript
 export type ISquintMessage =
    ISquintCameraPausedMessage |
    ISquintCameraRequestMessage |
    ISquintChatMessage |
+   ISquintConnectionInfoUpdateMessage |
    ISquintHelloFromClientMessage |
    ISquintHelloFromServerMessage |
    ISquintHostChangedMessage |
@@ -148,6 +149,5 @@ export type ISquintMessage =
    ISquintReconnectedMessage |
    ISquintSessionInfoMessage |
    ISquintSessionListMessage |
-   ISquintSubscribeMessage |
-   ISquintUpdateConnectionInfoMessage;
+   ISquintSubscribeMessage;
 

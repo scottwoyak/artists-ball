@@ -53,9 +53,9 @@ export class StartDialog extends Dialog {
       });
 
       this.squint.on({
-         event: SquintEvent.UpdateConnectionInfo,
+         event: SquintEvent.ConnectionInfoUpdate,
          handler: (info: IConnectionInfoBasic) => {
-            this.onUpdateConnectionInfo(info);
+            this.onConnectionInfoUpdate(info);
          }
       });
 
@@ -215,7 +215,7 @@ export class StartDialog extends Dialog {
       }
    }
 
-   private onUpdateConnectionInfo(info: IConnectionInfoBasic) {
+   private onConnectionInfoUpdate(info: IConnectionInfoBasic) {
       for (const item of this.viewListBox.items) {
          if (item.userData === info.connectionId) {
             item.div.innerText = info.userName;

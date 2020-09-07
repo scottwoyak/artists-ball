@@ -9,6 +9,7 @@ export class ChatPanel extends ResizeablePanel {
 
    private viewersListBox: ListBox;
    private chatListBox: ListBox;
+   private hostConnectionId: string;
 
    private squint: Squint;
 
@@ -55,6 +56,13 @@ export class ChatPanel extends ResizeablePanel {
       });
 
       this.squint.on({
+         event: SquintEvent.ConnectionInfoUpdate,
+         handler: (info: IConnectionInfoBasic) => {
+            this.onUpdateConnectionInfo(info);
+         }
+      });
+
+      this.squint.on({
          event: SquintEvent.ChatMessage,
          handler: (src: IConnectionInfoBasic, msg: string) => {
             this.onChatMessage(src, msg);
@@ -76,11 +84,25 @@ export class ChatPanel extends ResizeablePanel {
       this.viewersListBox.clear();
 
       if (info.host) {
-         this.viewersListBox.addItem(info.host.userName + ' (host)');
+         this.viewersListBox.addItem(info.host.userName + ' (host)', info.host.connectionId);
+         this.hostConnectionId = info.host.connectionId;
       }
 
       for (const viewer of info.viewers) {
-         this.viewersListBox.addItem(viewer.userName);
+         this.viewersListBox.addItem(viewer.userName, viewer.connectionId);
+      }
+   }
+
+   private onUpdateConnectionInfo(info: IConnectionInfoBasic) {
+      for (const item of this.viewersListBox.items) {
+         if (item.userData === info.connectionId) {
+            if (info.connectionId === this.hostConnectionId) {
+               item.div.innerText = info.userName + ' (host)';
+            }
+            else {
+               item.div.innerText = info.userName;
+            }
+         }
       }
    }
 

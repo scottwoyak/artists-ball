@@ -4,6 +4,7 @@ export type CameraPauseHandler = () => void;
 export type CameraRequestHandler = (resolution: number, jpegQuality: number) => void;
 export type ChatMessageHandler = (source: IConnectionInfoBasic, msg: string) => void;
 export type CloseHandler = () => void;
+export type ConnectionInfoUpdateHandler = (info: IConnectionInfoBasic) => void;
 export type HostChangedHandler = (newHostConnectionId: string) => void;
 export type HostDisconnectedHandler = () => void;
 export type ImageHandler = (img: Blob) => void;
@@ -11,13 +12,13 @@ export type ReconnectingHandler = () => void;
 export type ReconnectedHandler = (success: boolean) => void;
 export type SessionInfoHandler = (info: ISessionInfoFull) => void;
 export type SessionListHandler = (session: ISessionInfoBasic[]) => void;
-export type UpdateConnectionInfoHandler = (info: IConnectionInfoBasic) => void;
 
 export enum SquintEvent {
    CameraPaused = 'cameraPaused',
    CameraRequest = 'cameraRequest',
    ChatMessage = 'chatMessage',
    Close = 'close',
+   ConnectionInfoUpdate = 'connectionInfoUpdate',
    HostChanged = 'hostChanged',
    HostDisconnected = 'hostDisconnected',
    Image = 'image',
@@ -25,7 +26,6 @@ export enum SquintEvent {
    Reconnected = 'reconnected',
    SessionInfo = 'sessionInfo',
    SessionList = 'sessionList',
-   UpdateConnectionInfo = 'updateConnectionInfo',
 }
 
 export interface ISquintCameraPausedEvent {
@@ -46,6 +46,11 @@ export interface ISquintChatMessageEvent {
 export interface ISquintCloseEvent {
    event: SquintEvent.Close,
    handler: CloseHandler,
+}
+
+export interface ISquintConnectionInfoUpdateEvent {
+   event: SquintEvent.ConnectionInfoUpdate,
+   handler: ConnectionInfoUpdateHandler,
 }
 
 export interface ISquintHostChangedEvent {
@@ -83,21 +88,16 @@ export interface ISquintSessionListEvent {
    handler: SessionListHandler,
 }
 
-export interface ISquintUpdateConnectionInfoEvent {
-   event: SquintEvent.UpdateConnectionInfo,
-   handler: UpdateConnectionInfoHandler,
-}
-
 export type ISquintEventHandler =
    ISquintCameraPausedEvent |
    ISquintCameraRequestEvent |
    ISquintCloseEvent |
    ISquintChatMessageEvent |
+   ISquintConnectionInfoUpdateEvent |
    ISquintHostChangedEvent |
    ISquintHostDisconnectedEvent |
    ISquintImageEvent |
    ISquintReconnectedEvent |
    ISquintReconnectingEvent |
    ISquintSessionInfoEvent |
-   ISquintSessionListEvent |
-   ISquintUpdateConnectionInfoEvent;
+   ISquintSessionListEvent;
