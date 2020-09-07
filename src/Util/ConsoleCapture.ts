@@ -61,18 +61,20 @@ export class ConsoleCapture {
          oldClear();
       }
 
-      const oldOnError = window.onerror;
       window.onerror = (event: string | Event, source: string, lineno: number, colno: number, error: Error) => {
          const stackTrace = error && error instanceof Error ? '\n' + error.stack : '';
          const msg = event + '\n' + source + ' line:' + lineno + ', col:' + colno + stackTrace;
          //alert(msg);
          this.append(msg);
-         oldOnError(event, source, lineno, colno, error);
       }
    }
 
    private append(msg: string) {
       let fullmsg = this.textArea.value;
+
+      if (msg === null || msg === undefined) {
+         msg = '' + msg;
+      }
 
       msg = msg.substr(0, 100 * NUM_COLS)
       fullmsg = msg + '\n\n' + fullmsg;

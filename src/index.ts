@@ -1,5 +1,5 @@
 import './styles/styles.css';
-import { Launcher } from "./Launcher";
+import { Launcher } from './Launcher';
 
 window.onload = function () {
 

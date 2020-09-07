@@ -1,5 +1,6 @@
 import { GUI } from '../../GUI/GUI';
 import { Dialog } from '../../GUI/Dialog';
+import { StorageWithEvents, StorageItem } from './StorageWithEvents';
 
 export type okHandler = (userName: string) => void;
 
@@ -7,8 +8,7 @@ export class UserNameDialog extends Dialog {
 
    public constructor(
       parent: HTMLDivElement,
-      currentUserName: string,
-      onOk: okHandler
+      storage: StorageWithEvents,
    ) {
       // UserNameBackgroundDiv and UserNameDialogDiv
       super(parent, 'UserName');
@@ -20,7 +20,7 @@ export class UserNameDialog extends Dialog {
       const userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);
       userNameTextInput.type = 'text';
       userNameTextInput.placeholder = 'Your Name';
-      userNameTextInput.value = currentUserName;
+      userNameTextInput.value = storage.get(StorageItem.UserName);
 
       userNameTextInput.oninput = () => {
          okButton.disabled = (userNameTextInput.value.trim().length === 0);
@@ -44,7 +44,7 @@ export class UserNameDialog extends Dialog {
       okButton.innerText = 'OK';
       okButton.onclick = () => {
          this.visible = false;
-         onOk(userNameTextInput.value.trim());
+         storage.set(StorageItem.UserName, userNameTextInput.value.trim());
       };
 
       this.visible = true;

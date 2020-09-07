@@ -6,6 +6,7 @@ import { UserNameDialog } from './UserNameDialog';
 import { Dialog } from '../../GUI/Dialog';
 import { SquintEvent } from './SquintEvents';
 import { ISessionInfoBasic, IConnectionInfoBasic } from './SquintMessage';
+import { StorageWithEvents, StorageItem } from './StorageWithEvents';
 
 export type ViewSessionHandler = (sessionId: string) => void;
 export type StartSessionHandler = () => void;
@@ -22,8 +23,7 @@ export class StartDialog extends Dialog {
    private squint: Squint;
    private onStartView: ViewSessionHandler;
    private onStartSession: StartSessionHandler;
-   private onGetUserName: GetUserNameHandler;
-   private onSetUserName: SetUserNameHandler;
+   private storage: StorageWithEvents;
 
    private set showConnectingMsg(flag: boolean) {
       this.bodyDiv.style.pointerEvents = flag ? 'none' : 'auto';
@@ -38,12 +38,13 @@ export class StartDialog extends Dialog {
       squint: Squint,
       onViewSession: ViewSessionHandler,
       onStartSession: StartSessionHandler,
-      onGetUserName: GetUserNameHandler,
-      onSetUserName: SetUserNameHandler
+      storage: StorageWithEvents,
    ) {
       super(parent, 'Start');
 
       this.squint = squint;
+      this.storage = storage;
+
       this.squint.on({
          event: SquintEvent.SessionList,
          handler: (sessions: ISessionInfoBasic[]) => {
@@ -87,8 +88,6 @@ export class StartDialog extends Dialog {
 
       this.onStartView = onViewSession;
       this.onStartSession = onStartSession;
-      this.onGetUserName = onGetUserName;
-      this.onSetUserName = onSetUserName;
 
       const dialogTitleDiv = GUI.create('div', 'DialogTitleDiv', this.dialogDiv);
       const titleDiv = GUI.create('div', 'TitleDiv', dialogTitleDiv);
@@ -104,13 +103,7 @@ export class StartDialog extends Dialog {
       this.userNameButton.className = 'ButtonClass';
       this.userNameButton.style.display = 'none';
       this.userNameButton.onclick = () => {
-         new UserNameDialog(
-            parent,
-            onGetUserName(),
-            (userName: string) => {
-               this.onSetUserName(userName);
-               this.userNameButton.innerText = 'Hi ' + userName;
-            });
+         new UserNameDialog(parent, storage);
       }
 
       this.bodyDiv = GUI.create('div', 'DialogBodyDiv', this.dialogDiv);
@@ -180,10 +173,12 @@ export class StartDialog extends Dialog {
       }
 
 
-
+      storage.on(StorageItem.UserName, (userName) => {
+         this.userNameButton.innerText = 'Hi ' + userName;
+      });
 
       this.onShow = () => {
-         this.userNameButton.innerText = 'Hi ' + this.onGetUserName();
+         this.userNameButton.innerText = 'Hi ' + this.storage.get(StorageItem.UserName);
 
          if (this.squint.connected === false) {
             this.connect();
@@ -200,8 +195,7 @@ export class StartDialog extends Dialog {
       this.showConnectingMsg = true;
       this.viewListBox.clear();
 
-      const userName = this.onGetUserName();
-      this.squint.connect(Squint.url, userName)
+      this.squint.connect(Squint.url, this.storage.get(StorageItem.UserName))
          .then(() => {
             this.showConnectingMsg = false;
          })

@@ -21,6 +21,7 @@ import { SquintEvent } from './SquintEvents';
 import NoSleep from 'nosleep.js';
 import { WebSocketFactory } from './WebSocketFactory';
 import { IConnectionInfoBasic, ISquintInfo } from './SquintMessage';
+import { StorageWithEvents, StorageItem } from './StorageWithEvents';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -38,10 +39,6 @@ interface IConstraintItem {
    label: string,
 }
 
-enum StorageItems {
-   UserName = 'UserName'
-}
-
 export class SquintApp implements IApp {
    private handler: PointerEventHandler | undefined;
    private div: HTMLDivElement | undefined;
@@ -51,6 +48,7 @@ export class SquintApp implements IApp {
    private notificationDiv: HTMLDivElement | undefined;
    private cameraMenu: SubMenu | undefined;
    private remoteCameraMenu: SubMenu | undefined;
+   private storage = new StorageWithEvents();
 
    private camera: Camera | undefined;
    private canvas: HTMLCanvasElement | undefined;
@@ -90,11 +88,11 @@ export class SquintApp implements IApp {
    private noSleep = new NoSleep();
 
    private get hasUserName(): boolean {
-      return (localStorage.getItem(StorageItems.UserName) !== null);
+      return (this.storage.get(StorageItem.UserName) !== null);
    }
 
    private get userName(): string {
-      let userName = localStorage.getItem(StorageItems.UserName);
+      let userName = this.storage.get(StorageItem.UserName);
       if (userName === null) {
          userName = 'Unknown';
       }
@@ -102,16 +100,7 @@ export class SquintApp implements IApp {
    }
 
    private set userName(userName: string) {
-      const oldUserName = this.userName;
-      localStorage.setItem(StorageItems.UserName, userName);
-
-      if (userName !== oldUserName) {
-         this.userNameMenuItemDiv.innerText = 'Hi ' + userName;
-
-         if (this.squint && this.squint.connected) {
-            this.squint.updateConnectionInfo(userName);
-         }
-      }
+      this.storage.set(StorageItem.UserName, userName);
    }
 
    public constructor() {
@@ -194,6 +183,15 @@ export class SquintApp implements IApp {
       this.console.onMessage = (msg: string) => {
          this.squint.log(msg);
       }
+
+      this.storage.on(StorageItem.UserName, (userName) => {
+
+         this.userNameMenuItemDiv.innerText = 'Hi ' + userName;
+
+         if (this.squint && this.squint.connected) {
+            this.squint.updateConnectionInfo(userName);
+         }
+      });
 
       document.addEventListener('visibilitychange', () => {
          if (document.visibilityState === 'visible') {
@@ -283,12 +281,7 @@ export class SquintApp implements IApp {
          () => {
             this.enableVideo(true);
          },
-         () => {
-            return this.userName;
-         },
-         (name: string) => {
-            this.userName = name;
-         }
+         this.storage
       );
 
 
@@ -614,14 +607,10 @@ export class SquintApp implements IApp {
 
 
 
-      this.userNameMenuItemDiv = menubar.addItem('Hi ' + (this.hasUserName ? this.userName : ''),
+      this.userNameMenuItemDiv = menubar.addItem(
+         'Hi ' + (this.hasUserName ? this.userName : ''),
          () => {
-            new UserNameDialog(
-               this.div,
-               this.userName,
-               (userName: string) => {
-                  this.userName = userName;
-               });
+            new UserNameDialog(this.div, this.storage);
          });
       this.userNameMenuItemDiv.id = 'UserNameItemDiv';
    }
