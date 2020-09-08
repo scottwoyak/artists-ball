@@ -289,7 +289,8 @@ export class Squint {
       }
       else {
          // @ts-ignore: cannot be null - we check above
-         console.error('Skipping upload, buffer not empty: ' + this.ss.bufferedAmount);
+         // TODO figure out what this happens
+         // console.error('Skipping upload, buffer not empty: ' + this.ss.bufferedAmount);
       }
    }
 
