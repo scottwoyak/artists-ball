@@ -300,9 +300,9 @@ export class Squint {
       });
    }
 
-   public subscribe(sessionId: string): void {
+   public join(sessionId: string): void {
       this.send({
-         subject: SquintMessageSubject.Subscribe,
+         subject: SquintMessageSubject.Join,
          sessionId: sessionId,
       })
    }

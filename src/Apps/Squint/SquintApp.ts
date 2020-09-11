@@ -255,8 +255,8 @@ export class SquintApp implements IApp {
       this.startDialog = new StartDialog(
          div,
          this.squint,
-         (connectionId) => {
-            this.squint.subscribe(connectionId);
+         (sessionId) => {
+            this.squint.join(sessionId);
          },
          () => {
             this.enableVideo(true);
