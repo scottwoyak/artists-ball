@@ -470,7 +470,7 @@ describe('Squint', function () {
 
             info = await Squint.inspect(TestUrlLocalhost);
             ss.send({
-               subject: SquintMessageSubject.Join,
+               subject: SquintMessageSubject.JoinSession,
                requestId: 'not needed',
                sessionId: info.sessions[0].sessionId
             })

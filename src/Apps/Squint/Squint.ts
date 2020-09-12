@@ -150,7 +150,20 @@ export class Squint {
          }
             break;
 
-         case SquintMessageSubject.Joined: {
+         case SquintMessageSubject.SessionCreated: {
+            switch (msg.status) {
+               case CreateStatus.Success:
+                  this.requests.resolve(msg.requestId, msg.sessionId);
+                  break;
+
+               case CreateStatus.AlreadyInASession:
+                  this.requests.reject(msg.requestId, SquintStrings.CANNOT_CREATE_SESSION__IN_SESSION);
+                  break;
+            }
+         }
+            break;
+
+         case SquintMessageSubject.SessionJoined: {
             switch (msg.status) {
                case JoinStatus.Success:
                   this.requests.resolve(msg.requestId);
@@ -162,19 +175,6 @@ export class Squint {
 
                case JoinStatus.SessionNotFound:
                   this.requests.reject(msg.requestId, SquintStrings.CANNOT_JOIN_SESION__SESSION_NOT_FOUND);
-                  break;
-            }
-         }
-            break;
-
-         case SquintMessageSubject.SessionCreated: {
-            switch (msg.status) {
-               case CreateStatus.Success:
-                  this.requests.resolve(msg.requestId, msg.sessionId);
-                  break;
-
-               case CreateStatus.AlreadyInASession:
-                  this.requests.reject(msg.requestId, SquintStrings.CANNOT_CREATE_SESSION__IN_SESSION);
                   break;
             }
          }
@@ -360,7 +360,7 @@ export class Squint {
       let id = uuidv4(); // ⇨ '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'
 
       this.send({
-         subject: SquintMessageSubject.Join,
+         subject: SquintMessageSubject.JoinSession,
          requestId: id,
          sessionId: sessionId,
       });

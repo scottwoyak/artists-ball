@@ -59,13 +59,13 @@ export enum SquintMessageSubject {
    HostChanged = 'HostChanged',
    HostChangeRequest = 'HostChangeRequest',
    HostDisconnected = 'HostDisconnected',
-   Join = 'Join',
-   Joined = 'Joined',
+   JoinSession = 'JoinSession',
    Log = 'Log',
    ReadyForNextImage = 'ReadyForNextImage',
    Reconnected = 'Reconnected',
    SessionCreated = 'SessionCreated',
    SessionInfo = 'SessionInfo',
+   SessionJoined = 'SessionJoined',
    SessionList = 'SessionList',
 }
 
@@ -125,16 +125,10 @@ export interface ISquintHostDisconnectedMessage {
    subject: SquintMessageSubject.HostDisconnected
 }
 
-export interface ISquintJoinMessage {
-   subject: SquintMessageSubject.Join,
+export interface ISquintJoinSessionMessage {
+   subject: SquintMessageSubject.JoinSession,
    requestId: string, // value returned in the Joined response
    sessionId: string,
-}
-
-export interface ISquintJoinedMessage {
-   subject: SquintMessageSubject.Joined,
-   requestId: string, // same value from the Join request
-   status: JoinStatus,
 }
 
 export interface ISquintLogMessage {
@@ -162,6 +156,12 @@ export interface ISquintSessionInfoMessage {
    info: ISessionInfoFull,
 }
 
+export interface ISquintSessionJoinedMessage {
+   subject: SquintMessageSubject.SessionJoined,
+   requestId: string, // same value from the Join request
+   status: JoinStatus,
+}
+
 export interface ISquintSessionListMessage {
    subject: SquintMessageSubject.SessionList,
    sessions: ISessionInfoBasic[],
@@ -179,12 +179,12 @@ export type ISquintMessage =
    ISquintHostChangedMessage |
    ISquintHostChangeRequestMessage |
    ISquintHostDisconnectedMessage |
-   ISquintJoinMessage |
-   ISquintJoinedMessage |
+   ISquintJoinSessionMessage |
    ISquintLogMessage |
    ISquintReadyForNextImageMessage |
    ISquintReconnectedMessage |
    ISquintSessionCreatedMessage |
    ISquintSessionInfoMessage |
+   ISquintSessionJoinedMessage |
    ISquintSessionListMessage;
 
