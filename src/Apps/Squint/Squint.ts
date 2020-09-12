@@ -1,7 +1,7 @@
 import { SquintWsUrl as SquintWsUrl } from './Servers';
 import { debug } from './SquintApp';
 import { SquintSocket } from './SquintSocket';
-import { ISquintMessage, SquintMessageSubject, ISquintInfo, IConnectionInfoBasic, JoinStatus, CreateStatus } from './SquintMessage';
+import { ISquintMessage, SquintMessageSubject, ISquintInfo, IConnectionInfoBasic, JoinSessionStatus, CreateSessionStatus } from './SquintMessage';
 import { EventManager } from './EventManager';
 import { ISquintEventHandler, SquintEvent } from './SquintEvents';
 import { WebSocketFactory } from './WebSocketFactory';
@@ -152,12 +152,17 @@ export class Squint {
 
          case SquintMessageSubject.SessionCreated: {
             switch (msg.status) {
-               case CreateStatus.Success:
+               case CreateSessionStatus.Success:
                   this.requests.resolve(msg.requestId, msg.sessionId);
                   break;
 
-               case CreateStatus.AlreadyInASession:
+               case CreateSessionStatus.AlreadyInASession:
                   this.requests.reject(msg.requestId, SquintStrings.CANNOT_CREATE_SESSION__IN_SESSION);
+                  break;
+
+               default:
+                  // @ts-ignore TS2339: Property 'XXX' does not exist on type 'never'
+                  this.requests.reject(msg.requestId, SquintStrings.CANNOT_CREATE_SESSION(msg.status));
                   break;
             }
          }
@@ -165,16 +170,25 @@ export class Squint {
 
          case SquintMessageSubject.SessionJoined: {
             switch (msg.status) {
-               case JoinStatus.Success:
+               case JoinSessionStatus.Success:
                   this.requests.resolve(msg.requestId);
                   break;
 
-               case JoinStatus.AlreadyInASession:
+               case JoinSessionStatus.AlreadyInASession:
                   this.requests.reject(msg.requestId, SquintStrings.CANNOT_JOIN_SESSION__IN_SESSION);
                   break;
 
-               case JoinStatus.SessionNotFound:
-                  this.requests.reject(msg.requestId, SquintStrings.CANNOT_JOIN_SESION__SESSION_NOT_FOUND);
+               case JoinSessionStatus.SessionNotFound:
+                  this.requests.reject(msg.requestId, SquintStrings.CANNOT_JOIN_SESSION__SESSION_NOT_FOUND);
+                  break;
+
+               case JoinSessionStatus.InvalidPassword:
+                  this.requests.reject(msg.requestId, SquintStrings.CANNOT_JOIN_SESSION__INVALID_PASSWORD);
+                  break;
+
+               default:
+                  // @ts-ignore TS2339: Property 'XXX' does not exist on type 'never'
+                  this.requests.reject(msg.requestId, SquintStrings.CANNOT_JOIN_SESSION(msg.status));
                   break;
             }
          }
@@ -334,7 +348,7 @@ export class Squint {
       });
    }
 
-   public createSession(sessionTitle?: string, timeoutMs = 1000): Promise<string> {
+   public createSession(sessionTitle?: string, password?: string, timeoutMs = 1000): Promise<string> {
 
       if (sessionTitle === undefined) {
          sessionTitle = this.userName;
@@ -346,7 +360,8 @@ export class Squint {
       this.send({
          subject: SquintMessageSubject.CreateSession,
          requestId: id,
-         sessionTitle
+         sessionTitle,
+         password
       });
 
       return new Promise<string>((resolve, reject) => {
@@ -354,7 +369,7 @@ export class Squint {
       })
    }
 
-   public join(sessionId: string, timeoutMs = 1000): Promise<boolean> {
+   public join(sessionId: string, password?: string, timeoutMs = 1000): Promise<boolean> {
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       let id = uuidv4(); // ⇨ '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'
@@ -362,7 +377,8 @@ export class Squint {
       this.send({
          subject: SquintMessageSubject.JoinSession,
          requestId: id,
-         sessionId: sessionId,
+         sessionId,
+         password,
       });
 
       return new Promise<boolean>((resolve, reject) => {

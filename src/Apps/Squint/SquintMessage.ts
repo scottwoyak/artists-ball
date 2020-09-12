@@ -11,15 +11,16 @@ export enum ConnectionState {
    Unknown = 'UNKNOWN',
 }
 
-export enum CreateStatus {
+export enum CreateSessionStatus {
    Success = 0,
    AlreadyInASession,
 }
 
-export enum JoinStatus {
+export enum JoinSessionStatus {
    Success = 0,
    AlreadyInASession,
-   SessionNotFound
+   SessionNotFound,
+   InvalidPassword,
 }
 
 export interface IConnectionInfoBasic {
@@ -95,6 +96,7 @@ export interface ISquintCreateSessionMessage {
    subject: SquintMessageSubject.CreateSession,
    requestId: string,
    sessionTitle: string,
+   password?: string,
 }
 
 export interface ISquintHelloFromClientMessage {
@@ -129,6 +131,7 @@ export interface ISquintJoinSessionMessage {
    subject: SquintMessageSubject.JoinSession,
    requestId: string, // value returned in the Joined response
    sessionId: string,
+   password?: string,
 }
 
 export interface ISquintLogMessage {
@@ -147,7 +150,7 @@ export interface ISquintReconnectedMessage {
 export interface ISquintSessionCreatedMessage {
    subject: SquintMessageSubject.SessionCreated,
    requestId: string,
-   status: CreateStatus,
+   status: CreateSessionStatus,
    sessionId?: string, // undefined if creation fails
 }
 
@@ -159,7 +162,7 @@ export interface ISquintSessionInfoMessage {
 export interface ISquintSessionJoinedMessage {
    subject: SquintMessageSubject.SessionJoined,
    requestId: string, // same value from the Join request
-   status: JoinStatus,
+   status: JoinSessionStatus,
 }
 
 export interface ISquintSessionListMessage {
