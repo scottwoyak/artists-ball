@@ -1,7 +1,7 @@
 import { SquintWsUrl as SquintWsUrl } from './Servers';
 import { debug } from './SquintApp';
 import { SquintSocket } from './SquintSocket';
-import { ISquintMessage, SquintMessageSubject, ISquintInfo, IConnectionInfoBasic, JoinStatus } from './SquintMessage';
+import { ISquintMessage, SquintMessageSubject, ISquintInfo, IConnectionInfoBasic, JoinStatus, CreateStatus } from './SquintMessage';
 import { EventManager } from './EventManager';
 import { ISquintEventHandler, SquintEvent } from './SquintEvents';
 import { WebSocketFactory } from './WebSocketFactory';
@@ -167,6 +167,19 @@ export class Squint {
          }
             break;
 
+         case SquintMessageSubject.SessionCreated: {
+            switch (msg.status) {
+               case CreateStatus.Success:
+                  this.requests.resolve(msg.requestId, msg.sessionId);
+                  break;
+
+               case CreateStatus.AlreadyInASession:
+                  this.requests.reject(msg.requestId, SquintStrings.CANNOT_CREATE_SESSION__IN_SESSION);
+                  break;
+            }
+         }
+            break;
+
          case SquintMessageSubject.SessionList: {
             this.emit(SquintEvent.SessionList, msg.sessions);
          }
@@ -319,6 +332,26 @@ export class Squint {
       this.send({
          subject: SquintMessageSubject.ReadyForNextImage,
       });
+   }
+
+   public createSession(sessionTitle?: string, timeoutMs = 1000): Promise<string> {
+
+      if (sessionTitle === undefined) {
+         sessionTitle = this.userName;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      let id = uuidv4(); // ⇨ '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'
+
+      this.send({
+         subject: SquintMessageSubject.CreateSession,
+         requestId: id,
+         sessionTitle
+      });
+
+      return new Promise<string>((resolve, reject) => {
+         this.requests.put(id, timeoutMs, resolve, reject, SquintStrings.CANNOT_CREATE_SESSION__TIMEOUT);
+      })
    }
 
    public join(sessionId: string, timeoutMs = 1000): Promise<boolean> {

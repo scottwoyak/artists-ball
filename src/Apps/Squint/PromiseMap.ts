@@ -1,6 +1,6 @@
 import { debug } from './SquintApp';
 
-export type ResolveHandler = () => void;
+export type ResolveHandler = (data: any) => void;
 export type RejectHandler = (err: string) => void;
 
 class PromiseData {
@@ -62,9 +62,9 @@ export class PromiseMap {
       }
    }
 
-   public resolve(id: string): void {
+   public resolve<T>(id: string, data?: T): void {
       if (this.map.has(id)) {
-         this.extract(id).resolve();
+         this.extract(id).resolve(data);
       }
    }
 }

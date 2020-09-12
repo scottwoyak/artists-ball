@@ -11,6 +11,11 @@ export enum ConnectionState {
    Unknown = 'UNKNOWN',
 }
 
+export enum CreateStatus {
+   Success = 0,
+   AlreadyInASession,
+}
+
 export enum JoinStatus {
    Success = 0,
    AlreadyInASession,
@@ -49,6 +54,7 @@ export enum SquintMessageSubject {
    CameraRequest = 'CameraRequest',
    ChatMessage = 'ChatMessage',
    ConnectionInfoUpdate = 'ConnectionInfoUpdate',
+   CreateSession = 'CreateSession',
    Hello = 'Hello',
    HostChanged = 'HostChanged',
    HostChangeRequest = 'HostChangeRequest',
@@ -58,6 +64,7 @@ export enum SquintMessageSubject {
    Log = 'Log',
    ReadyForNextImage = 'ReadyForNextImage',
    Reconnected = 'Reconnected',
+   SessionCreated = 'SessionCreated',
    SessionInfo = 'SessionInfo',
    SessionList = 'SessionList',
 }
@@ -82,6 +89,12 @@ export interface ISquintConnectionInfoUpdateMessage {
    subject: SquintMessageSubject.ConnectionInfoUpdate,
    userName: string,
    connectionId: string,
+}
+
+export interface ISquintCreateSessionMessage {
+   subject: SquintMessageSubject.CreateSession,
+   requestId: string,
+   sessionTitle: string,
 }
 
 export interface ISquintHelloFromClientMessage {
@@ -137,6 +150,13 @@ export interface ISquintReconnectedMessage {
    subject: SquintMessageSubject.Reconnected,
 }
 
+export interface ISquintSessionCreatedMessage {
+   subject: SquintMessageSubject.SessionCreated,
+   requestId: string,
+   status: CreateStatus,
+   sessionId?: string, // undefined if creation fails
+}
+
 export interface ISquintSessionInfoMessage {
    subject: SquintMessageSubject.SessionInfo,
    info: ISessionInfoFull,
@@ -153,6 +173,7 @@ export type ISquintMessage =
    ISquintCameraRequestMessage |
    ISquintChatMessage |
    ISquintConnectionInfoUpdateMessage |
+   ISquintCreateSessionMessage |
    ISquintHelloFromClientMessage |
    ISquintHelloFromServerMessage |
    ISquintHostChangedMessage |
@@ -163,6 +184,7 @@ export type ISquintMessage =
    ISquintLogMessage |
    ISquintReadyForNextImageMessage |
    ISquintReconnectedMessage |
+   ISquintSessionCreatedMessage |
    ISquintSessionInfoMessage |
    ISquintSessionListMessage;
 

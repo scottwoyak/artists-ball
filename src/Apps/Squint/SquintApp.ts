@@ -248,19 +248,30 @@ export class SquintApp implements IApp {
 
       div.id = 'SquintApp';
 
+      let onViewSession = (sessionId: string) => {
+         this.squint.join(sessionId)
+            .catch((err) => {
+               alert(err);
+               this.startDialog.visible = true;
+            });
+      };
+
+      let onStartSession = () => {
+         this.squint.createSession()
+            .then(() => {
+               this.enableVideo(true);
+            })
+            .catch((err) => {
+               alert(err);
+               this.startDialog.visible = true;
+            })
+      };
+
       this.startDialog = new StartDialog(
          div,
          this.squint,
-         (sessionId) => {
-            this.squint.join(sessionId)
-               .catch((err) => {
-                  alert('Cannot join session: ' + err);
-                  this.startDialog.visible = true;
-               });
-         },
-         () => {
-            this.enableVideo(true);
-         },
+         onViewSession,
+         onStartSession,
          this.storage
       );
 
