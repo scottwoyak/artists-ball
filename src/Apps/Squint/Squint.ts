@@ -1,10 +1,13 @@
 import { SquintWsUrl as SquintWsUrl } from './Servers';
 import { debug } from './SquintApp';
 import { SquintSocket } from './SquintSocket';
-import { ISquintMessage, SquintMessageSubject, ISquintInfo, IConnectionInfoBasic } from './SquintMessage';
+import { ISquintMessage, SquintMessageSubject, ISquintInfo, IConnectionInfoBasic, JoinStatus } from './SquintMessage';
 import { EventManager } from './EventManager';
 import { ISquintEventHandler, SquintEvent } from './SquintEvents';
 import { WebSocketFactory } from './WebSocketFactory';
+import { PromiseMap } from './PromiseMap';
+import { v4 as uuidv4 } from 'uuid';
+import { SquintStrings } from './SquintStrings';
 
 
 export class Squint {
@@ -17,6 +20,7 @@ export class Squint {
    private _remoteCameraPaused = false;
    private _remoteCameraConnected = true;
    private _url: string | null;
+   private requests = new PromiseMap();
 
    private eventManager = new EventManager();
 
@@ -124,6 +128,17 @@ export class Squint {
          }
             break;
 
+         case SquintMessageSubject.ConnectionInfoUpdate: {
+            this.emit(
+               SquintEvent.ConnectionInfoUpdate,
+               {
+                  userName: msg.userName,
+                  connectionId: msg.connectionId,
+               }
+            );
+         }
+            break;
+
          case SquintMessageSubject.HostChanged: {
             this.emit(SquintEvent.HostChanged, msg.newHostConnectionId);
          }
@@ -135,19 +150,25 @@ export class Squint {
          }
             break;
 
-         case SquintMessageSubject.SessionList: {
-            this.emit(SquintEvent.SessionList, msg.sessions);
+         case SquintMessageSubject.Joined: {
+            switch (msg.status) {
+               case JoinStatus.Success:
+                  this.requests.resolve(msg.requestId);
+                  break;
+
+               case JoinStatus.AlreadyInASession:
+                  this.requests.reject(msg.requestId, SquintStrings.CANNOT_JOIN_SESSION__IN_SESSION);
+                  break;
+
+               case JoinStatus.SessionNotFound:
+                  this.requests.reject(msg.requestId, SquintStrings.CANNOT_JOIN_SESION__SESSION_NOT_FOUND);
+                  break;
+            }
          }
             break;
 
-         case SquintMessageSubject.ConnectionInfoUpdate: {
-            this.emit(
-               SquintEvent.ConnectionInfoUpdate,
-               {
-                  userName: msg.userName,
-                  connectionId: msg.connectionId,
-               }
-            );
+         case SquintMessageSubject.SessionList: {
+            this.emit(SquintEvent.SessionList, msg.sessions);
          }
             break;
 
@@ -300,10 +321,19 @@ export class Squint {
       });
    }
 
-   public join(sessionId: string): void {
+   public join(sessionId: string, timeoutMs = 1000): Promise<boolean> {
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      let id = uuidv4(); // ⇨ '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'
+
       this.send({
          subject: SquintMessageSubject.Join,
+         requestId: id,
          sessionId: sessionId,
+      });
+
+      return new Promise<boolean>((resolve, reject) => {
+         this.requests.put(id, timeoutMs, resolve, reject, SquintStrings.CANNOT_JOIN_SESSION__TIMEOUT);
       })
    }
 

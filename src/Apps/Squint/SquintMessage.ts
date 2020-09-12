@@ -11,6 +11,12 @@ export enum ConnectionState {
    Unknown = 'UNKNOWN',
 }
 
+export enum JoinStatus {
+   Success = 0,
+   AlreadyInASession,
+   SessionNotFound
+}
+
 export interface IConnectionInfoBasic {
    userName: string,
    connectionId: string,
@@ -48,6 +54,7 @@ export enum SquintMessageSubject {
    HostChangeRequest = 'HostChangeRequest',
    HostDisconnected = 'HostDisconnected',
    Join = 'Join',
+   Joined = 'Joined',
    Log = 'Log',
    ReadyForNextImage = 'ReadyForNextImage',
    Reconnected = 'Reconnected',
@@ -107,7 +114,14 @@ export interface ISquintHostDisconnectedMessage {
 
 export interface ISquintJoinMessage {
    subject: SquintMessageSubject.Join,
+   requestId: string, // value returned in the Joined response
    sessionId: string,
+}
+
+export interface ISquintJoinedMessage {
+   subject: SquintMessageSubject.Joined,
+   requestId: string, // same value from the Join request
+   status: JoinStatus,
 }
 
 export interface ISquintLogMessage {
@@ -145,6 +159,7 @@ export type ISquintMessage =
    ISquintHostChangeRequestMessage |
    ISquintHostDisconnectedMessage |
    ISquintJoinMessage |
+   ISquintJoinedMessage |
    ISquintLogMessage |
    ISquintReadyForNextImageMessage |
    ISquintReconnectedMessage |

@@ -25,10 +25,6 @@ import { StorageWithEvents, StorageItem } from './StorageWithEvents';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
-export class SquintStrings {
-   public static readonly CAMERA_NOT_READY = 'Camera not ready';
-}
-
 export function debug(msg: string): void {
    console.error(msg);
    //alert('debug error: ' + msg);
@@ -256,7 +252,11 @@ export class SquintApp implements IApp {
          div,
          this.squint,
          (sessionId) => {
-            this.squint.join(sessionId);
+            this.squint.join(sessionId)
+               .catch((err) => {
+                  alert('Cannot join session: ' + err);
+                  this.startDialog.visible = true;
+               });
          },
          () => {
             this.enableVideo(true);

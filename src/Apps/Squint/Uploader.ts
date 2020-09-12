@@ -1,7 +1,8 @@
-import { debug, SquintStrings } from './SquintApp';
+import { debug } from './SquintApp';
 import { Squint } from './Squint';
 import { Stopwatch } from '../../Util/Stopwatch';
 import { BandwidthTracker } from './BandwidthTracker';
+import { SquintStrings } from './SquintStrings';
 
 const MAX_FPS = 10;
 

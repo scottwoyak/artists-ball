@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { debug, SquintStrings } from './SquintApp';
+import { debug } from './SquintApp';
 import { iOS } from '../../Util/Globals';
+import { SquintStrings } from './SquintStrings';
 
 export interface IVideoConstraint {
    label: string,
