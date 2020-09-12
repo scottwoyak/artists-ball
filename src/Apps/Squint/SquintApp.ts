@@ -789,7 +789,7 @@ export class SquintApp implements IApp {
          this.camera.start(this.desired)
             .then((track: MediaStreamTrack) => {
                const settings = track.getSettings();
-               const desiredMP = 0.75 * 1000000;
+               const desiredMP = 1.25 * 1000000;
                const maxMP = settings.width * settings.height;
                if (maxMP > desiredMP) {
                   this.cameraScale.value = Math.sqrt(desiredMP / maxMP);
