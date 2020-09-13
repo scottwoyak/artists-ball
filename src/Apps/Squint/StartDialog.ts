@@ -7,11 +7,10 @@ import { Dialog } from '../../GUI/Dialog';
 import { SquintEvent } from './SquintEvents';
 import { ISessionInfoBasic, IConnectionInfoBasic } from './SquintMessage';
 import { StorageWithEvents, StorageItem } from './StorageWithEvents';
+import { SessionSetupDialog } from './SessionSetupDialog';
 
-export type ViewSessionHandler = (sessionId: string) => void;
-export type StartSessionHandler = () => void;
-export type GetUserNameHandler = () => string;
-export type SetUserNameHandler = (name: string) => void;
+export type JoinSessionHandler = (sessionId: string) => void;
+export type StartSessionHandler = (password: string | undefined) => void;
 
 export class StartDialog extends Dialog {
    private viewListBox: ListBox<string>;
@@ -21,7 +20,7 @@ export class StartDialog extends Dialog {
    private userNameButton: HTMLButtonElement;
    private goHostButton: HTMLButtonElement;
    private squint: Squint;
-   private onStartView: ViewSessionHandler;
+   private onStartView: JoinSessionHandler;
    private onStartSession: StartSessionHandler;
    private storage: StorageWithEvents;
 
@@ -36,7 +35,7 @@ export class StartDialog extends Dialog {
    public constructor(
       parent: HTMLDivElement,
       squint: Squint,
-      onViewSession: ViewSessionHandler,
+      onJoinSession: JoinSessionHandler,
       onStartSession: StartSessionHandler,
       storage: StorageWithEvents,
    ) {
@@ -86,7 +85,7 @@ export class StartDialog extends Dialog {
          }
       });
 
-      this.onStartView = onViewSession;
+      this.onStartView = onJoinSession;
       this.onStartSession = onStartSession;
 
       const dialogTitleDiv = GUI.create('div', 'DialogTitleDiv', this.dialogDiv);
@@ -168,8 +167,15 @@ export class StartDialog extends Dialog {
       this.goHostButton.className = 'ButtonClass';
       this.goHostButton.innerText = 'Share your camera...';
       this.goHostButton.onclick = () => {
-         this.onStartSession();
-         this.visible = false;
+
+         let dlg: SessionSetupDialog;
+         let onOk = (password: string) => {
+            dlg.dispose();
+            this.visible = false;
+            this.onStartSession(password);
+         }
+
+         dlg = new SessionSetupDialog(this.bodyDiv, onOk);
       }
 
 

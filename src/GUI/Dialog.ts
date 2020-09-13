@@ -38,4 +38,9 @@ export class Dialog {
 
       this.dialogDiv = GUI.create('div', baseName + 'DialogDiv', this.backgroundDiv);
    }
+
+   public dispose(): void {
+      let parent = this.backgroundDiv.parentElement;
+      parent.removeChild(this.backgroundDiv);
+   }
 }

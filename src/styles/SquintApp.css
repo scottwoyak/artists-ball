@@ -37,6 +37,8 @@
   --corner-radius-medium: 0.6em;
   --corner-radius-small: 0.4em;
 
+  --margin: 0.5em;
+
   user-select: none;
   -webkit-user-select: none;
 }
@@ -87,7 +89,7 @@
   height: 40em;
   border: solid;
   border-color: lightgray;
-  border-width: 0.5em;
+  border-width: var(--margin);
   background-color: lightgray;
   margin: 0px;
   display: none;
@@ -102,12 +104,12 @@
   background-color: lightskyblue;
   border-top-left-radius: var(--corner-radius-small);
   border-top-right-radius: var(--corner-radius-small);
-  padding: 0.5em;
+  padding: var(--margin);
 }
 
 #SquintApp #ChatPanelDiv #ChatPanelCloseButton {
   position: absolute;
-  right: 0.5em;
+  right: var(--margin);
   background-color: transparent;
   color: rgba(255, 255, 255, 0.5);
   padding: 0px;
@@ -131,7 +133,7 @@
 }
 
 #SquintApp #ChatPanelDiv .ListBoxClass {
-  margin-bottom: 0.5em;
+  margin-bottom: var(--margin);
 }
 
 #SquintApp #ChatPanelDiv .ListBoxItemClass,
@@ -265,8 +267,8 @@
   background-color: lightgray;
   padding-left: 0.7em;
   padding-right: 0.7em;
-  padding-top: 0.5em;
-  padding-bottom: 0.5em;
+  padding-top: var(--margin);
+  padding-bottom: var(--margin);
   display: flex;
 }
 
@@ -302,8 +304,8 @@
 
 #SquintApp #StartDialogDiv #ViewPanelDiv {
   flex: auto;
-  padding: 0.5em;
-  margin: 0.5em;
+  padding: var(--margin);
+  margin: var(--margin);
   display: flex;
   flex-direction: column;
   background-color: var(--view-bg-color);
@@ -343,8 +345,8 @@
 
 #SquintApp #StartDialogDiv #HostPanelDiv {
   flex: auto;
-  padding: 0.5em;
-  margin: 0.5em;
+  padding: var(--margin);
+  margin: var(--margin);
   display: flex;
   flex-direction: column;
   background-color: var(--host-bg-color);
@@ -436,8 +438,75 @@
 }
 
 #SquintApp #UserNameDialogDiv #UserNameTextInput {
-  margin-right: 0.5em;
-  margin-left: 0.5em;
+  margin-right: var(--margin);
+  margin-left: var(--margin);
+}
+
+/********************************************************************
+ *
+ * Session Setup Dialog
+ *
+ ********************************************************************/
+#SquintApp #SessionSetupDialogDiv {
+  width: 25em;
+  height: 7em;
+  background-color: white;
+  border-radius: var(--corner-radius-medium);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#SquintApp #SessionSetupDialogDiv #PasswordGroupDiv {
+  flex: 1 0 auto; /* stretch */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#SquintApp #SessionSetupDialogDiv #PasswordTextInput {
+  margin-right: var(--margin);
+  margin-left: var(--margin);
+}
+
+/********************************************************************
+ *
+ * Password Dialog
+ *
+ ********************************************************************/
+#SquintApp #PasswordDialogDiv {
+  width: 25em;
+  height: 7em;
+  background-color: white;
+  border-radius: var(--corner-radius-medium);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#SquintApp #PasswordDialogDiv #PasswordGroupDiv {
+  flex: 1 0 auto; /* stretch */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#SquintApp #PasswordDialogDiv #PasswordTextInput {
+  margin-right: var(--margin);
+  margin-left: var(--margin);
+}
+
+#SquintApp #PasswordDialogDiv #ButtonGroupDiv {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin: var(--margin);
+}
+
+#SquintApp #PasswordDialogDiv #ButtonGroupDiv .ButtonClass {
+  margin-right: var(--margin);
 }
 
 /* cool animation from https://loading.io/css/ */

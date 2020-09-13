@@ -2,8 +2,6 @@ import { GUI } from '../../GUI/GUI';
 import { Dialog } from '../../GUI/Dialog';
 import { StorageWithEvents, StorageItem } from './StorageWithEvents';
 
-export type okHandler = (userName: string) => void;
-
 export class UserNameDialog extends Dialog {
 
    public constructor(
@@ -15,7 +13,7 @@ export class UserNameDialog extends Dialog {
 
       const userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', this.dialogDiv);
       const userNameLabel = GUI.create('label', 'UserNameLabel', userNameGroupDiv);
-      userNameLabel.htmlFor = 'UserNameInput';
+      userNameLabel.htmlFor = 'UserNameTextInput';
       userNameLabel.innerText = 'Name:';
       const userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);
       userNameTextInput.type = 'text';

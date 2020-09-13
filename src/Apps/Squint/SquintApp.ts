@@ -22,6 +22,8 @@ import NoSleep from 'nosleep.js';
 import { WebSocketFactory } from './WebSocketFactory';
 import { IConnectionInfoBasic, ISquintInfo } from './SquintMessage';
 import { StorageWithEvents, StorageItem } from './StorageWithEvents';
+import { SquintStrings } from './SquintStrings';
+import { PasswordDialog } from './PasswordDialog';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -248,16 +250,12 @@ export class SquintApp implements IApp {
 
       div.id = 'SquintApp';
 
-      let onViewSession = (sessionId: string) => {
-         this.squint.join(sessionId)
-            .catch((err) => {
-               alert(err);
-               this.startDialog.visible = true;
-            });
+      let onJoinSession = (sessionId: string) => {
+         this.join(sessionId);
       };
 
-      let onStartSession = () => {
-         this.squint.createSession()
+      let onStartSession = (password: string) => {
+         this.squint.createSession(undefined, password)
             .then(() => {
                this.enableVideo(true);
             })
@@ -270,7 +268,7 @@ export class SquintApp implements IApp {
       this.startDialog = new StartDialog(
          div,
          this.squint,
-         onViewSession,
+         onJoinSession,
          onStartSession,
          this.storage
       );
@@ -367,6 +365,37 @@ export class SquintApp implements IApp {
       }
    }
 
+   private join(sessionId: string, password?: string): void {
+      this.squint.join(sessionId, password)
+         .then(() => {
+            this.startDialog.visible = false;
+         })
+         .catch((err) => {
+            if (password !== undefined) {
+               alert('Incorrect Password');
+            }
+
+            if (err === SquintStrings.CANNOT_JOIN_SESSION__INVALID_PASSWORD) {
+               let dlg: PasswordDialog;
+               let okHandler = (password: string) => {
+                  this.join(sessionId, password);
+
+                  // do this last as it stops execution of this handler when content 
+                  // is removed from the DOM
+                  dlg.dispose();
+               }
+               let cancelHandler = () => {
+                  dlg.dispose();
+               }
+               new PasswordDialog(this.div, okHandler, cancelHandler);
+            }
+            else {
+               alert(err);
+            }
+            this.startDialog.visible = true;
+         });
+
+   }
    private showWelcomeDialog(): void {
       const welcomeDialog = new WelcomeDialog(this.div, (userName) => {
          this.storage.set(StorageItem.UserName, userName);

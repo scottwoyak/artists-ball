@@ -4,10 +4,14 @@ export class GUI {
       type: K,
       id: string,
       parent: HTMLElement,
+      className?: string
    ): HTMLElementTagNameMap[K] {
       const elem = document.createElement(type);
       elem.id = id;
       parent.appendChild(elem);
+      if (className) {
+         elem.className = className;
+      }
       return elem;
    }
 

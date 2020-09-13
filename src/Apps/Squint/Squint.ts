@@ -354,6 +354,10 @@ export class Squint {
          sessionTitle = this.userName;
       }
 
+      if (password && password.trim().length === 0) {
+         password = undefined;
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       let id = uuidv4(); // ⇨ '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'
 
