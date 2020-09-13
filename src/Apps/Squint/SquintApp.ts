@@ -355,6 +355,17 @@ export class SquintApp implements IApp {
                }
                   break;
 
+               case 'd': {
+                  Squint.dump(Squint.url)
+                     .then((msg: string) => {
+                        alert(msg);
+                     })
+                     .catch((err) => {
+                        debug('Squint.dump() failed: ' + err);
+                     });
+               }
+                  break;
+
                case '1':
                   if (event.altKey) {
                      this.remoteCameraMenu.hidden = !this.remoteCameraMenu.hidden;

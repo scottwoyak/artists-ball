@@ -473,6 +473,33 @@ export class Squint {
       });
    }
 
+   public static dump(url: string): Promise<string> {
+      return new Promise<string>((resolve, reject) => {
+         let ws = WebSocketFactory.create(url);
+
+         ws.onopen = () => {
+            ws.send('dump');
+         }
+
+         ws.onmessage = (msg) => {
+            ws.onopen = null;
+            ws.onclose = null;
+            ws.onerror = null;
+            ws.onmessage = null;
+
+            resolve(msg.data);
+         }
+
+         ws.onclose = (event: CloseEvent) => {
+            reject('WebSocket closed with code ' + event.code);
+         }
+
+         ws.onerror = () => {
+            reject('WebSocket error');
+         }
+      });
+   }
+
    public static log(url: string, msg: string): void {
 
       let ws = WebSocketFactory.create(url);
