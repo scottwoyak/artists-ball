@@ -20,6 +20,7 @@ export class PasswordDialog extends Dialog {
       passwordLabel.htmlFor = passwordTextInput.id;
       passwordTextInput.type = 'text';
       passwordTextInput.placeholder = 'password';
+      passwordTextInput.autocapitalize = 'none';
 
       passwordTextInput.onkeypress = (event: KeyboardEvent) => {
          if (event.keyCode === 13) {

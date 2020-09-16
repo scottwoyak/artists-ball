@@ -18,6 +18,7 @@ export class SessionSetupDialog extends Dialog {
       passwordLabel.htmlFor = passwordTextInput.id;
       passwordTextInput.type = 'text';
       passwordTextInput.placeholder = 'leave blank for none';
+      passwordTextInput.autocapitalize = 'none';
 
       passwordTextInput.onkeypress = (event: KeyboardEvent) => {
          if (event.keyCode === 13) {
