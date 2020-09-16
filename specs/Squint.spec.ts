@@ -125,7 +125,7 @@ describe('Squint', function () {
       expectConnection(info.sessions[0].host, squintHost);
 
       // join
-      await squintViewer.join(sessionId);
+      await squintViewer.joinSession(sessionId);
 
       return { squintHost, squintViewer, sessionId }
    }
@@ -779,7 +779,7 @@ describe('Squint', function () {
 
             // add the second connection
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
-            await squintViewer.join(sessionId);
+            await squintViewer.joinSession(sessionId);
 
             // close the host - session should stay alive since we have a listener
             squintHost.close();
@@ -842,7 +842,7 @@ describe('Squint', function () {
 
             // add the second connection
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
-            await squintViewer.join(sessionId);
+            await squintViewer.joinSession(sessionId);
 
             // close the host - session should stay alive since we have a listener
             squintHost.close();
@@ -945,7 +945,7 @@ describe('Squint', function () {
 
             // create the second host and join the session
             let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
-            await squintHost2.join(sessionId);
+            await squintHost2.joinSession(sessionId);
             await sleep(INTERVAL_MS + BUFFER_MS); // let the existing SessionList events pass
 
             let squintHostCount = 0;
@@ -995,7 +995,7 @@ describe('Squint', function () {
 
             // create the second host and join the session
             let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
-            await squintHost2.join(sessionId);
+            await squintHost2.joinSession(sessionId);
 
             await sleep(INTERVAL_MS + BUFFER_MS); // let the existing SessionList events pass
 
@@ -1050,7 +1050,7 @@ describe('Squint', function () {
 
             // create the second host and join the session
             let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
-            await squintHost2.join(sessionId);
+            await squintHost2.joinSession(sessionId);
 
             // disconnect the current host
             squintHost.close();
@@ -1112,7 +1112,7 @@ describe('Squint', function () {
 
             // add the second connection
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
-            await squintViewer.join(sessionId);
+            await squintViewer.joinSession(sessionId);
 
             let promise = new Promise((resolve, reject) => {
                let pass = 1;
@@ -1173,9 +1173,9 @@ describe('Squint', function () {
 
             // add the other connections
             let squintViewer1 = await createSquint(TestUrlLocalhost, userNameViewer1);
-            await squintViewer1.join(sessionId);
+            await squintViewer1.joinSession(sessionId);
             let squintViewer2 = await createSquint(TestUrlLocalhost, userNameViewer2);
-            await squintViewer2.join(sessionId);
+            await squintViewer2.joinSession(sessionId);
 
             // close the host - session should stay alive since we have a listener
             squintHost.close();
@@ -1243,7 +1243,7 @@ describe('Squint', function () {
 
             // add the second connection
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
-            await squintViewer.join(sessionId);
+            await squintViewer.joinSession(sessionId);
 
             info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(2);
@@ -1557,7 +1557,7 @@ describe('Squint', function () {
 
             // add the viewer connection
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
-            await squintViewer.join(sessionId1);
+            await squintViewer.joinSession(sessionId1);
 
             info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(3);
@@ -1568,7 +1568,7 @@ describe('Squint', function () {
             return new Promise<void>((resolve, reject) => {
 
                // try to join to the other host
-               squintViewer.join(sessionId2)
+               squintViewer.joinSession(sessionId2)
                   .then(() => {
                      reject('join should have failed')
                   })
@@ -1620,7 +1620,7 @@ describe('Squint', function () {
 
             // add the viewer connection
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
-            await squintViewer.join(sessionId1);
+            await squintViewer.joinSession(sessionId1);
 
             info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(3);
@@ -1631,7 +1631,7 @@ describe('Squint', function () {
             return new Promise<void>((resolve, reject) => {
 
                // try to join to the other host
-               squintHost1.join(sessionId2)
+               squintHost1.joinSession(sessionId2)
                   .then(() => {
                      reject('join should have failed')
                   })
@@ -1709,7 +1709,7 @@ describe('Squint', function () {
             return new Promise<void>((resolve, reject) => {
 
                // try to join to the other host
-               squintViewer.join('InvalidID')
+               squintViewer.joinSession('InvalidID')
                   .then(() => {
                      reject('join should have failed')
                   })
@@ -1820,12 +1820,12 @@ describe('Squint', function () {
             });
 
             // join the session
-            await squintViewer1.join(sessionId);
+            await squintViewer1.joinSession(sessionId);
 
             // use timeouts to give the server time to send out separate messages for each viewer list change
             setTimeout(() => {
                // this should cause Pass 2
-               squintViewer2.join(sessionId)
+               squintViewer2.joinSession(sessionId)
                   .then(() => {
                      setTimeout(() => {
                         // this should cause Pass 3
@@ -1897,7 +1897,7 @@ describe('Squint', function () {
             return new Promise<void>((resolve, reject) => {
 
                // try to join without a password
-               squintViewer.join(sessionId)
+               squintViewer.joinSession(sessionId)
                   .then(() => {
                      reject('join should have failed')
                   })
@@ -1934,7 +1934,7 @@ describe('Squint', function () {
             return new Promise<void>((resolve, reject) => {
 
                // try to join without a password
-               squintViewer.join(sessionId, 'Incorrect Password')
+               squintViewer.joinSession(sessionId, 'Incorrect Password')
                   .then(() => {
                      reject('join should have failed')
                   })
@@ -1969,7 +1969,7 @@ describe('Squint', function () {
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
 
             // try to join without a password
-            await squintViewer.join(sessionId, password)
+            await squintViewer.joinSession(sessionId, password)
 
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(2);
@@ -2004,7 +2004,7 @@ describe('Squint', function () {
                });
 
                // join - we should then get a copy of the initial image
-               squintViewer.join(sessionId)
+               squintViewer.joinSession(sessionId)
                   .catch((err) => {
                      reject(err);
                   });
@@ -2046,7 +2046,7 @@ describe('Squint', function () {
 
             // create a new host and send an image
             let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
-            await squintHost2.join(sessionId);
+            await squintHost2.joinSession(sessionId);
             squintHost2.requestToBeHost();
 
             // let messages fire before we start counting
@@ -2080,7 +2080,7 @@ describe('Squint', function () {
 
             // add another viewer
             let squintViewer2 = await createSquint(TestUrlLocalhost, 'TesterViewer2');
-            await squintViewer2.join(sessionId);
+            await squintViewer2.joinSession(sessionId);
 
             // let messages fire before we start counting
             await sleep(BUFFER_MS);
@@ -2114,7 +2114,7 @@ describe('Squint', function () {
 
             // create a new host
             let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
-            await squintHost2.join(sessionId);
+            await squintHost2.joinSession(sessionId);
             squintHost2.requestToBeHost();
 
             // let messages fire before we start counting
@@ -2270,7 +2270,7 @@ describe('Squint', function () {
 
             // create a new host and send an image
             let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
-            await squintHost2.join(sessionId);
+            await squintHost2.joinSession(sessionId);
             squintHost2.requestToBeHost();
             squintHost2.sendImage(imageBlob);
 
@@ -2293,7 +2293,7 @@ describe('Squint', function () {
             squintHost.cameraPaused();
 
             // join
-            await squintViewer.join(sessionId);
+            await squintViewer.joinSession(sessionId);
 
             await sleep(BUFFER_MS);
 

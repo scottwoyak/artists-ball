@@ -348,7 +348,7 @@ export class Squint {
       });
    }
 
-   public createSession(sessionTitle?: string, password?: string, timeoutMs = 1000): Promise<string> {
+   public createSession(sessionTitle?: string, password?: string, timeoutMs = 5000): Promise<string> {
 
       if (sessionTitle === undefined) {
          sessionTitle = this.userName;
@@ -373,7 +373,7 @@ export class Squint {
       })
    }
 
-   public join(sessionId: string, password?: string, timeoutMs = 1000): Promise<boolean> {
+   public joinSession(sessionId: string, password?: string, timeoutMs = 5000): Promise<boolean> {
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       let id = uuidv4(); // ⇨ '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'

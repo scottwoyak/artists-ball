@@ -359,6 +359,7 @@ export class SquintApp implements IApp {
                   Squint.dump(Squint.url)
                      .then((msg: string) => {
                         alert(msg);
+                        console.log(msg);
                      })
                      .catch((err) => {
                         debug('Squint.dump() failed: ' + err);
@@ -377,7 +378,7 @@ export class SquintApp implements IApp {
    }
 
    private join(sessionId: string, password?: string): void {
-      this.squint.join(sessionId, password)
+      this.squint.joinSession(sessionId, password)
          .then(() => {
             this.startDialog.visible = false;
          })
