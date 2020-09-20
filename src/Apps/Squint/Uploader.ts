@@ -87,7 +87,7 @@ export class Uploader {
       }
       if (this.busy) {
          debug('upload() called before previous call returned');
-         requestAnimationFrame(() => { this.upload(1000) });
+         //requestAnimationFrame(() => { this.upload(1000) });
          return;
       }
       if (delay > 0) {

@@ -42,6 +42,7 @@ export class SquintApp implements IApp {
    private div: HTMLDivElement | undefined;
    private userNameMenuItemDiv: HTMLDivElement | undefined;
    private img: HTMLImageElement | undefined;
+   private dirty = true;
    private chatPanel: ChatPanel | undefined;
    private notificationDiv: HTMLDivElement | undefined;
    private cameraMenu: SubMenu | undefined;
@@ -114,7 +115,7 @@ export class SquintApp implements IApp {
          handler: () => {
             console.log('connection lost, reconnecting...');
             this.showNotification('Connection lost, reconnecting');
-            this.drawImg();
+            this.dirty = true;
          }
       });
 
@@ -129,7 +130,7 @@ export class SquintApp implements IApp {
             else {
                this.showNotification('Reconnected');
             }
-            this.drawImg();
+            this.dirty = true;
          }
       });
 
@@ -144,7 +145,7 @@ export class SquintApp implements IApp {
       this.squint.on({
          event: SquintEvent.HostDisconnected,
          handler: () => {
-            this.drawImg();
+            this.dirty = true;
          }
       });
 
@@ -291,7 +292,7 @@ export class SquintApp implements IApp {
       this.squint.on({
          event: SquintEvent.CameraPaused,
          handler: () => {
-            this.drawImg();
+            this.dirty = true;
          }
       });
 
@@ -377,6 +378,9 @@ export class SquintApp implements IApp {
             }
          }
       }
+
+      // kick off the rendering loop
+      this.drawImg();
    }
 
    private join(sessionId: string, password?: string): void {
@@ -470,7 +474,7 @@ export class SquintApp implements IApp {
          min: 0,
          max: 200,
          value: 100,
-         oninput: () => this.drawImg(),
+         oninput: () => this.dirty = true,
          onGetText: (slider) => slider.value.toFixed(0) + '%',
       })
 
@@ -479,7 +483,7 @@ export class SquintApp implements IApp {
          min: 0,
          max: 200,
          value: 100,
-         oninput: () => this.drawImg(),
+         oninput: () => this.dirty = true,
          onGetText: (slider) => slider.value.toFixed(0) + '%',
       });
 
@@ -488,7 +492,7 @@ export class SquintApp implements IApp {
          min: 0,
          max: 200,
          value: 100,
-         oninput: () => this.drawImg(),
+         oninput: () => this.dirty = true,
          onGetText: (slider) => slider.value.toFixed(0) + '%',
       });
 
@@ -497,7 +501,7 @@ export class SquintApp implements IApp {
          min: 0,
          max: 10,
          value: 0,
-         oninput: () => this.drawImg(),
+         oninput: () => this.dirty = true,
          onGetText: (slider) => slider.value.toFixed(0),
       });
 
@@ -515,7 +519,7 @@ export class SquintApp implements IApp {
          min: 1,
          max: 5,
          value: 1,
-         oninput: () => this.drawImg(),
+         oninput: () => this.dirty = true,
          onGetText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
 
@@ -670,7 +674,7 @@ export class SquintApp implements IApp {
             this.img = img;
             this.downloadTracker.tick(blob.size);
 
-            this.drawImg();
+            this.dirty = true;
          }
 
          URL.revokeObjectURL(img.src);
@@ -900,14 +904,18 @@ export class SquintApp implements IApp {
       this.canvas.width = viewWidth;
       this.canvas.height = viewHeight - menubarHeight;
 
-      if (this.squint.connected) {
-         this.drawImg();
-      }
+      this.dirty = true;
    }
 
 
 
    private drawImg() {
+
+      requestAnimationFrame(() => this.drawImg());
+
+      if (this.dirty === false) {
+         return;
+      }
 
       if (!this.img) {
          return;
@@ -1095,7 +1103,7 @@ export class SquintApp implements IApp {
          ctx.font = fontSize + 'px sans-serif';
 
          const textMetrics = ctx.measureText(msg);
-         fontSize *= (0.8 * width / textMetrics.width);
+         fontSize *= (0.8 * Math.min(width, canvasWidth) / textMetrics.width);
          ctx.font = fontSize + 'px sans-serif';
 
          ctx.fillStyle = 'rgba(255,255,255,0.5)';
@@ -1103,6 +1111,8 @@ export class SquintApp implements IApp {
          ctx.textBaseline = 'middle';
          ctx.fillText(msg, canvasWidth / 2, canvasHeight / 2);
       }
+
+      this.dirty = false;
    }
 
    private onScale(scale: number, change: number) {
@@ -1114,7 +1124,7 @@ export class SquintApp implements IApp {
       this.xOffset *= factor;
       this.yOffset *= factor;
 
-      this.drawImg();
+      this.dirty = true;
    }
 
    private onTranslate(delta: Vec2) {
@@ -1127,7 +1137,7 @@ export class SquintApp implements IApp {
       this.xOffset += delta.x;
       this.yOffset += delta.y;
 
-      this.drawImg();
+      this.dirty = true;
    }
 
    private onDrag(pos: Vec2, delta: Vec2) {
@@ -1135,7 +1145,7 @@ export class SquintApp implements IApp {
       this.xOffset += delta.x;
       this.yOffset -= delta.y;
 
-      this.drawImg();
+      this.dirty = true;
    }
 
    private onChatMessage(connection: IConnectionInfoBasic, msg: string) {
