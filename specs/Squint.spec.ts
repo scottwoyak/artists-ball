@@ -11,9 +11,13 @@ import { env } from '../src/Util/Globals';
 import { ConnectionState, IConnectionInfoFull, SquintMessageSubject, ISquintMessage } from '../src/Apps/Squint/SquintMessage';
 import { SquintSocket } from '../src/Apps/Squint/SquintSocket';
 import { SquintStrings } from '../src/Apps/Squint/SquintStrings';
+import { WebSocket as MockWebSocket } from 'mock-socket';
+import { MockServer, ReconnectAction } from './MockServer';
 
 const TestUrlLocalhost = 'ws://localhost:8080/V1/';
+const TestUrlMock = 'ws://mockhost:8081';
 
+console.log('\n\n\n\n\n\n\n\n\n\n');
 // dissable log so that the console just shows Mocha output
 console.log = () => { };
 
@@ -32,11 +36,6 @@ const imageData = [255, 216, 255, 224, 0, 16, 74, 70, 73, 70, 0, 1, 1, 0, 0, 1, 
 // How do we really make this a Blob in the testing environment?
 const imageBlob = imageData as unknown as Blob;
 
-// replace browser WebSockets (that don't exist here) with Node WebSockets
-WebSocketFactory.create = (url: string) => {
-   return new NodeWebSocket(url) as unknown as WebSocket;
-}
-
 describe('Squint', function () {
 
    let INTERVAL_MS = 0;
@@ -44,7 +43,30 @@ describe('Squint', function () {
    let ZOMBIE_TIMEOUT_MS = 0;
    let BUFFER_MS = 50;
 
+   enum WebSocketType {
+      Mock,
+      Node
+   }
+
+   function use(type: WebSocketType) {
+      switch (type) {
+         case WebSocketType.Node:
+            WebSocketFactory.create = (url: string) => {
+               return new NodeWebSocket(url) as unknown as WebSocket;
+            }
+            break;
+
+         case WebSocketType.Mock:
+            WebSocketFactory.create = (url: string) => {
+               return new MockWebSocket(url) as unknown as WebSocket;
+            }
+            break;
+      }
+   }
    beforeEach(async function () {
+      // replace browser WebSockets (that don't exist here) with Node WebSockets
+      use(WebSocketType.Node);
+
       let info = await Squint.inspect(TestUrlLocalhost);
       INTERVAL_MS = info.intervalMs;
       SESSION_TIMEOUT_MS = info.sessionTimeoutMs;
@@ -54,25 +76,40 @@ describe('Squint', function () {
    });
 
    let squints: Squint[] = [];
+   let servers: MockServer[] = [];
    afterEach(async function () {
 
       // if the test failed, it may abandon before closing things
+      /*
       while (squints.length > 0) {
          let squint = squints.shift();
          if (squint.connected) {
             squint.close();
          }
       }
+      */
+      for (let squint of squints) {
+         if (squint.connected) {
+            squint.close();
+         }
+      }
+      for (let server of servers) {
+         server.close();
+      }
 
       // wait long enough for all interval messages to get sent
       await sleep(INTERVAL_MS + BUFFER_MS);
 
+      use(WebSocketType.Node);
       Squint.log(TestUrlLocalhost, '<<<<<<<<<< Ending Test: \'' + this.currentTest.title + '\' >>>>>>>>>>>>');
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      let info = await Squint.inspect(TestUrlLocalhost);
-      expect(info.connections.length).to.equal(0);
-      expect(info.sessions.length).to.equal(0);
+      // if we're not using a mock server, make sure the test server is clean
+      if (servers.length === 0) {
+         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+         let info = await Squint.inspect(TestUrlLocalhost);
+         expect(info.connections.length).to.equal(0);
+         expect(info.sessions.length).to.equal(0);
+      }
    });
 
    function createSquint(url: string, userName: string): Promise<Squint> {
@@ -81,6 +118,15 @@ describe('Squint', function () {
          .then(() => {
             return squint;
          });
+   }
+
+   function createMockServer(): MockServer {
+      // use mock web scokets
+      use(WebSocketType.Mock);
+
+      let server = new MockServer(TestUrlMock);
+      servers.push(server);
+      return server;
    }
 
    function connectSquint(squint: Squint, url: string, userName: string): Promise<void> {
@@ -160,7 +206,34 @@ describe('Squint', function () {
             expect(info.sessions.length).to.equal(0);
          });
 
-         it('should close immediately on proper close', async function () {
+         it('should connect to a Mock server', async function () {
+
+            let mockServer = createMockServer();
+            expect(mockServer.connections.length).to.equal(0);
+
+            let userName = 'Tester1';
+            let squint = await createSquint(TestUrlMock, userName);
+            expect(mockServer.connections.length).to.equal(1);
+
+            return new Promise<void>((resolve, reject) => {
+               squint.on({
+                  event: SquintEvent.Close,
+                  handler: () => {
+                     try {
+                        expect(mockServer.connections.length).to.equal(0);
+                        resolve();
+                     }
+                     catch (err) {
+                        reject(err);
+                     }
+                  }
+               });
+
+               mockServer.connections[0].close();
+            })
+         })
+
+         it('server should close connection immediately on proper close', async function () {
 
             // test
             let userName = 'Tester1';
@@ -182,41 +255,172 @@ describe('Squint', function () {
             expect(info.sessions.length).to.equal(0);
          });
 
-         it('client should attempt to reconnect if the websocket closes abnormally', async function () {
+         it('client should reconnect if the websocket closes abnormally', async function () {
 
-            let userNameHost = 'TesterHost';
+            let mockServer = createMockServer();
+            mockServer.reconnectAction = ReconnectAction.Accept;
 
             // create a connection
-            let squint = await createSquint(TestUrlLocalhost, userNameHost);
-            let info = await Squint.inspect(TestUrlLocalhost);
-            expect(info.connections.length).to.equal(1);
+            let userNameHost = 'TesterHost';
+            let squint = await createSquint(TestUrlMock, userNameHost);
+            expect(mockServer.connections.length).to.equal(1);
 
-            // break the connection.
-            squint.ws.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
+            // track events
+            let closeCount = 0;
+            let reconnectingCount = 0;
+            let reconnectedTrueCount = 0;
+            let reconnectedFalseCount = 0;
+            squint.on({
+               event: SquintEvent.Close,
+               handler: () => closeCount++
+            })
+            squint.on({
+               event: SquintEvent.Reconnecting,
+               handler: () => reconnectingCount++
+            })
+            squint.on({
+               event: SquintEvent.Reconnected,
+               handler: (success: boolean) => success ? reconnectedTrueCount++ : reconnectedFalseCount++
+            })
 
-            // TODO sometimes the reconnect action occurs before the inspect call is made. How to prevent that?
-            /*
-            info = await Squint.inspect(TestUrlLocalhost);
-            expect(info.connections.length).to.equal(1);
-            expect(info.connections[0].state).to.equal(ConnectionState.Zombie);
-            */
+            // break the connection
+            mockServer.connections[0].close(1005);
 
             // should reconnect
             return new Promise((resolve, reject) => {
                setTimeout(() => {
-                  // should have reconnected by now
-                  Squint.inspect(TestUrlLocalhost)
-                     .then((info) => {
-                        expect(info.connections.length).to.equal(1);
-                        expect(info.connections[0].state).to.equal(ConnectionState.Open);
-                        resolve();
-                     })
-                     .catch((err) => {
-                        reject(err);
-                     });
+                  try {
+                     // should have reconnected by now
+                     expect(mockServer.connectionAttempts).to.equal(1);
+                     expect(mockServer.reconnectionAttempts).to.equal(1);
+                     expect(reconnectingCount).to.equal(1);
+                     expect(reconnectedTrueCount).to.equal(1);
+                     expect(reconnectedFalseCount).to.equal(0);
+                     expect(closeCount).to.equal(0);
+                     resolve();
+                  }
+                  catch (err) {
+                     reject(err);
+                  }
                }, BUFFER_MS);
             });
          });
+
+         it('should try to reconnect multiple times before timing out', async function () {
+
+            let mockServer = createMockServer();
+            mockServer.reconnectAction = ReconnectAction.RejectAsFailed;
+
+            // create a connection
+            let userNameHost = 'TesterHost';
+            let squint = await createSquint(TestUrlMock, userNameHost);
+            expect(mockServer.connectionAttempts).to.equal(1);
+            expect(mockServer.reconnectionAttempts).to.equal(0);
+            expect(mockServer.connections.length).to.equal(1);
+
+            // track events
+            let closeCount = 0;
+            let reconnectingCount = 0;
+            let reconnectedTrueCount = 0;
+            let reconnectedFalseCount = 0;
+            squint.on({
+               event: SquintEvent.Close,
+               handler: () => closeCount++
+            })
+            squint.on({
+               event: SquintEvent.Reconnecting,
+               handler: () => reconnectingCount++
+            })
+            squint.on({
+               event: SquintEvent.Reconnected,
+               handler: (success: boolean) => success ? reconnectedTrueCount++ : reconnectedFalseCount++
+            })
+
+            // speed everything up
+            let numTries = 4;
+            squint.ReconnectRetryDelayS = 0.2;
+            squint.ReconnectTimeoutS = (numTries - 0.5) * squint.ReconnectRetryDelayS;
+
+            // break the connection
+            mockServer.connections[0].close(1005);
+
+            // should reconnect
+            return new Promise((resolve, reject) => {
+               setTimeout(() => {
+                  try {
+                     // should have reconnected by now
+                     expect(mockServer.connectionAttempts).to.equal(1);
+                     expect(mockServer.reconnectionAttempts).to.equal(numTries);
+                     expect(reconnectingCount).to.equal(1);
+                     expect(reconnectedTrueCount).to.equal(0);
+                     expect(reconnectedFalseCount).to.equal(1);
+                     expect(closeCount).to.equal(1);
+                     resolve();
+                  }
+                  catch (err) {
+                     reject(err);
+                  }
+               }, 1000 * (1.5 * squint.ReconnectTimeoutS));
+            });
+         })
+
+         it('should NOT try to reconnect multiple times if the connection has expired', async function () {
+
+            let mockServer = createMockServer();
+            mockServer.reconnectAction = ReconnectAction.RejectAsExpired;
+
+            // create a connection
+            let userNameHost = 'TesterHost';
+            let squint = await createSquint(TestUrlMock, userNameHost);
+            expect(mockServer.connectionAttempts).to.equal(1);
+            expect(mockServer.reconnectionAttempts).to.equal(0);
+            expect(mockServer.connections.length).to.equal(1);
+
+            // track events
+            let closeCount = 0;
+            let reconnectingCount = 0;
+            let reconnectedTrueCount = 0;
+            let reconnectedFalseCount = 0;
+            squint.on({
+               event: SquintEvent.Close,
+               handler: () => closeCount++
+            })
+            squint.on({
+               event: SquintEvent.Reconnecting,
+               handler: () => reconnectingCount++
+            })
+            squint.on({
+               event: SquintEvent.Reconnected,
+               handler: (success: boolean) => success ? reconnectedTrueCount++ : reconnectedFalseCount++
+            })
+
+            // speed everything up
+            let numTries = 4;
+            squint.ReconnectRetryDelayS = 0.2;
+            squint.ReconnectTimeoutS = (numTries - 0.5) * squint.ReconnectRetryDelayS;
+
+            // break the connection
+            mockServer.connections[0].close(1005);
+
+            // should reconnect
+            return new Promise((resolve, reject) => {
+               setTimeout(() => {
+                  try {
+                     // should have reconnected by now
+                     expect(mockServer.connectionAttempts).to.equal(1);
+                     expect(mockServer.reconnectionAttempts).to.equal(1);
+                     expect(reconnectingCount).to.equal(1);
+                     expect(reconnectedTrueCount).to.equal(0);
+                     expect(reconnectedFalseCount).to.equal(1);
+                     expect(closeCount).to.equal(1);
+                     resolve();
+                  }
+                  catch (err) {
+                     reject(err);
+                  }
+               }, 1000 * (1.5 * squint.ReconnectTimeoutS));
+            });
+         })
 
          it('server connection should enter zombie mode if the websocket fails and then eventually fully close', async function () {
 

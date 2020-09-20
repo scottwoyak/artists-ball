@@ -114,6 +114,7 @@ export class SquintApp implements IApp {
          handler: () => {
             console.log('connection lost, reconnecting...');
             this.showNotification('Connection lost, reconnecting');
+            this.drawImg();
          }
       });
 
@@ -128,6 +129,7 @@ export class SquintApp implements IApp {
             else {
                this.showNotification('Reconnected');
             }
+            this.drawImg();
          }
       });
 
@@ -907,11 +909,6 @@ export class SquintApp implements IApp {
 
    private drawImg() {
 
-      if (!this.squint.connected) {
-         console.error('drawImg() after close');
-         return;
-      }
-
       if (!this.img) {
          return;
       }
@@ -1074,8 +1071,21 @@ export class SquintApp implements IApp {
       msg = toSizeStr(this.downloadTracker.lastTransferBytes);
       ctx.fillText(msg, 5, canvasHeight - 5);
 
-      // paused message
+      // messages
+      msg = '';
+      if (this.squint.reconnecting) {
+         msg = 'Reconnecting...';
+      }
       if (this.squint.remoteCameraPaused || this.squint.remoteCameraConnected === false) {
+         if (this.squint.remoteCameraConnected === false) {
+            msg = 'Camera Disconnected';
+         }
+         else {
+            msg = 'Camera Paused';
+         }
+      }
+
+      if (msg.length > 0) {
          ctx.shadowBlur = 0;
 
          ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -1083,13 +1093,7 @@ export class SquintApp implements IApp {
 
          let fontSize = 10;
          ctx.font = fontSize + 'px sans-serif';
-         let msg;
-         if (this.squint.remoteCameraConnected === false) {
-            msg = 'Camera Disconnected';
-         }
-         else {
-            msg = 'Camera Paused';
-         }
+
          const textMetrics = ctx.measureText(msg);
          fontSize *= (0.8 * width / textMetrics.width);
          ctx.font = fontSize + 'px sans-serif';

@@ -8,19 +8,22 @@ import { WebSocketFactory } from './WebSocketFactory';
 import { PromiseMap } from './PromiseMap';
 import { v4 as uuidv4 } from 'uuid';
 import { SquintStrings } from './SquintStrings';
+import { Stopwatch } from '../../Util/Stopwatch';
 
 
 export class Squint {
 
    public static readonly url = SquintWsUrl;
+   public ReconnectTimeoutS = 60;
+   public ReconnectRetryDelayS = 1;
 
    public ss: SquintSocket | null = null;
    public _userName: string | null = null;
-   private _reconnecting = false;
    private _remoteCameraPaused = false;
    private _remoteCameraConnected = true;
    private _url: string | null;
    private requests = new PromiseMap();
+   private reconnectStopwatch: Stopwatch | null = null;
 
    private eventManager = new EventManager();
 
@@ -65,7 +68,7 @@ export class Squint {
    }
 
    public get reconnecting(): boolean {
-      return this._reconnecting;
+      return this.reconnectStopwatch !== null;
    }
 
    public get bufferReady(): boolean {
@@ -214,27 +217,40 @@ export class Squint {
       }
    }
 
-   private tryToReconnect(connectionId: string, retryCount = 1): void {
-      this._reconnecting = true;
-      if (retryCount === 1) {
+   private retryCount: number;
+   private tryToReconnect(connectionId: string): void {
+
+      if (this.reconnectStopwatch === null) {
+         this.reconnectStopwatch = new Stopwatch();
+         this.retryCount = 1;
          this.emit(SquintEvent.Reconnecting);
       }
-      console.log(this + ' Reconnect try ' + retryCount)
+      else {
+         this.retryCount++;
+      }
+      console.log(this + ' Reconnect try ' + this.retryCount)
       this.doConnect(connectionId)
          .then(() => {
-            this._reconnecting = false;
+            this.reconnectStopwatch = null;
             this.emit(SquintEvent.Reconnected, true);
          })
          .catch((err) => {
-            console.log(this + ' Reconnect try ' + retryCount + ' failed: ' + err);
-            if (retryCount < 3) {
+            console.log(this + ' Reconnect try ' + this.retryCount + ' failed: ' + err);
+            if (typeof err === 'string' && err.endsWith('1000')) {
+               console.log(this + ' Unable to reconnect, server rejected the attempt.');
+               this.reconnectStopwatch = null;
+               this.ss = null;
+               this.emit(SquintEvent.Reconnected, false);
+               this.emit(SquintEvent.Close);
+            }
+            else if (this.reconnectStopwatch.elapsedS < this.ReconnectTimeoutS) {
                setTimeout(() => {
-                  this.tryToReconnect(connectionId, retryCount + 1);
-               }, 1000);
+                  this.tryToReconnect(connectionId);
+               }, 1000 * this.ReconnectRetryDelayS);
             }
             else {
-               console.log(this + ' Unable to reconnect. Passing along failure.');
-               this._reconnecting = false;
+               console.log(this + ' Unable to reconnect.');
+               this.reconnectStopwatch = null;
                this.ss = null;
                this.emit(SquintEvent.Reconnected, false);
                this.emit(SquintEvent.Close);

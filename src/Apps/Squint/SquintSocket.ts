@@ -38,7 +38,7 @@ export class SquintSocket {
 
    public get readyStateStr(): string {
       if (this._ws === null) {
-         return 'NULL';
+         return 'CLOSED';
       }
 
       switch (this._ws.readyState) {
