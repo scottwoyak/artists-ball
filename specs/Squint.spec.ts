@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 import { Squint } from '../src/Apps/Squint/Squint';
-import { WebSocketFactory } from '../src/Apps/Squint/WebSocketFactory';
+import { WebSocketFactory, WebSocketReadyState } from '../src/Apps/Squint/WebSocketFactory';
 import NodeWebSocket from 'ws';
 import { SquintEvent } from '../src/Apps/Squint/SquintEvents';
 import { env } from '../src/Util/Globals';
@@ -36,12 +36,19 @@ const imageData = [255, 216, 255, 224, 0, 16, 74, 70, 73, 70, 0, 1, 1, 0, 0, 1, 
 // How do we really make this a Blob in the testing environment?
 const imageBlob = imageData as unknown as Blob;
 
+let TimeMs = {
+   Interval: 0,
+   SessionTimeout: 0,
+   ZombieTimeout: 0,
+   Buffer: 0
+}
+
 describe('Squint', function () {
 
-   let INTERVAL_MS = 0;
-   let SESSION_TIMEOUT_MS = 0;
-   let ZOMBIE_TIMEOUT_MS = 0;
-   let BUFFER_MS = 50;
+   TimeMs.Interval = 0;
+   TimeMs.SessionTimeout = 0;
+   TimeMs.ZombieTimeout = 0;
+   TimeMs.Buffer = 50;
 
    enum WebSocketType {
       Mock,
@@ -68,9 +75,9 @@ describe('Squint', function () {
       use(WebSocketType.Node);
 
       let info = await Squint.inspect(TestUrlLocalhost);
-      INTERVAL_MS = info.intervalMs;
-      SESSION_TIMEOUT_MS = info.sessionTimeoutMs;
-      ZOMBIE_TIMEOUT_MS = info.zombieTimeoutMs;
+      TimeMs.Interval = info.intervalMs;
+      TimeMs.SessionTimeout = info.sessionTimeoutMs;
+      TimeMs.ZombieTimeout = info.zombieTimeoutMs;
 
       Squint.log(TestUrlLocalhost, '\n\n\n<<<<<<<<<< Starting Test: \'' + this.currentTest.title + '\' >>>>>>>>>>>>');
    });
@@ -80,14 +87,6 @@ describe('Squint', function () {
    afterEach(async function () {
 
       // if the test failed, it may abandon before closing things
-      /*
-      while (squints.length > 0) {
-         let squint = squints.shift();
-         if (squint.connected) {
-            squint.close();
-         }
-      }
-      */
       for (let squint of squints) {
          if (squint.connected) {
             squint.close();
@@ -98,7 +97,7 @@ describe('Squint', function () {
       }
 
       // wait long enough for all interval messages to get sent
-      await sleep(INTERVAL_MS + BUFFER_MS);
+      await sleep(TimeMs.Interval + TimeMs.Buffer);
 
       use(WebSocketType.Node);
       Squint.log(TestUrlLocalhost, '<<<<<<<<<< Ending Test: \'' + this.currentTest.title + '\' >>>>>>>>>>>>');
@@ -249,7 +248,7 @@ describe('Squint', function () {
             squint.close();
 
             // check results
-            await sleep(BUFFER_MS); // sleep so that the socket closes first
+            await sleep(TimeMs.Buffer); // sleep so that the socket closes first
             info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(0);
             expect(info.sessions.length).to.equal(0);
@@ -302,8 +301,88 @@ describe('Squint', function () {
                   catch (err) {
                      reject(err);
                   }
-               }, BUFFER_MS);
+               }, TimeMs.Buffer);
             });
+         });
+
+         it('client should replace a connection if a reconnect request is made but the original socket is still open', async function () {
+
+            let userNameHost = 'TesterHost';
+
+            // create a connection
+            let onMessage = () => { };
+            let onImage = () => { };
+            let onClose = () => { };
+            let onInit = () => { };
+            let ss = await SquintSocket.connect(TestUrlLocalhost, userNameHost, onMessage, onImage, onClose, onInit);
+
+            let info = await Squint.inspect(TestUrlLocalhost);
+            expect(info.connections.length).to.equal(1);
+            expect(info.connections[0].state).to.equal(ConnectionState.Open);
+            expect(info.connections[0].connectionId).to.equal(ss.connectionId);
+            let connectionId = ss.connectionId;
+
+            // reconnect without breaking the old connection
+            let ss2 = await SquintSocket.connect(TestUrlLocalhost, userNameHost, onMessage, onImage, onClose, onInit, connectionId);
+            expect(ss2.connectionId).to.equal(connectionId);
+
+            // should be back connected
+            info = await Squint.inspect(TestUrlLocalhost);
+            expect(info.connections.length).to.equal(1);
+            expect(info.connections[0].connectionId).to.equal(connectionId);
+            expect(info.connections[0].state).to.equal(ConnectionState.Open);
+            expect(ss.readyState).to.equal(WebSocketReadyState.CLOSED);
+            expect(ss2.readyState).to.equal(WebSocketReadyState.OPEN);
+
+            ss2.close();
+
+            /*
+            let mockServer = createMockServer();
+            mockServer.reconnectAction = ReconnectAction.Accept;
+
+            // create a connection
+            let userNameHost = 'TesterHost';
+            let squint = await createSquint(TestUrlMock, userNameHost);
+            expect(mockServer.connections.length).to.equal(1);
+
+            // track events
+            let closeCount = 0;
+            let reconnectingCount = 0;
+            let reconnectedTrueCount = 0;
+            let reconnectedFalseCount = 0;
+            squint.on({
+               event: SquintEvent.Close,
+               handler: () => closeCount++
+            })
+            squint.on({
+               event: SquintEvent.Reconnecting,
+               handler: () => reconnectingCount++
+            })
+            squint.on({
+               event: SquintEvent.Reconnected,
+               handler: (success: boolean) => success ? reconnectedTrueCount++ : reconnectedFalseCount++
+            })
+
+            // leave the original connection open, but reconnect with a new web socket
+xxx
+            return new Promise((resolve, reject) => {
+               setTimeout(() => {
+                  try {
+                     // should have reconnected by now
+                     expect(mockServer.connectionAttempts).to.equal(1);
+                     expect(mockServer.reconnectionAttempts).to.equal(1);
+                     expect(reconnectingCount).to.equal(1);
+                     expect(reconnectedTrueCount).to.equal(1);
+                     expect(reconnectedFalseCount).to.equal(0);
+                     expect(closeCount).to.equal(0);
+                     resolve();
+                  }
+                  catch (err) {
+                     reject(err);
+                  }
+               }, TimeMs.Buffer);
+            });
+            */
          });
 
          it('should try to reconnect multiple times before timing out', async function () {
@@ -459,7 +538,7 @@ describe('Squint', function () {
                      .catch((err) => {
                         reject(err);
                      });
-               }, ZOMBIE_TIMEOUT_MS + BUFFER_MS);
+               }, TimeMs.ZombieTimeout + TimeMs.Buffer);
             });
          });
 
@@ -545,7 +624,7 @@ describe('Squint', function () {
                      .catch((err) => {
                         reject(err);
                      });
-               }, ZOMBIE_TIMEOUT_MS + BUFFER_MS);
+               }, TimeMs.ZombieTimeout + TimeMs.Buffer);
             });
          });
 
@@ -642,7 +721,7 @@ describe('Squint', function () {
                      .catch((err) => {
                         reject(err);
                      });
-               }, BUFFER_MS);
+               }, TimeMs.Buffer);
             });
          });
 
@@ -699,7 +778,7 @@ describe('Squint', function () {
             // reconnect
             ss = await SquintSocket.connect(TestUrlLocalhost, userNameViewer, onMessage, onImage, onClose, onInit, ss.connectionId);
 
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
             expect(chat.length).to.equal(2);
             expect(chat[0]).to.equal('one');
             expect(chat[1]).to.equal('two');
@@ -820,7 +899,7 @@ describe('Squint', function () {
             expectConnection(info.sessions[0].host, squintHost);
 
             // let the initial notification associated with the session creation pass
-            await sleep(INTERVAL_MS);
+            await sleep(TimeMs.Interval);
 
             // add the second connection
             let squintViewer = new Squint();
@@ -920,7 +999,7 @@ describe('Squint', function () {
             await squintHost.createSession();
 
             // sleep to allow Pass 1
-            await sleep(INTERVAL_MS + BUFFER_MS);
+            await sleep(TimeMs.Interval + TimeMs.Buffer);
 
             // this should cause Pass 2
             squintHost.close();
@@ -988,7 +1067,7 @@ describe('Squint', function () {
             // close the host - session should stay alive since we have a listener
             squintHost.close();
 
-            await sleep(BUFFER_MS); // sleep so that the socket closes first
+            await sleep(TimeMs.Buffer); // sleep so that the socket closes first
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
             expectConnection(info.connections[0], squintViewer);
@@ -1009,7 +1088,7 @@ describe('Squint', function () {
                         reject(err);
                      });
 
-               }, SESSION_TIMEOUT_MS + BUFFER_MS);
+               }, TimeMs.SessionTimeout + TimeMs.Buffer);
             })
          });
 
@@ -1028,7 +1107,7 @@ describe('Squint', function () {
             // close the host - session should stay alive since we have a listener
             squintHost.close();
 
-            await sleep(BUFFER_MS); // sleep so that the socket closes first
+            await sleep(TimeMs.Buffer); // sleep so that the socket closes first
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
             expectConnection(info.connections[0], squintViewer);
@@ -1052,7 +1131,7 @@ describe('Squint', function () {
             squintHost.close();
 
             // prove session is still open
-            await sleep(BUFFER_MS); // sleep so that the socket closes first
+            await sleep(TimeMs.Buffer); // sleep so that the socket closes first
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
             expectConnection(info.connections[0], squintViewer);
@@ -1064,7 +1143,7 @@ describe('Squint', function () {
             squintViewer.close();
 
             // session should close
-            await sleep(BUFFER_MS); // sleep so that the socket closes first
+            await sleep(TimeMs.Buffer); // sleep so that the socket closes first
             info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(0);
             expect(info.sessions.length).to.equal(0);
@@ -1086,7 +1165,7 @@ describe('Squint', function () {
             // close the host
             squintHost.close();
 
-            await sleep(BUFFER_MS); // sleep so that the socket closes first
+            await sleep(TimeMs.Buffer); // sleep so that the socket closes first
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
             expect(info.sessions.length).to.equal(1);
@@ -1110,7 +1189,7 @@ describe('Squint', function () {
             // close the host
             squintHost.ws.close(Squint.CLOSE_CODE_FAIL_NO_RECONNECT);
 
-            await sleep(ZOMBIE_TIMEOUT_MS + BUFFER_MS); // sleep so that the socket closes first
+            await sleep(TimeMs.ZombieTimeout + TimeMs.Buffer); // sleep so that the socket closes first
 
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
@@ -1135,7 +1214,7 @@ describe('Squint', function () {
             squintHost.ws.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
 
             // sleep long enough to assure the zombie mode times out if it does
-            await sleep(ZOMBIE_TIMEOUT_MS + BUFFER_MS);
+            await sleep(TimeMs.ZombieTimeout + TimeMs.Buffer);
 
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(2);
@@ -1150,7 +1229,7 @@ describe('Squint', function () {
             // create the second host and join the session
             let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
             await squintHost2.joinSession(sessionId);
-            await sleep(INTERVAL_MS + BUFFER_MS); // let the existing SessionList events pass
+            await sleep(TimeMs.Interval + TimeMs.Buffer); // let the existing SessionList events pass
 
             let squintHostCount = 0;
             let squintHost2Count = 0;
@@ -1201,7 +1280,7 @@ describe('Squint', function () {
             let squintHost2 = await createSquint(TestUrlLocalhost, 'TesterHost2');
             await squintHost2.joinSession(sessionId);
 
-            await sleep(INTERVAL_MS + BUFFER_MS); // let the existing SessionList events pass
+            await sleep(TimeMs.Interval + TimeMs.Buffer); // let the existing SessionList events pass
 
             let squintHostCount = 0;
             let squintHost2Count = 0;
@@ -1230,7 +1309,7 @@ describe('Squint', function () {
             squintHost2.requestToBeHost();
 
             // allow events to fire
-            await sleep(SESSION_TIMEOUT_MS + BUFFER_MS);
+            await sleep(TimeMs.SessionTimeout + TimeMs.Buffer);
 
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(3);
@@ -1260,7 +1339,7 @@ describe('Squint', function () {
             squintHost.close();
 
             // allow events to fire
-            await sleep(INTERVAL_MS + BUFFER_MS);
+            await sleep(TimeMs.Interval + TimeMs.Buffer);
 
             let squintHostCount = 0;
             let squintHost2Count = 0;
@@ -1289,7 +1368,7 @@ describe('Squint', function () {
             squintHost2.requestToBeHost();
 
             // allow events to fire
-            await sleep(INTERVAL_MS + BUFFER_MS);
+            await sleep(TimeMs.Interval + TimeMs.Buffer);
 
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(2);
@@ -1352,12 +1431,12 @@ describe('Squint', function () {
 
             // sleep long enough that the initial message associated with the
             // subscription activity is sent
-            await sleep(INTERVAL_MS + BUFFER_MS);
+            await sleep(TimeMs.Interval + TimeMs.Buffer);
 
             // close the host - should trigger Pass 2
             squintHost.close();
 
-            await sleep(BUFFER_MS); // sleep so that the socket closes first
+            await sleep(TimeMs.Buffer); // sleep so that the socket closes first
             let info = await Squint.inspect(TestUrlLocalhost);
             expect(info.connections.length).to.equal(1);
             expect(info.sessions.length).to.equal(1);
@@ -1385,7 +1464,7 @@ describe('Squint', function () {
             squintHost.close();
 
             // let the close call occur before we inspect
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             // prove session is still open
             let info = await Squint.inspect(TestUrlLocalhost);
@@ -1397,7 +1476,7 @@ describe('Squint', function () {
             expectConnection(info.sessions[0].viewers[0], squintViewer1);
             expectConnection(info.sessions[0].viewers[1], squintViewer2);
 
-            await sleep(INTERVAL_MS + BUFFER_MS);
+            await sleep(TimeMs.Interval + TimeMs.Buffer);
 
             // viewer 2 should receive a message when viewer 1 closes
             let promise = new Promise((resolve, reject) => {
@@ -1510,7 +1589,7 @@ describe('Squint', function () {
             let squintOther = await createSquint(TestUrlLocalhost, 'TesterOther');
 
             // clear out the initial event
-            await sleep(INTERVAL_MS + BUFFER_MS);
+            await sleep(TimeMs.Interval + TimeMs.Buffer);
 
             let newName = 'TesterNewName';
 
@@ -1556,7 +1635,7 @@ describe('Squint', function () {
                      }
                   });
 
-                  sleep(BUFFER_MS)
+                  sleep(TimeMs.Buffer)
                      .then(() => {
                         resolve();
                      })
@@ -1578,7 +1657,7 @@ describe('Squint', function () {
             let squintOther = await createSquint(TestUrlLocalhost, 'TesterOther');
 
             // clear out the initial event
-            await sleep(INTERVAL_MS + BUFFER_MS);
+            await sleep(TimeMs.Interval + TimeMs.Buffer);
 
             let newName = 'TesterNewName';
 
@@ -1624,7 +1703,7 @@ describe('Squint', function () {
                      }
                   });
 
-                  sleep(BUFFER_MS)
+                  sleep(TimeMs.Buffer)
                      .then(() => {
                         resolve();
                      })
@@ -2034,13 +2113,13 @@ describe('Squint', function () {
                      setTimeout(() => {
                         // this should cause Pass 3
                         squintViewer2.close();
-                     }, INTERVAL_MS + BUFFER_MS);
+                     }, TimeMs.Interval + TimeMs.Buffer);
                   })
                   .catch((err) => {
                      // TODO remove throw within promise chain
                      throw new Error(err);
                   });
-            }, INTERVAL_MS + BUFFER_MS);
+            }, TimeMs.Interval + TimeMs.Buffer);
 
             return promise;
          });
@@ -2220,7 +2299,7 @@ describe('Squint', function () {
             let { squintHost, squintViewer } = await createSession();
 
             // make sure the initial join image has been received
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             let imageCount = 0;
             squintViewer.requestNextImage();
@@ -2244,7 +2323,7 @@ describe('Squint', function () {
             expect(imageCount).to.equal(sentImageCount);
          });
 
-         it('should still receive images if the host changes', async function () {
+         it('should continue receive images if the host changes', async function () {
 
             let { squintHost, squintViewer, sessionId } = await createSession();
 
@@ -2254,7 +2333,7 @@ describe('Squint', function () {
             squintHost2.requestToBeHost();
 
             // let messages fire before we start counting
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             let imageCount = 0;
             squintViewer.requestNextImage();
@@ -2278,6 +2357,98 @@ describe('Squint', function () {
             expect(imageCount).to.equal(sentImageCount);
          });
 
+         it.only('should continue to receive images if the listener reconnects', async function () {
+
+            let { squintHost, squintViewer, sessionId } = await createSession();
+
+            let imageCount = 0;
+            squintViewer.requestNextImage();
+            squintViewer.on({
+               event: SquintEvent.Image,
+               handler: () => {
+                  imageCount++;
+                  squintViewer.requestNextImage();
+               }
+            });
+
+            // send the first batch of images
+            // send a bunch of images
+            let sentImageCount = 10;
+            for (let i = 0; i < sentImageCount; i++) {
+               squintHost.sendImage(imageBlob);
+
+               // allow the viewer to request the next image
+               await sleep(10);
+            }
+
+            expect(imageCount).to.equal(sentImageCount);
+
+            // disconnect and reconnect
+            squintViewer.ws.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
+            expect(squintViewer.connected).to.be.false;
+
+            // let the reconnect happen
+            await sleep(TimeMs.ZombieTimeout);
+            expect(squintViewer.connected).to.be.true;
+
+            // send a bunch of images
+            for (let i = 0; i < sentImageCount; i++) {
+               squintHost.sendImage(imageBlob);
+
+               // allow the viewer to request the next image
+               await sleep(10);
+            }
+
+            expect(imageCount).to.equal(2 * sentImageCount);
+         });
+
+         it.only('should continue to receive images if the listener reconnects (without calling requestNextImage', async function () {
+
+            let { squintHost, squintViewer, sessionId } = await createSession();
+
+            let imageCount = 0;
+            squintViewer.requestNextImage();
+            squintViewer.on({
+               event: SquintEvent.Image,
+               handler: () => {
+                  imageCount++;
+                  if (imageCount != 10) {
+                     squintViewer.requestNextImage();
+                  }
+               }
+            });
+
+            // send the first batch of images
+            // send a bunch of images
+            let sentImageCount = 10;
+            for (let i = 0; i < sentImageCount; i++) {
+               squintHost.sendImage(imageBlob);
+
+               // allow the viewer to request the next image
+               await sleep(10);
+            }
+
+            expect(imageCount).to.equal(sentImageCount);
+
+            // disconnect and reconnect
+            squintViewer.ws.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
+            expect(squintViewer.connected).to.be.false;
+
+            // let the reconnect happen
+            await sleep(TimeMs.ZombieTimeout);
+            expect(squintViewer.connected).to.be.true;
+
+            // send a bunch of images
+            for (let i = 0; i < sentImageCount; i++) {
+               squintHost.sendImage(imageBlob);
+
+               // allow the viewer to request the next image
+               await sleep(10);
+            }
+
+            expect(imageCount).to.equal(2 * sentImageCount);
+         });
+
          it('should NOT receive images sent from viewers', async function () {
 
             let { squintHost, squintViewer, sessionId } = await createSession();
@@ -2287,7 +2458,7 @@ describe('Squint', function () {
             await squintViewer2.joinSession(sessionId);
 
             // let messages fire before we start counting
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             let imageCount = 0;
             squintViewer.requestNextImage();
@@ -2322,7 +2493,7 @@ describe('Squint', function () {
             squintHost2.requestToBeHost();
 
             // let messages fire before we start counting
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             let imageCount = 0;
             squintViewer.requestNextImage();
@@ -2354,7 +2525,7 @@ describe('Squint', function () {
             let { squintHost, squintViewer } = await createSession();
 
             // make sure the initial join image has been received
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             let imageCount = 0;
             //squintViewer.requestNextImage();
@@ -2416,7 +2587,7 @@ describe('Squint', function () {
                   catch (err) {
                      reject(err);
                   }
-               }, BUFFER_MS);
+               }, TimeMs.Buffer);
 
                squintHost.cameraPaused();
             });
@@ -2428,7 +2599,7 @@ describe('Squint', function () {
 
             squintHost.close();
 
-            await sleep(ZOMBIE_TIMEOUT_MS + BUFFER_MS);
+            await sleep(TimeMs.ZombieTimeout + TimeMs.Buffer);
 
             expect(squintHost.remoteCameraConnected).to.be.true; // there is no remote camera, value stays 'true'
             expect(squintViewer.remoteCameraConnected).to.be.false;
@@ -2440,7 +2611,7 @@ describe('Squint', function () {
 
             squintHost.ws.close(Squint.CLOSE_CODE_FAIL_NO_RECONNECT);
 
-            await sleep(ZOMBIE_TIMEOUT_MS + BUFFER_MS);
+            await sleep(TimeMs.ZombieTimeout + TimeMs.Buffer);
 
             expect(squintHost.remoteCameraConnected).to.be.true; // there is no remote camera, value stays 'true'
             expect(squintViewer.remoteCameraConnected).to.be.false;
@@ -2452,7 +2623,7 @@ describe('Squint', function () {
 
             squintHost.ws.close(Squint.CLOSE_CODE_FAIL_RECONNECT);
 
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             expect(squintHost.remoteCameraConnected).to.be.true; // there is no remote camera, value stays 'true'
             expect(squintViewer.remoteCameraConnected).to.be.true;
@@ -2466,7 +2637,7 @@ describe('Squint', function () {
 
             // close the host so the state goes to false
             squintHost.close();
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
             expect(squintViewer.remoteCameraConnected).to.be.false;
 
             // TODO there is a state we're not managing - state of when the host connects, but before it sends an image. The
@@ -2479,7 +2650,7 @@ describe('Squint', function () {
             squintHost2.sendImage(imageBlob);
 
             // let events propagate
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             // check
             expect(squintViewer.remoteCameraConnected).to.be.true;
@@ -2499,7 +2670,7 @@ describe('Squint', function () {
             // join
             await squintViewer.joinSession(sessionId);
 
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             expect(squintViewer.remoteCameraPaused).to.be.true;
          });
@@ -2514,7 +2685,7 @@ describe('Squint', function () {
             squintHost.cameraPaused();
 
             // let the events propagate
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             // verify
             expect(squintViewer.remoteCameraPaused).to.be.true;
@@ -2523,7 +2694,7 @@ describe('Squint', function () {
             squintHost.sendImage(imageBlob);
 
             // let the events propagate
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             // verify
             expect(squintViewer.remoteCameraPaused).to.be.false;
@@ -2539,13 +2710,13 @@ describe('Squint', function () {
             squintHost.cameraPaused();
 
             // let the events propagate
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             // disconnect
             squintHost.close();
 
             // let the events propagate
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             // verify
             expect(squintViewer.remoteCameraPaused).to.be.true;
@@ -2555,7 +2726,7 @@ describe('Squint', function () {
             squintViewer.requestToBeHost();
 
             // let the events propagate
-            await sleep(BUFFER_MS);
+            await sleep(TimeMs.Buffer);
 
             // verify
             expect(squintViewer.remoteCameraPaused).to.be.false;

@@ -36,6 +36,15 @@ export class SquintSocket {
       }
    }
 
+   public get readyState(): number {
+      if (this._ws === null) {
+         return WebSocketReadyState.CLOSED;
+      }
+      else {
+         return this._ws.readyState;
+      }
+   }
+
    public get readyStateStr(): string {
       if (this._ws === null) {
          return 'CLOSED';
