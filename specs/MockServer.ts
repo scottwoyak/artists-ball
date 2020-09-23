@@ -1,5 +1,5 @@
 import { Server, WebSocket as MockWebSocket } from 'mock-socket';
-import { SquintMessageSubject, ISquintMessage, ISquintHelloFromClientMessage } from '../src/Apps/Squint/SquintMessage';
+import { SquintMessageSubject, ISquintMessage, ISquintHelloFromClientMessage, ReconnectedStatus, ISquintReconnectedMessage } from '../src/Apps/Squint/SquintMessage';
 
 export enum ReconnectAction {
    Accept,
@@ -45,18 +45,32 @@ export class MockServer {
                   this.reconnectionAttempts++;
                   switch (this.reconnectAction) {
                      case ReconnectAction.RejectAsFailed:
+                        // simulate network no available
                         socket.close({ code: 1005 });
                         break;
 
                      case ReconnectAction.RejectAsExpired:
-                        socket.close();
+                        {
+                           // simulate connection after Zombie expiration
+                           let msg: ISquintReconnectedMessage = {
+                              subject: SquintMessageSubject.Reconnected,
+                              status: ReconnectedStatus.Failed
+                           };
+                           socket.send(JSON.stringify(msg));
+                           //socket.close();
+                        }
                         break;
 
                      case ReconnectAction.Accept:
-                        socket.send(JSON.stringify({
-                           subject: SquintMessageSubject.Reconnected
-                        }));
-                        this.connections.push(new MockConnection(this, socket));
+                        {
+                           // simulate success
+                           let msg: ISquintReconnectedMessage = {
+                              subject: SquintMessageSubject.Reconnected,
+                              status: ReconnectedStatus.Success
+                           };
+                           socket.send(JSON.stringify(msg));
+                           this.connections.push(new MockConnection(this, socket));
+                        }
                         break;
                   }
                }

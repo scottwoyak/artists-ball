@@ -23,6 +23,10 @@ export enum JoinSessionStatus {
    InvalidPassword,
 }
 
+export enum ReconnectedStatus {
+   Success = 'Success',
+   Failed = 'Failed'
+}
 export interface IConnectionInfoBasic {
    userName: string,
    connectionId: string,
@@ -145,6 +149,7 @@ export interface ISquintReadyForNextImageMessage {
 
 export interface ISquintReconnectedMessage {
    subject: SquintMessageSubject.Reconnected,
+   status: ReconnectedStatus,
 }
 
 export interface ISquintSessionCreatedMessage {

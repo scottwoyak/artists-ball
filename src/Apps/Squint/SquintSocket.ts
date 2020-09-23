@@ -1,4 +1,4 @@
-import { ISquintMessage, ISquintHelloFromServerMessage } from './SquintMessage';
+import { ISquintMessage, ISquintHelloFromServerMessage, ReconnectedStatus } from './SquintMessage';
 import { debug } from './SquintApp';
 import { WebSocketFactory, WebSocketReadyState } from './WebSocketFactory';
 import { env } from '../../Util/Globals';
@@ -236,15 +236,20 @@ export class SquintSocket {
                try {
                   const msg = JSON.parse(messageEvent.data) as ISquintMessage;
                   if (msg.subject && msg.subject === 'Reconnected') {
-                     let ss = new SquintSocket(
-                        ws,
-                        reconnectId,
-                        onMessage,
-                        onImage,
-                        onClose
-                     );
-                     onInit(ss);
-                     resolve(ss);
+                     if (msg.status === ReconnectedStatus.Success) {
+                        let ss = new SquintSocket(
+                           ws,
+                           reconnectId,
+                           onMessage,
+                           onImage,
+                           onClose
+                        );
+                        onInit(ss);
+                        resolve(ss);
+                     }
+                     else {
+                        reject('Cannot reconnect to ' + url + '\n\nServer rejected the request.');
+                     }
                   }
                   else {
                      debug('Expected Reconnected response, got: ' + JSON.stringify(msg, null, ' '));

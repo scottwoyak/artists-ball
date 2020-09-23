@@ -236,8 +236,8 @@ export class Squint {
          })
          .catch((err) => {
             console.log(this + ' Reconnect try ' + this.retryCount + ' failed: ' + err);
-            if (typeof err === 'string' && err.endsWith('1000')) {
-               console.log(this + ' Unable to reconnect, server rejected the attempt.');
+            if (typeof err === 'string' && err.endsWith('Server rejected the request.')) {
+               console.log(this + ' Unable to reconnect, server rejected the request.');
                this.reconnectStopwatch = null;
                this.ss = null;
                this.emit(SquintEvent.Reconnected, false);
@@ -466,7 +466,7 @@ export class Squint {
 
          ws.onmessage = (msg) => {
             ws.onopen = null;
-            ws.onclose = null;
+            //ws.onclose = null;
             ws.onerror = null;
             ws.onmessage = null;
 
