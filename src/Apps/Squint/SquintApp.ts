@@ -24,6 +24,8 @@ import { IConnectionInfoBasic, ISquintInfo } from './SquintMessage';
 import { StorageWithEvents, StorageItem } from './StorageWithEvents';
 import { SquintStrings } from './SquintStrings';
 import { PasswordDialog } from './PasswordDialog';
+import { hsvColor } from '../../Util/hsvColor';
+import { Checkbox } from '../../GUI/Checkbox';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -62,7 +64,7 @@ export class SquintApp implements IApp {
    private uploader: Uploader | null = null;
    private downloadTracker = new BandwidthTracker();
 
-   private brightness?: Slider | undefined;
+   private brightness: Slider | undefined;
    private contrast: Slider | undefined;
    private saturate: Slider | undefined;
    private blur: Slider | undefined;
@@ -70,6 +72,15 @@ export class SquintApp implements IApp {
    private jpegQuality: Slider | undefined;
    private cameraScale: Slider | undefined;
    private cameraCtrls: ICtrl[] = [];
+
+   private grayScale: Checkbox | undefined;
+   private darks: Slider | undefined;
+   private lights: Slider | undefined;
+   private blend: Checkbox | undefined;
+   private balance: Slider | undefined;
+   private midValue: Slider | undefined;
+
+
 
    private advancedConstraints: IAdvancedConstraint[] = [];
    private advancedSubMenu?: SubMenu;
@@ -405,7 +416,7 @@ export class SquintApp implements IApp {
                let cancelHandler = () => {
                   dlg.dispose();
                }
-               new PasswordDialog(this.div, okHandler, cancelHandler);
+               dlg = new PasswordDialog(this.div, okHandler, cancelHandler);
             }
             else {
                alert(err);
@@ -521,6 +532,69 @@ export class SquintApp implements IApp {
          value: 1,
          oninput: () => this.dirty = true,
          onGetText: (slider) => (100 * slider.value).toFixed(0) + '%',
+      });
+
+
+
+      const experimentalMenu = viewMenu.addSubMenu('Experimental');
+
+      this.grayScale = experimentalMenu.addCheckbox({
+         label: 'Grayscale',
+         oncheck: () => { this.dirty = true; },
+         checked: false
+      });
+
+      let epsilon = 0.001;
+      this.darks = experimentalMenu.addSlider({
+         label: 'Darks',
+         min: 0,
+         max: 1 - epsilon,
+         value: 0,
+         oninput: () => {
+            if (this.darks.value > this.lights.value - epsilon) {
+               this.lights.value = this.darks.value + epsilon;
+            }
+            this.dirty = true;
+         },
+         onGetText: (slider) => slider.value.toFixed(2),
+      });
+
+      this.lights = experimentalMenu.addSlider({
+         label: 'Lights',
+         min: epsilon,
+         max: 1,
+         value: 1,
+         oninput: () => {
+            if (this.darks.value > this.lights.value - epsilon) {
+               this.darks.value = this.lights.value - epsilon;
+            }
+            this.dirty = true;
+         },
+         onGetText: (slider) => slider.value.toFixed(2),
+      });
+
+      this.blend = experimentalMenu.addCheckbox({
+         label: 'Blend Middle Values',
+         oncheck: () => { this.dirty = true; },
+         checked: () => { return true; }
+      });
+
+      this.balance = experimentalMenu.addSlider({
+         label: 'Balance',
+         min: 0.001,
+         max: 0.999,
+         value: 0.5,
+         oninput: () => this.dirty = true,
+         onGetText: (slider) => slider.value.toFixed(2),
+      });
+
+      this.midValue = experimentalMenu.addSlider({
+         label: 'Mid Value',
+         min: 0,
+         max: 1,
+         value: 0.5,
+         oninput: () => this.dirty = true,
+         onGetText: (slider) => slider.value.toFixed(2),
       });
 
 
@@ -666,6 +740,7 @@ export class SquintApp implements IApp {
 
    private drawBlob(blob: Blob) {
       const img = document.createElement('img');
+
       img.src = URL.createObjectURL(blob);
       img.onload = () => {
          // TODO how do we know that this connection is the same as the one that
@@ -1017,6 +1092,8 @@ export class SquintApp implements IApp {
          ctx.putImageData(imageData, x, y);
       }
 
+      this.applyCustomFilters(ctx, x, y, width, height);
+
 
       let msg: string;
 
@@ -1113,6 +1190,67 @@ export class SquintApp implements IApp {
       }
 
       this.dirty = false;
+   }
+
+
+   private applyCustomFilters(
+      ctx: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      width: number,
+      height: number
+   ): void {
+
+      let imageData = ctx.getImageData(x, y, width, height);
+      let data = imageData.data;
+
+      let min = this.darks.value;
+      let max = this.lights.value;
+      let hsv = new hsvColor([0, 0, 0]);
+      let blend = this.blend.checked;
+      let balance = this.balance.value;
+      let midValue = this.midValue.value;
+      let grayScale = this.grayScale.checked;
+      for (let i = 0; i < data.length; i += 4) {
+         hsv.fromHtmlValues(data[i + 0], data[i + 1], data[i + 2]);
+
+         if (max > min) {
+            if (hsv.v <= min) {
+               hsv.v = 0;
+            }
+            else if (hsv.v >= max) {
+               hsv.v = 1;
+            }
+            else {
+               if (blend) {
+                  hsv.v = (hsv.v - min) / (max - min);
+               }
+            }
+         }
+
+         if (hsv.v > balance) {
+            hsv.v = midValue + midValue * (hsv.v - balance) / (1 - balance);
+         }
+         else {
+            hsv.v = midValue * (hsv.v / balance);
+         }
+
+         let rgb = hsv.toRGBValues();
+
+         if (grayScale) {
+            let val = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
+            data[i + 0] = val;
+            data[i + 1] = val;
+            data[i + 2] = val;
+         }
+         else {
+            data[i + 0] = rgb[0];
+            data[i + 1] = rgb[1];
+            data[i + 2] = rgb[2];
+         }
+      }
+
+      ctx.putImageData(imageData, x, y);
    }
 
    private onScale(scale: number, change: number) {
