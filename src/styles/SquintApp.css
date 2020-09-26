@@ -49,10 +49,6 @@
   background-color: white;
 }
 
-#SquintApp #Canvas {
-  flex-grow: 1;
-}
-
 #SquintApp .SliderLabel .disabled {
   color: gray;
 }
@@ -79,6 +75,7 @@
 
 #SquintApp #Canvas {
   font-size: 1em;
+  flex-grow: 1;
 }
 
 #SquintApp #ChatPanelDiv {

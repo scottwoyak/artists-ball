@@ -24,8 +24,9 @@ import { IConnectionInfoBasic, ISquintInfo } from './SquintMessage';
 import { StorageWithEvents, StorageItem } from './StorageWithEvents';
 import { SquintStrings } from './SquintStrings';
 import { PasswordDialog } from './PasswordDialog';
-import { hsvColor } from '../../Util/hsvColor';
 import { Checkbox } from '../../GUI/Checkbox';
+import { ImageCanvas } from './ImageCanvas';
+import { ImageCanvas2D } from './ImageCanvas2D';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -52,7 +53,8 @@ export class SquintApp implements IApp {
    private storage = new StorageWithEvents();
 
    private camera: Camera | undefined;
-   private canvas: HTMLCanvasElement | undefined;
+   private canvas: ImageCanvas;
+   private overlayCanvas: HTMLCanvasElement;
    private desired: IVideoConstraint = {
       label: '',
       width: 0,
@@ -64,22 +66,9 @@ export class SquintApp implements IApp {
    private uploader: Uploader | null = null;
    private downloadTracker = new BandwidthTracker();
 
-   private brightness: Slider | undefined;
-   private contrast: Slider | undefined;
-   private saturate: Slider | undefined;
-   private blur: Slider | undefined;
-   private zoom: Slider | undefined;
    private jpegQuality: Slider | undefined;
    private cameraScale: Slider | undefined;
    private cameraCtrls: ICtrl[] = [];
-
-   private grayScale: Checkbox | undefined;
-   private darks: Slider | undefined;
-   private lights: Slider | undefined;
-   private blend: Checkbox | undefined;
-   private balance: Slider | undefined;
-   private midValue: Slider | undefined;
-
 
 
    private advancedConstraints: IAdvancedConstraint[] = [];
@@ -287,12 +276,10 @@ export class SquintApp implements IApp {
          this.storage
       );
 
-
       this.div = GUI.create('div', 'BodyDiv', div);
 
-      this.canvas = document.createElement('canvas');
-      this.canvas.id = 'Canvas';
-      this.div.appendChild(this.canvas);
+      this.canvas = new ImageCanvas2D(this.div, 'Canvas');
+      this.overlayCanvas = GUI.create('canvas', 'OverlayCanvas', this.div, 'Overlay');
 
       this.camera = new Camera(this.div);
       this.camera.visible = false;
@@ -319,7 +306,7 @@ export class SquintApp implements IApp {
 
       this.notificationDiv = GUI.create('div', 'NotificationDiv', this.div);
 
-      this.handler = new PointerEventHandler(this.canvas);
+      this.handler = new PointerEventHandler(this.canvas.element);
       this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
       this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
       this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
@@ -442,8 +429,7 @@ export class SquintApp implements IApp {
       this.enableVideo(false);
       this.startDialog.visible = true;
 
-      const ctx = this.canvas.getContext('2d');
-      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.canvas.clear();
    }
 
    private startSession(): void {
@@ -480,57 +466,72 @@ export class SquintApp implements IApp {
 
       const viewMenu = menubar.addSubMenu('View');
 
-      this.brightness = viewMenu.addSlider({
+      viewMenu.addSlider({
          label: 'Brightness',
          min: 0,
          max: 200,
-         value: 100,
-         oninput: () => this.dirty = true,
+         value: this.canvas.brightness,
+         oninput: (slider: Slider) => {
+            this.dirty = true;
+            this.canvas.brightness = slider.value;
+         },
          onGetText: (slider) => slider.value.toFixed(0) + '%',
       })
 
-      this.contrast = viewMenu.addSlider({
+      viewMenu.addSlider({
          label: 'Contrast',
          min: 0,
          max: 200,
-         value: 100,
-         oninput: () => this.dirty = true,
+         value: this.canvas.contrast,
+         oninput: (slider: Slider) => {
+            this.dirty = true;
+            this.canvas.contrast = slider.value;
+         },
          onGetText: (slider) => slider.value.toFixed(0) + '%',
       });
 
-      this.saturate = viewMenu.addSlider({
+      viewMenu.addSlider({
          label: 'Chroma',
          min: 0,
          max: 200,
-         value: 100,
-         oninput: () => this.dirty = true,
+         value: this.canvas.saturate,
+         oninput: (slider: Slider) => {
+            this.dirty = true;
+            this.canvas.saturate = slider.value;
+         },
          onGetText: (slider) => slider.value.toFixed(0) + '%',
       });
 
-      this.blur = viewMenu.addSlider({
+      let blurCheckbox = viewMenu.addSlider({
          label: 'Blur',
          min: 0,
          max: 10,
-         value: 0,
-         oninput: () => this.dirty = true,
+         value: this.canvas.blur,
+         oninput: (slider: Slider) => {
+            this.dirty = true;
+            this.canvas.blur = slider.value;
+         },
          onGetText: (slider) => slider.value.toFixed(0),
       });
 
       // thank you Safari
       try {
          if (!CanvasRenderingContext2D.prototype.filter) {
-            this.blur.enabled = false;
+            blurCheckbox.enabled = false;
          }
       }
       catch (err) {
       }
 
-      this.zoom = viewMenu.addSlider({
+      viewMenu.addSlider({
          label: 'Zoom',
          min: 1,
          max: 5,
-         value: 1,
-         oninput: () => this.dirty = true,
+         value: this.canvas.zoom,
+         oninput: (slider: Slider) => {
+            this.dirty = true;
+            this.canvas.zoom = slider.value;
+         },
          onGetText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
 
@@ -538,62 +539,79 @@ export class SquintApp implements IApp {
 
       const experimentalMenu = viewMenu.addSubMenu('Experimental');
 
-      this.grayScale = experimentalMenu.addCheckbox({
+      experimentalMenu.addCheckbox({
          label: 'Grayscale',
-         oncheck: () => { this.dirty = true; },
-         checked: false
+         oncheck: (checkbox: Checkbox) => {
+            this.dirty = true;
+            this.canvas.grayScale = checkbox.checked;
+         },
+         checked: this.canvas.grayScale
       });
 
+      let whiteSlider: Slider;
+      let blackSlider: Slider;
+
       let epsilon = 0.001;
-      this.darks = experimentalMenu.addSlider({
+      blackSlider = experimentalMenu.addSlider({
          label: 'Darks',
          min: 0,
          max: 1 - epsilon,
-         value: 0,
-         oninput: () => {
-            if (this.darks.value > this.lights.value - epsilon) {
-               this.lights.value = this.darks.value + epsilon;
+         value: this.canvas.black,
+         oninput: (slider: Slider) => {
+            if (blackSlider.value > whiteSlider.value - epsilon) {
+               whiteSlider.value = blackSlider.value + epsilon;
             }
             this.dirty = true;
+            this.canvas.black = slider.value;
          },
          onGetText: (slider) => slider.value.toFixed(2),
       });
 
-      this.lights = experimentalMenu.addSlider({
+      whiteSlider = experimentalMenu.addSlider({
          label: 'Lights',
          min: epsilon,
          max: 1,
-         value: 1,
-         oninput: () => {
-            if (this.darks.value > this.lights.value - epsilon) {
-               this.darks.value = this.lights.value - epsilon;
+         value: this.canvas.white,
+         oninput: (slider: Slider) => {
+            if (blackSlider.value > whiteSlider.value - epsilon) {
+               blackSlider.value = whiteSlider.value - epsilon;
             }
             this.dirty = true;
+            this.canvas.white = slider.value;
          },
          onGetText: (slider) => slider.value.toFixed(2),
       });
 
-      this.blend = experimentalMenu.addCheckbox({
+      experimentalMenu.addCheckbox({
          label: 'Blend Middle Values',
-         oncheck: () => { this.dirty = true; },
-         checked: () => { return true; }
+         oncheck: (checkbox: Checkbox) => {
+            this.dirty = true;
+            this.canvas.blend = checkbox.checked;
+         },
+         checked: this.canvas.blend
       });
 
-      this.balance = experimentalMenu.addSlider({
-         label: 'Balance',
+      experimentalMenu.addSlider({
+         label: 'Mid Point',
          min: 0.001,
          max: 0.999,
-         value: 0.5,
-         oninput: () => this.dirty = true,
+         value: this.canvas.midPt,
+         oninput: (slider: Slider) => {
+            this.dirty = true;
+            this.canvas.midPt = slider.value;
+         },
          onGetText: (slider) => slider.value.toFixed(2),
       });
 
-      this.midValue = experimentalMenu.addSlider({
+      experimentalMenu.addSlider({
          label: 'Mid Value',
          min: 0,
          max: 1,
-         value: 0.5,
-         oninput: () => this.dirty = true,
+         value: this.canvas.midValue,
+         oninput: (slider: Slider) => {
+            this.dirty = true;
+            this.canvas.midValue = slider.value;
+         },
          onGetText: (slider) => slider.value.toFixed(2),
       });
 
@@ -978,6 +996,9 @@ export class SquintApp implements IApp {
 
       this.canvas.width = viewWidth;
       this.canvas.height = viewHeight - menubarHeight;
+      this.overlayCanvas.width = this.canvas.width;
+      this.overlayCanvas.height = this.canvas.height;
+      this.overlayCanvas.style.top = menubarHeight + 'px';
 
       this.dirty = true;
    }
@@ -996,6 +1017,14 @@ export class SquintApp implements IApp {
          return;
       }
 
+      this.canvas.draw(this.img, this.xOffset, this.yOffset);
+
+
+      const ctx = this.overlayCanvas.getContext('2d');
+
+      let msg: string;
+
+
       const canvasWidth = this.canvas.width;
       const canvasHeight = this.canvas.height;
       const canvasAR = canvasWidth / canvasHeight;
@@ -1008,107 +1037,26 @@ export class SquintApp implements IApp {
       let height: number;
 
       if (canvasAR > imgAR) {
-         height = this.zoom.value * canvasHeight;
+         height = this.canvas.zoom * canvasHeight;
          width = height * imgAR;
       }
       else {
-         width = this.zoom.value * canvasWidth;
+         width = this.canvas.zoom * canvasWidth;
          height = width / imgAR;
       }
 
-      /*
-      if (canvasAR > imgAR) {
-         height = this.zoom.value * imgHeight;
-         width = height * imgAR;
-      }
-      else {
-         width = this.zoom.value * imgWidth;
-         height = width / imgAR;
-      }
-      */
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-      const x = (canvasWidth - width) / 2.0 + this.xOffset;
-      const y = (canvasHeight - height) / 2.0 - this.yOffset;
-
-      const ctx = this.canvas.getContext('2d');
-      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-
-      if (ctx.filter) {
-         ctx.filter =
-            'contrast(' + this.contrast.value + '%) ' +
-            'brightness(' + this.brightness.value + '%) ' +
-            'saturate(' + this.saturate.value + '%) ' +
-            'blur(' + this.blur.value + 'px) ';
-      }
-
-      ctx.drawImage(this.img, x, y, width, height);
-
-      // if filters are not supported on contexts, ummm Safari, do our own
-      if (ctx.filter === undefined) {
-         let imageData = ctx.getImageData(x, y, width, height);
-         let data = imageData.data;
-
-         if (this.contrast.value !== 100) {
-            let amount = this.contrast.value / 100;
-            for (let i = 0; i < data.length; i += 4) {
-               data[i + 0] = ((((data[i + 0] / 255) - .5) * amount) + .5) * 255;
-               data[i + 1] = ((((data[i + 1] / 255) - .5) * amount) + .5) * 255;
-               data[i + 2] = ((((data[i + 2] / 255) - .5) * amount) + .5) * 255;
-            }
-         }
-
-         if (this.brightness.value !== 100) {
-            let amount = this.brightness.value / 100;
-            for (let i = 0; i < data.length; i += 4) {
-               data[i + 0] *= amount;
-               data[i + 1] *= amount;
-               data[i + 2] *= amount;
-            }
-         }
-
-         if (this.saturate.value !== 100) {
-            let amount = this.saturate.value / 100;
-            const lumR = (1 - amount) * .3086;
-            const lumG = (1 - amount) * .6094;
-            const lumB = (1 - amount) * .0820;
-            const shiftW = width << 2;
-            for (let j = 0; j < height; j++) {
-               const offset = j * shiftW;
-               for (let i = 0; i < width; i++) {
-                  const pos = offset + (i << 2);
-                  const r = data[pos + 0];
-                  const g = data[pos + 1];
-                  const b = data[pos + 2];
-
-                  data[pos + 0] = ((lumR + amount) * r) + (lumG * g) + (lumB * b);
-                  data[pos + 1] = (lumR * r) + ((lumG + amount) * g) + (lumB * b);
-                  data[pos + 2] = (lumR * r) + (lumG * g) + ((lumB + amount) * b);
-               }
-            }
-         }
-         ctx.putImageData(imageData, x, y);
-      }
-
-      this.applyCustomFilters(ctx, x, y, width, height);
-
-
-      let msg: string;
 
       const fontSize = isMobile ? 20 : 10;
       ctx.fillStyle = 'black';
       ctx.font = fontSize + 'px sans-serif';
-      ctx.shadowBlur = 4;
-      ctx.shadowColor = 'white';
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
 
       // squint server url
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       ctx.fillText(Squint.url, 5, 5);
+
 
 
       ctx.textAlign = 'left';
@@ -1189,68 +1137,8 @@ export class SquintApp implements IApp {
          ctx.fillText(msg, canvasWidth / 2, canvasHeight / 2);
       }
 
+
       this.dirty = false;
-   }
-
-
-   private applyCustomFilters(
-      ctx: CanvasRenderingContext2D,
-      x: number,
-      y: number,
-      width: number,
-      height: number
-   ): void {
-
-      let imageData = ctx.getImageData(x, y, width, height);
-      let data = imageData.data;
-
-      let min = this.darks.value;
-      let max = this.lights.value;
-      let hsv = new hsvColor([0, 0, 0]);
-      let blend = this.blend.checked;
-      let balance = this.balance.value;
-      let midValue = this.midValue.value;
-      let grayScale = this.grayScale.checked;
-      for (let i = 0; i < data.length; i += 4) {
-         hsv.fromHtmlValues(data[i + 0], data[i + 1], data[i + 2]);
-
-         if (max > min) {
-            if (hsv.v <= min) {
-               hsv.v = 0;
-            }
-            else if (hsv.v >= max) {
-               hsv.v = 1;
-            }
-            else {
-               if (blend) {
-                  hsv.v = (hsv.v - min) / (max - min);
-               }
-            }
-         }
-
-         if (hsv.v > balance) {
-            hsv.v = midValue + midValue * (hsv.v - balance) / (1 - balance);
-         }
-         else {
-            hsv.v = midValue * (hsv.v / balance);
-         }
-
-         let rgb = hsv.toRGBValues();
-
-         if (grayScale) {
-            let val = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
-            data[i + 0] = val;
-            data[i + 1] = val;
-            data[i + 2] = val;
-         }
-         else {
-            data[i + 0] = rgb[0];
-            data[i + 1] = rgb[1];
-            data[i + 2] = rgb[2];
-         }
-      }
-
-      ctx.putImageData(imageData, x, y);
    }
 
    private onScale(scale: number, change: number) {
@@ -1258,7 +1146,7 @@ export class SquintApp implements IApp {
       // TODO: center scaling about your two fingers
 
       const factor = change;
-      this.zoom.value *= factor;
+      this.canvas.zoom *= factor;
       this.xOffset *= factor;
       this.yOffset *= factor;
 
