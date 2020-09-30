@@ -47,14 +47,14 @@ export class PointerEventHandler {
 
       this.element.addEventListener('touchstart', this.touchstart);
       this.element.addEventListener('mousedown', this.mousedown);
-      this.element.addEventListener('mousemove', this.mousemove);
+      window.addEventListener('mousemove', this.mousemove);
       this.element.addEventListener('dblclick', this.dblclick);
    }
 
    public dispose(): void {
       this.element.removeEventListener('touchstart', this.touchstart);
       this.element.removeEventListener('mousedown', this.mousedown);
-      this.element.removeEventListener('mousemove', this.mousemove);
+      window.removeEventListener('mousemove', this.mousemove);
       this.element.removeEventListener('dblclick', this.dblclick);
    }
 
