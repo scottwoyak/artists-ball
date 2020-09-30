@@ -125,7 +125,6 @@ export class StartDialog extends Dialog {
       goViewButton.innerText = 'View a camera...';
       goViewButton.disabled = true;
       goViewButton.onclick = () => {
-         this.visible = false;
          const connectionId = this.viewListBox.selected;
          this.onStartView(connectionId);
       }
