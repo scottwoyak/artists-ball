@@ -127,10 +127,7 @@ export class LevelsPanel extends ResizeablePanel {
       this.margin = 0.9 * em;
       this.lineWidth = 0.1 * em;
 
-      // use a timeout so the browser gives the canvases sizes
-      setTimeout(() => {
-         this.draw();
-      }, 0);
+      this.draw();
    }
 
    private getHit(pos: Vec2): Hit {
@@ -158,6 +155,15 @@ export class LevelsPanel extends ResizeablePanel {
    }
 
    private draw(): void {
+
+      // work around for the canvas not being initialized yet when calling
+      // this function from the constructor. Isn't there an event for this?
+      if (this.canvas.clientWidth === 0) {
+         setTimeout(() => {
+            this.draw();
+         }, 10);
+         return;
+      }
 
       // sync sizes
       this.canvas.width = this.canvas.clientWidth;
