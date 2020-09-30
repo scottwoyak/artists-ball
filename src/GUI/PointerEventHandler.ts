@@ -4,6 +4,7 @@ type PointerRotateFunction = (angle: number, delta: number) => void;
 type PointerTranslateFunction = (delta: Vec2) => void;
 type PointerScaleFunction = (scale: number, change: number) => void;
 type PointerDragFunction = (pos: Vec2, delta: Vec2) => void;
+type PointerMoveFunction = (pos: Vec2, delta: Vec2) => void;
 type PointerUpFunction = () => void;
 type PointerDownFunction = (pos: Vec2) => void;
 type PointerDblClickFunction = (pos: Vec2) => boolean;
@@ -17,8 +18,9 @@ const DBL_CLICK_TIME = 300; // ms
 export class PointerEventHandler {
 
    private element: HTMLElement;
-   public mouseDown = false;
+   private mouseDown = false;
 
+   public stopPropagation = true;
    public onUp: PointerUpFunction | null = null;
    public onDown: PointerDownFunction | null = null;
    public onScale: PointerScaleFunction | null = null;
@@ -27,6 +29,7 @@ export class PointerEventHandler {
    public onClick: PointerClickFunction | null = null;
    public onDblClick: PointerDblClickFunction | null = null;
    public onDrag: PointerDragFunction | null = null;
+   public onMove: PointerMoveFunction | null = null;
    public ctrlKey = false;
 
    public lastPos = new Vec2([0, 0]);
@@ -44,12 +47,14 @@ export class PointerEventHandler {
 
       this.element.addEventListener('touchstart', this.touchstart);
       this.element.addEventListener('mousedown', this.mousedown);
+      this.element.addEventListener('mousemove', this.mousemove);
       this.element.addEventListener('dblclick', this.dblclick);
    }
 
    public dispose(): void {
       this.element.removeEventListener('touchstart', this.touchstart);
       this.element.removeEventListener('mousedown', this.mousedown);
+      this.element.removeEventListener('mousemove', this.mousemove);
       this.element.removeEventListener('dblclick', this.dblclick);
    }
 
@@ -67,11 +72,15 @@ export class PointerEventHandler {
 
       if (event.target instanceof HTMLInputElement === false &&
          event.target instanceof HTMLButtonElement === false) {
+
          const pos = this.getPos(event);
          this.ourOnDown(pos);
 
-         window.addEventListener('mousemove', this.mousemove);
          window.addEventListener('mouseup', this.mouseup);
+
+         if (this.stopPropagation) {
+            event.stopPropagation();
+         }
 
          // disable selection because we're doing something else with dragging
          return false;
@@ -87,6 +96,14 @@ export class PointerEventHandler {
          this.ourOnDrag(pos);
          this.lastPos = this.getPos(event);
       }
+      else {
+         this.ourOnMove(pos);
+         this.lastPos = this.getPos(event);
+      }
+
+      if (this.stopPropagation) {
+         event.stopPropagation();
+      }
    };
 
    private mouseup = (event: MouseEvent) => {
@@ -95,8 +112,11 @@ export class PointerEventHandler {
 
       this.ourOnUp();
 
-      window.removeEventListener('mousemove', this.mousemove);
       window.removeEventListener('mouseup', this.mouseup);
+
+      if (this.stopPropagation) {
+         event.stopPropagation();
+      }
    };
 
    private touchstart = (event: TouchEvent) => {
@@ -107,6 +127,10 @@ export class PointerEventHandler {
          event.target instanceof HTMLButtonElement === false) {
          // prevent the browser from using the event
          event.preventDefault();
+
+         if (this.stopPropagation) {
+            event.stopPropagation();
+         }
 
          // if this is the first touch
          if (event.touches.length === 1) {
@@ -153,6 +177,10 @@ export class PointerEventHandler {
       // prevent the browser from using the event
       event.preventDefault();
 
+      if (this.stopPropagation) {
+         event.stopPropagation();
+      }
+
       // if the initial two touches are active
       if (this.primaryTouchId !== null && this.secondaryTouchId !== null) {
 
@@ -198,6 +226,10 @@ export class PointerEventHandler {
       // prevent the browser from using the event
       // needed to select an input element
       //event.preventDefault();
+
+      if (this.stopPropagation) {
+         event.stopPropagation();
+      }
 
       if (this.secondaryTouchId !== null) {
          if (this.getTouch(event, this.secondaryTouchId) === null) {
@@ -350,6 +382,13 @@ export class PointerEventHandler {
       if (this.onDrag) {
          const delta = new Vec2([pos.x - this.lastPos.x, pos.y - this.lastPos.y]);
          this.onDrag(pos.clone(), delta);
+      }
+   }
+
+   private ourOnMove(pos: Vec2) {
+      if (this.onMove) {
+         const delta = new Vec2([pos.x - this.lastPos.x, pos.y - this.lastPos.y]);
+         this.onMove(pos.clone(), delta);
       }
    }
 

@@ -9,7 +9,6 @@ export abstract class ImageCanvas {
    public blur = 0;
    public black = 0;
    public white = 1;
-   public blend = true;
    public midPt = 0.5;
    public midValue = 0.5;
    public grayScale = false;

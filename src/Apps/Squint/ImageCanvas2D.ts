@@ -114,36 +114,26 @@ export class ImageCanvas2D extends ImageCanvas {
       let imageData = ctx.getImageData(x, y, width, height);
       let data = imageData.data;
 
-      let min = this.black;
-      let max = this.white;
       let hsv = new hsvColor([0, 0, 0]);
-      let blend = this.blend;
-      let balance = this.midPt;
-      let midValue = this.midValue;
       let grayScale = this.grayScale;
       for (let i = 0; i < data.length; i += 4) {
          hsv.fromHtmlValues(data[i + 0], data[i + 1], data[i + 2]);
 
-         if (max > min) {
-            if (hsv.v <= min) {
-               hsv.v = 0;
-            }
-            else if (hsv.v >= max) {
-               hsv.v = 1;
+         if (hsv.v <= this.black) {
+            hsv.v = 0;
+         }
+         else if (hsv.v >= this.white) {
+            hsv.v = 1;
+         }
+         else {
+            if (hsv.v > this.midPt) {
+               hsv.v = this.midValue + (1 - this.midValue) * (hsv.v - this.midPt) / (this.white - this.midPt);
             }
             else {
-               if (blend) {
-                  hsv.v = (hsv.v - min) / (max - min);
-               }
+               hsv.v = 0 + this.midValue * ((hsv.v - this.black) / (this.midPt - this.black));
             }
          }
 
-         if (hsv.v > balance) {
-            hsv.v = midValue + midValue * (hsv.v - balance) / (1 - balance);
-         }
-         else {
-            hsv.v = midValue * (hsv.v / balance);
-         }
 
          let rgb = hsv.toRGBValues();
 

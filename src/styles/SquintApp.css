@@ -78,6 +78,60 @@
   flex-grow: 1;
 }
 
+/********************************************************************
+ *
+ * Levels Panel
+ *
+ ********************************************************************/
+#SquintApp #LevelsPanelDiv {
+  position: absolute;
+  left: 1em;
+  bottom: 1em;
+  width: 20em;
+  height: 20em;
+  border: solid;
+  border-color: lightgray;
+  border-width: var(--margin);
+  background-color: lightgray;
+  margin: 0px;
+  display: none;
+  flex-direction: column;
+  font-size: smaller;
+  border-radius: var(--corner-radius-small);
+  cursor: move;
+}
+
+#SquintApp #LevelsPanelDiv .TitleClass {
+  color: white;
+  background-color: lightskyblue;
+  border-top-left-radius: var(--corner-radius-small);
+  border-top-right-radius: var(--corner-radius-small);
+  padding: var(--margin);
+}
+
+#SquintApp #LevelsPanelDiv #LevelsPanelCloseButton {
+  position: absolute;
+  right: var(--margin);
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 0px;
+}
+
+#SquintApp #LevelsPanelDiv #LevelsPanelCloseButton:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+#SquintApp #LevelsPanelDiv #AfterCanvas {
+  height: 0;
+  flex: 1 1 auto;
+  padding-top: var(--margin);
+}
+
+/********************************************************************
+ *
+ * Chat Panel
+ *
+ ********************************************************************/
 #SquintApp #ChatPanelDiv {
   position: absolute;
   right: 1em;
@@ -124,9 +178,6 @@
 #SquintApp #ChatPanelDiv #ChatListBox {
   flex: 1 0 auto; /* grow */
   cursor: move;
-}
-
-#SquintApp #ChatPanelDiv #ChatInputText {
 }
 
 #SquintApp #ChatPanelDiv .ListBoxClass {

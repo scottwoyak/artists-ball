@@ -27,6 +27,7 @@ import { PasswordDialog } from './PasswordDialog';
 import { Checkbox } from '../../GUI/Checkbox';
 import { ImageCanvas } from './ImageCanvas';
 import { ImageCanvas2D } from './ImageCanvas2D';
+import { LevelsPanel } from './LevelsPanel';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -47,6 +48,7 @@ export class SquintApp implements IApp {
    private img: HTMLImageElement | undefined;
    private dirty = true;
    private chatPanel: ChatPanel | undefined;
+   private levelsPanel: LevelsPanel;
    private notificationDiv: HTMLDivElement | undefined;
    private cameraMenu: SubMenu | undefined;
    private remoteCameraMenu: SubMenu | undefined;
@@ -304,6 +306,18 @@ export class SquintApp implements IApp {
          }
       }
 
+      this.levelsPanel = new LevelsPanel(this.div);
+      if (this.levelsPanel.hasSavedSettings) {
+         this.levelsPanel.restoreSettings();
+      }
+      this.levelsPanel.onChange = () => {
+         this.canvas.white = this.levelsPanel.white;
+         this.canvas.black = this.levelsPanel.black;
+         this.canvas.midPt = this.levelsPanel.midPoint;
+         this.canvas.midValue = this.levelsPanel.midValue;
+         this.dirty = true;
+      }
+
       this.notificationDiv = GUI.create('div', 'NotificationDiv', this.div);
 
       this.handler = new PointerEventHandler(this.canvas.element);
@@ -318,7 +332,7 @@ export class SquintApp implements IApp {
          this.showWelcomeDialog();
       }
       else {
-         this.startDialog.visible = true;
+         this.startDialog.visible = false;
       }
 
       document.onkeydown = (event: KeyboardEvent) => {
@@ -535,90 +549,11 @@ export class SquintApp implements IApp {
          onGetText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
 
-
-
-      const experimentalMenu = viewMenu.addSubMenu('Experimental');
-
-      experimentalMenu.addCheckbox({
-         label: 'Grayscale',
-         oncheck: (checkbox: Checkbox) => {
-            this.dirty = true;
-            this.canvas.grayScale = checkbox.checked;
-         },
-         checked: this.canvas.grayScale
+      viewMenu.addCheckbox({
+         label: 'Levels',
+         oncheck: (checkbox) => { this.levelsPanel.visible = checkbox.checked },
+         checked: () => { return this.levelsPanel.visible; }
       });
-
-      let whiteSlider: Slider;
-      let blackSlider: Slider;
-
-      let epsilon = 0.001;
-      blackSlider = experimentalMenu.addSlider({
-         label: 'Darks',
-         min: 0,
-         max: 1 - epsilon,
-         value: this.canvas.black,
-         oninput: (slider: Slider) => {
-            if (blackSlider.value > whiteSlider.value - epsilon) {
-               whiteSlider.value = blackSlider.value + epsilon;
-            }
-            this.dirty = true;
-            this.canvas.black = slider.value;
-         },
-         onGetText: (slider) => slider.value.toFixed(2),
-      });
-
-      whiteSlider = experimentalMenu.addSlider({
-         label: 'Lights',
-         min: epsilon,
-         max: 1,
-         value: this.canvas.white,
-         oninput: (slider: Slider) => {
-            if (blackSlider.value > whiteSlider.value - epsilon) {
-               blackSlider.value = whiteSlider.value - epsilon;
-            }
-            this.dirty = true;
-            this.canvas.white = slider.value;
-         },
-         onGetText: (slider) => slider.value.toFixed(2),
-      });
-
-      experimentalMenu.addCheckbox({
-         label: 'Blend Middle Values',
-         oncheck: (checkbox: Checkbox) => {
-            this.dirty = true;
-            this.canvas.blend = checkbox.checked;
-         },
-         checked: this.canvas.blend
-      });
-
-      experimentalMenu.addSlider({
-         label: 'Mid Point',
-         min: 0.001,
-         max: 0.999,
-         value: this.canvas.midPt,
-         oninput: (slider: Slider) => {
-            this.dirty = true;
-            this.canvas.midPt = slider.value;
-         },
-         onGetText: (slider) => slider.value.toFixed(2),
-      });
-
-      experimentalMenu.addSlider({
-         label: 'Mid Value',
-         min: 0,
-         max: 1,
-         value: this.canvas.midValue,
-         oninput: (slider: Slider) => {
-            this.dirty = true;
-            this.canvas.midValue = slider.value;
-         },
-         onGetText: (slider) => slider.value.toFixed(2),
-      });
-
-
-
-
-
 
 
 
