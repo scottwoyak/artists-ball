@@ -69,7 +69,7 @@ export class SquintApp implements IApp {
    private downloadTracker = new BandwidthTracker();
 
    private jpegQuality: Slider | undefined;
-   private cameraScale: Slider | undefined;
+   private megaPixels: Slider | undefined;
    private cameraCtrls: ICtrl[] = [];
 
 
@@ -138,8 +138,8 @@ export class SquintApp implements IApp {
 
       this.squint.on({
          event: SquintEvent.CameraRequest,
-         handler: (resolution: number, jpegQuality: number) => {
-            this.cameraScale.value = resolution
+         handler: (megaPixels: number, jpegQuality: number) => {
+            this.megaPixels.value = megaPixels
             this.jpegQuality.value = jpegQuality;
          }
       });
@@ -598,14 +598,14 @@ export class SquintApp implements IApp {
       });
       this.cameraCtrls.push(this.jpegQuality);
 
-      this.cameraScale = this.cameraMenu.addSlider({
-         label: 'Camera Resolution',
-         min: 0.1,
-         max: 1,
-         value: 1, // will automatically get scaled down when the camera starts
-         onGetText: (slider) => (100 * slider.value).toFixed() + '%',
+      this.megaPixels = this.cameraMenu.addSlider({
+         label: 'Camera Mega-Pixels',
+         min: 0.25,
+         max: 5,
+         value: 1.25,
+         onGetText: (slider) => slider.value.toFixed(2),
       });
-      this.cameraCtrls.push(this.cameraScale);
+      this.cameraCtrls.push(this.megaPixels);
 
       this.advancedSubMenu = this.cameraMenu.addSubMenu('Advanced');
 
@@ -640,18 +640,18 @@ export class SquintApp implements IApp {
          value: 0.5,
          onGetText: (slider) => (100 * slider.value).toFixed() + '%',
          oninput: () => {
-            this.squint.sendCameraRequest(remoteResolution.value, remoteJpegQuality.value);
+            this.squint.sendCameraRequest(remoteMegaPixels.value, remoteJpegQuality.value);
          }
       });
 
-      const remoteResolution = this.remoteCameraMenu.addSlider({
-         label: 'Camera Resolution',
+      const remoteMegaPixels = this.remoteCameraMenu.addSlider({
+         label: 'Camera Mega Pixels',
          min: 0.1,
          max: 1,
          value: 0.5,
          onGetText: (slider) => (100 * slider.value).toFixed() + '%',
          oninput: () => {
-            this.squint.sendCameraRequest(remoteResolution.value, remoteJpegQuality.value);
+            this.squint.sendCameraRequest(remoteMegaPixels.value, remoteJpegQuality.value);
          }
       });
 
@@ -876,11 +876,8 @@ export class SquintApp implements IApp {
          this.camera.start(this.desired)
             .then((track: MediaStreamTrack) => {
                const settings = track.getSettings();
-               const desiredMP = 1.25 * 1000000;
-               const maxMP = settings.width * settings.height;
-               if (maxMP > desiredMP) {
-                  this.cameraScale.value = Math.sqrt(desiredMP / maxMP);
-               }
+               const maxMP = settings.width * settings.height / 1000000;
+               this.megaPixels.max = maxMP;
 
                this.updateVideoSize(settings.width, settings.height);
 
@@ -908,7 +905,7 @@ export class SquintApp implements IApp {
          console.error('takePicture() after close');
       }
 
-      return this.camera.takePicture(this.cameraScale.value, this.jpegQuality.value)
+      return this.camera.takePicture(this.megaPixels.value, this.jpegQuality.value)
          .then((blob: Blob) => {
             // draw what was uploaded, i.e. simulate a download
             this.drawBlob(blob);
@@ -936,9 +933,7 @@ export class SquintApp implements IApp {
 
    private updateSizes() {
       let menuBar = document.getElementById('Menubar');
-      let menuBarStyle = getComputedStyle(menuBar);
       const menubarHeight = menuBar.clientHeight;
-      const height2 = menuBar.getBoundingClientRect().height;
 
       this.console.setEdges(0, 0, menubarHeight, 0);
       const viewWidth = document.documentElement.clientWidth;

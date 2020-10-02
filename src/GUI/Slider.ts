@@ -21,8 +21,8 @@ export interface ISliderSetup {
 class RangeMapper {
    public readonly sliderMin = 0;
    public readonly sliderMax = 1000;
-   public readonly realMin: number;
-   public readonly realMax: number;
+   public realMin: number;
+   public realMax: number;
 
    public get realRange(): number {
       return this.realMax - this.realMin;
@@ -211,6 +211,24 @@ export class Slider implements ICtrl {
     */
    public get max(): number {
       return this._rangeMapper.realMax;
+   }
+
+   /**
+    * Sets the max slider value.
+    * 
+    * @param value The max slider value.
+    */
+   public set max(value: number) {
+      // get the value before we change range values
+      let currentValue = Math.min(this.value, value);
+
+      // change the range
+      this._rangeMapper.realMax = value;
+      this._range.valueAsNumber = this._rangeMapper.realToSlider(currentValue);
+
+      // update GUI
+      this.updateSpanColor();
+      this.updateSpanText();
    }
 
    /**

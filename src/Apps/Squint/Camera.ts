@@ -163,7 +163,7 @@ export class Camera {
    }
 
    public takePicture(
-      scale: number,
+      megaPixels: number,
       jpegQuality: number
    ): Promise<Blob | null> {
 
@@ -178,6 +178,7 @@ export class Camera {
          return Promise.reject('XX Video Size = 0');
       }
 
+      let scale = Math.min(1000000 * megaPixels / (this.video.videoWidth * this.video.videoHeight), 1);
       this.hiddenCanvas.width = this.video.videoWidth * scale;
       this.hiddenCanvas.height = this.video.videoHeight * scale;
 
