@@ -122,6 +122,11 @@ export class PointerEventHandler {
 
       this.ctrlKey = event.ctrlKey;
 
+      // see mousedown for comments
+      if (event.defaultPrevented) {
+         return;
+      }
+
       if (event.target instanceof HTMLInputElement === false &&
          event.target instanceof HTMLButtonElement === false) {
 
