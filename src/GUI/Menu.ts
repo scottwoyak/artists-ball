@@ -101,7 +101,6 @@ class Menu {
                this.hideDown();
             }
          });
-
       }
    }
 

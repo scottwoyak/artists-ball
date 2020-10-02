@@ -27,7 +27,6 @@ import { PasswordDialog } from './PasswordDialog';
 import { ImageCanvas } from './ImageCanvas';
 import { ImageCanvas2D } from './ImageCanvas2D';
 import { LevelsPanel } from './LevelsPanel';
-import { SquintHttpUrl } from './Servers';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -658,14 +657,14 @@ export class SquintApp implements IApp {
 
 
       let transparentWhite = 'rgba(255,255,255,0.5)';
-      let chatImg = menubar.addImage(SquintHttpUrl + 'chat.svg',
+      let chatImg = menubar.addImage(location.origin + '/img/chat.svg',
          () => { this.chatPanel.visible = !this.chatPanel.visible; }
       );
       chatImg.style.backgroundColor = this.chatPanel.visible ? transparentWhite : 'transparent';
       this.chatPanel.onVisible = (visible) => {
          chatImg.style.backgroundColor = visible ? transparentWhite : 'transparent';
       }
-      let levelsImg = menubar.addImage(SquintHttpUrl + 'levels.svg',
+      let levelsImg = menubar.addImage(location.origin + '/img/levels.svg',
          () => { this.levelsPanel.visible = !this.levelsPanel.visible; }
       );
       levelsImg.style.backgroundColor = this.levelsPanel.visible ? transparentWhite : 'transparent';
@@ -674,10 +673,10 @@ export class SquintApp implements IApp {
       }
 
 
-      let grayscaleImg = menubar.addImage(SquintHttpUrl + 'color.svg',
+      let grayscaleImg = menubar.addImage(location.origin + '/img/color.svg',
          () => {
             this.canvas.grayScale = !this.canvas.grayScale;
-            grayscaleImg.src = SquintHttpUrl + (this.canvas.grayScale ? 'grayscale.svg' : 'color.svg');
+            grayscaleImg.src = location.origin + (this.canvas.grayScale ? '/img/grayscale.svg' : '/img/color.svg');
          }
       );
 

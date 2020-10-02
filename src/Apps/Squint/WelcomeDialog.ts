@@ -18,7 +18,7 @@ export class WelcomeDialog extends Dialog {
 
       const bodyDiv = GUI.create('div', 'BodyDiv', this.dialogDiv);
       const img = GUI.create('img', 'SquintImg', bodyDiv);
-      img.src = SquintHttpUrl + 'squint.jpg';
+      img.src = location.origin + '/img/squint.jpg';
 
       const userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', bodyDiv);
       const userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);

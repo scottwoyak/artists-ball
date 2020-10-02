@@ -2,7 +2,6 @@
   left: 0em;
   top: 0em;
   right: 0em;
-  padding-left: 0.5em;
   color: black;
   background-color: rgba(var(--main-color), 0.25);
   border: none;
@@ -75,8 +74,8 @@
 .Menubar .ImageMenuItem {
   padding-top: 0.2em;
   padding-bottom: 0em;
-  padding-left: 0.4em;
-  padding-right: 0.4em;
+  padding-left: 0.1em;
+  padding-right: 0.1em;
 }
 
 .Menubar .MenuItemImage {

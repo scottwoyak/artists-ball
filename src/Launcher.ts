@@ -33,7 +33,8 @@ export class Launcher {
       document.body.appendChild(this.div);
 
       this.menubar = new Menubar(this.div);
-      const subMenu = this.menubar.addSubMenu('Apps', 'Apps');
+      let html = '<img style="width: 1em" src="' + location.origin + '/img/apps.svg' + '" />';
+      const subMenu = this.menubar.addSubMenu(html, 'Apps');
       subMenu.addItem('3D Viewer', () => location.href = this.getUrl(AppType.Viewer));
       subMenu.addItem('Squint', () => location.href = this.getUrl(AppType.Squint));
       subMenu.addItem('Artist\'s Ball', () => location.href = this.getUrl(AppType.ArtistsBall));
