@@ -12,7 +12,7 @@ export class ImageCanvas2D extends ImageCanvas {
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
    }
 
-   public draw(img: HTMLImageElement, xOffset: number, yOffset: number): void {
+   public draw(img: HTMLImageElement): void {
       const canvasWidth = this.canvas.width;
       const canvasHeight = this.canvas.height;
       const canvasAR = canvasWidth / canvasHeight;
@@ -33,8 +33,8 @@ export class ImageCanvas2D extends ImageCanvas {
          height = width / imgAR;
       }
 
-      const x = (canvasWidth - width) / 2.0 + xOffset;
-      const y = (canvasHeight - height) / 2.0 - yOffset;
+      const x = (canvasWidth - width) / 2.0 + this.xOffset;
+      const y = (canvasHeight - height) / 2.0 - this.yOffset;
 
       const ctx = this.canvas.getContext('2d');
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -46,7 +46,6 @@ export class ImageCanvas2D extends ImageCanvas {
          ctx.filter =
             'contrast(' + this.contrast + '%) ' +
             'brightness(' + this.brightness + '%) ' +
-            'saturate(' + this.saturate + '%) ' +
             'saturate(' + this.saturate + '%) ' +
             'blur(' + blur + 'px) ';
       }
@@ -117,15 +116,6 @@ export class ImageCanvas2D extends ImageCanvas {
       let hsv = new hsvColor([0, 0, 0]);
       let grayScale = this.grayScale;
       for (let i = 0; i < data.length; i += 4) {
-         if (grayScale) {
-            let r = data[i + 0];
-            let g = data[i + 1];
-            let b = data[i + 2];
-            let val = 0.299 * r + 0.587 * g + 0.114 * b;
-            data[i + 0] = val;
-            data[i + 1] = val;
-            data[i + 2] = val;
-         }
 
          hsv.fromHtmlValues(data[i + 0], data[i + 1], data[i + 2]);
 
@@ -144,12 +134,23 @@ export class ImageCanvas2D extends ImageCanvas {
             }
          }
 
-
          let rgb = hsv.toRGBValues();
 
          data[i + 0] = rgb[0];
          data[i + 1] = rgb[1];
          data[i + 2] = rgb[2];
+
+         if (grayScale) {
+            let r = data[i + 0];
+            let g = data[i + 1];
+            let b = data[i + 2];
+            //let val = 0.299 * r + 0.587 * g + 0.114 * b;
+            // adobe Y'204 luminosity
+            let val = 0.3086 * r + 0.6094 * g + 0.0820 * b;
+            data[i + 0] = val;
+            data[i + 1] = val;
+            data[i + 2] = val;
+         }
       }
 
       ctx.putImageData(imageData, x, y);

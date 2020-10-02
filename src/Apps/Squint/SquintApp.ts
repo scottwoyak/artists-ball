@@ -75,9 +75,6 @@ export class SquintApp implements IApp {
    private advancedConstraints: IAdvancedConstraint[] = [];
    private advancedSubMenu?: SubMenu;
 
-   private xOffset = 0;
-   private yOffset = 0;
-
    private squint = new Squint();
 
    private startDialog: StartDialog | undefined;
@@ -961,7 +958,7 @@ export class SquintApp implements IApp {
          return;
       }
 
-      this.canvas.draw(this.img, this.xOffset, this.yOffset);
+      this.canvas.draw(this.img);
 
 
       const ctx = this.overlayCanvas.getContext('2d');
@@ -1089,31 +1086,25 @@ export class SquintApp implements IApp {
 
       // TODO: center scaling about your two fingers
 
-      const factor = change;
-      this.canvas.zoom *= factor;
-      this.xOffset *= factor;
-      this.yOffset *= factor;
+      this.canvas.zoom *= change;
+      this.canvas.xOffset *= change;
+      this.canvas.yOffset *= change;
 
       this.dirty = true;
    }
 
    private onTranslate(delta: Vec2) {
 
-      //let factor = 1;
-      //if (isMobile) {
-      //   factor = 2;
-      //}
-
-      this.xOffset += delta.x;
-      this.yOffset += delta.y;
+      this.canvas.xOffset += delta.x;
+      this.canvas.yOffset += delta.y;
 
       this.dirty = true;
    }
 
    private onDrag(pos: Vec2, delta: Vec2) {
       // TODO delta is opposite of translate in Y direction
-      this.xOffset += delta.x;
-      this.yOffset -= delta.y;
+      this.canvas.xOffset += delta.x;
+      this.canvas.yOffset -= delta.y;
 
       this.dirty = true;
    }

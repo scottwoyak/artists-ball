@@ -2,8 +2,11 @@ import { GUI } from '../../GUI/GUI';
 
 export abstract class ImageCanvas {
    protected canvas: HTMLCanvasElement;
-   public contrast = 100;
    public zoom = 1;
+   public xOffset = 0;
+   public yOffset = 0;
+
+   public contrast = 100;
    public brightness = 100;
    public saturate = 100;
    public blur = 0;
@@ -37,5 +40,5 @@ export abstract class ImageCanvas {
 
    abstract clear(): void;
 
-   abstract draw(img: HTMLImageElement, xOffset: number, yOffset: number): void;
+   abstract draw(img: HTMLImageElement): void;
 }
