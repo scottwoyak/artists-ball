@@ -5,9 +5,13 @@ export interface IPanelSettings extends ISettings {
    visible?: boolean
 }
 
+export type VisibleHandler = (visible: boolean) => void;
+
 export class Panel extends ObjectWithSettings {
    protected div: HTMLDivElement;
    private displayStyleForShowing: string;
+
+   public onVisible: VisibleHandler = null;
 
    public get visible(): boolean {
       return (getComputedStyle(this.div).display !== 'none');
@@ -23,6 +27,10 @@ export class Panel extends ObjectWithSettings {
       }
       else {
          this.div.style.display = 'none';
+      }
+
+      if (this.onVisible) {
+         this.onVisible(flag);
       }
 
       this.saveSettings();

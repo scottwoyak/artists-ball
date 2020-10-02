@@ -3,6 +3,7 @@ import { Checkbox, ICheckboxSetup } from './Checkbox';
 import { ICtrl } from './ICtrl';
 import { IRadiobuttonSetup, Radiobutton } from './Radiobutton';
 import { isMobile } from '../Util/Globals';
+import { GUI } from './GUI';
 
 export type MenuItemFunction = (item?: HTMLDivElement) => void;
 export type MenuItemFunctionBool = (value: boolean) => void;
@@ -212,6 +213,7 @@ class Menu {
       const item = document.createElement('div');
       item.className = 'MenuItem';
       item.innerText = text;
+
       item.onclick = (event: Event) => {
 
          // hide open menus in our hierarchy
@@ -268,6 +270,19 @@ class Menu {
       this.ctrls.push(ctrl);
 
       return ctrl;
+   }
+
+   public addImage(src: string, callback: MenuItemFunction): HTMLImageElement {
+      const div = this.addItem(
+         '',
+         callback
+      );
+      div.classList.add('ImageMenuItem');
+
+      const img = GUI.create('img', '', div);
+      img.className = 'MenuItemImage';
+      img.src = src;
+      return img;
    }
 }
 

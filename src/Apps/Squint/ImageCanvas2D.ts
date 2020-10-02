@@ -117,6 +117,16 @@ export class ImageCanvas2D extends ImageCanvas {
       let hsv = new hsvColor([0, 0, 0]);
       let grayScale = this.grayScale;
       for (let i = 0; i < data.length; i += 4) {
+         if (grayScale) {
+            let r = data[i + 0];
+            let g = data[i + 1];
+            let b = data[i + 2];
+            let val = 0.299 * r + 0.587 * g + 0.114 * b;
+            data[i + 0] = val;
+            data[i + 1] = val;
+            data[i + 2] = val;
+         }
+
          hsv.fromHtmlValues(data[i + 0], data[i + 1], data[i + 2]);
 
          if (hsv.v <= this.black) {
@@ -137,17 +147,9 @@ export class ImageCanvas2D extends ImageCanvas {
 
          let rgb = hsv.toRGBValues();
 
-         if (grayScale) {
-            let val = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
-            data[i + 0] = val;
-            data[i + 1] = val;
-            data[i + 2] = val;
-         }
-         else {
-            data[i + 0] = rgb[0];
-            data[i + 1] = rgb[1];
-            data[i + 2] = rgb[2];
-         }
+         data[i + 0] = rgb[0];
+         data[i + 1] = rgb[1];
+         data[i + 2] = rgb[2];
       }
 
       ctx.putImageData(imageData, x, y);

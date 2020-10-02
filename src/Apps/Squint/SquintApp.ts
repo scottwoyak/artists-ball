@@ -24,10 +24,10 @@ import { IConnectionInfoBasic, ISquintInfo } from './SquintMessage';
 import { StorageWithEvents, StorageItem } from './StorageWithEvents';
 import { SquintStrings } from './SquintStrings';
 import { PasswordDialog } from './PasswordDialog';
-import { Checkbox } from '../../GUI/Checkbox';
 import { ImageCanvas } from './ImageCanvas';
 import { ImageCanvas2D } from './ImageCanvas2D';
 import { LevelsPanel } from './LevelsPanel';
+import { SquintHttpUrl } from './Servers';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -549,12 +549,6 @@ export class SquintApp implements IApp {
          onGetText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
 
-      viewMenu.addCheckbox({
-         label: 'Levels',
-         oncheck: (checkbox) => { this.levelsPanel.visible = checkbox.checked },
-         checked: () => { return this.levelsPanel.visible; }
-      });
-
 
 
       this.cameraMenu = menubar.addSubMenu('Camera');
@@ -628,12 +622,6 @@ export class SquintApp implements IApp {
       });
 
       sessionMenu.addCheckbox({
-         label: 'Viewers/Chat',
-         oncheck: (checkbox) => { this.chatPanel.visible = checkbox.checked },
-         checked: () => { return this.chatPanel.visible; }
-      });
-
-      sessionMenu.addCheckbox({
          label: 'Logs',
          oncheck: (checkbox) => { this.console.visible = checkbox.checked },
          checked: () => { return this.console.visible; }
@@ -668,6 +656,30 @@ export class SquintApp implements IApp {
       });
 
 
+
+      let transparentWhite = 'rgba(255,255,255,0.5)';
+      let chatImg = menubar.addImage(SquintHttpUrl + 'chat.svg',
+         () => { this.chatPanel.visible = !this.chatPanel.visible; }
+      );
+      chatImg.style.backgroundColor = this.chatPanel.visible ? transparentWhite : 'transparent';
+      this.chatPanel.onVisible = (visible) => {
+         chatImg.style.backgroundColor = visible ? transparentWhite : 'transparent';
+      }
+      let levelsImg = menubar.addImage(SquintHttpUrl + 'levels.svg',
+         () => { this.levelsPanel.visible = !this.levelsPanel.visible; }
+      );
+      levelsImg.style.backgroundColor = this.levelsPanel.visible ? transparentWhite : 'transparent';
+      this.levelsPanel.onVisible = (visible) => {
+         levelsImg.style.backgroundColor = visible ? transparentWhite : 'transparent';
+      }
+
+
+      let grayscaleImg = menubar.addImage(SquintHttpUrl + 'color.svg',
+         () => {
+            this.canvas.grayScale = !this.canvas.grayScale;
+            grayscaleImg.src = SquintHttpUrl + (this.canvas.grayScale ? 'grayscale.svg' : 'color.svg');
+         }
+      );
 
 
 
@@ -923,7 +935,10 @@ export class SquintApp implements IApp {
    }
 
    private updateSizes() {
-      const menubarHeight = document.getElementById('Menubar').clientHeight;
+      let menuBar = document.getElementById('Menubar');
+      let menuBarStyle = getComputedStyle(menuBar);
+      const menubarHeight = menuBar.clientHeight;
+      const height2 = menuBar.getBoundingClientRect().height;
 
       this.console.setEdges(0, 0, menubarHeight, 0);
       const viewWidth = document.documentElement.clientWidth;

@@ -10,11 +10,10 @@
 }
 
 .Menubar > .MenuItem {
-  color: black;
-  padding: 0.5em;
-  text-decoration: none;
   display: inline-block;
-  cursor: pointer;
+  padding-right: 0.5em;
+  padding-left: 0.5em;
+  vertical-align: middle;
 }
 
 .Menu {
@@ -71,4 +70,17 @@
 
 .MenuItem .Checkbox {
   float: left;
+}
+
+.Menubar .ImageMenuItem {
+  padding-top: 0.2em;
+  padding-bottom: 0em;
+  padding-left: 0.4em;
+  padding-right: 0.4em;
+}
+
+.Menubar .MenuItemImage {
+  width: 1em;
+  height: 1em;
+  padding: 0.3em;
 }
