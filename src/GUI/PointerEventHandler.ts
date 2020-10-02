@@ -20,7 +20,6 @@ export class PointerEventHandler {
    private element: HTMLElement;
    private mouseDown = false;
 
-   public stopPropagation = true;
    public onUp: PointerUpFunction | null = null;
    public onDown: PointerDownFunction | null = null;
    public onScale: PointerScaleFunction | null = null;
@@ -70,6 +69,18 @@ export class PointerEventHandler {
 
       this.ctrlKey = event.ctrlKey;
 
+      // if this value is set, it means another handler already did something
+      // with the event and we should not continue to process it.
+      //
+      // Some use cases:
+      //   1) Levels Panel. Dragging the panel should move it around unless the
+      //      user clicks on one of the items to drag it within the panel
+      //   2) Menus closing. When clicking outside of a menu, the menu should close
+      //
+      if (event.defaultPrevented) {
+         return;
+      }
+
       if (event.target instanceof HTMLInputElement === false &&
          event.target instanceof HTMLButtonElement === false) {
 
@@ -78,12 +89,8 @@ export class PointerEventHandler {
 
          window.addEventListener('mouseup', this.mouseup);
 
-         if (this.stopPropagation) {
-            event.stopPropagation();
-         }
-
          // disable selection because we're doing something else with dragging
-         return false;
+         event.preventDefault();
       }
    };
 
@@ -100,10 +107,6 @@ export class PointerEventHandler {
          this.ourOnMove(pos);
          this.lastPos = this.getPos(event);
       }
-
-      if (this.stopPropagation) {
-         event.stopPropagation();
-      }
    };
 
    private mouseup = (event: MouseEvent) => {
@@ -113,10 +116,6 @@ export class PointerEventHandler {
       this.ourOnUp();
 
       window.removeEventListener('mouseup', this.mouseup);
-
-      if (this.stopPropagation) {
-         event.stopPropagation();
-      }
    };
 
    private touchstart = (event: TouchEvent) => {
@@ -125,12 +124,9 @@ export class PointerEventHandler {
 
       if (event.target instanceof HTMLInputElement === false &&
          event.target instanceof HTMLButtonElement === false) {
+
          // prevent the browser from using the event
          event.preventDefault();
-
-         if (this.stopPropagation) {
-            event.stopPropagation();
-         }
 
          // if this is the first touch
          if (event.touches.length === 1) {
@@ -177,10 +173,6 @@ export class PointerEventHandler {
       // prevent the browser from using the event
       event.preventDefault();
 
-      if (this.stopPropagation) {
-         event.stopPropagation();
-      }
-
       // if the initial two touches are active
       if (this.primaryTouchId !== null && this.secondaryTouchId !== null) {
 
@@ -226,10 +218,6 @@ export class PointerEventHandler {
       // prevent the browser from using the event
       // needed to select an input element
       //event.preventDefault();
-
-      if (this.stopPropagation) {
-         event.stopPropagation();
-      }
 
       if (this.secondaryTouchId !== null) {
          if (this.getTouch(event, this.secondaryTouchId) === null) {
