@@ -917,12 +917,12 @@ export class SquintApp implements IApp {
       if (this.camera.visible) {
          const videoSize = Math.max(this.camera.clientWidth, this.camera.clientHeight);
          if (videoWidth > videoHeight) {
-            this.camera.width = videoSize + 'px';
-            this.camera.height = (videoSize * videoHeight / videoWidth) + 'px';
+            this.camera.width = videoSize;
+            this.camera.height = (videoSize * videoHeight / videoWidth);
          }
          else {
-            this.camera.height = videoSize + 'px';
-            this.camera.width = (videoSize * videoWidth / videoHeight) + 'px';
+            this.camera.height = videoSize;
+            this.camera.width = (videoSize * videoWidth / videoHeight);
          }
       }
    }

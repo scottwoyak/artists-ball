@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { debug } from './SquintApp';
-import { iOS } from '../../Util/Globals';
+import { getEmPixels, iOS, pxToNumber } from '../../Util/Globals';
 import { SquintStrings } from './SquintStrings';
+import { PointerEventHandler } from '../../GUI/PointerEventHandler';
+import { Vec2 } from '../../Util3D/Vec';
+import { RectHit, Rect } from './Rect';
 
 export interface IVideoConstraint {
    label: string,
@@ -88,6 +91,10 @@ export class Camera {
 
    private hiddenCanvas: HTMLCanvasElement;
    private video: HTMLVideoElement;
+   private overlayCanvas: HTMLCanvasElement;
+
+   // the area of the camera that we capture in a photo
+   public capture = new Rect();
 
    public onPaused: CameraPauseResumeHandler | null = null;
    public onResume: CameraPauseResumeHandler | null = null;
@@ -110,11 +117,18 @@ export class Camera {
       return this.video.clientHeight;
    }
 
-   public set width(value: string) {
-      this.video.style.width = value;
+   private get offset(): number {
+      let style = getComputedStyle(this.video);
+      return pxToNumber(style.borderWidth) + pxToNumber(style.margin);
    }
-   public set height(value: string) {
-      this.video.style.height = value;
+
+   public set width(value: number) {
+      this.video.style.width = value + 'px';
+      this.overlayCanvas.style.width = (value + 2 * this.offset) + 'px';
+   }
+   public set height(value: number) {
+      this.video.style.height = value + 'px';
+      this.overlayCanvas.style.height = (value + 2 * this.offset) + 'px';
    }
 
    public get visible(): boolean {
@@ -127,11 +141,14 @@ export class Camera {
 
       if (flag) {
          this.video.style.display = 'block';
+         this.overlayCanvas.style.display = 'block';
       }
       else {
          this.video.style.display = 'none';
+         this.overlayCanvas.style.display = 'none';
       }
    }
+
 
    public constructor(parent: HTMLElement) {
       this.hiddenCanvas = document.createElement('canvas');
@@ -143,8 +160,120 @@ export class Camera {
       this.video.onerror = (err) => {
          alert('video.onerror(): ' + err);
       }
-
       parent.appendChild(this.video);
+
+      this.overlayCanvas = document.createElement('canvas');
+      this.overlayCanvas.id = 'VideoOverlay';
+      parent.appendChild(this.overlayCanvas);
+
+      let handler = new PointerEventHandler(this.overlayCanvas);
+
+      let hit = RectHit.None;
+      handler.onDown = (pos: Vec2) => {
+         hit = this.getHit(pos);
+      }
+
+      handler.onMove = (pos: Vec2) => {
+         let hit = this.getHit(pos);
+         switch (hit) {
+            case RectHit.UL:
+               this.overlayCanvas.style.cursor = 'nwse-resize';
+               break;
+            case RectHit.UR:
+               this.overlayCanvas.style.cursor = 'nesw-resize';
+               break;
+            case RectHit.LL:
+               this.overlayCanvas.style.cursor = 'nesw-resize';
+               break;
+            case RectHit.LR:
+               this.overlayCanvas.style.cursor = 'nwse-resize';
+               break;
+            case RectHit.Inside:
+               if (this.capture.width < this.videoWidth || this.capture.height < this.videoHeight) {
+                  this.overlayCanvas.style.cursor = 'move';
+               }
+               else {
+                  this.overlayCanvas.style.cursor = 'default';
+               }
+               break;
+            case RectHit.None:
+               this.overlayCanvas.style.cursor = 'default';
+               break;
+         }
+      }
+
+      handler.onDrag = (pos: Vec2, delta: Vec2) => {
+         let ratio = this.videoWidth / this.clientWidth;
+         delta.x *= ratio;
+         delta.y *= ratio;
+         let min = 200;
+
+         // check for limits
+         if (hit === RectHit.UL || hit === RectHit.LL || hit === RectHit.Inside) {
+            if (this.capture.width - delta.x < min) {
+               delta.x = this.capture.width - min;
+            }
+            if (this.capture.x + delta.x < 0) {
+               delta.x = -this.capture.x;
+            }
+         }
+         if (hit === RectHit.UR || hit === RectHit.LR || hit === RectHit.Inside) {
+            if (this.capture.right + delta.x > this.videoWidth) {
+               delta.x = this.videoWidth - this.capture.right;
+            }
+            if (this.capture.width + delta.x < min) {
+               delta.x = min - this.capture.width;
+            }
+         }
+         if (hit === RectHit.UL || hit === RectHit.UR || hit === RectHit.Inside) {
+            if (this.capture.y + delta.y + min > this.capture.bottom) {
+               delta.y = this.capture.bottom - this.capture.y - min;
+            }
+            if (this.capture.y + delta.y < 0) {
+               delta.y = -this.capture.y;
+            }
+         }
+         if (hit === RectHit.LL || hit === RectHit.LR || hit === RectHit.Inside) {
+            if (this.capture.height + delta.y < min) {
+               delta.y = min - this.capture.height;
+            }
+            if (this.capture.bottom + delta.y > this.videoHeight) {
+               delta.y = this.videoHeight - this.capture.bottom;
+            }
+         }
+
+         // do the move
+         switch (hit) {
+            case RectHit.UL:
+               this.capture.x += delta.x;
+               this.capture.y += delta.y;
+               this.capture.width -= delta.x;
+               this.capture.height -= delta.y;
+               this.draw();
+               break;
+            case RectHit.UR:
+               this.capture.y += delta.y;
+               this.capture.width += delta.x;
+               this.capture.height -= delta.y;
+               this.draw();
+               break;
+            case RectHit.LL:
+               this.capture.x += delta.x;
+               this.capture.width -= delta.x;
+               this.capture.height += delta.y;
+               this.draw();
+               break;
+            case RectHit.LR:
+               this.capture.width += delta.x;
+               this.capture.height += delta.y;
+               this.draw();
+               break;
+            case RectHit.Inside:
+               this.capture.x += delta.x;
+               this.capture.y += delta.y;
+               break;
+         }
+      }
 
       document.addEventListener('visibilitychange', () => {
          if (this.visible) {
@@ -160,6 +289,57 @@ export class Camera {
             }
          }
       });
+   }
+
+   private getHit(pos: Vec2): RectHit {
+      let scale = this.clientWidth / this.videoWidth;
+      let rect = this.capture.getScaled(scale);
+      let offset = this.offset;
+      rect.x += offset;
+      rect.y += offset;
+
+      let epsilon = 0.5 * getEmPixels();
+      return rect.hit(pos, epsilon);
+   }
+
+   private draw(): void {
+      let ctx = this.overlayCanvas.getContext('2d');
+      let w = this.overlayCanvas.width;
+      let h = this.overlayCanvas.height;
+      let m = getEmPixels();
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(m, m, w - 2 * m, h - 2 * m);
+
+      let scale = this.video.clientWidth / this.video.videoWidth;
+      let rect = this.capture.getScaled(scale);
+      ctx.clearRect(m + rect.x, m + rect.y, rect.width, rect.height);
+
+      // handles
+      ctx.fillStyle = 'lightgreen';
+      ctx.strokeStyle = 'darkgreen'
+      let radius = 0.5 * getEmPixels();
+
+      ctx.beginPath();
+      ctx.arc(m + rect.left, m + rect.top, radius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(m + rect.right, m + rect.top, radius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(m + rect.left, m + rect.bottom, radius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(m + rect.right, m + rect.bottom, radius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
    }
 
    public takePicture(
@@ -178,9 +358,14 @@ export class Camera {
          return Promise.reject('XX Video Size = 0');
       }
 
-      let scale = Math.min(1000000 * megaPixels / (this.video.videoWidth * this.video.videoHeight), 1);
-      this.hiddenCanvas.width = this.video.videoWidth * scale;
-      this.hiddenCanvas.height = this.video.videoHeight * scale;
+      this.overlayCanvas.width = this.overlayCanvas.clientWidth;
+      this.overlayCanvas.height = this.overlayCanvas.clientHeight;
+
+      this.draw();
+
+      let scale = Math.min(Math.sqrt(1000000 * megaPixels / (this.capture.width * this.capture.height)), 1);
+      this.hiddenCanvas.width = this.capture.width * scale;
+      this.hiddenCanvas.height = this.capture.height * scale;
 
       const context = this.hiddenCanvas.getContext('2d');
       if (context === null) {
@@ -189,7 +374,7 @@ export class Camera {
       }
 
       // @ts-ignore: context isn't null
-      context.drawImage(this.video, 0, 0, this.hiddenCanvas.width, this.hiddenCanvas.height);
+      context.drawImage(this.video, this.capture.x, this.capture.y, this.capture.width, this.capture.height, 0, 0, this.hiddenCanvas.width, this.hiddenCanvas.height);
 
       return new Promise<Blob | null>((resolve, reject) => {
          this.hiddenCanvas.toBlob(
@@ -252,8 +437,13 @@ export class Camera {
 
                   this.video.srcObject = stream;
                   const track = stream.getVideoTracks()[0];
+
                   this.video.play()
                      .then(() => {
+                        this.capture.x = 0;
+                        this.capture.y = 0;
+                        this.capture.width = this.video.videoWidth;
+                        this.capture.height = this.video.videoHeight;
                         resolve(track);
                      })
                      .catch((err) => {

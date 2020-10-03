@@ -7,6 +7,21 @@ export let env = {
    isTesting: false
 }
 
+export function getEmPixels(): number {
+   let style = getComputedStyle(document.body);
+   return Number.parseFloat(style.fontSize.substr(0, style.fontSize.length - 2));
+}
+
+export function pxToNumber(pxValue: string): number {
+   if (pxValue.endsWith('px')) {
+      return Number.parseFloat(pxValue.substr(0, pxValue.length - 2));
+   }
+   else {
+      return Number.NaN;
+   }
+}
+
+
 export function clamp(value: number, min: number, max: number): number {
    if (value < min) {
       return min;

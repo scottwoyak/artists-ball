@@ -1,6 +1,6 @@
 import { GUI } from '../../GUI/GUI';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
-import { clamp } from '../../Util/Globals';
+import { clamp, getEmPixels } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { ResizeablePanel } from './ResizeablePanel';
 
@@ -77,7 +77,6 @@ export class LevelsPanel extends ResizeablePanel {
                this.canvas.style.cursor = 'default'
                break;
          }
-
       }
 
       const minDelta = 0.01;
@@ -121,8 +120,7 @@ export class LevelsPanel extends ResizeablePanel {
          }
       }
 
-      let style = getComputedStyle(this.div);
-      let em = Number.parseFloat(style.fontSize.substr(0, style.fontSize.length - 2));
+      let em = getEmPixels();
       this.radius = 0.8 * em;
       this.margin = 0.9 * em;
       this.lineWidth = 0.1 * em;

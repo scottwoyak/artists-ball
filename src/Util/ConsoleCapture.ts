@@ -76,6 +76,10 @@ export class ConsoleCapture {
          msg = '' + msg;
       }
 
+      if (typeof msg !== 'string') {
+         msg = '' + msg;
+      }
+
       msg = msg.substr(0, 100 * NUM_COLS)
       fullmsg = msg + '\n\n' + fullmsg;
       fullmsg = fullmsg.substr(0, 10 * 1000 * NUM_COLS);
