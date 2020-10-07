@@ -4,6 +4,7 @@ import { getEmPixels } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { CountdownTimer } from './CountdownTimer';
 import { Squint } from './Squint';
+import { SquintApp } from './SquintApp';
 import { SquintEvent } from './SquintEvents';
 import { ITimerInfo } from './SquintMessage';
 
@@ -18,8 +19,8 @@ export class ModelTimer {
    private squint: Squint;
    private canvas: HTMLCanvasElement;
    private countdownTimer = new CountdownTimer;
-   private alarm = new Audio(location.origin + '/sounds/timer.mp3');
-   private notification = new Audio(location.origin + '/sounds/notification.mp3');
+   private alarm = new Audio(SquintApp.baseUrl + 'sounds/timer.mp3');
+   private notification = new Audio(SquintApp.baseUrl + '/sounds/notification.mp3');
 
    private get info(): ITimerInfo {
       return {
@@ -151,7 +152,7 @@ export class ModelTimer {
    }
 
    private playNotification() {
-      this.notification.play().catch((err) => { alert('Cannot play notification: ' + err) });
+      //this.notification.play().catch((err) => { alert('Cannot play notification: ' + err) });
    }
 
    private soundAlarm() {
