@@ -39,7 +39,7 @@ export class ModelTimer {
          event: SquintEvent.SynchronizeTimer,
          handler: (info: ITimerInfo) => {
             if (this.alarmSounding) {
-               console.log('XXX stopping alarm');
+               this.alarmSounding = false;
                this.alarm.pause();
                this.alarm.currentTime = 0;
             }
@@ -181,7 +181,6 @@ export class ModelTimer {
    private alarmSounding = false;
    private soundAlarm() {
       if (this.alarmSounding === false) {
-         console.log('XXX starting alarm');
          this.alarmSounding = true;
          if (this.alarm) {
             this.alarm.currentTime = 0;
@@ -192,7 +191,6 @@ export class ModelTimer {
 
    private stopAlarm() {
       if (this.alarmSounding) {
-         console.log('XXX stopping alarm');
          this.alarmSounding = false;
 
          // reset the sound file
