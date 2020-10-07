@@ -668,7 +668,6 @@ export class SquintApp implements IApp {
 
 
       let transparentWhite = 'rgba(255,255,255,0.5)';
-      console.log('xxx: ' + SquintApp.baseUrl + '/img/chat.svg');
       let chatImg = menubar.addImage(SquintApp.baseUrl + 'img/chat.svg',
          () => { this.chatPanel.visible = !this.chatPanel.visible; }
       );

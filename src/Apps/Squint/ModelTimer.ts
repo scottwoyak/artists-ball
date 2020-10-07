@@ -20,7 +20,7 @@ export class ModelTimer {
    private canvas: HTMLCanvasElement;
    private countdownTimer = new CountdownTimer;
    private alarm = new Audio(SquintApp.baseUrl + 'sounds/timer.mp3');
-   private notification = new Audio(SquintApp.baseUrl + '/sounds/notification.mp3');
+   private notification = new Audio(SquintApp.baseUrl + 'sounds/notification.mp3');
 
    private get info(): ITimerInfo {
       return {
@@ -103,7 +103,14 @@ export class ModelTimer {
       let hit = false;
       let accumulatedDelta = 0;
       handler.onDown = (pos: Vec2) => {
-         this.stopAlarm();
+
+         let alarm = GUI.create('audio', 'AlarmAudio', parent);
+         alarm.src = SquintApp.baseUrl + 'sounds/timer.mp3';
+         alarm.play()
+            .catch((err) => {
+               console.log('Cannot play sound ' + err)
+            });
+
          let boxSize = this.canvas.clientHeight;
          hit = false;
          if (pos.x < 0.5 * boxSize) {
@@ -152,15 +159,22 @@ export class ModelTimer {
    }
 
    private playNotification() {
-      //this.notification.play().catch((err) => { alert('Cannot play notification: ' + err) });
+      this.notification.play().catch((err) => { console.log('Cannot play notification: ' + err) });
    }
 
+   private alarmSounding = false;
    private soundAlarm() {
-      this.alarm.play().catch((err) => { alert('Cannot play alarm: ' + err) });
+      if (this.alarmSounding === false) {
+         this.alarmSounding = true;
+         this.alarm.play().catch((err) => { console.log('Cannot play alarm: ' + err) });
+      }
    }
 
    private stopAlarm() {
-      if (this.countdownTimer.running && this.countdownTimer.expired) {
+      if (this.alarmSounding) {
+         this.alarmSounding = false;
+
+         // reset the sound file
          this.alarm.pause();
          this.alarm.currentTime = 0;
 
@@ -248,6 +262,7 @@ export class ModelTimer {
    private requestTimeout(): void {
       if (this.countdownTimer.running && this.countdownTimer.expired) {
          this.soundAlarm();
+         this.countdownTimer.reset();
       }
 
       this.setCanvasSize();
@@ -256,7 +271,7 @@ export class ModelTimer {
       // trigger the next draw event
       setTimeout(() => {
          this.requestTimeout();
-      }, 250);
+      }, 100);
    }
 
    private drawText(ctx: CanvasRenderingContext2D, str: string, x: number, y: number, width: number, height: number) {
