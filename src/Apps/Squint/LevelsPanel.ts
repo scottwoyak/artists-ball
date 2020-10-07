@@ -130,7 +130,7 @@ export class LevelsPanel extends ResizeablePanel {
 
    private getHit(pos: Vec2): Hit {
       let hit = new Hit();
-      let epsilon = 1.5 * this.radius;
+      let epsilon = 3.0 * this.radius;
       let pts = this.computePoints();
       if (pos.distance(pts.mid) < epsilon) {
          hit.item = HitItem.Mid;

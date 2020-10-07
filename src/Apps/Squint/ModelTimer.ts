@@ -35,14 +35,6 @@ export class ModelTimer {
       this.canvas = GUI.create('canvas', 'ModelTimerCanvas', parent);
       this.countdownTimer.durationMs = TimeMs.StdPose;
 
-      // create via html instead of new Audio() which is blocked on portable ios
-      this.alarm = GUI.create('audio', 'AlarmAudio', parent);
-      this.alarm.src = SquintApp.baseUrl + 'sounds/timer.mp3';
-      this.alarm.loop = true;
-
-      this.notification = GUI.create('audio', 'NotificationAudio', parent);
-      this.notification.src = SquintApp.baseUrl + 'sounds/timer.mp3';
-
       squint.on({
          event: SquintEvent.SynchronizeTimer,
          handler: (info: ITimerInfo) => {
@@ -136,13 +128,32 @@ export class ModelTimer {
 
             this.draw();
          }
-
       }
 
-      document.body.addEventListener('mousedown', () => { this.stopAlarm(); });
-      document.body.addEventListener('touchstart', () => { this.stopAlarm(); });
+      document.body.addEventListener('mousedown', () => {
+         this.stopAlarm();
+         this.initAudio();
+      });
+      document.body.addEventListener('touchstart', () => {
+         this.stopAlarm();
+         this.initAudio();
+      });
 
       this.requestTimeout();
+   }
+
+   private initAudio(): void {
+      // create via html instead of new Audio() which is blocked on portable ios
+      if (this.alarm === null) {
+         this.alarm = GUI.create('audio', 'AlarmAudio', document.body);
+         this.alarm.src = SquintApp.baseUrl + 'sounds/timer.mp3';
+         this.alarm.loop = true;
+      }
+
+      if (this.notification === null) {
+         this.notification = GUI.create('audio', 'NotificationAudio', document.body);
+         this.notification.src = SquintApp.baseUrl + 'sounds/timer.mp3';
+      }
    }
 
    private setCanvasSize(): void {
