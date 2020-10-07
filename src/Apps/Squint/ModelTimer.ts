@@ -33,7 +33,6 @@ export class ModelTimer {
       this.squint = squint;
       this.canvas = GUI.create('canvas', 'ModelTimerCanvas', parent);
       this.countdownTimer.durationMs = TimeMs.StdPose;
-      this.countdownTimer.durationMs = 1000;
       this.alarm.loop = true;
 
       squint.on({
