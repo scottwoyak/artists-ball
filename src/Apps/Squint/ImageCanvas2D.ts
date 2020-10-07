@@ -115,6 +115,7 @@ export class ImageCanvas2D extends ImageCanvas {
 
       let hsv = new hsvColor([0, 0, 0]);
       let grayScale = this.grayScale;
+      let realMidPt = this.black + this.midPt * (this.white - this.black);
       for (let i = 0; i < data.length; i += 4) {
 
          hsv.fromHtmlValues(data[i + 0], data[i + 1], data[i + 2]);
@@ -126,11 +127,11 @@ export class ImageCanvas2D extends ImageCanvas {
             hsv.v = 1;
          }
          else {
-            if (hsv.v > this.midPt) {
-               hsv.v = this.midValue + (1 - this.midValue) * (hsv.v - this.midPt) / (this.white - this.midPt);
+            if (hsv.v < realMidPt) {
+               hsv.v = 0 + this.midValue * ((hsv.v - this.black) / (realMidPt - this.black));
             }
             else {
-               hsv.v = 0 + this.midValue * ((hsv.v - this.black) / (this.midPt - this.black));
+               hsv.v = this.midValue + (1 - this.midValue) * (hsv.v - realMidPt) / (this.white - realMidPt);
             }
          }
 
