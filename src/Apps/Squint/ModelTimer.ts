@@ -39,6 +39,7 @@ export class ModelTimer {
          event: SquintEvent.SynchronizeTimer,
          handler: (info: ITimerInfo) => {
             if (this.alarmSounding) {
+               console.log('XXX stopping alarm');
                this.alarm.pause();
                this.alarm.currentTime = 0;
             }
@@ -169,19 +170,29 @@ export class ModelTimer {
    }
 
    private playNotification() {
-      this.notification.play().catch((err) => { console.log('Cannot play notification: ' + err) });
+      /*
+      if (this.notification) {
+         this.notification.currentTime = 0;
+         this.notification.play().catch((err) => { console.log('Cannot play notification: ' + err) });
+      }
+      */
    }
 
    private alarmSounding = false;
    private soundAlarm() {
       if (this.alarmSounding === false) {
+         console.log('XXX starting alarm');
          this.alarmSounding = true;
-         this.alarm.play().catch((err) => { console.log('Cannot play alarm: ' + err) });
+         if (this.alarm) {
+            this.alarm.currentTime = 0;
+            this.alarm.play().catch((err) => { console.log('Cannot play alarm: ' + err) });
+         }
       }
    }
 
    private stopAlarm() {
       if (this.alarmSounding) {
+         console.log('XXX stopping alarm');
          this.alarmSounding = false;
 
          // reset the sound file
