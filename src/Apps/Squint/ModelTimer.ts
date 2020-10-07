@@ -19,8 +19,8 @@ export class ModelTimer {
    private squint: Squint;
    private canvas: HTMLCanvasElement;
    private countdownTimer = new CountdownTimer;
-   private alarm = new Audio(SquintApp.baseUrl + 'sounds/timer.mp3');
-   private notification = new Audio(SquintApp.baseUrl + 'sounds/notification.mp3');
+   private alarm: HTMLAudioElement = null;
+   private notification: HTMLAudioElement = null;
 
    private get info(): ITimerInfo {
       return {
@@ -34,7 +34,14 @@ export class ModelTimer {
       this.squint = squint;
       this.canvas = GUI.create('canvas', 'ModelTimerCanvas', parent);
       this.countdownTimer.durationMs = TimeMs.StdPose;
+
+      // create via html instead of new Audio() which is blocked on portable ios
+      this.alarm = GUI.create('audio', 'AlarmAudio', parent);
+      this.alarm.src = SquintApp.baseUrl + 'sounds/timer.mp3';
       this.alarm.loop = true;
+
+      this.notification = GUI.create('audio', 'NotificationAudio', parent);
+      this.notification.src = SquintApp.baseUrl + 'sounds/timer.mp3';
 
       squint.on({
          event: SquintEvent.SynchronizeTimer,
@@ -103,13 +110,6 @@ export class ModelTimer {
       let hit = false;
       let accumulatedDelta = 0;
       handler.onDown = (pos: Vec2) => {
-
-         let alarm = GUI.create('audio', 'AlarmAudio', parent);
-         alarm.src = SquintApp.baseUrl + 'sounds/timer.mp3';
-         alarm.play()
-            .catch((err) => {
-               console.log('Cannot play sound ' + err)
-            });
 
          let boxSize = this.canvas.clientHeight;
          hit = false;
