@@ -1,7 +1,7 @@
-import { IConnectionInfoBasic, ISessionInfoBasic, ISessionInfoFull } from './SquintMessage';
+import { IConnectionInfoBasic, ISessionInfoBasic, ISessionInfoFull, ITimerInfo } from './SquintMessage';
 
 export type CameraPauseHandler = () => void;
-export type CameraRequestHandler = (resolution: number, jpegQuality: number) => void;
+export type CameraRequestHandler = (megaPixels: number, jpegQuality: number) => void;
 export type ChatMessageHandler = (source: IConnectionInfoBasic, msg: string) => void;
 export type CloseHandler = () => void;
 export type ConnectionInfoUpdateHandler = (info: IConnectionInfoBasic) => void;
@@ -12,6 +12,7 @@ export type ReconnectingHandler = () => void;
 export type ReconnectedHandler = (success: boolean) => void;
 export type SessionInfoHandler = (info: ISessionInfoFull) => void;
 export type SessionListHandler = (session: ISessionInfoBasic[]) => void;
+export type TimerHandler = (timerInfo: ITimerInfo) => void;
 
 export enum SquintEvent {
    CameraPaused = 'cameraPaused',
@@ -26,6 +27,7 @@ export enum SquintEvent {
    Reconnected = 'reconnected',
    SessionInfo = 'sessionInfo',
    SessionList = 'sessionList',
+   SynchronizeTimer = 'synchronizeTimer',
 }
 
 export interface ISquintCameraPausedEvent {
@@ -88,6 +90,11 @@ export interface ISquintSessionListEvent {
    handler: SessionListHandler,
 }
 
+export interface ISquintSynchronizeTimerEvent {
+   event: SquintEvent.SynchronizeTimer,
+   handler: TimerHandler,
+}
+
 export type ISquintEventHandler =
    ISquintCameraPausedEvent |
    ISquintCameraRequestEvent |
@@ -100,4 +107,5 @@ export type ISquintEventHandler =
    ISquintReconnectedEvent |
    ISquintReconnectingEvent |
    ISquintSessionInfoEvent |
-   ISquintSessionListEvent;
+   ISquintSessionListEvent |
+   ISquintSynchronizeTimerEvent;

@@ -289,6 +289,20 @@ export class Camera {
             }
          }
       });
+
+      /*
+      window.addEventListener('orientationchange', () => {
+         this.capture.x = 0;
+         this.capture.y = 0;
+         this.capture.width = this.videoWidth;
+         this.capture.height = this.videoHeight;
+         let rect = this.video.getBoundingClientRect();
+         this.overlayCanvas.style.left = rect.left + 'px';
+         this.overlayCanvas.style.right = rect.right + 'px';
+         this.overlayCanvas.style.top = rect.top + 'px';
+         this.overlayCanvas.style.bottom = rect.bottom + 'px';
+      });
+      */
    }
 
    private getHit(pos: Vec2): RectHit {

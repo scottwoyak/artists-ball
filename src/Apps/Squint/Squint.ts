@@ -1,7 +1,7 @@
 import { SquintWsUrl as SquintWsUrl } from './Servers';
 import { debug } from './SquintApp';
 import { SquintSocket } from './SquintSocket';
-import { ISquintMessage, SquintMessageSubject, ISquintInfo, IConnectionInfoBasic, JoinSessionStatus, CreateSessionStatus } from './SquintMessage';
+import { ISquintMessage, SquintMessageSubject, ISquintInfo, IConnectionInfoBasic, JoinSessionStatus, CreateSessionStatus, ITimerInfo } from './SquintMessage';
 import { EventManager } from './EventManager';
 import { ISquintEventHandler, SquintEvent } from './SquintEvents';
 import { WebSocketFactory } from './WebSocketFactory';
@@ -9,7 +9,6 @@ import { PromiseMap } from './PromiseMap';
 import { v4 as uuidv4 } from 'uuid';
 import { SquintStrings } from './SquintStrings';
 import { Stopwatch } from '../../Util/Stopwatch';
-
 
 export class Squint {
 
@@ -204,6 +203,11 @@ export class Squint {
 
          case SquintMessageSubject.SessionInfo: {
             this.emit(SquintEvent.SessionInfo, msg.info);
+         }
+            break;
+
+         case SquintMessageSubject.SynchronizeTimer: {
+            this.emit(SquintEvent.SynchronizeTimer, msg.info);
          }
             break;
 
@@ -454,6 +458,14 @@ export class Squint {
       // reset flags
       this._remoteCameraConnected = true;
       this._remoteCameraPaused = false;
+   }
+
+   public synchronizeTimer(info: ITimerInfo): void {
+      this.send({
+         subject: SquintMessageSubject.SynchronizeTimer,
+         info,
+      });
+
    }
 
    public static inspect(url: string): Promise<ISquintInfo> {

@@ -46,6 +46,12 @@ export interface ISessionInfoFull extends ISessionInfoBasic {
    viewers: IConnectionInfoFull[]
 }
 
+export interface ITimerInfo {
+   durationMs: number,
+   elapsedMs: number,
+   running: boolean,
+}
+
 export interface ISquintInfo {
    connections: IConnectionInfoFull[],
    sessions: ISessionInfoFull[],
@@ -72,6 +78,7 @@ export enum SquintMessageSubject {
    SessionInfo = 'SessionInfo',
    SessionJoined = 'SessionJoined',
    SessionList = 'SessionList',
+   SynchronizeTimer = 'SynchronizeTimer',
 }
 
 export interface ISquintCameraPausedMessage {
@@ -175,6 +182,11 @@ export interface ISquintSessionListMessage {
    sessions: ISessionInfoBasic[],
 }
 
+export interface ISquintSynchronizeTimerMessage {
+   subject: SquintMessageSubject.SynchronizeTimer,
+   info: ITimerInfo,
+}
+
 // for type inference in TypeScript
 export type ISquintMessage =
    ISquintCameraPausedMessage |
@@ -194,5 +206,6 @@ export type ISquintMessage =
    ISquintSessionCreatedMessage |
    ISquintSessionInfoMessage |
    ISquintSessionJoinedMessage |
-   ISquintSessionListMessage;
+   ISquintSessionListMessage |
+   ISquintSynchronizeTimerMessage;
 

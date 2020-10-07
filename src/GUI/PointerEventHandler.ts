@@ -5,7 +5,7 @@ type PointerTranslateFunction = (delta: Vec2) => void;
 type PointerScaleFunction = (scale: number, change: number) => void;
 type PointerDragFunction = (pos: Vec2, delta: Vec2) => void;
 type PointerMoveFunction = (pos: Vec2, delta: Vec2) => void;
-type PointerUpFunction = () => void;
+type PointerUpFunction = (pos: Vec2) => void;
 type PointerDownFunction = (pos: Vec2) => void;
 type PointerDblClickFunction = (pos: Vec2) => boolean;
 type PointerClickFunction = (pos: Vec2) => boolean;
@@ -113,7 +113,7 @@ export class PointerEventHandler {
 
       this.ctrlKey = event.ctrlKey;
 
-      this.ourOnUp();
+      this.ourOnUp(this.getPos(event));
 
       window.removeEventListener('mouseup', this.mouseup);
    };
@@ -242,7 +242,7 @@ export class PointerEventHandler {
          if (this.getTouch(event, this.primaryTouchId) === null) {
             this.primaryTouchId = null;
 
-            this.ourOnUp();
+            this.ourOnUp(this.lastPos);
          }
       }
 
@@ -362,12 +362,12 @@ export class PointerEventHandler {
       }
    }
 
-   private ourOnUp() {
+   private ourOnUp(pos: Vec2) {
 
       this.mouseDown = false;
 
       if (this.onUp) {
-         this.onUp();
+         this.onUp(pos.clone());
       }
    }
 

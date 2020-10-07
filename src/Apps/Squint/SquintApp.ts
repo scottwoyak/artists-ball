@@ -27,6 +27,7 @@ import { PasswordDialog } from './PasswordDialog';
 import { ImageCanvas } from './ImageCanvas';
 import { ImageCanvas2D } from './ImageCanvas2D';
 import { LevelsPanel } from './LevelsPanel';
+import { ModelTimer } from './ModelTimer';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -41,7 +42,6 @@ interface IConstraintItem {
 }
 
 export class SquintApp implements IApp {
-   private handler: PointerEventHandler | undefined;
    private div: HTMLDivElement | undefined;
    private userNameMenuItemDiv: HTMLDivElement | undefined;
    private img: HTMLImageElement | undefined;
@@ -292,6 +292,8 @@ export class SquintApp implements IApp {
          }
       });
 
+      new ModelTimer(this.squint, this.div);
+
       this.chatPanel = new ChatPanel(this.squint, this.div);
       if (this.chatPanel.hasSavedSettings) {
          this.chatPanel.restoreSettings();
@@ -316,10 +318,10 @@ export class SquintApp implements IApp {
 
       this.notificationDiv = GUI.create('div', 'NotificationDiv', this.div);
 
-      this.handler = new PointerEventHandler(this.canvas.element);
-      this.handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
-      this.handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
-      this.handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
+      let handler = new PointerEventHandler(this.canvas.element);
+      handler.onScale = (scale: number, change: number) => this.onScale(scale, change);
+      handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
+      handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
 
       window.addEventListener('resize', () => this.onResize());
       this.updateSizes();

@@ -9,6 +9,47 @@ export class Stopwatch {
    private startTime: number;
    private _paused = false;
 
+   public get paused(): boolean {
+      return this._paused;
+   }
+
+   public get running(): boolean {
+      return !this.paused;
+   }
+
+   /**
+    * The elapsed time in as a string
+    */
+   public get elapsedStr(): string {
+      return toTimeStr(this.elapsedMs);
+   }
+
+   /**
+    * The elapsed time in milliseconds
+    */
+   public get elapsedMs(): number {
+      if (isNaN(this.startTime)) {
+         return this.accumulatedMs;
+      }
+      else {
+         return this.accumulatedMs + (this.getTimeMs() - this.startTime);
+      }
+   }
+
+   public set elapsedMs(value: number) {
+      this.accumulatedMs = value;
+      if (this.running) {
+         this.startTime = this.getTimeMs();
+      }
+   }
+
+   /**
+    * The elapsed time in milliseconds
+    */
+   public get elapsedS(): number {
+      return this.elapsedMs / 1000;
+   }
+
    private getTimeMs(): number {
       // window.performance is not defined for nodejs so our test need
       // this to compile
@@ -20,12 +61,24 @@ export class Stopwatch {
       }
    }
 
-   public constructor() {
-      this.startTime = this.getTimeMs();
+   public constructor(start = true) {
+      this.reset(start);
    }
 
-   public get paused(): boolean {
-      return this._paused;
+   public reset(start: boolean): void {
+      this.accumulatedMs = 0;
+      if (start) {
+         this._paused = false;
+         this.startTime = this.getTimeMs();
+      }
+      else {
+         this._paused = true;
+         this.startTime = NaN;
+      }
+   }
+
+   public restart(): void {
+      this.reset(true);
    }
 
    public pause(): void {
@@ -44,32 +97,11 @@ export class Stopwatch {
    }
 
    /**
-    * The elapsed time in as a string
+    * Adjusts the elapsed time by the specified amount of time
+    * 
+    * @param timeMs Adjustment in milliseconds
     */
-   public get elapsedStr(): string {
-      return toTimeStr(this.elapsedMs);
-   }
-
-   /**
-    * The elapsed time in milliseconds
-    */
-   public get elapsedMs(): number {
-      return this.accumulatedMs + (this.getTimeMs() - this.startTime);
-   }
-
-   /**
-    * The elapsed time in milliseconds
-    */
-   public get elapsedS(): number {
-      return this.elapsedMs / 1000;
-   }
-
-   /**
-    * Resets elapsed time to 0
-    */
-   public restart(): void {
-      this.startTime = this.getTimeMs();
-      this.accumulatedMs = 0;
-      this._paused = false;
+   public adjustMs(timeMs: number): void {
+      this.startTime = this.startTime - timeMs;
    }
 }
