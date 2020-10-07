@@ -38,12 +38,11 @@ export class ModelTimer {
       squint.on({
          event: SquintEvent.SynchronizeTimer,
          handler: (info: ITimerInfo) => {
-
-            if (this.countdownTimer.running && this.countdownTimer.expired) {
+            if (this.alarmSounding) {
                this.alarm.pause();
                this.alarm.currentTime = 0;
             }
-            else if (this.countdownTimer.running === false && info.running) {
+            else if (this.countdownTimer.running !== info.running) {
                this.playNotification();
             }
 
