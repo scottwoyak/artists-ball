@@ -312,7 +312,8 @@ export class Camera {
       rect.x += offset;
       rect.y += offset;
 
-      let epsilon = 0.5 * getEmPixels();
+      let radius = 0.5 * getEmPixels();
+      let epsilon = 3 * radius;
       return rect.hit(pos, epsilon);
    }
 
