@@ -33,8 +33,8 @@ export class ImageCanvas2D extends ImageCanvas {
          height = width / imgAR;
       }
 
-      const x = (canvasWidth - width) / 2.0 + this.xOffset;
-      const y = (canvasHeight - height) / 2.0 - this.yOffset;
+      let x = (canvasWidth - width) / 2.0 + this.xOffset;
+      let y = (canvasHeight - height) / 2.0 - this.yOffset;
 
       const ctx = this.canvas.getContext('2d');
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -51,6 +51,14 @@ export class ImageCanvas2D extends ImageCanvas {
       }
 
       ctx.drawImage(img, x, y, width, height);
+
+      // adjust dimensions so we're now only editing what is visible
+      let right = Math.min(canvasWidth, width + x);
+      let bottom = Math.min(canvasHeight, height + y);
+      x = Math.max(0, x);
+      y = Math.max(0, y);
+      width = Math.min(right - x, canvasWidth);
+      height = Math.min(bottom - y, canvasHeight);
 
       // if filters are not supported on contexts, ummm Safari, do our own
       if (ctx.filter === undefined) {
