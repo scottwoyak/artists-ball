@@ -106,8 +106,7 @@ export class ImageCanvas2D extends ImageCanvas {
          ctx.putImageData(imageData, x, y);
       }
 
-      //this.applyCustomFilters(ctx, x, y, width, height);
-
+      this.applyCustomFilters(ctx, x, y, width, height);
    }
 
    private applyCustomFilters(
