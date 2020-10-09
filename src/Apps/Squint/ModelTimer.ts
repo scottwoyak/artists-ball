@@ -1,7 +1,6 @@
 import { GUI } from '../../GUI/GUI';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
-import { Launcher } from '../../Launcher';
-import { getEmPixels } from '../../Util/Globals';
+import { baseUrl, getEmPixels } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { CountdownTimer } from './CountdownTimer';
 import { Squint } from './Squint';
@@ -146,13 +145,13 @@ export class ModelTimer {
       // create via html instead of new Audio() which is blocked on portable ios
       if (this.alarm === null) {
          this.alarm = GUI.create('audio', 'AlarmAudio', document.body);
-         this.alarm.src = Launcher.baseUrl + 'sounds/timer.mp3';
+         this.alarm.src = baseUrl() + 'sounds/timer.mp3';
          this.alarm.loop = true;
       }
 
       if (this.notification === null) {
          this.notification = GUI.create('audio', 'NotificationAudio', document.body);
-         this.notification.src = Launcher.baseUrl + 'sounds/timer.mp3';
+         this.notification.src = baseUrl() + 'sounds/timer.mp3';
       }
    }
 

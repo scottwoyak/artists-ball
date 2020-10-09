@@ -7,6 +7,19 @@ export let env = {
    isTesting: false
 }
 
+export function baseUrl(): string {
+   let url = location.origin + location.pathname;
+   if (url.endsWith('index.html')) {
+      url = url.substr(0, url.length - 10);
+   }
+   if (url.endsWith('/') === false) {
+      url += '/';
+   }
+   return url;
+}
+
+
+
 export function getEmPixels(): number {
    let style = getComputedStyle(document.body);
    return Number.parseFloat(style.fontSize.substr(0, style.fontSize.length - 2));

@@ -5,7 +5,7 @@ import { IVideoConstraint, Camera, IMediaSettingsRange, IVideoTrackAdvancedCapab
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
-import { toSizeStr, isMobile } from '../../Util/Globals';
+import { toSizeStr, isMobile, baseUrl } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Menubar, SubMenu } from '../../GUI/Menu';
 import { ConsoleCapture } from '../../Util/ConsoleCapture';
@@ -28,7 +28,6 @@ import { ImageCanvas } from './ImageCanvas';
 import { ImageCanvas2D } from './ImageCanvas2D';
 import { LevelsPanel } from './LevelsPanel';
 import { ModelTimer } from './ModelTimer';
-import { Launcher } from '../../Launcher';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -658,14 +657,14 @@ export class SquintApp implements IApp {
 
 
       let transparentWhite = 'rgba(255,255,255,0.5)';
-      let chatImg = menubar.addImage(Launcher.baseUrl + 'img/chat.svg',
+      let chatImg = menubar.addImage(baseUrl() + 'img/chat.svg',
          () => { this.chatPanel.visible = !this.chatPanel.visible; }
       );
       chatImg.style.backgroundColor = this.chatPanel.visible ? transparentWhite : 'transparent';
       this.chatPanel.onVisible = (visible) => {
          chatImg.style.backgroundColor = visible ? transparentWhite : 'transparent';
       }
-      let levelsImg = menubar.addImage(Launcher.baseUrl + 'img/levels.svg',
+      let levelsImg = menubar.addImage(baseUrl() + 'img/levels.svg',
          () => { this.levelsPanel.visible = !this.levelsPanel.visible; }
       );
       levelsImg.style.backgroundColor = this.levelsPanel.visible ? transparentWhite : 'transparent';
@@ -674,10 +673,10 @@ export class SquintApp implements IApp {
       }
 
 
-      let grayscaleImg = menubar.addImage(Launcher.baseUrl + '/img/color.svg',
+      let grayscaleImg = menubar.addImage(baseUrl() + '/img/color.svg',
          () => {
             this.canvas.grayScale = !this.canvas.grayScale;
-            grayscaleImg.src = Launcher.baseUrl + (this.canvas.grayScale ? '/img/grayscale.svg' : '/img/color.svg');
+            grayscaleImg.src = baseUrl() + (this.canvas.grayScale ? '/img/grayscale.svg' : '/img/color.svg');
          }
       );
 

@@ -3,6 +3,7 @@ import { Menubar } from './GUI/Menu';
 import { PathTracerApp } from './Apps/PathTracer/PathTracerApp';
 import { ViewerApp } from './Apps/Viewer/ViewerApp';
 import { SquintApp } from './Apps/Squint/SquintApp';
+import { baseUrl } from './Util/Globals';
 
 enum AppType {
    ArtistsBall = 'ArtistsBall',
@@ -20,17 +21,6 @@ export class Launcher {
    private app: IApp | null = null;
    private menubar: Menubar | undefined;
 
-   public static get baseUrl(): string {
-      let url = location.origin + location.pathname;
-      if (url.endsWith('index.html')) {
-         url = url.substr(0, url.length - 10);
-      }
-      if (url.endsWith('/') === false) {
-         url += '/';
-      }
-      return url;
-   }
-
    public constructor() {
 
       this.setFontSize();
@@ -44,7 +34,7 @@ export class Launcher {
       document.body.appendChild(this.div);
 
       this.menubar = new Menubar(this.div);
-      let html = '<img style="width: 1em" src="' + Launcher.baseUrl + 'img/apps.svg' + '" />';
+      let html = '<img style="width: 1em" src="' + baseUrl() + 'img/apps.svg' + '" />';
       const subMenu = this.menubar.addSubMenu(html, 'Apps');
       subMenu.addItem('3D Viewer', () => location.href = this.getUrl(AppType.Viewer));
       subMenu.addItem('Squint', () => location.href = this.getUrl(AppType.Squint));
