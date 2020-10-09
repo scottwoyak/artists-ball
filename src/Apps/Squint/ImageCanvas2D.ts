@@ -47,7 +47,7 @@ export class ImageCanvas2D extends ImageCanvas {
             'contrast(' + this.contrast + '%) ' +
             'brightness(' + this.brightness + '%) ' +
             'saturate(' + this.saturate + '%) ' +
-            'blur(' + blur + 'px) ';
+            'blur(' + this.blur + 'px) ';
       }
 
       ctx.drawImage(img, x, y, width, height);
@@ -98,7 +98,7 @@ export class ImageCanvas2D extends ImageCanvas {
          ctx.putImageData(imageData, x, y);
       }
 
-      this.applyCustomFilters(ctx, x, y, width, height);
+      //this.applyCustomFilters(ctx, x, y, width, height);
 
    }
 
