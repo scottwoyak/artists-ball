@@ -5,30 +5,20 @@ const SEC = 1000;
 const MIN = 60 * SEC;
 
 export class CountdownTimer {
-   private sw: Stopwatch = new Stopwatch(false);
+   private sw = new Stopwatch(false);
    public durationMs: number;
 
    public get running(): boolean {
-      return this.sw.paused === false;
+      return this.sw.paused === false && this.expired === false;
    }
 
    public get durationMin(): number {
       return this.durationMs / MIN;
    }
 
-   public get elapsedMs(): number {
-      return this.sw.elapsedMs;
-   }
-
    public get remainingMs(): number {
       return Math.max(0, this.durationMs - this.sw.elapsedMs);
    }
-
-   /*
-   public get timeRemainingMin(): number {
-      return Math.max(0, this.durationMs - this.sw.elapsedMs) / MIN;
-   }
-*/
 
    public get timeRemainingStr(): string {
       let remaining = this.remainingMs;
@@ -45,13 +35,13 @@ export class CountdownTimer {
 
    public start(): void {
       if (this.sw.paused) {
-         this.sw.resume();
+         this.sw.start();
       }
    }
 
-   public pause(): void {
+   public stop(): void {
       if (this.running) {
-         this.sw.pause();
+         this.sw.stop();
       }
    }
 
@@ -60,7 +50,7 @@ export class CountdownTimer {
    }
 
    public addOne(): void {
-      this.pause();
+      this.stop();
 
       this.durationMs = this.remainingMs;
       this.sw.elapsedMs = 0;
@@ -70,7 +60,7 @@ export class CountdownTimer {
    }
 
    public subtractOne(): void {
-      this.pause();
+      this.stop();
 
       this.durationMs = this.remainingMs;
       this.sw.elapsedMs = 0;
@@ -84,7 +74,7 @@ export class CountdownTimer {
       if (this.running !== info.running) {
          this.sw.reset(info.running);
       }
-      this.sw.elapsedMs = info.elapsedMs;
+      this.sw.elapsedMs = info.durationMs - info.remainingMs;
       this.durationMs = info.durationMs;
    }
 }

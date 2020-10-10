@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { Stopwatch } from '../src/Util/Stopwatch';
 import { sleep } from './util';
 
-describe.only('Stopwatch', function () {
+describe('Stopwatch', function () {
 
    it('should keep track of time', async function () {
 
@@ -35,7 +35,7 @@ describe.only('Stopwatch', function () {
 
       let sw = new Stopwatch();
       await sleep(10);
-      sw.pause();
+      sw.stop();
       expect(sw.elapsedMs).to.be.greaterThan(0);
       expect(sw.running).to.be.false;
       expect(sw.elapsedMs).to.equal(1000 * sw.elapsedS);
@@ -45,7 +45,7 @@ describe.only('Stopwatch', function () {
 
       let sw = new Stopwatch();
       await sleep(1);
-      sw.pause();
+      sw.stop();
       expect(sw.elapsedMs).to.be.greaterThan(0);
       expect(sw.paused).to.be.true;
       expect(sw.running).to.be.false;
@@ -54,7 +54,7 @@ describe.only('Stopwatch', function () {
       await sleep(1);
       expect(sw.elapsedMs).to.equal(elapsedMs);
 
-      sw.resume();
+      sw.start();
       await sleep(1);
       expect(sw.elapsedMs).to.be.greaterThan(elapsedMs);
    });
@@ -79,7 +79,7 @@ describe.only('Stopwatch', function () {
       expect(sw.elapsedMs).to.be.greaterThan(0);
       let oldElapsedMs = sw.elapsedMs;
 
-      sw.pause();
+      sw.stop();
       sw.restart();
       expect(sw.running).to.be.true;
       expect(sw.elapsedMs).to.be.greaterThan(0);
@@ -118,7 +118,7 @@ describe.only('Stopwatch', function () {
       expect(sw.elapsedMs).to.be.greaterThan(0);
       let oldElapsedMs = sw.elapsedMs;
 
-      sw.pause();
+      sw.stop();
       sw.reset(true);
       expect(sw.running).to.be.true;
       expect(sw.elapsedMs).to.be.greaterThan(0);
@@ -132,7 +132,7 @@ describe.only('Stopwatch', function () {
       await sleep(1);
       expect(sw.elapsedMs).to.be.greaterThan(0);
 
-      sw.pause();
+      sw.stop();
       sw.reset(false);
       expect(sw.running).to.be.false;
       expect(sw.elapsedMs).to.equal(0);
@@ -145,12 +145,11 @@ describe.only('Stopwatch', function () {
       await sleep(1);
       expect(sw.elapsedMs).to.be.greaterThan(0);
 
-      sw.adjustMs(5000);
-
+      sw.elapsedMs += 5000;
       expect(sw.running).to.be.true;
       expect(sw.elapsedMs).to.be.greaterThan(5000);
 
-      sw.adjustMs(-10000);
+      sw.elapsedMs -= 10000;
       expect(sw.running).to.be.true;
       expect(sw.elapsedMs).to.be.lessThan(0);
    });
@@ -161,15 +160,43 @@ describe.only('Stopwatch', function () {
       await sleep(1);
       expect(sw.elapsedMs).to.be.greaterThan(0);
 
-      sw.pause();
+      sw.stop();
       let elapsedMs = sw.elapsedMs;
 
-      sw.adjustMs(5000);
+      sw.elapsedMs += 5000;
       expect(sw.running).to.be.false;
       expect(sw.elapsedMs).to.equal(5000 + elapsedMs);
 
-      sw.adjustMs(-10000);
+      sw.elapsedMs -= 10000;
       expect(sw.running).to.be.false;
       expect(sw.elapsedMs).to.equal(5000 - 10000 + elapsedMs);
+   });
+
+   it('should be ok to call stop() while paused', async function () {
+      let sw = new Stopwatch();
+      await sleep(1);
+      expect(sw.elapsedMs).to.be.greaterThan(0);
+
+      sw.stop();
+      let elapsedMs = sw.elapsedMs;
+      expect(sw.running).to.be.false;
+
+      sw.stop();
+      expect(sw.elapsedMs).to.equal(elapsedMs);
+      expect(sw.running).to.be.false;
+   });
+
+   it('should be ok to call start() while running', async function () {
+      let sw = new Stopwatch();
+      await sleep(1);
+      let elapsedMs = sw.elapsedMs;
+      expect(elapsedMs).to.be.greaterThan(0);
+      expect(sw.running).to.be.true;
+
+      sw.start();
+      await sleep(1);
+
+      expect(sw.running).to.be.true;
+      expect(sw.elapsedMs).to.be.greaterThan(elapsedMs);
    });
 });

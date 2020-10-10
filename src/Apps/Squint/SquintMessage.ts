@@ -48,7 +48,7 @@ export interface ISessionInfoFull extends ISessionInfoBasic {
 
 export interface ITimerInfo {
    durationMs: number,
-   elapsedMs: number,
+   remainingMs: number,
    running: boolean,
 }
 

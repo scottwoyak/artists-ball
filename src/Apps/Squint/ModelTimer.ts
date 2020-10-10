@@ -25,7 +25,7 @@ export class ModelTimer {
       return {
          running: this.countdownTimer.running,
          durationMs: this.countdownTimer.durationMs,
-         elapsedMs: this.countdownTimer.elapsedMs,
+         remainingMs: this.countdownTimer.remainingMs,
       }
    }
 
@@ -86,7 +86,7 @@ export class ModelTimer {
          else if (pos.x > width - boxSize) {
             if (this.countdownTimer.running) {
                this.playNotification();
-               this.countdownTimer.pause();
+               this.countdownTimer.stop();
             }
             else {
                this.playNotification();

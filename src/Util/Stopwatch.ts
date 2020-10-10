@@ -81,7 +81,7 @@ export class Stopwatch {
       this.reset(true);
    }
 
-   public pause(): void {
+   public stop(): void {
       if (this._paused === false) {
          this._paused = true;
          this.accumulatedMs = this.elapsedMs;
@@ -89,24 +89,10 @@ export class Stopwatch {
       }
    }
 
-   public resume(): void {
+   public start(): void {
       if (this._paused === true) {
          this._paused = false;
          this.startTime = this.getTimeMs();
-      }
-   }
-
-   /**
-    * Adjusts the elapsed time by the specified amount of time
-    * 
-    * @param timeMs Adjustment in milliseconds
-    */
-   public adjustMs(timeMs: number): void {
-      if (this._paused) {
-         this.accumulatedMs += timeMs;
-      }
-      else {
-         this.startTime -= timeMs;
       }
    }
 }

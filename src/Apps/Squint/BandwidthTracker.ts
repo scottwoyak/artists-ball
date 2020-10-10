@@ -71,11 +71,11 @@ export class BandwidthTracker {
    }
 
    public pause(): void {
-      this.stopwatch.pause();
+      this.stopwatch.stop();
    }
 
    public resume(): void {
-      this.stopwatch.resume();
+      this.stopwatch.start();
    }
 
    /**
