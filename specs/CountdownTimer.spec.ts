@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { CountdownTimer } from '../src/Apps/Squint/CountdownTimer';
+import { CountdownTimer } from '../src/Util/CountdownTimer';
 import { sleep } from './util';
 
 describe('CountdownTimer', function () {

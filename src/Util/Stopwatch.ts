@@ -1,12 +1,10 @@
-import { toTimeStr } from './Globals';
-
 /**
  * Utility class for tracking time
  */
 export class Stopwatch {
 
    private accumulatedMs = 0;
-   private startTime: number;
+   private startTime = NaN;
    private _paused = false;
 
    public get paused(): boolean {
@@ -15,13 +13,6 @@ export class Stopwatch {
 
    public get running(): boolean {
       return !this.paused;
-   }
-
-   /**
-    * The elapsed time in as a string
-    */
-   public get elapsedStr(): string {
-      return toTimeStr(this.elapsedMs);
    }
 
    /**

@@ -2,10 +2,9 @@ import { GUI } from '../../GUI/GUI';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
 import { baseUrl, getEmPixels } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
-import { CountdownTimer } from './CountdownTimer';
+import { CountdownTimer, ITimerInfo } from '../../Util/CountdownTimer';
 import { Squint } from './Squint';
 import { SquintEvent } from './SquintEvents';
-import { ITimerInfo } from './SquintMessage';
 
 enum TimeMs {
    Sec = 1000,

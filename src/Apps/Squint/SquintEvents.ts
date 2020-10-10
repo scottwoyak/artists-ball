@@ -1,4 +1,5 @@
-import { IConnectionInfoBasic, ISessionInfoBasic, ISessionInfoFull, ITimerInfo } from './SquintMessage';
+import { ITimerInfo } from '../../Util/CountdownTimer';
+import { IConnectionInfoBasic, ISessionInfoBasic, ISessionInfoFull } from './SquintMessage';
 
 export type CameraPauseHandler = () => void;
 export type CameraRequestHandler = (megaPixels: number, jpegQuality: number) => void;

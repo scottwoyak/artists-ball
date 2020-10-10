@@ -1,7 +1,7 @@
 import { SquintWsUrl as SquintWsUrl } from './Servers';
 import { debug } from './SquintApp';
 import { SquintSocket } from './SquintSocket';
-import { ISquintMessage, SquintMessageSubject, ISquintInfo, IConnectionInfoBasic, JoinSessionStatus, CreateSessionStatus, ITimerInfo } from './SquintMessage';
+import { ISquintMessage, SquintMessageSubject, ISquintInfo, IConnectionInfoBasic, JoinSessionStatus, CreateSessionStatus } from './SquintMessage';
 import { EventManager } from './EventManager';
 import { ISquintEventHandler, SquintEvent } from './SquintEvents';
 import { WebSocketFactory } from './WebSocketFactory';
@@ -9,6 +9,7 @@ import { PromiseMap } from './PromiseMap';
 import { v4 as uuidv4 } from 'uuid';
 import { SquintStrings } from './SquintStrings';
 import { Stopwatch } from '../../Util/Stopwatch';
+import { ITimerInfo } from '../../Util/CountdownTimer';
 
 export class Squint {
 

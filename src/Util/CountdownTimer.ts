@@ -1,12 +1,17 @@
-import { Stopwatch } from '../../Util/Stopwatch';
-import { ITimerInfo } from './SquintMessage';
+import { Stopwatch } from './Stopwatch';
+
+export interface ITimerInfo {
+   durationMs: number,
+   remainingMs: number,
+   running: boolean,
+}
 
 const SEC = 1000;
 const MIN = 60 * SEC;
 
 export class CountdownTimer {
    private sw = new Stopwatch(false);
-   public durationMs: number;
+   public durationMs = 0;
 
    public get running(): boolean {
       return this.sw.paused === false && this.expired === false;

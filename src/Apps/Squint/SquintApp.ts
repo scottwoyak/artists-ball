@@ -645,10 +645,10 @@ export class SquintApp implements IApp {
 
       const remoteMegaPixels = this.remoteCameraMenu.addSlider({
          label: 'Camera Mega Pixels',
-         min: 0.1,
-         max: 1,
-         value: 0.5,
-         onGetText: (slider) => (100 * slider.value).toFixed() + '%',
+         min: 0.25,
+         max: 5,
+         value: 1.25,
+         onGetText: (slider) => slider.value.toFixed(2),
          oninput: () => {
             this.squint.sendCameraRequest(remoteMegaPixels.value, remoteJpegQuality.value);
          }

@@ -75,15 +75,6 @@ export function toSizeStr(val: number): string {
    }
 }
 
-export function toTimeStr(val: number): string {
-   if (val < 1000) {
-      return val.toFixed(0) + ' ms';
-   }
-   else {
-      return (val / 1000).toFixed(1) + ' s';
-   }
-}
-
 export function getBooleanValue(value: boolean | (() => boolean) | undefined | null): boolean {
    if (value === undefined || value === null) {
       return false;

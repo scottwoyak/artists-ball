@@ -2,6 +2,8 @@
 // This file should be the same in both the Squint and SquintServer projects
 //
 
+import { ITimerInfo } from '../../Util/CountdownTimer';
+
 export enum ConnectionState {
    Zombie = 'ZOMBIE',
    Open = 'OPEN',
@@ -44,12 +46,6 @@ export interface ISessionInfoBasic {
 export interface ISessionInfoFull extends ISessionInfoBasic {
    host?: IConnectionInfoFull,
    viewers: IConnectionInfoFull[]
-}
-
-export interface ITimerInfo {
-   durationMs: number,
-   remainingMs: number,
-   running: boolean,
 }
 
 export interface ISquintInfo {
