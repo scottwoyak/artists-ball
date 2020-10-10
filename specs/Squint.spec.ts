@@ -13,6 +13,7 @@ import { SquintSocket } from '../src/Apps/Squint/SquintSocket';
 import { SquintStrings } from '../src/Apps/Squint/SquintStrings';
 import { WebSocket as MockWebSocket } from 'mock-socket';
 import { MockServer, ReconnectAction } from './MockServer';
+import { sleep } from './util';
 
 const TestUrlLocalhost = 'ws://localhost:8080/V1/';
 const TestUrlMock = 'ws://mockhost:8081';
@@ -173,14 +174,6 @@ describe('Squint', function () {
       await squintViewer.joinSession(sessionId);
 
       return { squintHost, squintViewer, sessionId }
-   }
-
-   function sleep(delay: number): Promise<void> {
-      return new Promise((resolve, reject) => {
-         setTimeout(() => {
-            resolve();
-         }, delay);
-      });
    }
 
    function expectConnection(actual: IConnectionInfoFull, expected: Squint) {
@@ -2013,7 +2006,7 @@ xxx
             });
          });
 
-         it.only('should notify session members as viewers join and leave (normally)', async function () {
+         it('should notify session members as viewers join and leave (normally)', async function () {
 
             let userNameHost = 'TesterHost';
             let userNameViewer1 = 'TesterViewer1';
@@ -2124,7 +2117,7 @@ xxx
             return promise;
          });
 
-         it.only('should notify session members as viewers join and leave (abnormally)', async function () {
+         it('should notify session members as viewers join and leave (abnormally)', async function () {
 
             let userNameHost = 'TesterHost';
             let userNameViewer1 = 'TesterViewer1';
@@ -2235,7 +2228,7 @@ xxx
             return promise;
          });
 
-         it.only('should notify hosts as viewers join and leave (normally)', async function () {
+         it('should notify hosts as viewers join and leave (normally)', async function () {
 
             let userNameHost = 'TesterHost';
             let userNameViewer1 = 'TesterViewer1';
@@ -2347,7 +2340,7 @@ xxx
             return promise;
          });
 
-         it.only('should notify hosts as viewers join and leave (abnormally)', async function () {
+         it('should notify hosts as viewers join and leave (abnormally)', async function () {
 
             let userNameHost = 'TesterHost';
             let userNameViewer1 = 'TesterViewer1';

@@ -102,6 +102,11 @@ export class Stopwatch {
     * @param timeMs Adjustment in milliseconds
     */
    public adjustMs(timeMs: number): void {
-      this.startTime = this.startTime - timeMs;
+      if (this._paused) {
+         this.accumulatedMs += timeMs;
+      }
+      else {
+         this.startTime -= timeMs;
+      }
    }
 }
