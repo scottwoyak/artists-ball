@@ -30,7 +30,7 @@ export class CountdownTimer {
    }
 
    public get expired(): boolean {
-      return (this.sw.elapsedMs > this.durationMs);
+      return (this.sw.elapsedMs >= this.durationMs);
    }
 
    public start(): void {
@@ -71,10 +71,16 @@ export class CountdownTimer {
    }
 
    public synchronize(info: ITimerInfo): void {
-      if (this.running !== info.running) {
-         this.sw.reset(info.running);
+      let durationMs = Math.max(0, info.durationMs);
+      let remainingMs = Math.min(info.remainingMs, info.durationMs);
+      remainingMs = Math.max(0, remainingMs);
+
+      this.sw.reset(false);
+      this.sw.elapsedMs = durationMs - remainingMs;
+      this.durationMs = durationMs;
+
+      if (durationMs > 0 && remainingMs > 0 && info.running) {
+         this.sw.start();
       }
-      this.sw.elapsedMs = info.durationMs - info.remainingMs;
-      this.durationMs = info.durationMs;
    }
 }
