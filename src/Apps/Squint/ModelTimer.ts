@@ -1,7 +1,3 @@
-import { GUI } from '../../GUI/GUI';
-import { PointerEventHandler } from '../../GUI/PointerEventHandler';
-import { baseUrl, getEmPixels } from '../../Util/Globals';
-import { Vec2 } from '../../Util3D/Vec';
 import { CountdownTimer, ITimerInfo } from '../../Util/CountdownTimer';
 import { Squint } from './Squint';
 import { SquintEvent } from './SquintEvents';
@@ -13,291 +9,218 @@ enum TimeMs {
    StdBreak = 7 * Min,
 }
 
+export type OnTickHandler = (info: ITimerInfo) => void;
+export type OnAlarmHandler = (sound: boolean) => void;
+
 export class ModelTimer {
    private squint: Squint;
-   private canvas: HTMLCanvasElement;
-   private countdownTimer = new CountdownTimer;
-   private alarm: HTMLAudioElement = null;
-   private notification: HTMLAudioElement = null;
+   private countdownTimer = new CountdownTimer();
 
-   private get info(): ITimerInfo {
-      return {
-         running: this.countdownTimer.running,
-         durationMs: this.countdownTimer.durationMs,
-         remainingMs: this.countdownTimer.remainingMs,
-      }
+   public alarmDurationMs = 15 * TimeMs.Sec;
+
+   private alarmTimeoutHandle = NaN;
+   private tickTimeoutHandle = NaN;
+
+   public onTick: OnTickHandler = null;
+   public onAlarm: OnAlarmHandler = null;
+
+
+   public get running(): boolean {
+      return this.countdownTimer.running;
    }
 
-   public constructor(squint: Squint, parent: HTMLElement) {
+   /**
+    * This value is only for testing
+    */
+   public get ticking(): boolean {
+      return !isNaN(this.tickTimeoutHandle);
+   }
+
+   public get durationMs(): number {
+      return this.countdownTimer.durationMs;
+   }
+
+   public set durationMs(value: number) {
+      console.info('aaa setting duration: ' + value);
+      this.countdownTimer.durationMs = value;
+      this.tick();
+      this.synchronizeToServer();
+   }
+
+   public get remainingMs(): number {
+      return this.countdownTimer.remainingMs;
+   }
+
+   public get timeRemainingStr(): string {
+      return this.countdownTimer.timeRemainingStr;
+   }
+
+   public get alarmSounding(): boolean {
+      return !isNaN(this.alarmTimeoutHandle);
+   }
+
+   public get info(): ITimerInfo {
+      return this.countdownTimer.info;
+   }
+
+   public constructor(squint: Squint) {
       this.squint = squint;
-      this.canvas = GUI.create('canvas', 'ModelTimerCanvas', parent);
       this.countdownTimer.durationMs = TimeMs.StdPose;
 
       squint.on({
          event: SquintEvent.SynchronizeTimer,
          handler: (info: ITimerInfo) => {
-            if (this.alarmSounding) {
-               this.alarmSounding = false;
-               this.alarm.pause();
-               this.alarm.currentTime = 0;
-            }
-            else if (this.countdownTimer.running !== info.running) {
-               this.playNotification();
+
+            console.info('from server: ' + JSON.stringify(info))
+            this.countdownTimer.synchronize(info);
+            this.tick();
+            /*
+            // stop the alarm on any signal from another connection
+            if (!isNaN(this.alarmTimeoutHandle)) {
+               window.clearTimeout(this.alarmTimeoutHandle);
+               this.alarmTimeoutHandle = NaN;
             }
 
             this.countdownTimer.synchronize(info);
+
+            // start/stop/change ticking if needed
+            this.resetTicking();
+            */
          }
       })
-
-      let handler = new PointerEventHandler(this.canvas);
-
-      handler.onMove = (pos: Vec2, delta: Vec2) => {
-         this.stopAlarm();
-         let boxSize = this.canvas.clientHeight;
-         if (pos.x < 0.5 * boxSize) {
-            this.canvas.style.cursor = 'ns-resize';
-         }
-         else {
-            this.canvas.style.cursor = 'default';
-         }
-      }
-
-      let wasDragging = false;
-      handler.onUp = (pos: Vec2) => {
-         document.body.style.cursor = 'default';
-         let height = this.canvas.clientHeight;
-         let width = this.canvas.clientWidth;
-         let boxSize = height;
-         if (wasDragging === false && pos.x < 0.5 * boxSize) {
-            if (pos.y < 0.5 * height) {
-               this.countdownTimer.addOne();
-            }
-            else {
-               this.countdownTimer.subtractOne();
-            }
-
-            this.squint.synchronizeTimer(this.info);
-            this.draw();
-         }
-         else if (wasDragging) {
-            this.squint.synchronizeTimer(this.info);
-         }
-         else if (pos.x > width - boxSize) {
-            if (this.countdownTimer.running) {
-               this.playNotification();
-               this.countdownTimer.stop();
-            }
-            else {
-               this.playNotification();
-               this.countdownTimer.start();
-            }
-            this.squint.synchronizeTimer(this.info);
-         }
-
-         wasDragging = false;
-      }
-
-      let hit = false;
-      let accumulatedDelta = 0;
-      handler.onDown = (pos: Vec2) => {
-
-         let boxSize = this.canvas.clientHeight;
-         hit = false;
-         if (pos.x < 0.5 * boxSize) {
-            hit = true;
-         }
-      }
-
-      let step = getEmPixels() / 2;
-      handler.onDrag = (pos: Vec2, delta: Vec2) => {
-         if (hit === true) {
-            document.body.style.cursor = 'ns-resize';
-            accumulatedDelta += delta.y;
-            while (accumulatedDelta > step) {
-               wasDragging = true;
-               this.countdownTimer.subtractOne();
-               accumulatedDelta -= step;
-            }
-            while (accumulatedDelta < -step) {
-               wasDragging = true;
-               this.countdownTimer.addOne();
-               accumulatedDelta += step;
-            }
-
-            this.draw();
-         }
-      }
-
-      document.body.addEventListener('mousedown', () => {
-         this.stopAlarm();
-         this.initAudio();
-      });
-      document.body.addEventListener('touchstart', () => {
-         this.stopAlarm();
-         this.initAudio();
-      });
-
-      this.requestTimeout();
    }
 
-   private initAudio(): void {
-      // create via html instead of new Audio() which is blocked on portable ios
-      if (this.alarm === null) {
-         this.alarm = GUI.create('audio', 'AlarmAudio', document.body);
-         this.alarm.src = baseUrl() + 'sounds/timer.mp3';
-         this.alarm.loop = true;
-      }
+   /*
+   private resetTicking(): void {
+      if (!isNaN(this.tickTimeoutHandle)) {
+         // remove the old timer
+         window.clearTimeout(this.tickTimeoutHandle);
+         this.tickTimeoutHandle = NaN;
 
-      if (this.notification === null) {
-         this.notification = GUI.create('audio', 'NotificationAudio', document.body);
-         this.notification.src = baseUrl() + 'sounds/timer.mp3';
-      }
-   }
-
-   private setCanvasSize(): void {
-      let em = getEmPixels();
-      let height = this.canvas.clientHeight;
-      let largeFont = (height - 0.5 * em);
-
-      let ctx = this.canvas.getContext('2d');
-      ctx.font = largeFont + 'px Arial';
-      let size = ctx.measureText(' 00:00 ');
-
-      let width = 0.5 * height + size.width + 1.0 * height;
-      this.canvas.style.width = width + 'px';
-   }
-
-   private playNotification() {
-      /*
-      if (this.notification) {
-         this.notification.currentTime = 0;
-         this.notification.play().catch((err) => { console.log('Cannot play notification: ' + err) });
-      }
-      */
-   }
-
-   private alarmSounding = false;
-   private soundAlarm() {
-      if (this.alarmSounding === false) {
-         this.alarmSounding = true;
-         if (this.alarm) {
-            this.alarm.currentTime = 0;
-            this.alarm.play().catch((err) => { console.log('Cannot play alarm: ' + err) });
+         // if running, add the new timer
+         if (this.countdownTimer.running) {
+            this.registerNextTick();
          }
-      }
-   }
-
-   private stopAlarm() {
-      if (this.alarmSounding) {
-         this.alarmSounding = false;
-
-         // reset the sound file
-         this.alarm.pause();
-         this.alarm.currentTime = 0;
-
-         this.countdownTimer.reset();
-         if (this.countdownTimer.durationMin === TimeMs.StdBreak) {
-            // prepare for next pose;
-            this.countdownTimer.durationMs = TimeMs.StdPose;
-         }
-         else if (this.countdownTimer.durationMs === TimeMs.StdPose) {
-            // prepare for the break
-            this.countdownTimer.durationMs = TimeMs.StdBreak;
-         }
-
-         this.squint.synchronizeTimer(this.info);
-      }
-   }
-
-   private draw(): void {
-      // sync sizes
-      this.canvas.width = this.canvas.clientWidth;
-      this.canvas.height = this.canvas.clientHeight;
-      let width = this.canvas.width;
-      let height = this.canvas.height;
-
-      let ctx = this.canvas.getContext('2d');
-      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      ctx.fillStyle = 'lightgray';
-      ctx.fillRect(0, 0, width, height);
-
-      // draw the up-down symbol
-      let boxWidth = height / 2;
-      let boxHeight = height;
-
-      ctx.beginPath();
-      ctx.moveTo(0.6 * boxWidth, 0.2 * boxHeight);
-      ctx.lineTo(0.9 * boxWidth, 0.3 * boxHeight);
-      ctx.lineTo(0.9 * boxWidth, 0.7 * boxHeight);
-      ctx.lineTo(0.6 * boxWidth, 0.8 * boxHeight);
-      ctx.lineTo(0.3 * boxWidth, 0.7 * boxHeight);
-      ctx.lineTo(0.3 * boxWidth, 0.3 * boxHeight)
-      ctx.lineTo(0.6 * boxWidth, 0.2 * boxHeight);
-
-      ctx.fillStyle = 'rgb(230,230,230)';
-      ctx.strokeStyle = 'gray';
-      ctx.fill();
-      ctx.stroke();
-
-      // draw the time text
-      let em = getEmPixels();
-      let largeFont = (this.canvas.height - 0.5 * em);
-      ctx.font = largeFont + 'px Arial';
-      ctx.fillStyle = 'black';
-      let size = ctx.measureText('00:00 ');
-
-      let x = boxWidth;
-      this.drawText(ctx, this.countdownTimer.timeRemainingStr, x, 0, size.width, height);
-      x += size.width;
-
-      // draw the start/stop symbols
-      let boxSize = height;
-      ctx.beginPath();
-      if (this.countdownTimer.running) {
-         // square
-         let size = 0.25;
-         ctx.fillStyle = 'pink';
-         ctx.moveTo(x + size * boxSize, size * boxSize);
-         ctx.lineTo(x + (1 - size) * boxSize, size * boxSize);
-         ctx.lineTo(x + (1 - size) * boxSize, (1 - size) * boxSize);
-         ctx.lineTo(x + size * boxSize, (1 - size) * boxSize);
-         ctx.lineTo(x + size * boxSize, size * boxSize);
       }
       else {
-         // triangle
-         ctx.fillStyle = 'lightgreen';
-         ctx.moveTo(x + 0.2 * boxSize, 0.2 * boxSize);
-         ctx.lineTo(x + 0.8 * boxSize, 0.5 * boxSize);
-         ctx.lineTo(x + 0.2 * boxSize, 0.8 * boxSize);
-         ctx.lineTo(x + 0.2 * boxSize, 0.2 * boxSize);
+         // if the timer has newly started, trigger a tick
+         if (this.countdownTimer.running) {
+            this.tick();
+         }
       }
-      ctx.strokeStyle = 'black';
-      ctx.fill();
-      ctx.stroke();
+   }
+   */
+
+   private synchronizeToServer(): void {
+      console.info('to server: ' + JSON.stringify(this.countdownTimer.info))
+      this.squint.synchronizeTimer(this.countdownTimer.info);
    }
 
-   private requestTimeout(): void {
-      if (this.countdownTimer.running && this.countdownTimer.expired) {
-         this.soundAlarm();
-         this.countdownTimer.reset();
+   public synchronizeFromServer(): void {
+      console.info('requesting from server');
+      this.squint.synchronizeTimer();
+   }
+
+   private tick(): void {
+      if (this.onTick) {
+         this.onTick(this.countdownTimer.info);
       }
 
-      this.setCanvasSize();
-      this.draw();
+      if (this.countdownTimer.expired && !this.alarmSounding) {
 
-      // trigger the next draw event
-      setTimeout(() => {
-         this.requestTimeout();
-      }, 100);
+         this.alarmTimeoutHandle = window.setTimeout(() => {
+            this.countdownTimer.reset();
+            this.alarmTimeoutHandle = NaN;
+            if (this.onAlarm) {
+               this.onAlarm(false);
+            }
+         }, this.alarmDurationMs);
+
+         // do this after setting a timeout value so that alarmSounding = true
+         if (this.onAlarm) {
+            this.onAlarm(true);
+         }
+      }
+
+      if (this.ticking) {
+         window.clearTimeout(this.tickTimeoutHandle);
+         this.tickTimeoutHandle = NaN;
+      }
+
+      // if the timer is running request the next timeout
+      if (this.countdownTimer.running) {
+         this.registerNextTick();
+      }
    }
 
-   private drawText(ctx: CanvasRenderingContext2D, str: string, x: number, y: number, width: number, height: number) {
-
-      let size = ctx.measureText('y'); // something with a descent
-
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(str, x + width / 2, y + height / 2 + size.actualBoundingBoxDescent / 2);
-
+   private registerNextTick(): void {
+      this.tickTimeoutHandle = window.setTimeout(() => {
+         this.tickTimeoutHandle = NaN;
+         this.tick();
+      }, this.countdownTimer.info.remainingMs % 1000 + 1);
    }
+
+   public start(): void {
+      if (this.countdownTimer.running === false) {
+         console.info('duration: ' + this.countdownTimer.durationMs);
+         this.countdownTimer.start();
+         this.squint.synchronizeTimer({
+            running: true,
+            durationMs: this.countdownTimer.info.durationMs,
+            remainingMs: this.countdownTimer.info.remainingMs
+         });
+         console.info('xxx ' + JSON.stringify(this.countdownTimer.info));
+         this.tick();
+         console.info('xxx ' + JSON.stringify(this.countdownTimer.info));
+         console.info('running: ' + this.running);
+      }
+   }
+
+   public stop(): void {
+      if (this.countdownTimer.running) {
+         this.countdownTimer.stop();
+         this.synchronizeToServer();
+      }
+
+      if (this.ticking) {
+         window.clearTimeout(this.tickTimeoutHandle);
+         this.tickTimeoutHandle = NaN;
+      }
+   }
+
+   public reset(): void {
+      this.countdownTimer.reset();
+      if (this.durationMs === TimeMs.StdBreak) {
+         // prepare for next pose;
+         this.durationMs = TimeMs.StdPose;
+      }
+      else if (this.durationMs === TimeMs.StdPose) {
+         // prepare for the break
+         this.durationMs = TimeMs.StdBreak;
+      }
+   }
+
+   public stopAlarm(): void {
+      if (this.alarmSounding) {
+         window.clearTimeout(this.alarmTimeoutHandle);
+         this.alarmTimeoutHandle = NaN;
+
+         this.synchronizeToServer();
+
+         if (this.onAlarm) {
+            this.onAlarm(false);
+         }
+      }
+   }
+
+   public addOne(): void {
+      this.countdownTimer.addOne();
+      this.synchronizeToServer();
+   }
+
+   public subtractOne(): void {
+      this.countdownTimer.subtractOne();
+      this.synchronizeToServer();
+   }
+
 }

@@ -174,6 +174,9 @@ export class Squint {
          case SquintMessageSubject.SessionJoined: {
             switch (msg.status) {
                case JoinSessionStatus.Success:
+                  // synchronize with the time from the session
+                  console.info('TTTTTTTTTTTT requesting from server');
+                  this.synchronizeTimer();
                   this.requests.resolve(msg.requestId);
                   break;
 
@@ -461,7 +464,7 @@ export class Squint {
       this._remoteCameraPaused = false;
    }
 
-   public synchronizeTimer(info: ITimerInfo): void {
+   public synchronizeTimer(info?: ITimerInfo): void {
       this.send({
          subject: SquintMessageSubject.SynchronizeTimer,
          info,

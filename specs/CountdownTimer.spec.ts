@@ -53,6 +53,47 @@ describe('CountdownTimer', function () {
       expect(timer.expired).to.be.true;
    });
 
+   it('should be able to set duration while running', async function () {
+
+      let timer = new CountdownTimer();
+      timer.durationMs = 1000;
+      expect(timer.running).to.be.false;
+
+      timer.start();
+      expect(timer.running).to.be.true;
+
+      timer.durationMs = 200;
+      await sleep(100);
+
+      // not yet expired
+      expect(timer.running).to.be.true;
+      expect(timer.expired).to.be.false;
+
+      await sleep(100);
+
+      // now expired
+      expect(timer.running).to.be.false;
+      expect(timer.expired).to.be.true;
+   });
+
+   it('should be able to set duration while running', async function () {
+
+      let timer = new CountdownTimer();
+      timer.durationMs = 1000;
+      expect(timer.running).to.be.false;
+
+      timer.start();
+      expect(timer.running).to.be.true;
+
+      await sleep(100);
+
+      timer.durationMs = 50;
+
+      // should immediately go to expired state
+      expect(timer.running).to.be.false;
+      expect(timer.expired).to.be.true;
+   });
+
    it('should should be pausable/resumable', async function () {
       let timer = new CountdownTimer();
       let durationMs = 20;

@@ -180,7 +180,7 @@ export interface ISquintSessionListMessage {
 
 export interface ISquintSynchronizeTimerMessage {
    subject: SquintMessageSubject.SynchronizeTimer,
-   info: ITimerInfo,
+   info?: ITimerInfo,
 }
 
 // for type inference in TypeScript

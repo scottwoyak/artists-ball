@@ -44,7 +44,7 @@ export class Stopwatch {
    private getTimeMs(): number {
       // window.performance is not defined for nodejs so our test need
       // this to compile
-      if (window.performance !== undefined) {
+      if (typeof window !== 'undefined' && typeof window.performance != 'undefined') {
          return window.performance.now();
       }
       else {

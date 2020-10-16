@@ -35,7 +35,15 @@ export class CountdownTimer {
    }
 
    public get expired(): boolean {
-      return (this.sw.elapsedMs >= this.durationMs);
+      return (this.sw.elapsedMs > this.durationMs);
+   }
+
+   public get info(): ITimerInfo {
+      return {
+         running: this.running,
+         durationMs: this.durationMs,
+         remainingMs: this.remainingMs,
+      }
    }
 
    public start(): void {
@@ -57,6 +65,7 @@ export class CountdownTimer {
    public addOne(): void {
       this.stop();
 
+      console.info('iiiiiiii addOne');
       this.durationMs = this.remainingMs;
       this.sw.elapsedMs = 0;
 
@@ -67,6 +76,7 @@ export class CountdownTimer {
    public subtractOne(): void {
       this.stop();
 
+      console.info('iiiiiiii subtractOne');
       this.durationMs = this.remainingMs;
       this.sw.elapsedMs = 0;
 
@@ -76,6 +86,7 @@ export class CountdownTimer {
    }
 
    public synchronize(info: ITimerInfo): void {
+      console.info('gggg ' + JSON.stringify(info));
       let durationMs = Math.max(0, info.durationMs);
       let remainingMs = Math.min(info.remainingMs, info.durationMs);
       remainingMs = Math.max(0, remainingMs);
@@ -84,7 +95,7 @@ export class CountdownTimer {
       this.sw.elapsedMs = durationMs - remainingMs;
       this.durationMs = durationMs;
 
-      if (durationMs > 0 && remainingMs > 0 && info.running) {
+      if (durationMs >= 0 && remainingMs >= 0 && info.running) {
          this.sw.start();
       }
    }

@@ -27,7 +27,7 @@ import { PasswordDialog } from './PasswordDialog';
 import { ImageCanvas } from './ImageCanvas';
 import { ImageCanvas2D } from './ImageCanvas2D';
 import { LevelsPanel } from './LevelsPanel';
-import { ModelTimer } from './ModelTimer';
+import { ModelTimerPanel } from './ModelTimerPanel';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -70,6 +70,7 @@ export class SquintApp implements IApp {
    private jpegQuality: Slider | undefined;
    private megaPixels: Slider | undefined;
    private cameraCtrls: ICtrl[] = [];
+   private modelTimerPanel: ModelTimerPanel;
 
 
    private advancedConstraints: IAdvancedConstraint[] = [];
@@ -259,6 +260,7 @@ export class SquintApp implements IApp {
       let onStartSession = (password: string) => {
          this.squint.createSession(undefined, password)
             .then(() => {
+               this.squint.synchronizeTimer(this.modelTimerPanel.info)
                this.enableVideo(true);
             })
             .catch((err) => {
@@ -293,7 +295,7 @@ export class SquintApp implements IApp {
          }
       });
 
-      new ModelTimer(this.squint, this.div);
+      this.modelTimerPanel = new ModelTimerPanel(this.squint, this.div);
 
       this.chatPanel = new ChatPanel(this.squint, this.div);
       if (this.chatPanel.hasSavedSettings) {
