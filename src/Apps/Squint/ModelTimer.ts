@@ -1,5 +1,7 @@
-import { CountdownTimer, ITimerInfo } from '../../Util/CountdownTimer';
+import { CountdownTimer } from '../../Util/CountdownTimer';
+import { ITimerInfo } from './ITimerInfo';
 import { Squint } from './Squint';
+import { debug } from './SquintApp';
 import { SquintEvent } from './SquintEvents';
 
 enum TimeMs {
@@ -41,8 +43,12 @@ export class ModelTimer {
    }
 
    public set durationMs(value: number) {
-      console.info('aaa setting duration: ' + value);
       this.countdownTimer.durationMs = value;
+
+      if (this.alarmSounding) {
+         this.doStopAlarm(false);
+      }
+
       this.tick();
       this.synchronizeToServer();
    }
@@ -60,7 +66,12 @@ export class ModelTimer {
    }
 
    public get info(): ITimerInfo {
-      return this.countdownTimer.info;
+      return {
+         running: this.countdownTimer.running,
+         durationMs: this.countdownTimer.durationMs,
+         remainingMs: this.countdownTimer.remainingMs,
+         alarmSounding: this.alarmSounding,
+      }
    }
 
    public constructor(squint: Squint) {
@@ -71,75 +82,40 @@ export class ModelTimer {
          event: SquintEvent.SynchronizeTimer,
          handler: (info: ITimerInfo) => {
 
-            console.info('from server: ' + JSON.stringify(info))
-            this.countdownTimer.synchronize(info);
-            this.tick();
-            /*
-            // stop the alarm on any signal from another connection
-            if (!isNaN(this.alarmTimeoutHandle)) {
-               window.clearTimeout(this.alarmTimeoutHandle);
-               this.alarmTimeoutHandle = NaN;
+            this.countdownTimer.synchronize(info.running, info.durationMs, info.remainingMs);
+
+            if (info.alarmSounding !== this.alarmSounding) {
+               if (info.alarmSounding) {
+                  this.startAlarm();
+               }
+               else {
+                  this.doStopAlarm(false);
+               }
             }
 
-            this.countdownTimer.synchronize(info);
+            this.tick();
+         }
+      });
 
-            // start/stop/change ticking if needed
-            this.resetTicking();
-            */
+      squint.on({
+         event: SquintEvent.Close,
+         handler: () => {
+            this.doReset(false);
          }
       })
    }
 
-   /*
-   private resetTicking(): void {
-      if (!isNaN(this.tickTimeoutHandle)) {
-         // remove the old timer
-         window.clearTimeout(this.tickTimeoutHandle);
-         this.tickTimeoutHandle = NaN;
-
-         // if running, add the new timer
-         if (this.countdownTimer.running) {
-            this.registerNextTick();
-         }
-      }
-      else {
-         // if the timer has newly started, trigger a tick
-         if (this.countdownTimer.running) {
-            this.tick();
-         }
-      }
-   }
-   */
-
    private synchronizeToServer(): void {
-      console.info('to server: ' + JSON.stringify(this.countdownTimer.info))
-      this.squint.synchronizeTimer(this.countdownTimer.info);
+      this.squint.synchronizeTimer(this.info);
    }
 
    public synchronizeFromServer(): void {
-      console.info('requesting from server');
       this.squint.synchronizeTimer();
    }
 
    private tick(): void {
       if (this.onTick) {
-         this.onTick(this.countdownTimer.info);
-      }
-
-      if (this.countdownTimer.expired && !this.alarmSounding) {
-
-         this.alarmTimeoutHandle = window.setTimeout(() => {
-            this.countdownTimer.reset();
-            this.alarmTimeoutHandle = NaN;
-            if (this.onAlarm) {
-               this.onAlarm(false);
-            }
-         }, this.alarmDurationMs);
-
-         // do this after setting a timeout value so that alarmSounding = true
-         if (this.onAlarm) {
-            this.onAlarm(true);
-         }
+         this.onTick(this.info);
       }
 
       if (this.ticking) {
@@ -156,61 +132,108 @@ export class ModelTimer {
    private registerNextTick(): void {
       this.tickTimeoutHandle = window.setTimeout(() => {
          this.tickTimeoutHandle = NaN;
+
+         if (this.countdownTimer.expired && !this.alarmSounding) {
+            this.startAlarm();
+         }
+
          this.tick();
-      }, this.countdownTimer.info.remainingMs % 1000 + 1);
+      }, this.countdownTimer.remainingMs % 1000 + 1);
    }
 
    public start(): void {
       if (this.countdownTimer.running === false) {
-         console.info('duration: ' + this.countdownTimer.durationMs);
          this.countdownTimer.start();
-         this.squint.synchronizeTimer({
-            running: true,
-            durationMs: this.countdownTimer.info.durationMs,
-            remainingMs: this.countdownTimer.info.remainingMs
-         });
-         console.info('xxx ' + JSON.stringify(this.countdownTimer.info));
+
+         if (this.countdownTimer.expired && !this.alarmSounding) {
+            this.startAlarm();
+         }
+
          this.tick();
-         console.info('xxx ' + JSON.stringify(this.countdownTimer.info));
-         console.info('running: ' + this.running);
+         this.squint.synchronizeTimer(this.info);
+      }
+   }
+
+   private doStop(sync: boolean) {
+      if (this.countdownTimer.running) {
+         this.countdownTimer.stop();
+
+         this.tick();
+
+         if (sync) {
+            this.synchronizeToServer();
+         }
       }
    }
 
    public stop(): void {
-      if (this.countdownTimer.running) {
-         this.countdownTimer.stop();
-         this.synchronizeToServer();
+      this.doStop(true);
+   }
+
+   private doReset(sync: boolean): void {
+      if (this.alarmSounding) {
+         this.doStopAlarm(false);
       }
 
-      if (this.ticking) {
-         window.clearTimeout(this.tickTimeoutHandle);
-         this.tickTimeoutHandle = NaN;
+      this.countdownTimer.reset();
+      if (this.durationMs === TimeMs.StdBreak) {
+         // prepare for next pose;
+         this.countdownTimer.durationMs = TimeMs.StdPose;
+      }
+      else if (this.durationMs === TimeMs.StdPose) {
+         // prepare for the break
+         this.countdownTimer.durationMs = TimeMs.StdBreak;
+      }
+
+      this.tick();
+
+      if (sync) {
+         this.synchronizeToServer();
       }
    }
 
    public reset(): void {
-      this.countdownTimer.reset();
-      if (this.durationMs === TimeMs.StdBreak) {
-         // prepare for next pose;
-         this.durationMs = TimeMs.StdPose;
+      this.doReset(true);
+   }
+
+   private startAlarm(): void {
+      if (this.alarmSounding) {
+         debug('Starting alarm but it is already sounding');
+         return;
       }
-      else if (this.durationMs === TimeMs.StdPose) {
-         // prepare for the break
-         this.durationMs = TimeMs.StdBreak;
+
+      this.alarmTimeoutHandle = window.setTimeout(() => {
+         // if we time out, we just stop playing the sound. We don't synchronize with the server
+         this.countdownTimer.reset();
+         this.alarmTimeoutHandle = NaN;
+         if (this.onAlarm) {
+            this.onAlarm(false);
+         }
+      }, this.alarmDurationMs);
+
+      // do this after setting a value for alarmTimeoutHandle so that alarmSounding = true
+      if (this.onAlarm) {
+         this.onAlarm(true);
       }
    }
 
-   public stopAlarm(): void {
+   private doStopAlarm(sync: boolean): void {
       if (this.alarmSounding) {
          window.clearTimeout(this.alarmTimeoutHandle);
          this.alarmTimeoutHandle = NaN;
 
-         this.synchronizeToServer();
-
          if (this.onAlarm) {
             this.onAlarm(false);
          }
+
+         if (sync && this.squint.connected) {
+            this.synchronizeToServer();
+         }
       }
+   }
+
+   public stopAlarm(): void {
+      this.doStopAlarm(true);
    }
 
    public addOne(): void {
@@ -219,8 +242,10 @@ export class ModelTimer {
    }
 
    public subtractOne(): void {
-      this.countdownTimer.subtractOne();
-      this.synchronizeToServer();
+      if (this.countdownTimer.durationMs > 0) {
+         this.countdownTimer.subtractOne();
+         this.synchronizeToServer();
+      }
    }
 
 }

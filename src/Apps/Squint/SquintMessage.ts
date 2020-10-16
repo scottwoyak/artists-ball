@@ -2,7 +2,8 @@
 // This file should be the same in both the Squint and SquintServer projects
 //
 
-import { ITimerInfo } from '../../Util/CountdownTimer';
+import { ITimerInfo } from './ITimerInfo';
+
 
 export enum ConnectionState {
    Zombie = 'ZOMBIE',
@@ -99,13 +100,6 @@ export interface ISquintConnectionInfoUpdateMessage {
    connectionId: string,
 }
 
-export interface ISquintCreateSessionMessage {
-   subject: SquintMessageSubject.CreateSession,
-   requestId: string,
-   sessionTitle: string,
-   password?: string,
-}
-
 export interface ISquintHelloFromClientMessage {
    subject: SquintMessageSubject.Hello,
    userName: string,
@@ -155,11 +149,19 @@ export interface ISquintReconnectedMessage {
    status: ReconnectedStatus,
 }
 
+export interface ISquintSessionCreateMessage {
+   subject: SquintMessageSubject.CreateSession,
+   requestId: string,
+   sessionTitle: string,
+   password?: string,
+}
+
 export interface ISquintSessionCreatedMessage {
    subject: SquintMessageSubject.SessionCreated,
    requestId: string,
    status: CreateSessionStatus,
    sessionId?: string, // undefined if creation fails
+   timerInfo?: ITimerInfo,
 }
 
 export interface ISquintSessionInfoMessage {
@@ -171,6 +173,7 @@ export interface ISquintSessionJoinedMessage {
    subject: SquintMessageSubject.SessionJoined,
    requestId: string, // same value from the Join request
    status: JoinSessionStatus,
+   timerInfo?: ITimerInfo,
 }
 
 export interface ISquintSessionListMessage {
@@ -189,7 +192,6 @@ export type ISquintMessage =
    ISquintCameraRequestMessage |
    ISquintChatMessage |
    ISquintConnectionInfoUpdateMessage |
-   ISquintCreateSessionMessage |
    ISquintHelloFromClientMessage |
    ISquintHelloFromServerMessage |
    ISquintHostChangedMessage |
@@ -199,6 +201,7 @@ export type ISquintMessage =
    ISquintLogMessage |
    ISquintReadyForNextImageMessage |
    ISquintReconnectedMessage |
+   ISquintSessionCreateMessage |
    ISquintSessionCreatedMessage |
    ISquintSessionInfoMessage |
    ISquintSessionJoinedMessage |

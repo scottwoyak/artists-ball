@@ -12,8 +12,8 @@ import { SquintSocket } from '../src/Apps/Squint/SquintSocket';
 import { SquintStrings } from '../src/Apps/Squint/SquintStrings';
 import { ReconnectAction } from './MockServer';
 import { connectSquint, createMockServer, createSession, createSquint, expectConnection, sleep, squintAfterEach, squintBeforeEach, TimeMs } from './util';
-import { ITimerInfo } from '../src/Util/CountdownTimer';
 import { TestUrlLocalhost, TestUrlMock, imageBlob } from './Constants';
+import { ITimerInfo } from '../src/Apps/Squint/ITimerInfo';
 
 console.log('\n\n\n\n\n\n\n\n\n\n');
 // dissable log so that the console just shows Mocha output
@@ -31,7 +31,8 @@ describe('Squint', function () {
       return squintAfterEach(this);
    });
 
-   for (let test = 0; test < 100; test++) {
+   const numTrials = 1;
+   for (let test = 0; test < numTrials; test++) {
       describe('connect()', function () {
 
          it('should connect', async function () {
@@ -2912,7 +2913,7 @@ xxx
          });
       });
 
-      describe('Timer', function () {
+      describe.only('Timer', function () {
 
          function createTestPromise(
             sourceInfo: ITimerInfo,
@@ -2946,7 +2947,12 @@ xxx
                            }
                         }
                         if (count === expectedMsgReceivers.length) {
-                           resolve();
+
+                           // don't immediately resolve - give it time for bad events
+                           // to happen before closing sockets
+                           setTimeout(() => {
+                              resolve();
+                           }, TimeMs.Interval);
                         }
                      }
                   })
@@ -2965,23 +2971,26 @@ xxx
 
          it('should send SynchronizeTime message when the host updates the timer', async function () {
 
-            let numViewers = 5;
+            let numViewers = 1;
             let { squintHost, squintViewers } = await createSession(numViewers);
 
             let sourceInfo: ITimerInfo = {
                running: true,
                durationMs: 1000,
                remainingMs: 500,
+               alarmSounding: false,
             }
 
             let promise = createTestPromise(sourceInfo, squintViewers, squintHost);
 
             squintHost.synchronizeTimer(sourceInfo);
 
+            await sleep(TimeMs.Interval);
+
             return promise;
          });
 
-         it('should send SynchronizeTime message when the host updates the timer', async function () {
+         it('should send SynchronizeTime message when a viewer updates the timer', async function () {
 
             let numViewers = 5;
             let { squintHost, squintViewers } = await createSession(numViewers);
@@ -2997,6 +3006,7 @@ xxx
                running: true,
                durationMs: 1000,
                remainingMs: 500,
+               alarmSounding: false,
             }
 
             let promise = createTestPromise(sourceInfo, expectedMsgReceivers, nonExpectedMsgReceiver);
@@ -3019,6 +3029,7 @@ xxx
                running: true,
                durationMs: 1000,
                remainingMs: 500,
+               alarmSounding: false,
             }
 
             // send time info to the server

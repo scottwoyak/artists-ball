@@ -180,6 +180,7 @@ export class SquintApp implements IApp {
                this.uploader.resume();
             }
             this.downloadTracker.resume();
+            this.squint.synchronizeTimer();
          }
          else {
             if (this.uploader) {
@@ -260,7 +261,6 @@ export class SquintApp implements IApp {
       let onStartSession = (password: string) => {
          this.squint.createSession(undefined, password)
             .then(() => {
-               this.squint.synchronizeTimer(this.modelTimerPanel.info)
                this.enableVideo(true);
             })
             .catch((err) => {

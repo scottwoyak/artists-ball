@@ -1,20 +1,28 @@
 import { Stopwatch } from './Stopwatch';
 
-export interface ITimerInfo {
-   durationMs: number,
-   remainingMs: number,
-   running: boolean,
-}
-
 const SEC = 1000;
 const MIN = 60 * SEC;
 
 export class CountdownTimer {
    private sw = new Stopwatch(false);
-   public durationMs = 0;
+   public _durationMs = 20 * MIN;
+
+   public get durationMs(): number {
+      return this._durationMs;
+   }
+
+   public set durationMs(value: number) {
+      this.stop();
+      this._durationMs = value;
+   }
 
    public get running(): boolean {
-      return this.sw.paused === false && this.expired === false;
+      if (this.sw.elapsedMs > this._durationMs) {
+         this.sw.stop();
+         this.sw.elapsedMs = this._durationMs;
+      }
+
+      return this.sw.running;
    }
 
    public get durationMin(): number {
@@ -35,26 +43,20 @@ export class CountdownTimer {
    }
 
    public get expired(): boolean {
-      return (this.sw.elapsedMs > this.durationMs);
-   }
-
-   public get info(): ITimerInfo {
-      return {
-         running: this.running,
-         durationMs: this.durationMs,
-         remainingMs: this.remainingMs,
-      }
+      return (this.sw.elapsedMs >= this.durationMs);
    }
 
    public start(): void {
-      if (this.sw.paused) {
+      if (this.sw.running === false && this.expired === false) {
          this.sw.start();
       }
    }
 
    public stop(): void {
-      if (this.running) {
-         this.sw.stop();
+      this.sw.stop();
+
+      if (this.sw.elapsedMs > this._durationMs) {
+         this.sw.elapsedMs = this._durationMs;
       }
    }
 
@@ -65,37 +67,34 @@ export class CountdownTimer {
    public addOne(): void {
       this.stop();
 
-      console.info('iiiiiiii addOne');
-      this.durationMs = this.remainingMs;
+      this._durationMs = this.remainingMs;
       this.sw.elapsedMs = 0;
 
       // the next highest minute value
-      this.durationMs = MIN * Math.floor(this.durationMin) + MIN;
+      this._durationMs = MIN * Math.floor(this.durationMin) + MIN;
    }
 
    public subtractOne(): void {
       this.stop();
 
-      console.info('iiiiiiii subtractOne');
-      this.durationMs = this.remainingMs;
+      this._durationMs = this.remainingMs;
       this.sw.elapsedMs = 0;
 
       // the next lowest minute value
-      this.durationMs = MIN * Math.floor(0.9999 + this.durationMin) - MIN;
-      this.durationMs = Math.max(this.durationMs, 0);
+      this._durationMs = MIN * Math.floor(0.9999 + this.durationMin) - MIN;
+      this._durationMs = Math.max(this._durationMs, 0);
    }
 
-   public synchronize(info: ITimerInfo): void {
-      console.info('gggg ' + JSON.stringify(info));
-      let durationMs = Math.max(0, info.durationMs);
-      let remainingMs = Math.min(info.remainingMs, info.durationMs);
+   public synchronize(running: boolean, durationMs: number, remainingMs: number): void {
+      durationMs = Math.max(0, durationMs);
+      remainingMs = Math.min(remainingMs, durationMs);
       remainingMs = Math.max(0, remainingMs);
 
       this.sw.reset(false);
       this.sw.elapsedMs = durationMs - remainingMs;
-      this.durationMs = durationMs;
+      this._durationMs = durationMs;
 
-      if (durationMs >= 0 && remainingMs >= 0 && info.running) {
+      if (durationMs >= 0 && remainingMs >= 0 && durationMs > remainingMs && running) {
          this.sw.start();
       }
    }

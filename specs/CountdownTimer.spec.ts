@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { CountdownTimer } from '../src/Util/CountdownTimer';
 import { sleep } from './util';
 
-describe('CountdownTimer', function () {
+describe.only('CountdownTimer', function () {
 
    it('should keep track of time', async function () {
 
@@ -17,7 +17,6 @@ describe('CountdownTimer', function () {
       expect(timer.expired).to.be.false;
 
       timer.start();
-      await sleep(1);
       expect(timer.running).to.be.true;
       expect(timer.remainingMs).to.be.greaterThan(0);
       expect(timer.remainingMs).to.be.lessThan(durationMs);
@@ -40,7 +39,7 @@ describe('CountdownTimer', function () {
       expect(timer.running).to.be.true;
    });
 
-   it('should be able to set duration to 0', function () {
+   it('should be able to set duration to zero', function () {
 
       let timer = new CountdownTimer();
       timer.durationMs = 0;
@@ -53,7 +52,20 @@ describe('CountdownTimer', function () {
       expect(timer.expired).to.be.true;
    });
 
-   it('should be able to set duration while running', async function () {
+   it('setting duration less than zero should be the same as setting it to zero', function () {
+
+      let timer = new CountdownTimer();
+      timer.durationMs = -10;
+      expect(timer.running).to.be.false;
+
+      timer.start();
+
+      // should immediately go to expired state
+      expect(timer.running).to.be.false;
+      expect(timer.expired).to.be.true;
+   });
+
+   it('setting duration while running should stop the timer', function () {
 
       let timer = new CountdownTimer();
       timer.durationMs = 1000;
@@ -63,17 +75,10 @@ describe('CountdownTimer', function () {
       expect(timer.running).to.be.true;
 
       timer.durationMs = 200;
-      await sleep(100);
 
       // not yet expired
-      expect(timer.running).to.be.true;
-      expect(timer.expired).to.be.false;
-
-      await sleep(100);
-
-      // now expired
       expect(timer.running).to.be.false;
-      expect(timer.expired).to.be.true;
+      expect(timer.expired).to.be.false;
    });
 
    it('should be able to set duration while running', async function () {
@@ -226,6 +231,31 @@ describe('CountdownTimer', function () {
       expect(timer.remainingMs).to.equal(0);
    });
 
+   it('adding time to an expired timer should not restart it', async function () {
+      let timer = new CountdownTimer();
+      let durationMs = 1;
+      timer.durationMs = durationMs;
+
+      expect(timer.durationMs).to.equal(durationMs);
+      expect(timer.running).to.be.false;
+      expect(timer.expired).to.be.false;
+
+      timer.start();
+      await sleep(10);
+
+      expect(timer.expired).to.be.true;
+      expect(timer.running).to.be.false;
+      expect(timer.remainingMs).to.equal(0);
+
+      timer.durationMs = 1000;
+
+      expect(timer.expired).to.be.false;
+      expect(timer.running).to.be.false;
+      expect(timer.remainingMs).to.be.lessThan(1000);
+      expect(timer.remainingMs).to.be.greaterThan(0);
+
+   });
+
    it('should be ok to call stop() after expiring', async function () {
       let timer = new CountdownTimer();
       let durationMs = 1;
@@ -332,7 +362,7 @@ describe('CountdownTimer', function () {
          timer.start();
          await sleep(1);
 
-         timer.synchronize(info);
+         timer.synchronize(info.running, info.durationMs, info.remainingMs);
 
          let remainingMs = Math.max(0, Math.min(info.remainingMs, info.durationMs));
          let durationMs = Math.max(info.durationMs, 0);

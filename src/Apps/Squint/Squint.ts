@@ -9,7 +9,8 @@ import { PromiseMap } from './PromiseMap';
 import { v4 as uuidv4 } from 'uuid';
 import { SquintStrings } from './SquintStrings';
 import { Stopwatch } from '../../Util/Stopwatch';
-import { ITimerInfo } from '../../Util/CountdownTimer';
+import { ModelTimer } from './ModelTimer';
+import { ITimerInfo } from './ITimerInfo';
 
 export class Squint {
 
@@ -24,6 +25,7 @@ export class Squint {
    private _url: string | null;
    private requests = new PromiseMap();
    private reconnectStopwatch: Stopwatch | null = null;
+   private _modelTimer: ModelTimer;
 
    private eventManager = new EventManager();
 
@@ -38,6 +40,10 @@ export class Squint {
     */
    public get ws(): WebSocket {
       return this.ss.ws;
+   }
+
+   public get modelTimer(): ModelTimer | null {
+      return this._modelTimer;
    }
 
    public get userName(): string {
@@ -100,6 +106,10 @@ export class Squint {
       return this._remoteCameraConnected;
    }
 
+   public constructor() {
+      this._modelTimer = new ModelTimer(this);
+   }
+
    public on(handler: ISquintEventHandler): void {
       this.eventManager.on(handler.event, handler.handler);
    }
@@ -157,6 +167,7 @@ export class Squint {
             switch (msg.status) {
                case CreateSessionStatus.Success:
                   this.requests.resolve(msg.requestId, msg.sessionId);
+                  this.emit(SquintEvent.SynchronizeTimer, msg.timerInfo);
                   break;
 
                case CreateSessionStatus.AlreadyInASession:
@@ -174,10 +185,8 @@ export class Squint {
          case SquintMessageSubject.SessionJoined: {
             switch (msg.status) {
                case JoinSessionStatus.Success:
-                  // synchronize with the time from the session
-                  console.info('TTTTTTTTTTTT requesting from server');
-                  this.synchronizeTimer();
                   this.requests.resolve(msg.requestId);
+                  this.emit(SquintEvent.SynchronizeTimer, msg.timerInfo);
                   break;
 
                case JoinSessionStatus.AlreadyInASession:
@@ -341,7 +350,7 @@ export class Squint {
 
    private send(msg: ISquintMessage) {
       if (!this.connected) {
-         debug('Squint.send() called, but not connected');
+         debug('Squint.send() called, but not connected: ' + JSON.stringify(msg));
          return;
       }
 

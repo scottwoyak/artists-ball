@@ -1,4 +1,4 @@
-import { ITimerInfo } from '../../Util/CountdownTimer';
+import { ITimerInfo } from './ITimerInfo';
 import { IConnectionInfoBasic, ISessionInfoBasic, ISessionInfoFull } from './SquintMessage';
 
 export type CameraPauseHandler = () => void;

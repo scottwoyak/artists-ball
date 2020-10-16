@@ -1,6 +1,6 @@
 import { expect } from 'chai';
+import { ITimerInfo } from '../src/Apps/Squint/ITimerInfo';
 import { ModelTimer } from '../src/Apps/Squint/ModelTimer';
-import { ITimerInfo } from '../src/Util/CountdownTimer';
 import { Stopwatch } from '../src/Util/Stopwatch';
 import { TestUrlLocalhost } from './Constants';
 import { createSession, createSquint, sleep, squintAfterEach, squintBeforeEach, TimeMs } from './util';
@@ -15,595 +15,830 @@ describe.only('ModelTimer', function () {
       return squintAfterEach(this);
    });
 
+   describe('Single Timer', function () {
 
-   it('should tick', async function () {
+      it('should tick', async function () {
 
-      let squint = await createSquint(TestUrlLocalhost, 'Squint');
+         let squint = await createSquint(TestUrlLocalhost, 'Squint');
 
-      let timer = new ModelTimer(squint);
-      let sw = new Stopwatch(false);
+         let timer = new ModelTimer(squint);
+         let sw = new Stopwatch(false);
 
-      let promise = new Promise((resolve, reject) => {
+         let promise = new Promise((resolve, reject) => {
 
-         let tickCount = 0;
-         timer.onTick = (info: ITimerInfo) => {
-            tickCount++;
+            let tickCount = 0;
+            timer.onTick = (info: ITimerInfo) => {
+               tickCount++;
 
-            try {
-               expect(info.running).to.be.true;
+               try {
 
-               if (tickCount === 1) {
-                  expect(sw.elapsedS).to.be.greaterThan(0);
-                  expect(sw.elapsedS).to.be.lessThan(0.1);
+                  if (tickCount === 1) {
+                     expect(info.running).to.be.true;
+                     expect(sw.elapsedS).to.be.greaterThan(0);
+                     expect(sw.elapsedS).to.be.lessThan(0.1);
+                  }
+                  else if (tickCount === 2) {
+                     expect(info.running).to.be.true;
+                     expect(sw.elapsedS).to.be.greaterThan(1);
+                     expect(sw.elapsedS).to.be.lessThan(1.1);
+                  }
+                  else if (tickCount === 3) {
+                     expect(info.running).to.be.true;
+                     expect(sw.elapsedS).to.be.greaterThan(2);
+                     expect(sw.elapsedS).to.be.lessThan(2.1);
+                     timer.stop();
+                     resolve();
+                  }
+                  else if (tickCount === 4) {
+                     // happens after resolve when we close Squint
+                     expect(info.running).to.be.false;
+                  }
+                  else {
+                     reject('tick #5 encountered');
+                  }
                }
-               else if (tickCount === 2) {
-                  expect(sw.elapsedS).to.be.greaterThan(1);
-                  expect(sw.elapsedS).to.be.lessThan(1.1);
+               catch (err) {
+                  reject(err);
                }
-               else if (tickCount === 3) {
-                  expect(sw.elapsedS).to.be.greaterThan(2);
-                  expect(sw.elapsedS).to.be.lessThan(2.1);
-                  timer.stop();
-                  resolve();
+            }
+         });
+
+         sw.start();
+         timer.start();
+         expect(timer.ticking).to.be.true;
+
+         return promise;
+      });
+
+      it('should immediately sound the alarm if durationMs is zero', async function () {
+
+         let squintHost = await createSquint(TestUrlLocalhost, 'TestHost');
+
+         squintHost.modelTimer.durationMs = 0;
+         squintHost.modelTimer.start();
+
+         expect(squintHost.modelTimer.running).to.be.false;
+         expect(squintHost.modelTimer.alarmSounding).to.be.true;
+      })
+
+      it('reset() should stop the alarm', async function () {
+
+         let squintHost = await createSquint(TestUrlLocalhost, 'TestHost');
+
+         squintHost.modelTimer.durationMs = 0;
+         squintHost.modelTimer.start();
+
+         expect(squintHost.modelTimer.running).to.be.false;
+         expect(squintHost.modelTimer.alarmSounding).to.be.true;
+
+         squintHost.modelTimer.reset();
+         expect(squintHost.modelTimer.running).to.be.false;
+         expect(squintHost.modelTimer.alarmSounding).to.be.false;
+      })
+
+      it('stopAlarm() should stop the alarm', async function () {
+
+         let squintHost = await createSquint(TestUrlLocalhost, 'TestHost');
+
+         squintHost.modelTimer.durationMs = 0;
+         squintHost.modelTimer.start();
+
+         expect(squintHost.modelTimer.running).to.be.false;
+         expect(squintHost.modelTimer.alarmSounding).to.be.true;
+
+         squintHost.modelTimer.stopAlarm();
+         expect(squintHost.modelTimer.running).to.be.false;
+         expect(squintHost.modelTimer.alarmSounding).to.be.false;
+      })
+
+      it('changing durationMs should stop the alarm', async function () {
+
+         let squintHost = await createSquint(TestUrlLocalhost, 'TestHost');
+
+         squintHost.modelTimer.durationMs = 0;
+         squintHost.modelTimer.start();
+
+         expect(squintHost.modelTimer.running).to.be.false;
+         expect(squintHost.modelTimer.alarmSounding).to.be.true;
+
+         squintHost.modelTimer.durationMs = 1000;
+
+         expect(squintHost.modelTimer.running).to.be.false;
+         expect(squintHost.modelTimer.alarmSounding).to.be.false;
+      })
+
+      it('should stop running when Squint closes', async function () {
+
+         let squintHost = await createSquint(TestUrlLocalhost, 'TestHost');
+
+         squintHost.modelTimer.start();
+         expect(squintHost.modelTimer.running).to.be.true;
+         expect(squintHost.modelTimer.alarmSounding).to.be.false;
+
+         squintHost.close();
+         expect(squintHost.modelTimer.running).to.be.false;
+         expect(squintHost.modelTimer.alarmSounding).to.be.false;
+      })
+
+      it('should stop the alarm when Squint closes', async function () {
+
+         let squintHost = await createSquint(TestUrlLocalhost, 'TestHost');
+
+         squintHost.modelTimer.durationMs = 10;
+         squintHost.modelTimer.start();
+         await sleep(20);
+
+         expect(squintHost.modelTimer.running).to.be.false;
+         expect(squintHost.modelTimer.alarmSounding).to.be.true;
+
+         squintHost.close();
+         expect(squintHost.modelTimer.running).to.be.false;
+         expect(squintHost.modelTimer.alarmSounding).to.be.false;
+      })
+
+      it('should tick once when Squint closes (timer running)', async function () {
+
+         let squintHost = await createSquint(TestUrlLocalhost, 'TestHost');
+
+         squintHost.modelTimer.start();
+         expect(squintHost.modelTimer.running).to.be.true;
+         expect(squintHost.modelTimer.alarmSounding).to.be.false;
+
+         let promise = new Promise((resolve, reject) => {
+            let count = 0;
+            squintHost.modelTimer.onTick = (info: ITimerInfo) => {
+               count++;
+               if (count === 1) {
+                  try {
+                     expect(info.running).to.be.false;
+                     expect(info.alarmSounding).to.be.false;
+                  }
+                  catch (err) {
+                     reject(err);
+                  }
                }
                else {
-                  reject('tick #4 encountered');
+                  reject('unexpected onTick()');
                }
             }
-            catch (err) {
-               reject(err);
+
+            setTimeout(() => {
+               if (count === 1) {
+                  resolve();
+               }
+            }, 500);
+         });
+
+         squintHost.close();
+         expect(squintHost.modelTimer.running).to.be.false;
+
+         return promise;
+      })
+
+      it('should tick once when Squint closes (alarm sounding)', async function () {
+
+         let squintHost = await createSquint(TestUrlLocalhost, 'TestHost');
+
+         squintHost.modelTimer.durationMs = 10;
+         squintHost.modelTimer.start();
+         expect(squintHost.modelTimer.running).to.be.true;
+         expect(squintHost.modelTimer.alarmSounding).to.be.false;
+
+         await sleep(20);
+
+         let promise = new Promise((resolve, reject) => {
+            let count = 0;
+            squintHost.modelTimer.onTick = (info: ITimerInfo) => {
+               count++;
+               if (count === 1) {
+                  try {
+                     expect(info.running).to.be.false;
+                     expect(info.alarmSounding).to.be.false;
+                  }
+                  catch (err) {
+                     reject(err);
+                  }
+               }
+               else {
+                  reject('unexpected onTick()');
+               }
             }
-         }
-      });
 
-      sw.start();
-      timer.start();
-      expect(timer.ticking).to.be.true;
+            setTimeout(() => {
+               if (count === 1) {
+                  resolve();
+               }
+            }, 500);
+         });
 
-      return promise;
-   });
+         squintHost.close();
+         expect(squintHost.modelTimer.running).to.be.false;
 
-   it('should sound an alarm when time has expired', async function () {
-      let squint = await createSquint(TestUrlLocalhost, 'Squint');
+         return promise;
+      })
 
-      let timer = new ModelTimer(squint);
-      timer.durationMs = 100;
-      let sw = new Stopwatch(false);
+      it('should sound an alarm when time has expired', async function () {
+         let squint = await createSquint(TestUrlLocalhost, 'Squint');
 
-      let promise = new Promise((resolve, reject) => {
+         let timer = new ModelTimer(squint);
+         timer.durationMs = 100;
+         let sw = new Stopwatch(false);
 
-         timer.onAlarm = (sound: boolean) => {
-            try {
-               expect(timer.running).to.be.false;
-               expect(timer.ticking).to.be.false;
-               expect(sound).to.be.true;
-               expect(sw.elapsedMs).to.be.greaterThan(100);
-               expect(sw.elapsedMs).to.be.lessThan(120);
-               resolve();
+         let promise = new Promise((resolve, reject) => {
 
-               timer.stopAlarm();
-            }
-            catch (err) {
-               reject(err);
-            }
-         }
-      });
-
-      sw.start();
-      timer.start();
-
-      return promise;
-   });
-
-   it('should stop the alarm after the timeout period', async function () {
-      let squint = await createSquint(TestUrlLocalhost, 'Squint');
-
-      let timer = new ModelTimer(squint);
-      timer.durationMs = 100;
-      timer.alarmDurationMs = 200;
-
-      let sw = new Stopwatch(false);
-
-      let alarmCount = 0;
-      let promise = new Promise((resolve, reject) => {
-
-         timer.onAlarm = (sound: boolean) => {
-            try {
-               alarmCount++;
-
-               if (alarmCount === 1) {
+            timer.onAlarm = (sound: boolean) => {
+               try {
                   expect(timer.running).to.be.false;
                   expect(timer.ticking).to.be.false;
                   expect(sound).to.be.true;
                   expect(sw.elapsedMs).to.be.greaterThan(100);
                   expect(sw.elapsedMs).to.be.lessThan(120);
-               }
-               else if (alarmCount === 2) {
-                  expect(timer.running).to.be.false;
-                  expect(timer.ticking).to.be.false;
-                  expect(sound).to.be.false;
-                  expect(sw.elapsedMs).to.be.greaterThan(300);
-                  expect(sw.elapsedMs).to.be.lessThan(350);
                   resolve();
+
+                  timer.stopAlarm();
+               }
+               catch (err) {
+                  reject(err);
                }
             }
-            catch (err) {
-               reject(err);
+         });
+
+         sw.start();
+         timer.start();
+
+         return promise;
+      });
+
+      it('should stop the alarm after the timeout period', async function () {
+         let squint = await createSquint(TestUrlLocalhost, 'Squint');
+
+         let timer = new ModelTimer(squint);
+         timer.durationMs = 100;
+         timer.alarmDurationMs = 200;
+
+         let sw = new Stopwatch(false);
+
+         let alarmCount = 0;
+         let promise = new Promise((resolve, reject) => {
+
+            timer.onAlarm = (sound: boolean) => {
+               try {
+                  alarmCount++;
+
+                  if (alarmCount === 1) {
+                     expect(timer.running).to.be.false;
+                     expect(timer.ticking).to.be.false;
+                     expect(sound).to.be.true;
+                     expect(sw.elapsedMs).to.be.greaterThan(100);
+                     expect(sw.elapsedMs).to.be.lessThan(120);
+                  }
+                  else if (alarmCount === 2) {
+                     expect(timer.running).to.be.false;
+                     expect(timer.ticking).to.be.false;
+                     expect(sound).to.be.false;
+                     expect(sw.elapsedMs).to.be.greaterThan(300);
+                     expect(sw.elapsedMs).to.be.lessThan(350);
+                     resolve();
+                  }
+               }
+               catch (err) {
+                  reject(err);
+               }
             }
-         }
-      });
+         });
 
-      sw.start();
-      timer.start();
-
-      return promise;
-   });
-
-   enum Source {
-      Host = 'Host',
-      Viewer1 = 'Viewer1',
-      Viewer2 = 'Viewer2',
-   }
-
-   [
-      [Source.Viewer2, Source.Host],
-      [Source.Viewer2, Source.Viewer1],
-      [Source.Viewer2, Source.Viewer2],
-      [Source.Host, Source.Host],
-      [Source.Host, Source.Viewer1],
-      [Source.Host, Source.Viewer2],
-      [Source.Viewer1, Source.Host],
-      [Source.Viewer1, Source.Viewer1],
-      [Source.Viewer1, Source.Viewer2],
-   ].forEach((startStop: Source[]) => {
-
-      it.only('should synchronize timer starts/stops start:' + startStop[0] + ' stop:' + startStop[1], async function () {
-         let { squintHost, squintViewers } = await createSession(2);
-         await sleep(5 * TimeMs.Buffer);
-
-         let timerH = new ModelTimer(squintHost);
-         let timer1 = new ModelTimer(squintViewers[0]);
-         let timer2 = new ModelTimer(squintViewers[1]);
-         console.info('yyy ' + JSON.stringify(timer2.info));
-
-         switch (startStop[0]) {
-            case Source.Host:
-               timerH.start();
-               break;
-            case Source.Viewer1:
-               timer1.start();
-               break;
-            case Source.Viewer2:
-               timer2.start();
-               break;
-         }
-
-         console.info('yyy ' + JSON.stringify(timer2.info));
-         await sleep(5 * TimeMs.Buffer);
-
-         console.info('yyy ' + JSON.stringify(timer2.info));
-         expect(timerH.running).to.be.true;
-         expect(timer1.running).to.be.true;
-         expect(timer2.running).to.be.true;
-
-         expect(timerH.ticking).to.be.true;
-         expect(timer1.ticking).to.be.true;
-         expect(timer2.ticking).to.be.true;
-
-         switch (startStop[1]) {
-            case Source.Host:
-               timerH.stop();
-               break;
-            case Source.Viewer1:
-               timer1.stop();
-               break;
-            case Source.Viewer2:
-               timer2.stop();
-               break;
-         }
-
-         await sleep(TimeMs.Buffer);
-
-         expect(timerH.running).to.be.false;
-         expect(timer1.running).to.be.false;
-         expect(timer2.running).to.be.false;
-
-         expect(timerH.ticking).to.be.false;
-         expect(timer1.ticking).to.be.false;
-         expect(timer2.ticking).to.be.false;
-      });
-   });
-
-   [
-      Source.Host,
-      Source.Viewer1,
-      Source.Viewer2
-   ].forEach((source: Source) => {
-
-      it('should synchronize duration values. Change source:' + source, async function () {
-         let { squintHost, squintViewers } = await createSession(2);
-
-         let timerH = new ModelTimer(squintHost);
-         let timer1 = new ModelTimer(squintViewers[0]);
-         let timer2 = new ModelTimer(squintViewers[1]);
-
-         let durationMs = 10;
-         switch (source) {
-            case Source.Host:
-               timerH.durationMs = durationMs;
-               break;
-            case Source.Viewer1:
-               timer1.durationMs = durationMs;
-               break;
-            case Source.Viewer2:
-               timer2.durationMs = durationMs;
-               break;
-         }
-
-         await sleep(TimeMs.Buffer);
-
-         expect(timerH.durationMs).to.equal(durationMs);
-         expect(timer1.durationMs).to.equal(durationMs);
-         expect(timer2.durationMs).to.equal(durationMs);
-
-         expect(timerH.running).to.be.false;
-         expect(timer1.running).to.be.false;
-         expect(timer2.running).to.be.false;
-
-         expect(timerH.ticking).to.be.false;
-         expect(timer1.ticking).to.be.false;
-         expect(timer2.ticking).to.be.false;
-
-         expect(timerH.remainingMs).to.equal(durationMs);
-         expect(timer1.remainingMs).to.equal(durationMs);
-         expect(timer2.remainingMs).to.equal(durationMs);
-      });
-   });
-
-   [
-      [Source.Host, Source.Host],
-      [Source.Host, Source.Viewer1],
-      [Source.Host, Source.Viewer2],
-      [Source.Viewer1, Source.Host],
-      [Source.Viewer1, Source.Viewer1],
-      [Source.Viewer1, Source.Viewer2],
-      [Source.Viewer2, Source.Host],
-      [Source.Viewer2, Source.Viewer1],
-      [Source.Viewer2, Source.Viewer2],
-   ].forEach((source: Source[]) => {
-
-      it('should synchronize duration values while running. start:' + source[0] + ' change:' + source[1], async function () {
-         let { squintHost, squintViewers } = await createSession(2);
-
-         let timerH = new ModelTimer(squintHost);
-         let timer1 = new ModelTimer(squintViewers[0]);
-         let timer2 = new ModelTimer(squintViewers[1]);
-         let durationMs = 100;
-
-         switch (source[1]) {
-            case Source.Host:
-               timerH.start();
-               break;
-            case Source.Viewer1:
-               timer1.start();
-               break;
-            case Source.Viewer2:
-               timer2.start();
-               break;
-         }
-
-         let sw = new Stopwatch();
-         let promise = new Promise((resolve, reject) => {
-            [timerH, timer1, timer2].forEach((timer) => {
-               timer.onAlarm = (sound: boolean) => {
-                  try {
-                     if (timer === timerH) console.info('TimerH ' + sw.elapsedMs);
-                     if (timer === timer1) console.info('Timer1 ' + sw.elapsedMs);
-                     if (timer === timer2) console.info('Timer2 ' + sw.elapsedMs);
-                     expect(sound).to.be.true;
-                     if (timerH.alarmSounding && timer1.alarmSounding && timer2.alarmSounding) {
-                        expect(sw.elapsedMs).to.be.greaterThan(durationMs);
-                        expect(sw.elapsedMs).to.be.lessThan(2 * durationMs);
-                        resolve();
-
-                        timerH.stopAlarm();
-                        timer1.stopAlarm();
-                        timer2.stopAlarm();
-                     }
-                  }
-                  catch (err) {
-                     reject(err);
-                  }
-               };
-            });
-         })
-
-         switch (source[1]) {
-            case Source.Host:
-               timerH.durationMs = durationMs;
-               break;
-            case Source.Viewer1:
-               timer1.durationMs = durationMs;
-               break;
-            case Source.Viewer2:
-               timer2.durationMs = durationMs;
-               break;
-         }
+         sw.start();
+         timer.start();
 
          return promise;
       });
-   });
 
-   [
-      [Source.Host, Source.Host],
-      [Source.Host, Source.Viewer1],
-      [Source.Host, Source.Viewer2],
-      [Source.Viewer1, Source.Host],
-      [Source.Viewer1, Source.Viewer1],
-      [Source.Viewer1, Source.Viewer2],
-      [Source.Viewer2, Source.Host],
-      [Source.Viewer2, Source.Viewer1],
-      [Source.Viewer2, Source.Viewer2],
-   ].forEach((startStop: Source[]) => {
+      it('should be initialized to 20 minutes', async function () {
 
-      it('should stop all alarms when one stops. start:' + startStop[0] + ' stop:' + startStop[1], async function () {
-         let { squintHost, squintViewers } = await createSession(2);
+         let squintHost = await createSquint(TestUrlLocalhost, 'TestHost')
 
-         let timerH = new ModelTimer(squintHost);
-         let timer1 = new ModelTimer(squintViewers[0]);
-         let timer2 = new ModelTimer(squintViewers[1]);
-         let durationMs = 10;
+         expect(squintHost.modelTimer.durationMs).to.equal(20 * 60 * 1000);
 
-         switch (startStop[0]) {
-            case Source.Host:
-               timerH.durationMs = durationMs;
-               timerH.start();
-               break;
-            case Source.Viewer1:
-               timer1.durationMs = durationMs;
-               timer1.start();
-               break;
-            case Source.Viewer2:
-               timer2.durationMs = durationMs;
-               timer2.start();
-               break;
-         }
+         let sessionId = await squintHost.createSession();
 
-         await sleep(durationMs + TimeMs.Buffer);
+         expect(squintHost.modelTimer.durationMs).to.equal(20 * 60 * 1000);
 
-         expect(timerH.alarmSounding).to.be.true;
-         expect(timer1.alarmSounding).to.be.true;
-         expect(timer2.alarmSounding).to.be.true;
-         expect(timerH.ticking).to.be.false;
-         expect(timer1.ticking).to.be.false;
-         expect(timer2.ticking).to.be.false;
+         let squintViewer = await createSquint(TestUrlLocalhost, 'TestViewer')
 
-         switch (startStop[1]) {
-            case Source.Host:
-               timerH.stopAlarm();
-               break;
-            case Source.Viewer1:
-               timer1.stopAlarm();
-               break;
-            case Source.Viewer2:
-               timer2.stopAlarm();
-               break;
-         }
+         expect(squintViewer.modelTimer.durationMs).to.equal(20 * 60 * 1000);
 
-         await sleep(TimeMs.Buffer);
+         await squintViewer.joinSession(sessionId);
 
-         expect(timerH.alarmSounding).to.be.false;
-         expect(timer1.alarmSounding).to.be.false;
-         expect(timer2.alarmSounding).to.be.false;
-         expect(timerH.ticking).to.be.false;
-         expect(timer1.ticking).to.be.false;
-         expect(timer2.ticking).to.be.false;
+         expect(squintViewer.modelTimer.durationMs).to.equal(20 * 60 * 1000);
+      });
+
+      it('should alternate between 20 and 7 minutes', async function () {
+         let squintHost = await createSquint(TestUrlLocalhost, 'TestHost')
+
+         expect(squintHost.modelTimer.durationMs).to.equal(20 * 60 * 1000);
+
+         squintHost.modelTimer.reset();
+
+         expect(squintHost.modelTimer.durationMs).to.equal(7 * 60 * 1000);
+
+         squintHost.modelTimer.reset();
+
+         expect(squintHost.modelTimer.durationMs).to.equal(20 * 60 * 1000);
+      });
+
+      it('should reset to the initial duration if a non standard time is used', async function () {
+         let squintHost = await createSquint(TestUrlLocalhost, 'TestHost')
+
+         expect(squintHost.modelTimer.durationMs).to.equal(20 * 60 * 1000);
+
+         squintHost.modelTimer.durationMs = 1000;
+         squintHost.modelTimer.reset();
+
+         expect(squintHost.modelTimer.durationMs).to.equal(1000);
       });
    });
 
-   [
-      [Source.Host, Source.Host],
-      [Source.Host, Source.Viewer1],
-      [Source.Host, Source.Viewer2],
-      [Source.Viewer1, Source.Host],
-      [Source.Viewer1, Source.Viewer1],
-      [Source.Viewer1, Source.Viewer2],
-      [Source.Viewer2, Source.Host],
-      [Source.Viewer2, Source.Viewer1],
-      [Source.Viewer2, Source.Viewer2],
-   ].forEach((source: Source[]) => {
+   describe('Multi-Timer Synchronization', function () {
 
-      it('should handle a durationMs value of 0. set duration:' + source[0] + ' start:' + source[1], async function () {
-         let { squintHost, squintViewers } = await createSession(2);
+      enum Source {
+         Host = 'Host',
+         Viewer1 = 'Viewer1',
+         Viewer2 = 'Viewer2',
+      }
 
-         let timerH = new ModelTimer(squintHost);
-         let timer1 = new ModelTimer(squintViewers[0]);
-         let timer2 = new ModelTimer(squintViewers[1]);
-         let durationMs = 0;
+      [
+         [Source.Viewer2, Source.Host],
+         [Source.Viewer2, Source.Viewer1],
+         [Source.Viewer2, Source.Viewer2],
+         [Source.Host, Source.Host],
+         [Source.Host, Source.Viewer1],
+         [Source.Host, Source.Viewer2],
+         [Source.Viewer1, Source.Host],
+         [Source.Viewer1, Source.Viewer1],
+         [Source.Viewer1, Source.Viewer2],
+      ].forEach((startStop: Source[]) => {
 
-         switch (source[0]) {
-            case Source.Host:
-               timerH.durationMs = durationMs;
-               break;
-            case Source.Viewer1:
-               timer1.durationMs = durationMs;
-               break;
-            case Source.Viewer2:
-               timer2.durationMs = durationMs;
-               break;
-         }
+         it('should synchronize timer starts/stops start:' + startStop[0] + ' stop:' + startStop[1], async function () {
+            let { squintHost, squintViewers } = await createSession(2);
 
-         // all synchronization events
-         await sleep(TimeMs.Buffer);
+            switch (startStop[0]) {
+               case Source.Host:
+                  squintHost.modelTimer.start();
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.start();
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.start();
+                  break;
+            }
 
-         expect(timerH.alarmSounding).to.be.false;
-         expect(timer1.alarmSounding).to.be.false;
-         expect(timer2.alarmSounding).to.be.false;
-         expect(timerH.ticking).to.be.false;
-         expect(timer1.ticking).to.be.false;
-         expect(timer2.ticking).to.be.false;
+            await sleep(5 * TimeMs.Buffer);
 
-         switch (source[1]) {
-            case Source.Host:
-               timerH.start();
-               break;
-            case Source.Viewer1:
-               timer1.start();
-               break;
-            case Source.Viewer2:
-               timer2.start();
-               break;
-         }
+            expect(squintHost.modelTimer.running).to.be.true;
+            expect(squintViewers[0].modelTimer.running).to.be.true;
+            expect(squintViewers[1].modelTimer.running).to.be.true;
 
-         await sleep(TimeMs.Buffer);
+            expect(squintHost.modelTimer.ticking).to.be.true;
+            expect(squintViewers[0].modelTimer.ticking).to.be.true;
+            expect(squintViewers[1].modelTimer.ticking).to.be.true;
 
-         expect(timerH.alarmSounding).to.be.true;
-         expect(timer1.alarmSounding).to.be.true;
-         expect(timer2.alarmSounding).to.be.true;
-         expect(timerH.ticking).to.be.false;
-         expect(timer1.ticking).to.be.false;
-         expect(timer2.ticking).to.be.false;
+            switch (startStop[1]) {
+               case Source.Host:
+                  squintHost.modelTimer.stop();
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.stop();
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.stop();
+                  break;
+            }
 
-         timerH.stopAlarm();
-         timer1.stopAlarm();
-         timer2.stopAlarm();
+            await sleep(TimeMs.Buffer);
+
+            expect(squintHost.modelTimer.running).to.be.false;
+            expect(squintViewers[0].modelTimer.running).to.be.false;
+            expect(squintViewers[1].modelTimer.running).to.be.false;
+
+            expect(squintHost.modelTimer.ticking).to.be.false;
+            expect(squintViewers[0].modelTimer.ticking).to.be.false;
+            expect(squintViewers[1].modelTimer.ticking).to.be.false;
+         });
       });
-   });
 
-   [
-      Source.Host,
-      Source.Viewer1,
-      Source.Viewer2
-   ].forEach((source: Source) => {
+      [
+         Source.Host,
+         Source.Viewer1,
+         Source.Viewer2
+      ].forEach((source: Source) => {
 
-      it('should sound all alarms at the same time. Started: ' + source, async function () {
-         let { squintHost, squintViewers } = await createSession(2);
+         it('should synchronize duration values (timer not running). Change source:' + source, async function () {
+            let { squintHost, squintViewers } = await createSession(2);
 
-         let timerH = new ModelTimer(squintHost);
-         let timer1 = new ModelTimer(squintViewers[0]);
-         let timer2 = new ModelTimer(squintViewers[1]);
-         let durationMs = 100;
+            let durationMs = 10;
+            switch (source) {
+               case Source.Host:
+                  squintHost.modelTimer.durationMs = durationMs;
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.durationMs = durationMs;
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.durationMs = durationMs;
+                  break;
+            }
 
-         let sw = new Stopwatch();
-         // TODO test fails if this line is uncommented. Make this a real test
-         //timerH.start();
+            await sleep(TimeMs.Buffer);
 
-         let promise = new Promise((resolve, reject) => {
-            [timerH, timer1, timer2].forEach((timer) => {
-               timer.onAlarm = (sound: boolean) => {
-                  try {
-                     if (timer === timerH) console.info('TimerH ' + sw.elapsedMs);
-                     if (timer === timer1) console.info('Timer1 ' + sw.elapsedMs);
-                     if (timer === timer2) console.info('Timer2 ' + sw.elapsedMs);
-                     expect(sound).to.be.true;
-                     if (timerH.alarmSounding && timer1.alarmSounding && timer2.alarmSounding) {
-                        expect(sw.elapsedMs).to.be.greaterThan(durationMs);
-                        expect(sw.elapsedMs).to.be.lessThan(2 * durationMs);
-                        resolve();
+            expect(squintHost.modelTimer.durationMs).to.equal(durationMs);
+            expect(squintViewers[0].modelTimer.durationMs).to.equal(durationMs);
+            expect(squintViewers[1].modelTimer.durationMs).to.equal(durationMs);
 
-                        timerH.stopAlarm();
-                        timer1.stopAlarm();
-                        timer2.stopAlarm();
+            expect(squintHost.modelTimer.running).to.be.false;
+            expect(squintViewers[0].modelTimer.running).to.be.false;
+            expect(squintViewers[1].modelTimer.running).to.be.false;
+
+            expect(squintHost.modelTimer.ticking).to.be.false;
+            expect(squintViewers[0].modelTimer.ticking).to.be.false;
+            expect(squintViewers[1].modelTimer.ticking).to.be.false;
+
+            expect(squintHost.modelTimer.remainingMs).to.equal(durationMs);
+            expect(squintViewers[0].modelTimer.remainingMs).to.equal(durationMs);
+            expect(squintViewers[1].modelTimer.remainingMs).to.equal(durationMs);
+         });
+      });
+
+      [
+         [Source.Host, Source.Host],
+         [Source.Host, Source.Viewer1],
+         [Source.Host, Source.Viewer2],
+         [Source.Viewer1, Source.Host],
+         [Source.Viewer1, Source.Viewer1],
+         [Source.Viewer1, Source.Viewer2],
+         [Source.Viewer2, Source.Host],
+         [Source.Viewer2, Source.Viewer1],
+         [Source.Viewer2, Source.Viewer2],
+      ].forEach((source: Source[]) => {
+
+         it('should synchronize duration values (timer running). start:' + source[0] + ' change:' + source[1], async function () {
+            let { squintHost, squintViewers } = await createSession(2);
+
+            let durationMs = 100;
+
+            switch (source[1]) {
+               case Source.Host:
+                  squintHost.modelTimer.start();
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.start();
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.start();
+                  break;
+            }
+
+            switch (source[1]) {
+               case Source.Host:
+                  squintHost.modelTimer.durationMs = durationMs;
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.durationMs = durationMs;
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.durationMs = durationMs;
+                  break;
+            }
+
+            await sleep(TimeMs.Interval);
+
+            expect(squintHost.modelTimer.running).to.be.false;
+            expect(squintViewers[0].modelTimer.running).to.be.false;
+            expect(squintViewers[1].modelTimer.running).to.be.false;
+
+            expect(squintHost.modelTimer.durationMs).to.equal(durationMs);
+            expect(squintViewers[0].modelTimer.durationMs).to.equal(durationMs);
+            expect(squintViewers[1].modelTimer.durationMs).to.equal(durationMs);
+         });
+      });
+
+      [
+         [Source.Host, Source.Host],
+         [Source.Host, Source.Viewer1],
+         [Source.Host, Source.Viewer2],
+         [Source.Viewer1, Source.Host],
+         [Source.Viewer1, Source.Viewer1],
+         [Source.Viewer1, Source.Viewer2],
+         [Source.Viewer2, Source.Host],
+         [Source.Viewer2, Source.Viewer1],
+         [Source.Viewer2, Source.Viewer2],
+      ].forEach((startStop: Source[]) => {
+
+         it('stopAlarm() on one should stop all alarms. start:' + startStop[0] + ' stop:' + startStop[1], async function () {
+            let { squintHost, squintViewers } = await createSession(2);
+
+            let durationMs = 10;
+
+            switch (startStop[0]) {
+               case Source.Host:
+                  squintHost.modelTimer.durationMs = durationMs;
+                  squintHost.modelTimer.start();
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.durationMs = durationMs;
+                  squintViewers[0].modelTimer.start();
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.durationMs = durationMs;
+                  squintViewers[1].modelTimer.start();
+                  break;
+            }
+
+            await sleep(durationMs + TimeMs.Buffer);
+
+            expect(squintHost.modelTimer.alarmSounding).to.be.true;
+            expect(squintViewers[0].modelTimer.alarmSounding).to.be.true;
+            expect(squintViewers[1].modelTimer.alarmSounding).to.be.true;
+            expect(squintHost.modelTimer.ticking).to.be.false;
+            expect(squintViewers[0].modelTimer.ticking).to.be.false;
+            expect(squintViewers[1].modelTimer.ticking).to.be.false;
+
+            switch (startStop[1]) {
+               case Source.Host:
+                  squintHost.modelTimer.stopAlarm();
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.stopAlarm();
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.stopAlarm();
+                  break;
+            }
+
+            await sleep(TimeMs.Buffer);
+
+            expect(squintHost.modelTimer.alarmSounding).to.be.false;
+            expect(squintViewers[0].modelTimer.alarmSounding).to.be.false;
+            expect(squintViewers[1].modelTimer.alarmSounding).to.be.false;
+            expect(squintHost.modelTimer.ticking).to.be.false;
+            expect(squintViewers[0].modelTimer.ticking).to.be.false;
+            expect(squintViewers[1].modelTimer.ticking).to.be.false;
+         });
+      });
+
+      [
+         [Source.Host, Source.Host],
+         [Source.Host, Source.Viewer1],
+         [Source.Host, Source.Viewer2],
+         [Source.Viewer1, Source.Host],
+         [Source.Viewer1, Source.Viewer1],
+         [Source.Viewer1, Source.Viewer2],
+         [Source.Viewer2, Source.Host],
+         [Source.Viewer2, Source.Viewer1],
+         [Source.Viewer2, Source.Viewer2],
+      ].forEach((startStop: Source[]) => {
+
+         it('reset() on one should stop all alarms. start:' + startStop[0] + ' stop:' + startStop[1], async function () {
+            let { squintHost, squintViewers } = await createSession(2);
+
+            let durationMs = 10;
+
+            switch (startStop[0]) {
+               case Source.Host:
+                  squintHost.modelTimer.durationMs = durationMs;
+                  squintHost.modelTimer.start();
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.durationMs = durationMs;
+                  squintViewers[0].modelTimer.start();
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.durationMs = durationMs;
+                  squintViewers[1].modelTimer.start();
+                  break;
+            }
+
+            await sleep(durationMs + TimeMs.Buffer);
+
+            expect(squintHost.modelTimer.alarmSounding).to.be.true;
+            expect(squintViewers[0].modelTimer.alarmSounding).to.be.true;
+            expect(squintViewers[1].modelTimer.alarmSounding).to.be.true;
+            expect(squintHost.modelTimer.ticking).to.be.false;
+            expect(squintViewers[0].modelTimer.ticking).to.be.false;
+            expect(squintViewers[1].modelTimer.ticking).to.be.false;
+
+            switch (startStop[1]) {
+               case Source.Host:
+                  squintHost.modelTimer.reset();
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.reset();
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.reset();
+                  break;
+            }
+
+            await sleep(TimeMs.Buffer);
+
+            expect(squintHost.modelTimer.alarmSounding).to.be.false;
+            expect(squintViewers[0].modelTimer.alarmSounding).to.be.false;
+            expect(squintViewers[1].modelTimer.alarmSounding).to.be.false;
+            expect(squintHost.modelTimer.ticking).to.be.false;
+            expect(squintViewers[0].modelTimer.ticking).to.be.false;
+            expect(squintViewers[1].modelTimer.ticking).to.be.false;
+         });
+      });
+
+      [
+         [Source.Host, Source.Host],
+         [Source.Host, Source.Viewer1],
+         [Source.Host, Source.Viewer2],
+         [Source.Viewer1, Source.Host],
+         [Source.Viewer1, Source.Viewer1],
+         [Source.Viewer1, Source.Viewer2],
+         [Source.Viewer2, Source.Host],
+         [Source.Viewer2, Source.Viewer1],
+         [Source.Viewer2, Source.Viewer2],
+      ].forEach((source: Source[]) => {
+
+         it('should handle a durationMs value of zero. set duration:' + source[0] + ' start:' + source[1], async function () {
+            let { squintHost, squintViewers } = await createSession(2);
+
+            let durationMs = 0;
+
+            switch (source[0]) {
+               case Source.Host:
+                  squintHost.modelTimer.durationMs = durationMs;
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.durationMs = durationMs;
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.durationMs = durationMs;
+                  break;
+            }
+
+            // all synchronization events
+            await sleep(TimeMs.Buffer);
+
+            expect(squintHost.modelTimer.alarmSounding).to.be.false;
+            expect(squintViewers[0].modelTimer.alarmSounding).to.be.false;
+            expect(squintViewers[1].modelTimer.alarmSounding).to.be.false;
+            expect(squintHost.modelTimer.ticking).to.be.false;
+            expect(squintViewers[0].modelTimer.ticking).to.be.false;
+            expect(squintViewers[1].modelTimer.ticking).to.be.false;
+
+            switch (source[1]) {
+               case Source.Host:
+                  squintHost.modelTimer.start();
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.start();
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.start();
+                  break;
+            }
+
+            await sleep(TimeMs.Buffer);
+
+            expect(squintHost.modelTimer.alarmSounding).to.be.true;
+            expect(squintViewers[0].modelTimer.alarmSounding).to.be.true;
+            expect(squintViewers[1].modelTimer.alarmSounding).to.be.true;
+            expect(squintHost.modelTimer.ticking).to.be.false;
+            expect(squintViewers[0].modelTimer.ticking).to.be.false;
+            expect(squintViewers[1].modelTimer.ticking).to.be.false;
+
+            switch (source[0]) {
+               case Source.Host:
+                  squintHost.modelTimer.stopAlarm();
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.stopAlarm();
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.stopAlarm();
+                  break;
+            }
+            await sleep(TimeMs.Buffer);
+
+            expect(squintHost.modelTimer.ticking).to.be.false;
+            expect(squintViewers[0].modelTimer.ticking).to.be.false;
+            expect(squintViewers[1].modelTimer.ticking).to.be.false;
+
+            expect(squintHost.modelTimer.alarmSounding).to.be.false;
+            expect(squintViewers[0].modelTimer.alarmSounding).to.be.false;
+            expect(squintViewers[1].modelTimer.alarmSounding).to.be.false;
+         });
+      });
+
+      [
+         Source.Host,
+         Source.Viewer1,
+         Source.Viewer2
+      ].forEach((source: Source) => {
+
+         it('should sound all alarms at the same time. Started: ' + source, async function () {
+            let { squintHost, squintViewers } = await createSession(2);
+
+            let durationMs = 100;
+
+            let sw = new Stopwatch();
+            // TODO test fails if this line is uncommented. Make this a real test
+            //squintHost.modelTimer.start();
+
+            let promise = new Promise((resolve, reject) => {
+               [squintHost.modelTimer, squintViewers[0].modelTimer, squintViewers[1].modelTimer].forEach((timer) => {
+                  timer.onAlarm = (sound: boolean) => {
+                     try {
+                        /*
+                        if (timer === squintHost.modelTimer) console.info('squintHost.modelTimer ' + sw.elapsedMs);
+                        if (timer === squintViewers[0].modelTimer) console.info('squintViewers[0].modelTimer ' + sw.elapsedMs);
+                        if (timer === squintViewers[1].modelTimer) console.info('squintViewers[1].modelTimer ' + sw.elapsedMs);
+                        */
+                        expect(sound).to.be.true;
+                        if (squintHost.modelTimer.alarmSounding && squintViewers[0].modelTimer.alarmSounding && squintViewers[1].modelTimer.alarmSounding) {
+                           expect(sw.elapsedMs).to.be.greaterThan(durationMs);
+                           expect(sw.elapsedMs).to.be.lessThan(2 * durationMs);
+                           resolve();
+
+                           squintHost.modelTimer.stopAlarm();
+                           squintViewers[0].modelTimer.stopAlarm();
+                           squintViewers[1].modelTimer.stopAlarm();
+                        }
                      }
-                  }
-                  catch (err) {
-                     reject(err);
-                  }
-               };
-            });
-         })
+                     catch (err) {
+                        reject(err);
+                     }
+                  };
+               });
+            })
 
-         switch (source) {
-            case Source.Host:
-               timerH.durationMs = durationMs;
-               timerH.start();
-               break;
-            case Source.Viewer1:
-               timer1.durationMs = durationMs;
-               timer1.start();
-               break;
-            case Source.Viewer2:
-               timer2.durationMs = durationMs;
-               timer2.start();
-               break;
-         }
+            switch (source) {
+               case Source.Host:
+                  squintHost.modelTimer.durationMs = durationMs;
+                  squintHost.modelTimer.start();
+                  break;
+               case Source.Viewer1:
+                  squintViewers[0].modelTimer.durationMs = durationMs;
+                  squintViewers[0].modelTimer.start();
+                  break;
+               case Source.Viewer2:
+                  squintViewers[1].modelTimer.durationMs = durationMs;
+                  squintViewers[1].modelTimer.start();
+                  break;
+            }
 
-         return promise;
+            return promise;
+         });
+      });
+
+
+      it('an alarm timeout should not cause other alarms to stop', async function () {
+      });
+
+      it('should be able to synchronize to a stopped session', async function () {
+
+         let { squintHost, sessionId } = await createSession();
+         let squintViewer = await createSquint(TestUrlLocalhost, 'TestNewViewer')
+
+         squintHost.modelTimer.durationMs = 345423;
+
+         // let synch events pass before joining the session
+         await sleep(TimeMs.Buffer);
+
+         await squintViewer.joinSession(sessionId);
+
+         expect(Math.abs(squintHost.modelTimer.durationMs - squintViewer.modelTimer.durationMs)).to.be.lessThan(10);
+         expect(squintHost.modelTimer.running).to.equal(squintViewer.modelTimer.running);
+
+         squintHost.modelTimer.stop();
+         squintViewer.modelTimer.stop();
+      });
+
+
+      it('should be able to synchronize to a running session', async function () {
+
+         let { squintHost, sessionId } = await createSession();
+         let squintViewer = await createSquint(TestUrlLocalhost, 'TestNewViewer')
+
+         squintHost.modelTimer.durationMs = 345423;
+         squintHost.modelTimer.start();
+
+         // let synch events pass before joining the session
+         await sleep(TimeMs.Buffer);
+
+         await squintViewer.joinSession(sessionId);
+
+         expect(Math.abs(squintHost.modelTimer.durationMs - squintViewer.modelTimer.durationMs)).to.be.lessThan(10);
+         expect(squintHost.modelTimer.running).to.equal(squintViewer.modelTimer.running);
+
+         squintHost.modelTimer.stop();
+         squintViewer.modelTimer.stop();
       });
    });
 
 
-   it('an alarm timeout should not cause other alarms to stop', async function () {
-   });
-
-   it('should be able to synchronize to a stopped session', async function () {
-
-      let { squintHost, sessionId } = await createSession();
-      let newSquintViewer = await createSquint(TestUrlLocalhost, 'TestNewViewer')
-
-      let timerH = new ModelTimer(squintHost);
-      timerH.durationMs = 345423;
-
-      // let synch events pass before joining the session
-      await sleep(TimeMs.Buffer);
-
-      await newSquintViewer.joinSession(sessionId);
-      let timerV = new ModelTimer(newSquintViewer);
-
-      expect(timerH.durationMs).not.to.equal(timerV.durationMs);
-
-      // TODO if this is timerH, the stop call doesn't work
-      timerV.synchronizeFromServer();
-
-      await sleep(TimeMs.Buffer);
-
-      expect(timerH.durationMs).to.equal(timerV.durationMs);
-      expect(timerH.running).to.equal(timerV.running);
-
-      timerH.stop();
-      timerV.stop();
-   });
-
-
-   it('should be able to synchronize to a running session', async function () {
-
-      let { squintHost, sessionId } = await createSession();
-      let newSquintViewer = await createSquint(TestUrlLocalhost, 'TestNewViewer')
-
-      let timerH = new ModelTimer(squintHost);
-      timerH.durationMs = 345423;
-      timerH.start();
-
-      // let synch events pass before joining the session
-      await sleep(TimeMs.Buffer);
-
-      await newSquintViewer.joinSession(sessionId);
-      let timerV = new ModelTimer(newSquintViewer);
-
-      expect(timerH.durationMs).not.to.equal(timerV.durationMs);
-
-      // TODO if this is timerH, the stop call doesn't work
-      timerV.synchronizeFromServer();
-
-      await sleep(TimeMs.Buffer);
-
-      expect(timerH.durationMs).to.equal(timerV.durationMs);
-      expect(timerH.running).to.equal(timerV.running);
-
-      timerH.stop();
-      timerV.stop();
-   });
-
-
-   it('should be initialized to 20 minutes', async function () {
-
-   });
-
-   it('should alternate between 20 and 7 minutes', async function () {
-
-   });
-
-   it('should reset to the initial duration if a non standard time is used', async function () {
-
-   });
+   // reset should stop the alarm
 });

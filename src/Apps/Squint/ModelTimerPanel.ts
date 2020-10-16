@@ -3,35 +3,32 @@ import { PointerEventHandler } from '../../GUI/PointerEventHandler';
 import { baseUrl, getEmPixels } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { Squint } from './Squint';
-import { ModelTimer } from './ModelTimer';
-import { ITimerInfo } from '../../Util/CountdownTimer';
+import { ITimerInfo } from './ITimerInfo';
 
 export class ModelTimerPanel {
    private squint: Squint;
    private canvas: HTMLCanvasElement;
    private alarm: HTMLAudioElement = null;
-   private modelTimer: ModelTimer;
 
    public get info(): ITimerInfo {
-      return this.modelTimer.info;
+      return this.squint.modelTimer.info;
    }
 
    public constructor(squint: Squint, parent: HTMLElement) {
       this.squint = squint;
-      this.modelTimer = new ModelTimer(this.squint);
 
-      this.modelTimer.onAlarm = (sound: boolean) => {
+      this.squint.modelTimer.onAlarm = (sound: boolean) => {
          if (sound) {
-            this.soundAlarm();
+            this.startSound();
             this.draw();
          }
          else {
-            this.stopAlarm();
+            this.stopSound();
             this.draw();
          }
       }
 
-      this.modelTimer.onTick = () => {
+      this.squint.modelTimer.onTick = () => {
          this.draw();
       }
 
@@ -58,20 +55,20 @@ export class ModelTimerPanel {
          let boxSize = height;
          if (wasDragging === false && pos.x < 0.5 * boxSize) {
             if (pos.y < 0.5 * height) {
-               this.modelTimer.addOne();
+               this.squint.modelTimer.addOne();
             }
             else {
-               this.modelTimer.subtractOne();
+               this.squint.modelTimer.subtractOne();
             }
 
             this.draw();
          }
          else if (pos.x > width - boxSize) {
-            if (this.modelTimer.running) {
-               this.modelTimer.stop();
+            if (this.squint.modelTimer.running) {
+               this.squint.modelTimer.stop();
             }
             else {
-               this.modelTimer.start();
+               this.squint.modelTimer.start();
             }
          }
 
@@ -96,12 +93,12 @@ export class ModelTimerPanel {
             accumulatedDelta += delta.y;
             while (accumulatedDelta > step) {
                wasDragging = true;
-               this.modelTimer.subtractOne();
+               this.squint.modelTimer.subtractOne();
                accumulatedDelta -= step;
             }
             while (accumulatedDelta < -step) {
                wasDragging = true;
-               this.modelTimer.addOne();
+               this.squint.modelTimer.addOne();
                accumulatedDelta += step;
             }
 
@@ -143,20 +140,21 @@ export class ModelTimerPanel {
       this.canvas.style.width = width + 'px';
    }
 
-   private soundAlarm() {
+   private startSound() {
       if (this.alarm) {
          this.alarm.currentTime = 0;
          this.alarm.play().catch((err) => { console.log('Cannot play alarm: ' + err) });
       }
    }
 
+   private stopSound() {
+      this.alarm.pause();
+      this.alarm.currentTime = 0;
+   }
+
    private stopAlarm() {
-      if (this.modelTimer.alarmSounding) {
-         // reset the sound file
-         this.alarm.pause();
-         this.alarm.currentTime = 0;
-         this.modelTimer.stopAlarm();
-         this.modelTimer.reset();
+      if (this.squint.modelTimer.alarmSounding) {
+         this.squint.modelTimer.reset();
       }
    }
 
@@ -171,7 +169,7 @@ export class ModelTimerPanel {
 
       let ctx = this.canvas.getContext('2d');
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      ctx.fillStyle = this.modelTimer.alarmSounding ? 'yellow' : 'lightgray';
+      ctx.fillStyle = this.squint.modelTimer.alarmSounding ? 'orange' : 'lightgray';
       ctx.fillRect(0, 0, width, height);
 
       // draw the up-down symbol
@@ -200,13 +198,13 @@ export class ModelTimerPanel {
       let size = ctx.measureText('00:00 ');
 
       let x = boxWidth;
-      this.drawText(ctx, this.modelTimer.timeRemainingStr, x, 0, size.width, height);
+      this.drawText(ctx, this.squint.modelTimer.timeRemainingStr, x, 0, size.width, height);
       x += size.width;
 
       // draw the start/stop symbols
       let boxSize = height;
       ctx.beginPath();
-      if (this.modelTimer.running) {
+      if (this.squint.modelTimer.running) {
          // square
          let size = 0.25;
          ctx.fillStyle = 'pink';

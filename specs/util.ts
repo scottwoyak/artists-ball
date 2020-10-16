@@ -148,7 +148,8 @@ export async function createSession(numViewers = 1): Promise<{
       // join
       let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
       await squintViewer.joinSession(sessionId);
-      return { squintHost, squintViewer, sessionId }
+      let squintViewers = [squintViewer];
+      return { squintHost, squintViewer, squintViewers, sessionId }
    }
    else {
       let squintViewers: Squint[] = [];
