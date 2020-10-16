@@ -157,7 +157,6 @@
   right: 1em;
   top: 3em;
   width: 30em;
-  height: 40em;
   border: solid;
   border-color: lightgray;
   border-width: var(--margin);
@@ -191,13 +190,13 @@
 }
 
 #SquintApp #ChatPanelDiv #ViewersListBox {
-  flex: 1 0 auto; /* grow */
   cursor: move;
+  flex: 0 0 10em;
 }
 
 #SquintApp #ChatPanelDiv #ChatListBox {
-  flex: 1 0 auto; /* grow */
   cursor: move;
+  flex: 0 0 15em;
 }
 
 #SquintApp #ChatPanelDiv .ListBoxClass {
@@ -214,7 +213,7 @@
 #SquintApp #NotificationDiv {
   position: absolute;
   right: 1em;
-  bottom: 0px;
+  bottom: 0.5em;
   left: 50%;
   height: 2 em;
   text-align: right;

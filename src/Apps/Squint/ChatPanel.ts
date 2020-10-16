@@ -109,5 +109,6 @@ export class ChatPanel extends ResizeablePanel {
    private onChatMessage(src: IConnectionInfoBasic, msg: string) {
       const item = this.chatListBox.addItem();
       item.innerHTML = '<b>' + src.userName + '</b>: ' + msg;
+      item.scrollIntoView();
    }
 }

@@ -934,11 +934,11 @@ export class SquintApp implements IApp {
 
    private updateSizes() {
       let menuBar = document.getElementById('Menubar');
-      const menubarHeight = menuBar.clientHeight;
+      const menubarHeight = menuBar.getBoundingClientRect().height;
 
       this.console.setEdges(0, 0, menubarHeight, 0);
-      const viewWidth = document.documentElement.clientWidth;
-      const viewHeight = document.documentElement.clientHeight;
+      const viewWidth = window.innerWidth;
+      const viewHeight = window.innerHeight - 5; // TODO, don't know what this 5 is, but without it the window can scroll up/down by a few pixels
 
       this.canvas.width = viewWidth;
       this.canvas.height = viewHeight - menubarHeight;
