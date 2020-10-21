@@ -14,6 +14,30 @@ export class htmlColor extends Color {
    public static readonly blue = new htmlColor([0, 0, 255]);
    public static readonly orange = new htmlColor([255, 165, 0]);
 
+   public get luminosity(): number {
+      // adobe Y'204 luminosity
+      return (0.3086 * this.r + 0.6094 * this.g + 0.0820 * this.b) / 255;
+   }
+
+   public set luminosity(value: number) {
+      let oldLuminosity = this.luminosity;
+      /*
+      this.r += 255 * 0.3086 * (value - oldLuminosity);
+      this.g += 255 * 0.6094 * (value - oldLuminosity);
+      this.b += 255 * 0.0820 * (value - oldLuminosity);
+      */
+      /*
+      this.r += 255 * (value - oldLuminosity) / 0.3086;
+      this.g += 255 * (value - oldLuminosity) / 0.6094;
+      this.b += 255 * (value - oldLuminosity) / 0.0820;
+      */
+      let f = value / oldLuminosity;
+      this.r *= f;
+      this.g += f;
+      this.b += f;
+
+   }
+
    /**
     * @param color An RGB color array
     */
