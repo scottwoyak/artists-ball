@@ -1,7 +1,8 @@
-import { ISquintMessage, ISquintHelloFromServerMessage, ReconnectedStatus } from './SquintMessage';
+import { ISquintMessage, ISquintHelloFromServerMessage, ReconnectedStatus, ISquintHelloFromClientMessage, SquintMessageSubject } from './SquintMessage';
 import { debug } from './SquintApp';
 import { WebSocketFactory, WebSocketReadyState } from './WebSocketFactory';
 import { env } from '../../Util/Globals';
+import { Version } from './Version';
 
 export type ImageHandler = (img: Blob) => void;
 export type MessageHandler = (msg: ISquintMessage) => void;
@@ -17,7 +18,6 @@ export class SquintSocket {
    private onMessage: MessageHandler;
    private onClose: CloseHandler;
 
-   public static readonly CLOSE_CODE_ERROR = -1;
    public static readonly CLOSE_CODE_NORMAL = 1000;
 
    /**
@@ -120,16 +120,6 @@ export class SquintSocket {
 
       ws.onerror = (event: Event) => {
          debug('SquintSocket.onError: ' + JSON.stringify(event, null, ' '));
-         /*
-         if (this._ws) {
-            this._ws.onclose = null;
-            this._ws.onerror = null;
-            this._ws.onmessage = null;
-            this._ws.onopen = null;
-         }
-         this._ws = null;
-         this.onClose(SquintSocket.CLOSE_CODE_ERROR);
-         */
       }
 
       ws.onmessage = (message: MessageEvent) => {
@@ -218,8 +208,6 @@ export class SquintSocket {
       reconnectId?: string
    ): Promise<SquintSocket> {
 
-      console.info('XXX SquintSocket.connect().then()');
-
       return new Promise<SquintSocket>((resolve, reject) => {
 
          // create temporary handlers that process the server handshake
@@ -227,26 +215,28 @@ export class SquintSocket {
 
          ws.onopen = () => {
             // send handshake message
+            let msg: ISquintHelloFromClientMessage = {
+               subject: SquintMessageSubject.Hello,
+               userName: userName,
+               reconnectId: reconnectId,
+               userAgent: navigator.userAgent,
+               platform: navigator.platform,
+               version: Version.toString(),
+            }
             ws.send(
                JSON.stringify({
-                  subject: 'Hello',
-                  userName: userName,
-                  reconnectId: reconnectId,
-                  userAgent: navigator.userAgent,
-                  platform: navigator.platform
-               })
+               } as ISquintHelloFromClientMessage)
             );
          };
 
          ws.onclose = (event: CloseEvent) => {
-            console.info('XXX SquintSocket.onClose() ' + JSON.stringify(event, null, ' '));
             ws.onopen = null;
             ws.onclose = null;
             ws.onmessage = null;
             reject('Cannot connect to server: ' + event.code);
          }
          ws.onerror = (event: Event) => {
-            console.info('XXX SquintSocket.onError() ' + JSON.stringify(event, null, ' '));
+            debug('SquintSocket.onError() ' + JSON.stringify(event, null, ' '));
             ws.onopen = null;
             ws.onclose = null;
             ws.onmessage = null;

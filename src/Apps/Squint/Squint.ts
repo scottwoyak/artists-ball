@@ -249,12 +249,10 @@ export class Squint {
       console.log(this + ' Reconnect try ' + this.retryCount)
       this.doConnect(connectionId)
          .then(() => {
-            console.info('XXX doConnect().then()');
             this.reconnectStopwatch = null;
             this.emit(SquintEvent.Reconnected, true);
          })
          .catch((err) => {
-            console.info('XXX doConnect().catch() ' + err);
             console.log(this + ' Reconnect try ' + this.retryCount + ' failed: ' + err);
             if (typeof err === 'string' && err.endsWith('Server rejected the request.')) {
                console.log(this + ' Unable to reconnect, server rejected the request.');
@@ -264,7 +262,6 @@ export class Squint {
                this.emit(SquintEvent.Close);
             }
             else if (this.reconnectStopwatch.elapsedS < this.ReconnectTimeoutS) {
-               console.info('XXX doConnect().catch() reconnecting in 1 sec');
                setTimeout(() => {
                   this.tryToReconnect(connectionId);
                }, 1000 * this.ReconnectRetryDelayS);
@@ -281,8 +278,6 @@ export class Squint {
 
    public connect(url: string, userName: string): Promise<void> {
 
-      console.info('XXX Squint.connect()');
-
       this._userName = userName;
       this._url = url;
       this._remoteCameraConnected = true;
@@ -292,7 +287,6 @@ export class Squint {
 
    private doConnect(reconnectId?: string): Promise<void> {
 
-      console.info('XXX Squint.doConnect()');
       if (this.connected) {
          debug('Connecting even though previous connection is still open');
          return Promise.reject('Cannot connect to server: previous connection is still open');
@@ -318,7 +312,6 @@ export class Squint {
       }
 
       let onClose = (code: number) => {
-         console.info('XXX onClose: ' + code);
          const connectionId = this.ss.connectionId;
          if (code === SquintSocket.CLOSE_CODE_NORMAL) {
             this.ss = null;
@@ -346,7 +339,6 @@ export class Squint {
    }
 
    public close(): void {
-      console.info('XXX Squint.close()');
       if (!this.connected) {
          debug('Squint.close() called but no connection exists');
          return;

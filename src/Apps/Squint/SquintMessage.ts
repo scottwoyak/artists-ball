@@ -105,7 +105,8 @@ export interface ISquintHelloFromClientMessage {
    userName: string,
    reconnectId: string,
    userAgent: string,
-   platform: string
+   platform: string,
+   version: string,
 }
 
 export interface ISquintHelloFromServerMessage {
