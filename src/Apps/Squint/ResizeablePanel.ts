@@ -18,15 +18,15 @@ export class ResizeablePanel extends Panel {
       }
    }
 
-   protected buildSettingsObj(settings: IResizeablePanelSettings): void {
-      super.buildSettingsObj(settings);
+   protected onSaveSettings(settings: IResizeablePanelSettings): void {
+      super.onSaveSettings(settings);
       const style = getComputedStyle(this.div);
       settings.left = style.left;
       settings.top = style.top;
    }
 
-   protected onRestore(settings: IResizeablePanelSettings): void {
-      super.onRestore(settings);
+   protected onRestoreSettings(settings: IResizeablePanelSettings): void {
+      super.onRestoreSettings(settings);
       if (settings.left !== undefined && settings.top != undefined) {
          this.div.style.top = settings.top;
          this.div.style.left = settings.left;

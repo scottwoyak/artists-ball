@@ -22,6 +22,13 @@ export class Panel extends ObjectWithSettings {
          return;
       }
 
+      if (this.hasSavedSettings) {
+         let savedSettings = this.settings as IPanelSettings;
+         if (savedSettings.visible !== flag) {
+            this.saveSettings();
+         }
+      }
+
       if (flag) {
          this.div.style.display = this.displayStyleForShowing;
       }
@@ -32,8 +39,6 @@ export class Panel extends ObjectWithSettings {
       if (this.onVisible) {
          this.onVisible(flag);
       }
-
-      this.saveSettings();
    }
 
    protected constructor(parent: HTMLElement, id: string, displayStyleForShowing = 'block', settingsKey?: string) {
@@ -43,13 +48,13 @@ export class Panel extends ObjectWithSettings {
       this.displayStyleForShowing = displayStyleForShowing;
    }
 
-   protected buildSettingsObj(settings: IPanelSettings): void {
-      super.buildSettingsObj(settings);
+   protected onSaveSettings(settings: IPanelSettings): void {
+      super.onSaveSettings(settings);
       settings.visible = this.visible;
    }
 
-   protected onRestore(settings: IPanelSettings): void {
-      super.onRestore(settings);
+   protected onRestoreSettings(settings: IPanelSettings): void {
+      super.onRestoreSettings(settings);
       if (settings.visible !== undefined) {
          this.visible = settings.visible;
       }

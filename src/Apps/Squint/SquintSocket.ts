@@ -224,8 +224,7 @@ export class SquintSocket {
                version: Version.toString(),
             }
             ws.send(
-               JSON.stringify({
-               } as ISquintHelloFromClientMessage)
+               JSON.stringify(msg)
             );
          };
 

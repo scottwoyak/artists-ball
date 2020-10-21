@@ -11,26 +11,44 @@ export class ObjectWithSettings {
       return (this.settingsKey !== undefined && localStorage.getItem(this.settingsKey) !== null);
    }
 
+   public get settings(): ISettings {
+      if (this.settingsKey === undefined) {
+         return null;
+      }
+      else {
+         let settings = localStorage.getItem(this.settingsKey);
+         if (settings) {
+            try {
+               // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+               return JSON.parse(settings);
+            }
+            catch (err) {
+               return null;
+            }
+         }
+      }
+   }
+
    protected constructor(settingsKey?: string) {
 
       this.settingsKey = settingsKey;
    }
 
    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
-   protected buildSettingsObj(_settings: ISettings): void {
+   protected onSaveSettings(_settings: ISettings): void {
+   }
+
+   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
+   protected onRestoreSettings(settings: ISettings) {
    }
 
    public saveSettings(): void {
       if (this.settingsKey) {
          let settings = {};
-         this.buildSettingsObj(settings);
+         this.onSaveSettings(settings);
 
          localStorage.setItem(this.settingsKey, JSON.stringify(settings));
       }
-   }
-
-   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
-   protected onRestore(settings: ISettings) {
    }
 
    public restoreSettings(): void {
@@ -39,7 +57,7 @@ export class ObjectWithSettings {
          if (jsonStr !== null) {
             try {
                let settings = JSON.parse(jsonStr);
-               this.onRestore(settings);
+               this.onRestoreSettings(settings);
             }
             catch (err) {
                debug('Cannot restore settings for \' + key + \'.\nValue is not JSON: ' + jsonStr);
