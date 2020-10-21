@@ -240,10 +240,16 @@ export class SquintSocket {
 
          ws.onclose = (event: CloseEvent) => {
             console.info('XXX SquintSocket.onClose() ' + JSON.stringify(event, null, ' '));
+            ws.onopen = null;
+            ws.onclose = null;
+            ws.onmessage = null;
             reject('Cannot connect to server: ' + event.code);
          }
          ws.onerror = (event: Event) => {
             console.info('XXX SquintSocket.onError() ' + JSON.stringify(event, null, ' '));
+            ws.onopen = null;
+            ws.onclose = null;
+            ws.onmessage = null;
             reject('Cannot connect to ' + url);
          };
 

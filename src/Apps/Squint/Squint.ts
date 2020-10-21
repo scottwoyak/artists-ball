@@ -15,7 +15,7 @@ import { ITimerInfo } from './ITimerInfo';
 export class Squint {
 
    public static readonly url = SquintWsUrl;
-   public ReconnectTimeoutS = 60;
+   public ReconnectTimeoutS = 600;
    public ReconnectRetryDelayS = 1;
 
    public ss: SquintSocket | null = null;
