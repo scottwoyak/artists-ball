@@ -119,6 +119,8 @@ export class SquintSocket {
       }
 
       ws.onerror = (event: Event) => {
+         debug('SquintSocket.onError: ' + JSON.stringify(event, null, ' '));
+         /*
          if (this._ws) {
             this._ws.onclose = null;
             this._ws.onerror = null;
@@ -127,6 +129,7 @@ export class SquintSocket {
          }
          this._ws = null;
          this.onClose(SquintSocket.CLOSE_CODE_ERROR);
+         */
       }
 
       ws.onmessage = (message: MessageEvent) => {
@@ -215,6 +218,8 @@ export class SquintSocket {
       reconnectId?: string
    ): Promise<SquintSocket> {
 
+      console.info('XXX SquintSocket.connect().then()');
+
       return new Promise<SquintSocket>((resolve, reject) => {
 
          // create temporary handlers that process the server handshake
@@ -234,9 +239,11 @@ export class SquintSocket {
          };
 
          ws.onclose = (event: CloseEvent) => {
+            console.info('XXX SquintSocket.onClose() ' + JSON.stringify(event, null, ' '));
             reject('Cannot connect to server: ' + event.code);
          }
          ws.onerror = (event: Event) => {
+            console.info('XXX SquintSocket.onError() ' + JSON.stringify(event, null, ' '));
             reject('Cannot connect to ' + url);
          };
 
