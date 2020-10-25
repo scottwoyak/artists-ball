@@ -108,7 +108,7 @@
   left: 1em;
   bottom: 1em;
   width: 20em;
-  height: 20em;
+  height: 22em;
   border: solid;
   border-color: lightgray;
   border-width: var(--margin);
@@ -145,6 +145,14 @@
   height: 0;
   flex: 1 1 auto;
   padding-top: var(--margin);
+}
+
+#SquintApp #LevelsPanelDiv #SliderLabel {
+  flex: 0 0 0;
+}
+
+#SquintApp #LevelsPanelDiv #SliderValueSpan {
+  flex: 0 0 1.3em;
 }
 
 /********************************************************************

@@ -1,5 +1,6 @@
 import { GUI } from '../../GUI/GUI';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
+import { Slider } from '../../GUI/Slider';
 import { clamp, getEmPixels } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { ResizeablePanel } from './ResizeablePanel';
@@ -36,6 +37,7 @@ export class LevelsPanel extends ResizeablePanel {
    public black = 0;
    public midPoint = 0.5;
    public midValue = 0.5;
+   public numLevels = NaN;
 
    public onChange: ChangeHandler = null;
 
@@ -54,6 +56,31 @@ export class LevelsPanel extends ResizeablePanel {
       }
 
       this.canvas = GUI.create('canvas', 'AfterCanvas', this.div);
+
+      new Slider(this.div, {
+         label: '',
+         min: 2,
+         max: 20,
+         value: 20,
+         oninput: (slider: Slider) => {
+            if (slider.value === slider.max) {
+               this.numLevels = NaN;
+            }
+            else {
+               this.numLevels = slider.value;
+            }
+            this.onChange();
+         },
+         onGetText: (slider) => {
+            if (slider.value === slider.max) {
+               return '∞';
+            }
+            else {
+               return slider.value.toFixed(0)
+            }
+         }
+      }
+      );
 
       let handler = new PointerEventHandler(this.canvas);
 

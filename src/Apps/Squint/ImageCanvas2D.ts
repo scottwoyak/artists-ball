@@ -1,3 +1,4 @@
+import { clamp } from '../../Util/Globals';
 import { hsvColor } from '../../Util/hsvColor';
 import { ImageCanvas } from './ImageCanvas';
 
@@ -60,11 +61,11 @@ export class ImageCanvas2D extends ImageCanvas {
       width = Math.min(right - x, canvasWidth);
       height = Math.min(bottom - y, canvasHeight);
 
+      let imageData = ctx.getImageData(x, y, width, height);
+      let data = imageData.data;
+
       // if filters are not supported on contexts, ummm Safari, do our own
       if (ctx.filter === undefined) {
-         let imageData = ctx.getImageData(x, y, width, height);
-         let data = imageData.data;
-
          if (this.contrast !== 100) {
             let amount = this.contrast / 100;
             for (let i = 0; i < data.length; i += 4) {
@@ -103,65 +104,51 @@ export class ImageCanvas2D extends ImageCanvas {
                }
             }
          }
-         ctx.putImageData(imageData, x, y);
       }
 
-      this.applyCustomFilters(ctx, x, y, width, height);
-   }
-
-   private applyCustomFilters(
-      ctx: CanvasRenderingContext2D,
-      x: number,
-      y: number,
-      width: number,
-      height: number
-   ): void {
-
-      let imageData = ctx.getImageData(x, y, width, height);
-      let data = imageData.data;
-
-      let hsv = new hsvColor([0, 0, 0]);
       let grayScale = this.grayScale;
       let realMidPt = this.black + this.midPt * (this.white - this.black);
       for (let i = 0; i < data.length; i += 4) {
 
-         hsv.fromHtmlValues(data[i + 0], data[i + 1], data[i + 2]);
+         let oldLum = (0.3086 * data[i + 0] + 0.6094 * data[i + 1] + 0.0820 * data[i + 2]) / 255.0;
+         let newLum = NaN;
 
-         if (hsv.v <= this.black) {
-            hsv.v = 0;
+         if (oldLum <= this.black) {
+            newLum = 0;
          }
-         else if (hsv.v >= this.white) {
-            hsv.v = 1;
+         else if (oldLum >= this.white) {
+            newLum = 1;
          }
          else {
-            if (hsv.v < realMidPt) {
-               hsv.v = 0 + this.midValue * ((hsv.v - this.black) / (realMidPt - this.black));
+            if (oldLum < realMidPt) {
+               newLum = 0 + this.midValue * ((oldLum - this.black) / (realMidPt - this.black));
             }
             else {
-               hsv.v = this.midValue + (1 - this.midValue) * (hsv.v - realMidPt) / (this.white - realMidPt);
+               newLum = this.midValue + (1 - this.midValue) * (oldLum - realMidPt) / (this.white - realMidPt);
             }
          }
 
-         let rgb = hsv.toRGBValues();
-
-         data[i + 0] = rgb[0];
-         data[i + 1] = rgb[1];
-         data[i + 2] = rgb[2];
+         if (isNaN(this.numLevels) === false) {
+            let val = newLum;
+            newLum = (Math.floor(this.numLevels * (val - 0.0001)) + 0.5) / this.numLevels;
+         }
 
          if (grayScale) {
-            let r = data[i + 0];
-            let g = data[i + 1];
-            let b = data[i + 2];
             //let val = 0.299 * r + 0.587 * g + 0.114 * b;
             // adobe Y'204 luminosity
-            let val = 0.3086 * r + 0.6094 * g + 0.0820 * b;
+            let val = clamp(255 * newLum, 0, 255);
             data[i + 0] = val;
             data[i + 1] = val;
             data[i + 2] = val;
+         }
+         else {
+            let ratio = newLum / oldLum;
+            data[i + 0] = clamp(data[i + 0] * ratio, 0, 255);
+            data[i + 1] = clamp(data[i + 1] * ratio, 0, 255);
+            data[i + 2] = clamp(data[i + 2] * ratio, 0, 255);
          }
       }
 
       ctx.putImageData(imageData, x, y);
    }
-
 }

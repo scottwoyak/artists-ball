@@ -16,6 +16,8 @@ export abstract class ImageCanvas {
    public midValue = 0.5;
    public grayScale = false;
 
+   public numLevels = NaN;
+
    public get element(): HTMLElement {
       return this.canvas;
    }

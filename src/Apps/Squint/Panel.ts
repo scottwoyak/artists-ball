@@ -22,18 +22,18 @@ export class Panel extends ObjectWithSettings {
          return;
       }
 
-      if (this.hasSavedSettings) {
-         let savedSettings = this.settings as IPanelSettings;
-         if (savedSettings.visible !== flag) {
-            this.saveSettings();
-         }
-      }
-
       if (flag) {
          this.div.style.display = this.displayStyleForShowing;
       }
       else {
          this.div.style.display = 'none';
+      }
+
+      if (this.hasSavedSettings) {
+         let savedSettings = this.settings as IPanelSettings;
+         if (savedSettings.visible !== flag) {
+            this.saveSettings();
+         }
       }
 
       if (this.onVisible) {

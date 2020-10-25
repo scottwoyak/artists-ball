@@ -316,6 +316,7 @@ export class SquintApp implements IApp {
          this.canvas.black = this.levelsPanel.black;
          this.canvas.midPt = this.levelsPanel.midPoint;
          this.canvas.midValue = this.levelsPanel.midValue;
+         this.canvas.numLevels = this.levelsPanel.numLevels;
          this.dirty = true;
       }
 
@@ -516,6 +517,32 @@ export class SquintApp implements IApp {
          },
          onGetText: (slider) => slider.value.toFixed(0) + '%',
       });
+
+      /*
+      viewMenu.addSlider({
+         label: 'Posterize',
+         min: 2,
+         max: 20,
+         value: 20,
+         oninput: (slider: Slider) => {
+            this.dirty = true;
+            if (slider.value === slider.max) {
+               this.canvas.numLevels = NaN;
+            }
+            else {
+               this.canvas.numLevels = slider.value;
+            }
+         },
+         onGetText: (slider) => {
+            if (slider.value === slider.max) {
+               return '∞';
+            }
+            else {
+               return slider.value.toFixed(0)
+            }
+         }
+      });
+      */
 
       let blurCheckbox = viewMenu.addSlider({
          label: 'Blur',
