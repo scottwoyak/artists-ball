@@ -4,11 +4,13 @@ import { PathTracerApp } from './Apps/PathTracer/PathTracerApp';
 import { ViewerApp } from './Apps/Viewer/ViewerApp';
 import { SquintApp } from './Apps/Squint/SquintApp';
 import { baseUrl } from './Util/Globals';
+import { SeeApp } from './Apps/Squint/ArtSeeApp';
 
 enum AppType {
    ArtistsBall = 'ArtistsBall',
    Viewer = 'Viewer',
-   Squint = 'Squint'
+   Squint = 'Squint',
+   ArtSee = 'Art-See',
 }
 
 interface IParam {
@@ -39,6 +41,7 @@ export class Launcher {
       subMenu.addItem('3D Viewer', () => location.href = this.getUrl(AppType.Viewer));
       subMenu.addItem('Squint', () => location.href = this.getUrl(AppType.Squint));
       subMenu.addItem('Artist\'s Ball', () => location.href = this.getUrl(AppType.ArtistsBall));
+      subMenu.addItem('Art-See', () => location.href = this.getUrl(AppType.ArtSee));
 
       const paramString = location.href.split('?')[1];
       const query = new URLSearchParams(paramString);
@@ -59,6 +62,10 @@ export class Launcher {
          case AppType.Viewer:
             type = AppType.Viewer;
             break;
+
+         case AppType.ArtSee:
+            type = AppType.ArtSee;
+            break;
       }
       query.delete('App');
 
@@ -78,6 +85,11 @@ export class Launcher {
          case AppType.Squint:
             document.title = 'Squint';
             this.app = new SquintApp();
+            break;
+
+         case AppType.ArtSee:
+            document.title = 'Art-See';
+            this.app = new SeeApp();
             break;
       }
       this.app.create(this.div);
@@ -114,6 +126,10 @@ export class Launcher {
 
          case AppType.Viewer:
             return base + '?App=Viewer';
+            break;
+
+         case AppType.ArtSee:
+            return base + '?App=Art-See';
             break;
 
          default:

@@ -249,24 +249,24 @@ export class Camera {
                this.capture.y += delta.y;
                this.capture.width -= delta.x;
                this.capture.height -= delta.y;
-               this.draw();
+               this.drawOverlay();
                break;
             case RectHit.UR:
                this.capture.y += delta.y;
                this.capture.width += delta.x;
                this.capture.height -= delta.y;
-               this.draw();
+               this.drawOverlay();
                break;
             case RectHit.LL:
                this.capture.x += delta.x;
                this.capture.width -= delta.x;
                this.capture.height += delta.y;
-               this.draw();
+               this.drawOverlay();
                break;
             case RectHit.LR:
                this.capture.width += delta.x;
                this.capture.height += delta.y;
-               this.draw();
+               this.drawOverlay();
                break;
             case RectHit.Inside:
                this.capture.x += delta.x;
@@ -317,7 +317,7 @@ export class Camera {
       return rect.hit(pos, epsilon);
    }
 
-   private draw(): void {
+   private drawOverlay(): void {
       let ctx = this.overlayCanvas.getContext('2d');
       let w = this.overlayCanvas.width;
       let h = this.overlayCanvas.height;
@@ -376,7 +376,7 @@ export class Camera {
       this.overlayCanvas.width = this.overlayCanvas.clientWidth;
       this.overlayCanvas.height = this.overlayCanvas.clientHeight;
 
-      this.draw();
+      this.drawOverlay();
 
       let scale = Math.min(Math.sqrt(1000000 * megaPixels / (this.capture.width * this.capture.height)), 1);
       this.hiddenCanvas.width = this.capture.width * scale;
@@ -388,8 +388,16 @@ export class Camera {
          return Promise.reject(SquintStrings.CAMERA_NOT_READY);
       }
 
-      // @ts-ignore: context isn't null
-      context.drawImage(this.video, this.capture.x, this.capture.y, this.capture.width, this.capture.height, 0, 0, this.hiddenCanvas.width, this.hiddenCanvas.height);
+      context.drawImage(
+         this.video,
+         this.capture.x,
+         this.capture.y,
+         this.capture.width,
+         this.capture.height,
+         0,
+         0,
+         this.hiddenCanvas.width,
+         this.hiddenCanvas.height);
 
       return new Promise<Blob | null>((resolve, reject) => {
          this.hiddenCanvas.toBlob(
@@ -410,6 +418,53 @@ export class Camera {
             'image/jpeg',
             jpegQuality);
       });
+   }
+
+   public takePicture2(
+      megaPixels: number
+   ): ImageData {
+
+      if (this.video.readyState != 4) {
+         return null;
+         //return Promise.reject(SquintStrings.CAMERA_NOT_READY);
+      }
+      if (this.paused) {
+         return null;
+         //return Promise.reject(SquintStrings.CAMERA_NOT_READY);
+      }
+
+      if (this.video.videoHeight === 0 || this.video.videoWidth === 0) {
+         return null;
+         //return Promise.reject('XX Video Size = 0');
+      }
+
+      this.overlayCanvas.width = this.overlayCanvas.clientWidth;
+      this.overlayCanvas.height = this.overlayCanvas.clientHeight;
+
+      this.drawOverlay();
+
+      let scale = Math.min(Math.sqrt(1000000 * megaPixels / (this.capture.width * this.capture.height)), 1);
+      this.hiddenCanvas.width = this.capture.width * scale;
+      this.hiddenCanvas.height = this.capture.height * scale;
+
+      const context = this.hiddenCanvas.getContext('2d');
+      if (context === null) {
+         return null;
+         //return Promise.reject(SquintStrings.CAMERA_NOT_READY);
+      }
+
+      context.drawImage(
+         this.video,
+         this.capture.x,
+         this.capture.y,
+         this.capture.width,
+         this.capture.height,
+         0,
+         0,
+         this.hiddenCanvas.width,
+         this.hiddenCanvas.height);
+
+      return context.getImageData(0, 0, this.hiddenCanvas.width, this.hiddenCanvas.height);
    }
 
    public start(desired: MediaTrackConstraints): Promise<MediaStreamTrack> {
@@ -550,9 +605,19 @@ export class Camera {
 
    private static videoEnabled = false;
 
-   public static getCameras(onFound: (resolution: IVideoConstraint) => void): void {
+   public static getCameras(onFound: (resolution: IVideoConstraint, index: number, numCameras: number) => void): void {
+      let index = 0;
       navigator.mediaDevices.enumerateDevices()
          .then((devices) => {
+
+            let numCameras = 0;
+            for (let i = 0; i < devices.length; i++) {
+               const device = devices[i];
+               if (device.kind === 'videoinput') {
+                  numCameras++;
+               }
+            }
+
             if (iOS() && Camera.videoEnabled === false) {
 
                // iPhones and iPads don't allow you to enumerate cameras until the user
@@ -562,12 +627,16 @@ export class Camera {
                onFound({
                   label: 'Front Camera',
                   facingMode: 'user',
-               });
+               },
+                  index++,
+                  numCameras);
 
                onFound({
                   label: 'Back Camera',
                   facingMode: 'environment',
-               });
+               },
+                  index++,
+                  numCameras);
 
             }
             else {
@@ -593,7 +662,7 @@ export class Camera {
                         deviceId: device.deviceId,
                      }
 
-                     onFound(actual)
+                     onFound(actual, index++, numCameras);
                   }
                }
             }

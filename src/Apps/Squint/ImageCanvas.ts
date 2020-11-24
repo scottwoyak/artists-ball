@@ -15,6 +15,7 @@ export abstract class ImageCanvas {
    public midPt = 0.5;
    public midValue = 0.5;
    public grayScale = false;
+   public showAsTemperature = false;
 
    public numLevels = NaN;
 

@@ -149,6 +149,57 @@ export class ImageCanvas2D extends ImageCanvas {
          }
       }
 
+      if (this.showAsTemperature) {
+         // first compute min and max temp
+         let minTemp = 255;
+         let maxTemp = -255;
+         let hsv = new hsvColor([0, 0, 0]);
+         for (let i = 0; i < data.length; i += 4) {
+            let r = data[i + 0];
+            let g = data[i + 1];
+            let b = data[i + 2];
+            hsv.fromHtmlValues(r, g, b);
+
+            let temp = this.temperature(r, g, b);
+            minTemp = Math.min(minTemp, temp);
+            maxTemp = Math.max(maxTemp, temp);
+         }
+         //console.log(minTemp + '   ' + maxTemp);
+         let avgTemp = (maxTemp + minTemp) / 2;
+
+         for (let i = 0; i < data.length; i += 4) {
+            let r = data[i + 0];
+            let g = data[i + 1];
+            let b = data[i + 2];
+            let temp = this.temperature(r, g, b);
+
+            if (temp < avgTemp) {
+               r = 0;
+               g = 0;
+               b = 255 * (avgTemp - temp) / (avgTemp - minTemp);
+               r = 255 - b;
+               g = 255 - b;
+               b = 255;
+            }
+            else {
+               r = 255 * (temp - avgTemp) / (maxTemp - avgTemp);
+               g = 0;
+               b = 0;
+               g = 255 - r;
+               b = 255 - r;
+               r = 255;
+            }
+
+            data[i + 0] = r;
+            data[i + 1] = g;
+            data[i + 2] = b;
+         }
+      }
+
       ctx.putImageData(imageData, x, y);
+   }
+
+   private temperature(r: number, g: number, b: number): number {
+      return 0.5 + (((g + r) / 2 - b) / 255) / 2;
    }
 }

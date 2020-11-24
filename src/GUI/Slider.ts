@@ -59,6 +59,8 @@ export class Slider implements ICtrl {
    private _getText: (slider: Slider) => string;
    private _rangeMapper: RangeMapper;
 
+   public readonly div: HTMLDivElement;
+
    public set enabled(value: boolean) {
       this._range.disabled = !value;
       if (value) {
@@ -86,16 +88,16 @@ export class Slider implements ICtrl {
       const id = setup.id ?? 'Slider';
       this._getText = setup.onGetText;
 
-      const div = document.createElement('div');
-      div.id = id;
-      div.className = 'SliderDiv';
-      parent.appendChild(div);
+      this.div = document.createElement('div');
+      this.div.id = id;
+      this.div.className = 'SliderDiv';
+      parent.appendChild(this.div);
 
       this._label = document.createElement('label');
       this._label.id = id + 'Label';
       this._label.className = 'SliderLabel';
       this._label.innerText = setup.label ?? '';
-      div.appendChild(this._label);
+      this.div.appendChild(this._label);
 
       this._rangeMapper = new RangeMapper(setup.min, setup.max);
 
@@ -111,13 +113,13 @@ export class Slider implements ICtrl {
          this.updateSpanText()
       });
       this._label.htmlFor = this._range.id;
-      div.appendChild(this._range);
+      this.div.appendChild(this._range);
 
       if (setup.colors) {
          this._colorSpan = document.createElement('span');
          this._colorSpan.id = id + 'ColorSpan';
          this._colorSpan.className = 'SliderColorSpan';
-         div.appendChild(this._colorSpan);
+         this.div.appendChild(this._colorSpan);
 
          // set the initial color.
          this.colors = setup.colors;
@@ -127,7 +129,7 @@ export class Slider implements ICtrl {
       this._valueSpan.id = id + 'ValueSpan';
       this._valueSpan.className = 'SliderValueSpan';
       //      this._valueSpan.innerText = setup.value.toString();
-      div.appendChild(this._valueSpan);
+      this.div.appendChild(this._valueSpan);
 
       // set the initial span text
       this.updateSpanText();
