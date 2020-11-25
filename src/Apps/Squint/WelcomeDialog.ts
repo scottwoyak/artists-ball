@@ -1,6 +1,6 @@
 import { GUI } from '../../GUI/GUI';
-import { SquintHttpUrl } from './Servers';
 import { Dialog } from '../../GUI/Dialog';
+import { baseUrl } from '../../Util/Globals';
 
 export type okHandler = (userName: string) => void;
 
@@ -18,7 +18,7 @@ export class WelcomeDialog extends Dialog {
 
       const bodyDiv = GUI.create('div', 'BodyDiv', this.dialogDiv);
       const img = GUI.create('img', 'SquintImg', bodyDiv);
-      img.src = location.origin + '/img/squint.jpg';
+      img.src = baseUrl() + 'img/squint.jpg';
 
       const userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', bodyDiv);
       const userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);

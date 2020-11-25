@@ -129,7 +129,7 @@ describe('Squint', function () {
             mockServer.connections[0].close(1005);
 
             // should reconnect
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                setTimeout(() => {
                   try {
                      // should have reconnected by now
@@ -208,7 +208,7 @@ describe('Squint', function () {
 
             // leave the original connection open, but reconnect with a new web socket
 xxx
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                setTimeout(() => {
                   try {
                      // should have reconnected by now
@@ -267,7 +267,7 @@ xxx
             mockServer.connections[0].close(1005);
 
             // should reconnect
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                setTimeout(() => {
                   try {
                      // should have reconnected by now
@@ -325,7 +325,7 @@ xxx
             mockServer.connections[0].close(1005);
 
             // should reconnect
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                setTimeout(() => {
                   try {
                      // should have reconnected by now
@@ -368,7 +368,7 @@ xxx
             expect(info.connections[0].state).to.equal(ConnectionState.Zombie);
 
             // should fully close after the zombie timeout
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                setTimeout(() => {
                   // should have reconnected by now
                   Squint.inspect(TestUrlLocalhost)
@@ -448,7 +448,7 @@ xxx
             expect(info.connections[0].state).to.equal(ConnectionState.Zombie);
 
             // try to reconnect after the Zombie timeout
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                setTimeout(() => {
                   // should have reconnected by now
                   Squint.inspect(TestUrlLocalhost)
@@ -515,7 +515,7 @@ xxx
             expect(info.connections.length).to.equal(1);
             expect(info.connections[0].state).to.equal(ConnectionState.Open);
 
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
 
                let disconnectedEvent = false;
                squint.on({
@@ -644,7 +644,7 @@ xxx
             let squintViewer = new Squint();
 
             // wait for the initial session list
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
                squintViewer.on({
                   event: SquintEvent.SessionList,
                   handler: (sessions) => {
@@ -683,7 +683,7 @@ xxx
 
             // as soon as squintHost sends an image, a session will be started and we'll
             // be notified about it. Join the session.
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
                squintViewer.on({
                   event: SquintEvent.SessionList,
                   handler: async (sessions) => {
@@ -748,7 +748,7 @@ xxx
             let squintViewer = new Squint();
 
             // We should immediately receive the session list
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
 
                squintViewer.on({
                   event: SquintEvent.SessionList,
@@ -796,7 +796,7 @@ xxx
             expect(info.sessions.length).to.equal(0);
 
             let pass = 1;
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
                squintViewer.on({
                   event: SquintEvent.SessionList,
                   handler: async (sessions) => {
@@ -919,7 +919,7 @@ xxx
             expectConnection(info.sessions[0].viewers[0], squintViewer);
 
             // now wait and the session should close automatically
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                setTimeout(() => {
                   Squint.inspect(TestUrlLocalhost)
                      .then((info) => {
@@ -996,7 +996,7 @@ xxx
 
             let { squintHost, squintViewer } = await createSession();
 
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
                squintViewer.on({
                   event: SquintEvent.HostDisconnected,
                   handler: () => {
@@ -1020,7 +1020,7 @@ xxx
 
             let { squintHost, squintViewer } = await createSession();
 
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
                squintViewer.on({
                   event: SquintEvent.HostDisconnected,
                   handler: () => {
@@ -1240,7 +1240,7 @@ xxx
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
             await squintViewer.joinSession(sessionId);
 
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
                let pass = 1;
                squintViewer.on({
                   event: SquintEvent.SessionInfo,
@@ -1322,7 +1322,7 @@ xxx
             await sleep(TimeMs.Interval + TimeMs.Buffer);
 
             // viewer 2 should receive a message when viewer 1 closes
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
                squintViewer2.on({
                   event: SquintEvent.SessionInfo,
                   handler: (sessionInfo) => {
@@ -1382,7 +1382,7 @@ xxx
             expectConnection(info.sessions[0].viewers[0], squintViewer);
 
             // change the host
-            let promise1 = new Promise((resolve, reject) => {
+            let promise1 = new Promise<void>((resolve, reject) => {
                squintHost.on({
                   event: SquintEvent.HostChanged,
                   handler: (newHostConnectionId: string) => {
@@ -1396,7 +1396,7 @@ xxx
                   }
                });
             });
-            let promise2 = new Promise((resolve, reject) => {
+            let promise2 = new Promise<void>((resolve, reject) => {
                squintViewer.on({
                   event: SquintEvent.HostChanged,
                   handler: (newHostConnectionId: string) => {
@@ -1888,7 +1888,7 @@ xxx
             expectConnection(info.connections[2], squintViewer2);
             expect(info.sessions.length).to.equal(1);
 
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
 
                let pass = 1;
                squintViewer1.on({
@@ -1999,7 +1999,7 @@ xxx
             expectConnection(info.connections[2], squintViewer2);
             expect(info.sessions.length).to.equal(1);
 
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
 
                let pass = 1;
                squintViewer1.on({
@@ -2111,7 +2111,7 @@ xxx
             expectConnection(info.connections[2], squintViewer2);
             expect(info.sessions.length).to.equal(1);
 
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
 
                let pass = 1;
                squintHost.on({
@@ -2223,7 +2223,7 @@ xxx
             expectConnection(info.connections[2], squintViewer2);
             expect(info.sessions.length).to.equal(1);
 
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
 
                let pass = 1;
                squintHost.on({
@@ -2313,7 +2313,7 @@ xxx
             expectConnection(info.connections[0], squintHost);
             expect(info.sessions.length).to.equal(0);
 
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
 
                squintHost.on({
                   event: SquintEvent.SessionInfo,
@@ -2457,7 +2457,7 @@ xxx
             squintHost.sendImage(imageBlob);
 
             // when squintViewer receives the image, the test has passed
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                squintViewer.on({
                   event: SquintEvent.Image,
                   handler: () => {
@@ -2738,7 +2738,7 @@ xxx
             let { squintHost, squintViewer } = await createSession();
 
             // when all session members receive the pause event, the test has passed
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                let viewerEvent = 0;
                let hostEvent = 0;
                squintViewer.on({

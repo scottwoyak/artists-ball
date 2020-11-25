@@ -24,7 +24,7 @@ describe.only('ModelTimer', function () {
          let timer = new ModelTimer(squint);
          let sw = new Stopwatch(false);
 
-         let promise = new Promise((resolve, reject) => {
+         let promise = new Promise<void>((resolve, reject) => {
 
             let tickCount = 0;
             timer.onTick = (info: ITimerInfo) => {
@@ -164,7 +164,7 @@ describe.only('ModelTimer', function () {
          expect(squintHost.modelTimer.running).to.be.true;
          expect(squintHost.modelTimer.alarmSounding).to.be.false;
 
-         let promise = new Promise((resolve, reject) => {
+         let promise = new Promise<void>((resolve, reject) => {
             let count = 0;
             squintHost.modelTimer.onTick = (info: ITimerInfo) => {
                count++;
@@ -206,7 +206,7 @@ describe.only('ModelTimer', function () {
 
          await sleep(20);
 
-         let promise = new Promise((resolve, reject) => {
+         let promise = new Promise<void>((resolve, reject) => {
             let count = 0;
             squintHost.modelTimer.onTick = (info: ITimerInfo) => {
                count++;
@@ -244,7 +244,7 @@ describe.only('ModelTimer', function () {
          timer.durationMs = 100;
          let sw = new Stopwatch(false);
 
-         let promise = new Promise((resolve, reject) => {
+         let promise = new Promise<void>((resolve, reject) => {
 
             timer.onAlarm = (sound: boolean) => {
                try {
@@ -279,7 +279,7 @@ describe.only('ModelTimer', function () {
          let sw = new Stopwatch(false);
 
          let alarmCount = 0;
-         let promise = new Promise((resolve, reject) => {
+         let promise = new Promise<void>((resolve, reject) => {
 
             timer.onAlarm = (sound: boolean) => {
                try {
@@ -748,7 +748,7 @@ describe.only('ModelTimer', function () {
             // TODO test fails if this line is uncommented. Make this a real test
             //squintHost.modelTimer.start();
 
-            let promise = new Promise((resolve, reject) => {
+            let promise = new Promise<void>((resolve, reject) => {
                [squintHost.modelTimer, squintViewers[0].modelTimer, squintViewers[1].modelTimer].forEach((timer) => {
                   timer.onAlarm = (sound: boolean) => {
                      try {
