@@ -584,9 +584,9 @@ export class SquintApp implements IApp {
       // TODO just fully disable all the menu items instead of the menu itself.
       this.cameraMenu.enabled = false;
 
-      let firstItem = true;
-      Camera.getCameras((constraint) => {
+      Camera.getCameras((constraint, cameraIndex, numCameras) => {
 
+         let selected = (cameraIndex === (numCameras-1));
          const radioButton = this.cameraMenu.addRadiobutton(
             {
                label: constraint.label,
@@ -594,12 +594,11 @@ export class SquintApp implements IApp {
                   this.desired = constraint;
                   this.enableVideo(true);
                },
-               checked: firstItem,
+               checked: selected,
                group: 'CamerasGroup',
             });
-         if (firstItem) {
+         if (selected) {
             this.desired = constraint;
-            firstItem = false;
          }
 
          this.cameraCtrls.push(radioButton);

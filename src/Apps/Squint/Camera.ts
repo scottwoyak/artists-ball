@@ -629,16 +629,15 @@ export class Camera {
                   label: 'Front Camera',
                   facingMode: 'user',
                },
-                  index++,
-                  numCameras);
+                  0,
+                  2);
 
                onFound({
                   label: 'Back Camera',
                   facingMode: 'environment',
                },
-                  index++,
-                  numCameras);
-
+                  1,
+                  2);
             }
             else {
                let str = '';
