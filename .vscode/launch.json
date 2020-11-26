@@ -4,6 +4,14 @@
    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
    "version": "0.2.0",
    "configurations": [
+
+      {
+         "type": "chrome",
+         "request": "launch",
+         "name": "Art-See",
+         "url": "https://localhost?App=Art-See",
+         "webRoot": "${workspaceFolder}"
+      },
       {
          "type": "chrome",
          "request": "launch",
@@ -16,6 +24,13 @@
          "request": "launch",
          "name": "cs:valhalla",
          "url": "https://192.168.86.23",
+         "webRoot": "${workspaceFolder}"
+      },
+      {
+         "type": "chrome",
+         "request": "launch",
+         "name": "cs:dell",
+         "url": "https://192.168.86.108",
          "webRoot": "${workspaceFolder}"
       },
       {

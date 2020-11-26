@@ -613,7 +613,8 @@ export class Camera {
             let numCameras = 0;
             for (let i = 0; i < devices.length; i++) {
                const device = devices[i];
-               if (device.kind === 'videoinput') {
+               // AvStream is the infared camera that isn't a camera in chrome
+               if (device.kind === 'videoinput' && device.label.startsWith('AvStream Media Device') === false) {
                   numCameras++;
                }
             }

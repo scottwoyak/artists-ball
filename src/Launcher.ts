@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { IApp } from './IApp';
 import { Menubar } from './GUI/Menu';
 import { PathTracerApp } from './Apps/PathTracer/PathTracerApp';
@@ -5,6 +7,7 @@ import { ViewerApp } from './Apps/Viewer/ViewerApp';
 import { SquintApp } from './Apps/Squint/SquintApp';
 import { baseUrl } from './Util/Globals';
 import { SeeApp } from './Apps/Squint/ArtSeeApp';
+import { Device } from './Util/Device';
 
 enum AppType {
    ArtistsBall = 'ArtistsBall',
@@ -141,31 +144,27 @@ export class Launcher {
       // supposed to be able to do this stuff with media queries, but I give up! Browsers
       // behave differently on mobile devices and some alter scaling for portrait and
       // landscape too!
-      const isMobile = (navigator.userAgent.indexOf('Mobile') > 0);
-      const isFirefox = (navigator.userAgent.indexOf('Firefox') > 0);
-      const isChome = (navigator.userAgent.indexOf('Chrome') > 0);
-      const isPortrait = (window.orientation !== undefined && window.orientation === 0 || window.orientation === 180);
-      const isIphone = (navigator.userAgent.indexOf('iPhone') > 0);
+      let device = new Device();
 
-      let fontSize = 11;
-      if (isFirefox) {
-         fontSize = 11;
+      let fontSize = 14;
+      if (device.isFirefox) {
+         fontSize = 14;
       }
       else {
-         if (isMobile && isPortrait) {
-            if (isIphone) {
-               fontSize = 28;
+         if (device.isMobile && device.isPortrait) {
+            if (device.isIPhone) {
+               fontSize = 30;
             }
             else {
                fontSize = 24;
             }
          }
          else {
-            if (isIphone) {
+            if (device.isIPhone) {
                fontSize = 16;
             }
             else {
-               fontSize = 11;
+               fontSize = 14;
             }
          }
       }
