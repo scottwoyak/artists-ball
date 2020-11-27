@@ -48,6 +48,7 @@ export class PointerEventHandler {
       this.element.addEventListener('mousedown', this.mousedown);
       window.addEventListener('mousemove', this.mousemove);
       this.element.addEventListener('dblclick', this.dblclick);
+      this.element.addEventListener('wheel', this.onWheel);
    }
 
    public dispose(): void {
@@ -55,6 +56,7 @@ export class PointerEventHandler {
       this.element.removeEventListener('mousedown', this.mousedown);
       window.removeEventListener('mousemove', this.mousemove);
       this.element.removeEventListener('dblclick', this.dblclick);
+      this.element.removeEventListener('wheel', this.onWheel);
    }
 
    private dblclick = (event: MouseEvent) => {
@@ -343,6 +345,15 @@ export class PointerEventHandler {
       const y2 = touches.secondaryTouch.screenY;
 
       return new Vec2([(x1 + x2) / 2, (y1 + y2) / 2]);
+   }
+
+   private onWheel = (event: WheelEvent) => {
+      if (event.deltaY > 0) {
+         this.ourOnScale(1, 1.03);
+      }
+      else {
+         this.ourOnScale(1, 0.97);
+      }
    }
 
    private ourOnDown(pos: Vec2) {
