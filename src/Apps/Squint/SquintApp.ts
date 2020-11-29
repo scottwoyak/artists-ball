@@ -93,7 +93,7 @@ export class SquintApp implements IApp {
 
       document.title += (' ' + Version.Build);
 
-      //localStorage.removeItem(StorageItems.UserName); // simulates starting up the first time
+      //localStorage.removeItem(StorageItem.UserName); // simulates starting up the first time
 
       this.squint.on({
          event: SquintEvent.Image,
