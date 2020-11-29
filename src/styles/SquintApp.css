@@ -43,6 +43,11 @@
   -webkit-user-select: none;
 }
 
+/* prevent scaling on Apple */
+body {
+  touch-action: none;
+}
+
 #SquintApp #Panel {
   flex: 0 0 300px;
   display: block;
