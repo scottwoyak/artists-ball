@@ -1,7 +1,7 @@
 import 'webrtc-adapter';
 import { IApp } from '../../IApp';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
-import { IVideoConstraint, Camera, IMediaSettingsRange, IVideoTrackAdvancedCapabilities, IVideoTrackAdvancedSettings, AdvancedConstraintName, IAdvancedConstraint } from './Camera';
+import { IVideoConstraint, Camera, IMediaSettingsRange, IVideoTrackAdvancedCapabilities, IVideoTrackAdvancedSettings, AdvancedConstraintName, IAdvancedConstraint, CameraRotation } from './Camera';
 import { Uploader } from './Uploader';
 import { Slider } from '../../GUI/Slider';
 import { ICtrl } from '../../GUI/ICtrl';
@@ -341,6 +341,26 @@ export class SquintApp implements IApp {
          if (this.squint.connected && event.target instanceof HTMLInputElement === false) {
             switch (event.key) {
 
+               case 'r':
+                  switch (this.camera.rotation) {
+                     case CameraRotation.DEG_0:
+                        this.camera.rotation = CameraRotation.DEG_90;
+                        break;
+
+                     case CameraRotation.DEG_90:
+                        this.camera.rotation = CameraRotation.DEG_180;
+                        break;
+
+                     case CameraRotation.DEG_180:
+                        this.camera.rotation = CameraRotation.DEG_270;
+                        break;
+
+                     case CameraRotation.DEG_270:
+                        this.camera.rotation = CameraRotation.DEG_0;
+                        break;
+                  }
+                  break;
+
                case 'x':
                   // simulate killing the connection
                   this.squint.ws.close(3000);
@@ -586,7 +606,7 @@ export class SquintApp implements IApp {
 
       Camera.getCameras((constraint, cameraIndex, numCameras) => {
 
-         let selected = (cameraIndex === (numCameras-1));
+         let selected = (cameraIndex === (numCameras - 1));
          const radioButton = this.cameraMenu.addRadiobutton(
             {
                label: constraint.label,

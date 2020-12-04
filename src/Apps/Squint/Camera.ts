@@ -7,6 +7,13 @@ import { PointerEventHandler } from '../../GUI/PointerEventHandler';
 import { Vec2 } from '../../Util3D/Vec';
 import { RectHit, Rect } from './Rect';
 
+export enum CameraRotation {
+   DEG_0 = 0,
+   DEG_90 = Math.PI / 2,
+   DEG_180 = Math.PI,
+   DEG_270 = 3 * Math.PI / 2,
+}
+
 export interface IVideoConstraint {
    label: string,
    width?: number,
@@ -121,6 +128,8 @@ export class Camera {
       let style = getComputedStyle(this.video);
       return pxToNumber(style.borderWidth) + pxToNumber(style.margin);
    }
+
+   public rotation = CameraRotation.DEG_0;
 
    public set width(value: number) {
       this.video.style.width = value + 'px';
@@ -379,13 +388,41 @@ export class Camera {
       this.drawOverlay();
 
       let scale = Math.min(Math.sqrt(1000000 * megaPixels / (this.capture.width * this.capture.height)), 1);
-      this.hiddenCanvas.width = this.capture.width * scale;
-      this.hiddenCanvas.height = this.capture.height * scale;
+      let imgWidth = this.capture.width * scale;
+      let imgHeight = this.capture.height * scale;
+
+      if (this.rotation === CameraRotation.DEG_0 || this.rotation === CameraRotation.DEG_180) {
+         this.hiddenCanvas.width = imgWidth;
+         this.hiddenCanvas.height = imgHeight;
+      }
+      else {
+         this.hiddenCanvas.width = imgHeight;
+         this.hiddenCanvas.height = imgWidth;
+      }
 
       const context = this.hiddenCanvas.getContext('2d');
       if (context === null) {
          debug('Cannot get context 2D');
          return Promise.reject(SquintStrings.CAMERA_NOT_READY);
+      }
+
+      context.rotate(this.rotation);
+
+      switch (this.rotation) {
+         case CameraRotation.DEG_0:
+            break;
+
+         case CameraRotation.DEG_90:
+            context.translate(0, -imgHeight);
+            break;
+
+         case CameraRotation.DEG_180:
+            context.translate(-imgWidth, -imgHeight);
+            break;
+
+         case CameraRotation.DEG_270:
+            context.translate(-imgWidth, 0);
+            break;
       }
 
       context.drawImage(
@@ -396,8 +433,8 @@ export class Camera {
          this.capture.height,
          0,
          0,
-         this.hiddenCanvas.width,
-         this.hiddenCanvas.height);
+         imgWidth,
+         imgHeight);
 
       return new Promise<Blob | null>((resolve, reject) => {
          this.hiddenCanvas.toBlob(
@@ -473,8 +510,8 @@ export class Camera {
       if (desired.deviceId && desired.deviceId.toString().trim().length > 0) {
          constraints = {
             video: {
-               width: { ideal: 10 * 1000 },
-               height: { ideal: 10 * 1000 },
+               width: { ideal: desired.width? desired.width as number: 10*1000 },
+               height: { ideal: desired.height? desired.height as number: 10*1000 },
                facingMode: desired.facingMode,
                deviceId: desired.deviceId,
             },
@@ -655,14 +692,25 @@ export class Camera {
                let cameraCount = 1;
                for (let i = 0; i < devices.length; i++) {
                   const device = devices[i];
-                  if (device.kind === 'videoinput') {
+                  if (device.kind === 'videoinput' && device.label.startsWith('AvStream Media Device') === false) {
+                     if (device.label.includes('INOGENI 4K')) {
+                        const actual = {
+                           label: 'INOGENI 4K',
+                           deviceId: device.deviceId,
+                           width: 2*1920,
+                           height: 2*1080,
+                        }
 
-                     const actual = {
-                        label: 'camera ' + cameraCount++,
-                        deviceId: device.deviceId,
+                        onFound(actual, index++, numCameras);   
                      }
+                     else {
+                        const actual = {
+                           label: 'camera ' + cameraCount++,
+                           deviceId: device.deviceId,
+                        }
 
-                     onFound(actual, index++, numCameras);
+                        onFound(actual, index++, numCameras);   
+                     }
                   }
                }
             }
