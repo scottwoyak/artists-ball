@@ -1,0 +1,9 @@
+/* prevent scaling on Apple */
+body {
+  touch-action: none;
+}
+
+#ModelTimerApp #ModelTimerCanvas {
+  background-color: black;
+  color: lightgray;
+}

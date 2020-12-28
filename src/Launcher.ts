@@ -8,12 +8,14 @@ import { SquintApp } from './Apps/Squint/SquintApp';
 import { baseUrl } from './Util/Globals';
 import { SeeApp } from './Apps/Squint/ArtSeeApp';
 import { Device } from './Util/Device';
+import { ModelTimerApp } from './Apps/Squint/ModelTimerApp';
 
 enum AppType {
    ArtistsBall = 'ArtistsBall',
    Viewer = 'Viewer',
    Squint = 'Squint',
    ArtSee = 'Art-See',
+   ModelTimer = 'ModelTimer',
 }
 
 interface IParam {
@@ -45,6 +47,7 @@ export class Launcher {
       subMenu.addItem('Squint', () => location.href = this.getUrl(AppType.Squint));
       subMenu.addItem('Artist\'s Ball', () => location.href = this.getUrl(AppType.ArtistsBall));
       subMenu.addItem('Art-See', () => location.href = this.getUrl(AppType.ArtSee));
+      subMenu.addItem('ModelTimer', () => location.href = this.getUrl(AppType.ModelTimer));
 
       const paramString = location.href.split('?')[1];
       const query = new URLSearchParams(paramString);
@@ -68,6 +71,10 @@ export class Launcher {
 
          case AppType.ArtSee:
             type = AppType.ArtSee;
+            break;
+
+         case AppType.ModelTimer:
+            type = AppType.ModelTimer;
             break;
       }
       query.delete('App');
@@ -93,6 +100,11 @@ export class Launcher {
          case AppType.ArtSee:
             document.title = 'Art-See';
             this.app = new SeeApp();
+            break;
+
+         case AppType.ModelTimer:
+            document.title = 'Model Timer';
+            this.app = new ModelTimerApp();
             break;
       }
       this.app.create(this.div);
@@ -133,6 +145,10 @@ export class Launcher {
 
          case AppType.ArtSee:
             return base + '?App=Art-See';
+            break;
+
+         case AppType.ModelTimer:
+            return base + '?App=ModelTimer';
             break;
 
          default:

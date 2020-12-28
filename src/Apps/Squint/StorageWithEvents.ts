@@ -1,7 +1,8 @@
 import { EventManager } from './EventManager';
 
 export enum StorageItem {
-   UserName = 'UserName'
+   UserName = 'UserName',
+   Sound = 'Sound'
 }
 
 export type StorageItemChangeHandler = (value: string, oldValue: string) => void;

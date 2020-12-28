@@ -2,22 +2,74 @@ import { GUI } from '../../GUI/GUI';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
 import { baseUrl, getEmPixels } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
-import { Squint } from './Squint';
 import { ITimerInfo } from './ITimerInfo';
+import { ModelTimer } from './ModelTimer';
+import { Rect } from './Rect';
+
+enum HitArea {
+   Up,
+   Down,
+   TimerText,
+   StartStop,
+   None,
+}
 
 export class ModelTimerPanel {
-   private squint: Squint;
+   private modelTimer: ModelTimer;
    private canvas: HTMLCanvasElement;
    private alarm: HTMLAudioElement = null;
+   private box: Rect;
+   private soundFile = 'sounds/gong.mp3';
 
-   public get info(): ITimerInfo {
-      return this.squint.modelTimer.info;
+   private readonly upDownWidthRatio = 0.5;
+   private readonly startStopWidthRatio = 1.0;
+
+   private get upDownWidth(): number {
+      return this.box.height * this.upDownWidthRatio;
    }
 
-   public constructor(squint: Squint, parent: HTMLElement) {
-      this.squint = squint;
+   private get startStopWidth(): number {
+      return this.box.height * this.startStopWidthRatio;
+   }
 
-      this.squint.modelTimer.onAlarm = (sound: boolean) => {
+   public get info(): ITimerInfo {
+      return this.modelTimer.info;
+   }
+
+   public get width(): number {
+      return this.canvas.width;
+   }
+   public set width(width: number) {
+      this.canvas.style.width = width + 'px'
+      this.canvas.width = width;
+      this.draw();
+   }
+
+   public get height(): number {
+      return this.canvas.height;
+   }
+   public set height(height: number) {
+      this.canvas.style.height = height + 'px'
+      this.canvas.height = height;
+      this.draw();
+   }
+
+   public set sound(sound: string) {
+      this.soundFile = sound;
+      if (this.alarm) {
+         this.alarm.src = baseUrl() + sound;
+      }
+   }
+
+   public get sound(): string {
+      return this.soundFile;
+   }
+
+   public constructor(modelTimer: ModelTimer, parent: HTMLElement) {
+
+      this.modelTimer = modelTimer;
+
+      this.modelTimer.onAlarm = (sound: boolean) => {
          if (sound) {
             this.startSound();
             this.draw();
@@ -28,7 +80,7 @@ export class ModelTimerPanel {
          }
       }
 
-      this.squint.modelTimer.onTick = () => {
+      this.modelTimer.onTick = () => {
          this.draw();
       }
 
@@ -38,8 +90,9 @@ export class ModelTimerPanel {
 
       handler.onMove = (pos: Vec2, delta: Vec2) => {
          this.stopAlarm();
-         let boxSize = this.canvas.clientHeight;
-         if (pos.x < 0.5 * boxSize) {
+
+         let hit = this.hitTest(pos);
+         if (hit === HitArea.Up || hit === HitArea.Down) {
             this.canvas.style.cursor = 'ns-resize';
          }
          else {
@@ -50,55 +103,52 @@ export class ModelTimerPanel {
       let wasDragging = false;
       handler.onUp = (pos: Vec2) => {
          document.body.style.cursor = 'default';
-         let height = this.canvas.clientHeight;
-         let width = this.canvas.clientWidth;
-         let boxSize = height;
-         if (wasDragging === false && pos.x < 0.5 * boxSize) {
-            if (pos.y < 0.5 * height) {
-               this.squint.modelTimer.addOne();
+         let hit = this.hitTest(pos);
+         if (wasDragging === false && hit === HitArea.Up || hit === HitArea.Down) {
+            if (hit === HitArea.Up) {
+               this.modelTimer.addOne();
             }
-            else {
-               this.squint.modelTimer.subtractOne();
+            else if (hit === HitArea.Down) {
+               this.modelTimer.subtractOne();
             }
 
             this.draw();
          }
-         else if (pos.x > width - boxSize) {
-            if (this.squint.modelTimer.running) {
-               this.squint.modelTimer.stop();
+         else if (hit === HitArea.StartStop) {
+            if (this.modelTimer.running) {
+               this.modelTimer.stop();
             }
             else {
-               this.squint.modelTimer.start();
+               this.modelTimer.start();
             }
          }
 
          wasDragging = false;
       }
 
-      let hit = false;
+      let hitUpDown = false;
       let accumulatedDelta = 0;
       handler.onDown = (pos: Vec2) => {
 
-         let boxSize = this.canvas.clientHeight;
-         hit = false;
-         if (pos.x < 0.5 * boxSize) {
-            hit = true;
+         let hit = this.hitTest(pos);
+         if (hit === HitArea.Up || hit === HitArea.Down) {
+            hitUpDown = true;
          }
       }
 
       let step = getEmPixels() / 2;
       handler.onDrag = (pos: Vec2, delta: Vec2) => {
-         if (hit === true) {
+         if (hitUpDown === true) {
             document.body.style.cursor = 'ns-resize';
             accumulatedDelta += delta.y;
             while (accumulatedDelta > step) {
                wasDragging = true;
-               this.squint.modelTimer.subtractOne();
+               this.modelTimer.subtractOne();
                accumulatedDelta -= step;
             }
             while (accumulatedDelta < -step) {
                wasDragging = true;
-               this.squint.modelTimer.addOne();
+               this.modelTimer.addOne();
                accumulatedDelta += step;
             }
 
@@ -118,31 +168,72 @@ export class ModelTimerPanel {
       this.draw();
    }
 
+   public playSound(): void {
+      this.alarm.loop = false;
+      this.alarm.currentTime = 0;
+      this.alarm.play()
+         .catch((err) => { console.log('Cannot play alarm: ' + err) });
+   }
+
+   private hitTest(pos: Vec2): HitArea {
+
+      if (pos.x < this.box.left || pos.x > this.box.right || pos.y < this.box.top || pos.y > this.box.bottom) {
+         return HitArea.None;
+      }
+
+      if (pos.x < this.box.left + this.upDownWidth) {
+         if (pos.y < this.box.top - this.box.height / 2) {
+            return HitArea.Up;
+         }
+         else {
+            return HitArea.Down;
+         }
+      }
+      else if (pos.x < this.box.right - this.startStopWidth) {
+         return HitArea.TimerText;
+      }
+      else {
+         return HitArea.StartStop;
+      }
+   }
+
    private initAudio(): void {
       // create via html instead of new Audio() which is blocked on portable ios
       if (this.alarm === null) {
          this.alarm = GUI.create('audio', 'AlarmAudio', document.body);
-         this.alarm.src = baseUrl() + 'sounds/timer.mp3';
-         this.alarm.loop = true;
+         this.alarm.src = baseUrl() + this.soundFile;
       }
    }
 
-   private setCanvasSize(): void {
+   private getOptimalSize(): Rect {
+      let width = this.canvas.width;
+      let height = this.canvas.height;
+
       let em = getEmPixels();
-      let height = this.canvas.clientHeight;
-      let largeFont = (height - 0.5 * em);
+      let fontSize = (height - 0.5 * em);
 
       let ctx = this.canvas.getContext('2d');
-      ctx.font = largeFont + 'px Arial';
-      let size = ctx.measureText(' 00:00 ');
+      ctx.font = fontSize + 'px Arial';
+      let size = ctx.measureText('00:00');
 
-      let width = 0.5 * height + size.width + 1.0 * height;
-      this.canvas.style.width = width + 'px';
+      let desiredHeight = height;
+      let desiredWidth = this.upDownWidthRatio * height + size.width + this.startStopWidthRatio * height;
+      let AR = desiredWidth / desiredHeight;
+
+      if (desiredWidth > width) {
+         desiredWidth = width;
+         desiredHeight = desiredWidth / AR;
+      }
+
+      let x = (width - desiredWidth) / 2;
+      let y = (height - desiredHeight) / 2;
+      return new Rect(x, y, desiredWidth, desiredHeight);
    }
 
    private startSound() {
       if (this.alarm) {
          this.alarm.currentTime = 0;
+         this.alarm.loop = true;
          this.alarm.play().catch((err) => { console.log('Cannot play alarm: ' + err) });
       }
    }
@@ -153,76 +244,80 @@ export class ModelTimerPanel {
    }
 
    private stopAlarm() {
-      if (this.squint.modelTimer.alarmSounding) {
-         this.squint.modelTimer.reset();
+      if (this.modelTimer.alarmSounding) {
+         this.modelTimer.reset();
       }
    }
 
    private draw(): void {
-      this.setCanvasSize();
 
-      // sync sizes
+      let style = getComputedStyle(this.canvas);
+
       this.canvas.width = this.canvas.clientWidth;
       this.canvas.height = this.canvas.clientHeight;
-      let width = this.canvas.width;
-      let height = this.canvas.height;
+      this.box = this.getOptimalSize();
+
+      let x = this.box.x;
+      let y = this.box.y;
 
       let ctx = this.canvas.getContext('2d');
-      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      ctx.fillStyle = this.squint.modelTimer.alarmSounding ? 'orange' : 'lightgray';
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = this.modelTimer.alarmSounding ? 'orange' : style.backgroundColor ?? 'lightgray';
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
       // draw the up-down symbol
-      let boxWidth = height / 2;
-      let boxHeight = height;
+      let boxWidth = this.upDownWidth;
+      let boxHeight = this.box.height;
 
       ctx.beginPath();
-      ctx.moveTo(0.6 * boxWidth, 0.2 * boxHeight);
-      ctx.lineTo(0.9 * boxWidth, 0.3 * boxHeight);
-      ctx.lineTo(0.9 * boxWidth, 0.7 * boxHeight);
-      ctx.lineTo(0.6 * boxWidth, 0.8 * boxHeight);
-      ctx.lineTo(0.3 * boxWidth, 0.7 * boxHeight);
-      ctx.lineTo(0.3 * boxWidth, 0.3 * boxHeight)
-      ctx.lineTo(0.6 * boxWidth, 0.2 * boxHeight);
+      ctx.moveTo(x + 0.5 * boxWidth, y + 0.2 * boxHeight);
+      ctx.lineTo(x + 0.8 * boxWidth, y + 0.3 * boxHeight);
+      ctx.lineTo(x + 0.8 * boxWidth, y + 0.7 * boxHeight);
+      ctx.lineTo(x + 0.5 * boxWidth, y + 0.8 * boxHeight);
+      ctx.lineTo(x + 0.2 * boxWidth, y + 0.7 * boxHeight);
+      ctx.lineTo(x + 0.2 * boxWidth, y + 0.3 * boxHeight)
+      ctx.lineTo(x + 0.5 * boxWidth, y + 0.2 * boxHeight);
 
-      ctx.fillStyle = 'rgb(230,230,230)';
-      ctx.strokeStyle = 'gray';
+      ctx.fillStyle = 'rgba(128,128,128, 0.3)';
+      ctx.strokeStyle = 'rgba(128,128,128,1)';
       ctx.fill();
       ctx.stroke();
 
       // draw the time text
       let em = getEmPixels();
-      let largeFont = (this.canvas.height - 0.5 * em);
-      ctx.font = largeFont + 'px Arial';
-      ctx.fillStyle = 'black';
-      let size = ctx.measureText('00:00 ');
+      let fontSize = (this.box.height - 0.5 * em);
+      ctx.font = fontSize + 'px Arial';
+      ctx.fillStyle = style.color ?? 'black';
+      let size = ctx.measureText('00:00');
 
-      let x = boxWidth;
-      this.drawText(ctx, this.squint.modelTimer.timeRemainingStr, x, 0, size.width, height);
+      x += boxWidth;
+      this.drawText(ctx, this.modelTimer.timeRemainingStr, x, y, size.width, this.box.height);
       x += size.width;
 
       // draw the start/stop symbols
-      let boxSize = height;
+      let boxSize = this.box.height;
       ctx.beginPath();
-      if (this.squint.modelTimer.running) {
+      if (this.modelTimer.running) {
          // square
          let size = 0.25;
-         ctx.fillStyle = 'pink';
-         ctx.moveTo(x + size * boxSize, size * boxSize);
-         ctx.lineTo(x + (1 - size) * boxSize, size * boxSize);
-         ctx.lineTo(x + (1 - size) * boxSize, (1 - size) * boxSize);
-         ctx.lineTo(x + size * boxSize, (1 - size) * boxSize);
-         ctx.lineTo(x + size * boxSize, size * boxSize);
+         ctx.fillStyle = 'rgba(255,128,128,0.3)';
+         ctx.strokeStyle = 'rgba(255,0,0,0.8)';
+         ctx.moveTo(x + size * boxSize, y + size * boxSize);
+         ctx.lineTo(x + (1 - size) * boxSize, y + size * boxSize);
+         ctx.lineTo(x + (1 - size) * boxSize, y + (1 - size) * boxSize);
+         ctx.lineTo(x + size * boxSize, y + (1 - size) * boxSize);
+         ctx.lineTo(x + size * boxSize, y + size * boxSize);
       }
       else {
          // triangle
-         ctx.fillStyle = 'lightgreen';
-         ctx.moveTo(x + 0.2 * boxSize, 0.2 * boxSize);
-         ctx.lineTo(x + 0.8 * boxSize, 0.5 * boxSize);
-         ctx.lineTo(x + 0.2 * boxSize, 0.8 * boxSize);
-         ctx.lineTo(x + 0.2 * boxSize, 0.2 * boxSize);
+         //ctx.fillStyle = 'lightgreen';
+         ctx.fillStyle = 'rgba(128,255,128,0.4)';
+         ctx.strokeStyle = 'rgba(0,200,0,0.9)';
+         ctx.moveTo(x + 0.2 * boxSize, y + 0.2 * boxSize);
+         ctx.lineTo(x + 0.8 * boxSize, y + 0.5 * boxSize);
+         ctx.lineTo(x + 0.2 * boxSize, y + 0.8 * boxSize);
+         ctx.lineTo(x + 0.2 * boxSize, y + 0.2 * boxSize);
       }
-      ctx.strokeStyle = 'black';
+      //ctx.strokeStyle = 'black';
       ctx.fill();
       ctx.stroke();
    }

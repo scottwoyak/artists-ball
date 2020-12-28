@@ -74,43 +74,49 @@ export class ModelTimer {
       }
    }
 
-   public constructor(squint: Squint) {
+   public constructor(squint?: Squint) {
       this.squint = squint;
       this.countdownTimer.durationMs = TimeMs.StdPose;
 
-      squint.on({
-         event: SquintEvent.SynchronizeTimer,
-         handler: (info: ITimerInfo) => {
+      if (this.squint) {
+         squint.on({
+            event: SquintEvent.SynchronizeTimer,
+            handler: (info: ITimerInfo) => {
 
-            this.countdownTimer.synchronize(info.running, info.durationMs, info.remainingMs);
+               this.countdownTimer.synchronize(info.running, info.durationMs, info.remainingMs);
 
-            if (info.alarmSounding !== this.alarmSounding) {
-               if (info.alarmSounding) {
-                  this.startAlarm();
+               if (info.alarmSounding !== this.alarmSounding) {
+                  if (info.alarmSounding) {
+                     this.startAlarm();
+                  }
+                  else {
+                     this.doStopAlarm(false);
+                  }
                }
-               else {
-                  this.doStopAlarm(false);
-               }
+
+               this.tick();
             }
+         });
 
-            this.tick();
-         }
-      });
-
-      squint.on({
-         event: SquintEvent.Close,
-         handler: () => {
-            this.doReset(false);
-         }
-      })
+         squint.on({
+            event: SquintEvent.Close,
+            handler: () => {
+               this.doReset(false);
+            }
+         });
+      }
    }
 
    private synchronizeToServer(): void {
-      this.squint.synchronizeTimer(this.info);
+      if (this.squint) {
+         this.squint.synchronizeTimer(this.info);
+      }
    }
 
    public synchronizeFromServer(): void {
-      this.squint.synchronizeTimer();
+      if (this.squint) {
+         this.squint.synchronizeTimer();
+      }
    }
 
    private tick(): void {
@@ -150,7 +156,10 @@ export class ModelTimer {
          }
 
          this.tick();
-         this.squint.synchronizeTimer(this.info);
+
+         if (this.squint) {
+            this.squint.synchronizeTimer(this.info);
+         }
       }
    }
 

@@ -295,7 +295,7 @@ export class SquintApp implements IApp {
          }
       });
 
-      this.modelTimerPanel = new ModelTimerPanel(this.squint, this.div);
+      this.modelTimerPanel = new ModelTimerPanel(this.squint.modelTimer, this.div);
 
       this.chatPanel = new ChatPanel(this.squint, this.div);
       if (this.chatPanel.hasSavedSettings) {
