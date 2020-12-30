@@ -10,6 +10,7 @@ import { ModelTimerPanel } from './ModelTimerPanel';
 enum Sounds {
    Chime = 'sounds/chime.mp3',
    Cricket = 'sounds/cricket.mp3',
+   Ding = 'sounds/ding.mp3',
    Gong = 'sounds/gong.mp3',
    Loon = 'sounds/loon.mp3',
    Owl = 'sounds/owl.mp3',
@@ -31,7 +32,6 @@ export class ModelTimerApp implements IApp {
       this.noSleep.enable();
 
       document.title += (' ' + Version.Build);
-
    }
 
    public create(div: HTMLDivElement): void {
@@ -39,7 +39,6 @@ export class ModelTimerApp implements IApp {
       div.id = 'ModelTimerApp';
 
       let timer = new ModelTimer();
-      timer.start();
       this.timerPanel = new ModelTimerPanel(timer, div)
 
       if (this.storage.has(StorageItem.Sound)) {
@@ -73,6 +72,7 @@ export class ModelTimerApp implements IApp {
       const soundMenu = menubar.addSubMenu('Sounds');
       this.addSoundRadioButton(soundMenu, 'Chimes', Sounds.Chime);
       this.addSoundRadioButton(soundMenu, 'Crickets', Sounds.Cricket);
+      this.addSoundRadioButton(soundMenu, 'Ding', Sounds.Ding);
       this.addSoundRadioButton(soundMenu, 'Gong', Sounds.Gong);
       this.addSoundRadioButton(soundMenu, 'Loon', Sounds.Loon);
       this.addSoundRadioButton(soundMenu, 'Owl', Sounds.Owl);

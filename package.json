@@ -6,7 +6,7 @@
   "scripts": {
     "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -bail --timeout 5000 -r ts-node/register -r jsdom-global/register specs/**/*.ts",
     "testLocalhost": "webpack-dev-server --contentBase . --host localhost --port 80",
-    "startValhalla": "webpack-dev-server --https --cert server.crt --key server.key --host 192.168.86.23 --port 443",
+    "startValhalla": "webpack-dev-server --https --cert server.crt --key server.key --host 192.168.86.132 --port 443",
     "startDell": "webpack-dev-server --https --cert server.crt --key server.key --host 192.168.86.108 --port 443",
     "startHotspot": "webpack-dev-server --https --cert server.crt --key server.key --host 192.168.43.170 --port 443",
     "startLocalhost": "webpack-dev-server --host localhost --port 80",

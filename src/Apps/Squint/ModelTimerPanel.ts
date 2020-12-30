@@ -1,14 +1,12 @@
 import { GUI } from '../../GUI/GUI';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
-import { baseUrl, getEmPixels } from '../../Util/Globals';
+import { baseUrl, getEmPixels, isMobile } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { ITimerInfo } from './ITimerInfo';
 import { ModelTimer } from './ModelTimer';
 import { Rect } from './Rect';
 
 enum HitArea {
-   Up,
-   Down,
    TimerText,
    StartStop,
    None,
@@ -21,13 +19,12 @@ export class ModelTimerPanel {
    private box: Rect;
    private soundFile = 'sounds/gong.mp3';
 
-   private readonly upDownWidthRatio = 0.5;
-   private readonly startStopWidthRatio = 1.0;
-
-   private get upDownWidth(): number {
-      return this.box.height * this.upDownWidthRatio;
+   private readonly leftMarginRatio = 0.25;
+   private get leftMarginWidth(): number {
+      return this.box.height * this.leftMarginRatio;
    }
 
+   private readonly startStopWidthRatio = 1.0;
    private get startStopWidth(): number {
       return this.box.height * this.startStopWidthRatio;
    }
@@ -90,35 +87,21 @@ export class ModelTimerPanel {
 
       handler.onMove = (pos: Vec2, delta: Vec2) => {
          this.stopAlarm();
-
-         let hit = this.hitTest(pos);
-         if (hit === HitArea.Up || hit === HitArea.Down) {
-            this.canvas.style.cursor = 'ns-resize';
-         }
-         else {
-            this.canvas.style.cursor = 'default';
-         }
       }
 
       let wasDragging = false;
       handler.onUp = (pos: Vec2) => {
          document.body.style.cursor = 'default';
          let hit = this.hitTest(pos);
-         if (wasDragging === false && hit === HitArea.Up || hit === HitArea.Down) {
-            if (hit === HitArea.Up) {
-               this.modelTimer.addOne();
-            }
-            else if (hit === HitArea.Down) {
-               this.modelTimer.subtractOne();
-            }
-
-            this.draw();
-         }
-         else if (hit === HitArea.StartStop) {
+         if (wasDragging === false && hit === HitArea.StartStop) {
             if (this.modelTimer.running) {
                this.modelTimer.stop();
             }
             else {
+               // go fullscreen
+               this.canvas.requestFullscreen()
+                  .catch((err) => { console.log('Cannot go fullscreen: ' + err) });
+
                this.modelTimer.start();
             }
          }
@@ -126,34 +109,48 @@ export class ModelTimerPanel {
          wasDragging = false;
       }
 
-      let hitUpDown = false;
-      let accumulatedDelta = 0;
       handler.onDown = (pos: Vec2) => {
 
          let hit = this.hitTest(pos);
-         if (hit === HitArea.Up || hit === HitArea.Down) {
-            hitUpDown = true;
+         if (hit === HitArea.TimerText) {
+            wasDragging = true;
          }
       }
 
+      let accumulatedDelta = 0;
       let step = getEmPixels() / 2;
+
+      if (isMobile) {
+         step *= 2;
+      }
+
       handler.onDrag = (pos: Vec2, delta: Vec2) => {
-         if (hitUpDown === true) {
+         if (wasDragging === true) {
             document.body.style.cursor = 'ns-resize';
             accumulatedDelta += delta.y;
             while (accumulatedDelta > step) {
-               wasDragging = true;
                this.modelTimer.subtractOne();
                accumulatedDelta -= step;
             }
             while (accumulatedDelta < -step) {
-               wasDragging = true;
                this.modelTimer.addOne();
                accumulatedDelta += step;
             }
 
             this.draw();
          }
+      }
+
+      // for the mouse wheel
+      handler.onScale = (scale: number, change: number) => {
+         if (change < 1) {
+            this.modelTimer.addOne();
+         }
+         else {
+            this.modelTimer.subtractOne();
+         }
+
+         this.draw();
       }
 
       document.body.addEventListener('mousedown', () => {
@@ -181,15 +178,7 @@ export class ModelTimerPanel {
          return HitArea.None;
       }
 
-      if (pos.x < this.box.left + this.upDownWidth) {
-         if (pos.y < this.box.top - this.box.height / 2) {
-            return HitArea.Up;
-         }
-         else {
-            return HitArea.Down;
-         }
-      }
-      else if (pos.x < this.box.right - this.startStopWidth) {
+      if (pos.x < this.box.right - this.startStopWidth) {
          return HitArea.TimerText;
       }
       else {
@@ -217,7 +206,7 @@ export class ModelTimerPanel {
       let size = ctx.measureText('00:00');
 
       let desiredHeight = height;
-      let desiredWidth = this.upDownWidthRatio * height + size.width + this.startStopWidthRatio * height;
+      let desiredWidth = size.width + (this.leftMarginRatio + this.startStopWidthRatio) * height;
       let AR = desiredWidth / desiredHeight;
 
       if (desiredWidth > width) {
@@ -264,24 +253,6 @@ export class ModelTimerPanel {
       ctx.fillStyle = this.modelTimer.alarmSounding ? 'orange' : style.backgroundColor ?? 'lightgray';
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-      // draw the up-down symbol
-      let boxWidth = this.upDownWidth;
-      let boxHeight = this.box.height;
-
-      ctx.beginPath();
-      ctx.moveTo(x + 0.5 * boxWidth, y + 0.2 * boxHeight);
-      ctx.lineTo(x + 0.8 * boxWidth, y + 0.3 * boxHeight);
-      ctx.lineTo(x + 0.8 * boxWidth, y + 0.7 * boxHeight);
-      ctx.lineTo(x + 0.5 * boxWidth, y + 0.8 * boxHeight);
-      ctx.lineTo(x + 0.2 * boxWidth, y + 0.7 * boxHeight);
-      ctx.lineTo(x + 0.2 * boxWidth, y + 0.3 * boxHeight)
-      ctx.lineTo(x + 0.5 * boxWidth, y + 0.2 * boxHeight);
-
-      ctx.fillStyle = 'rgba(128,128,128, 0.3)';
-      ctx.strokeStyle = 'rgba(128,128,128,1)';
-      ctx.fill();
-      ctx.stroke();
-
       // draw the time text
       let em = getEmPixels();
       let fontSize = (this.box.height - 0.5 * em);
@@ -289,7 +260,7 @@ export class ModelTimerPanel {
       ctx.fillStyle = style.color ?? 'black';
       let size = ctx.measureText('00:00');
 
-      x += boxWidth;
+      x += this.leftMarginWidth;
       this.drawText(ctx, this.modelTimer.timeRemainingStr, x, y, size.width, this.box.height);
       x += size.width;
 
@@ -328,7 +299,7 @@ export class ModelTimerPanel {
 
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(str, x + width / 2, y + height / 2 + size.actualBoundingBoxDescent / 2);
+      ctx.fillText(str, x + width / 2, y + height / 2 + 0.5 * size.actualBoundingBoxDescent / 2);
 
    }
 }
