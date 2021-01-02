@@ -38,6 +38,7 @@ export class LevelsPanel extends ResizeablePanel {
    public midPoint = 0.5;
    public midValue = 0.5;
    public numLevels = NaN;
+   public chroma = 100;
 
    public onChange: ChangeHandler = null;
 
@@ -58,7 +59,7 @@ export class LevelsPanel extends ResizeablePanel {
       this.canvas = GUI.create('canvas', 'AfterCanvas', this.div);
 
       new Slider(this.div, {
-         label: '',
+         label: 'Levels',
          min: 2,
          max: 20,
          value: 20,
@@ -78,6 +79,21 @@ export class LevelsPanel extends ResizeablePanel {
             else {
                return slider.value.toFixed(0)
             }
+         }
+      }
+      );
+
+      new Slider(this.div, {
+         label: 'Chroma',
+         min: 0,
+         max: 200,
+         value: 100,
+         oninput: (slider: Slider) => {
+            this.chroma = slider.value;
+            this.onChange();
+         },
+         onGetText: (slider) => {
+            return slider.value.toFixed(0) + '%'
          }
       }
       );

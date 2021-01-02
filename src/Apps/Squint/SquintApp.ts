@@ -25,7 +25,6 @@ import { StorageWithEvents, StorageItem } from './StorageWithEvents';
 import { SquintStrings } from './SquintStrings';
 import { PasswordDialog } from './PasswordDialog';
 import { ImageCanvas } from './ImageCanvas';
-import { ImageCanvas2D } from './ImageCanvas2D';
 import { LevelsPanel } from './LevelsPanel';
 import { ModelTimerPanel } from './ModelTimerPanel';
 import { Sounds } from './Sounds';
@@ -280,7 +279,7 @@ export class SquintApp implements IApp {
 
       this.div = GUI.create('div', 'BodyDiv', div);
 
-      this.canvas = new ImageCanvas2D(this.div, 'Canvas');
+      this.canvas = new ImageCanvas(this.div, 'Canvas');
       this.overlayCanvas = GUI.create('canvas', 'OverlayCanvas', this.div, 'Overlay');
 
       this.camera = new Camera(this.div);
@@ -318,6 +317,7 @@ export class SquintApp implements IApp {
          this.canvas.midPt = this.levelsPanel.midPoint;
          this.canvas.midValue = this.levelsPanel.midValue;
          this.canvas.numLevels = this.levelsPanel.numLevels;
+         this.canvas.chroma = this.levelsPanel.chroma;
          this.dirty = true;
       }
 
@@ -505,69 +505,7 @@ export class SquintApp implements IApp {
 
       const viewMenu = optionsMenu.addSubMenu('View');
 
-      viewMenu.addSlider({
-         label: 'Brightness',
-         min: 0,
-         max: 200,
-         value: this.canvas.brightness,
-         oninput: (slider: Slider) => {
-            this.dirty = true;
-            this.canvas.brightness = slider.value;
-         },
-         onGetText: (slider) => slider.value.toFixed(0) + '%',
-      })
-
-      viewMenu.addSlider({
-         label: 'Contrast',
-         min: 0,
-         max: 200,
-         value: this.canvas.contrast,
-         oninput: (slider: Slider) => {
-            this.dirty = true;
-            this.canvas.contrast = slider.value;
-         },
-         onGetText: (slider) => slider.value.toFixed(0) + '%',
-      });
-
-      viewMenu.addSlider({
-         label: 'Chroma',
-         min: 0,
-         max: 200,
-         value: this.canvas.saturate,
-         oninput: (slider: Slider) => {
-            this.dirty = true;
-            this.canvas.saturate = slider.value;
-         },
-         onGetText: (slider) => slider.value.toFixed(0) + '%',
-      });
-
-      /*
-      viewMenu.addSlider({
-         label: 'Posterize',
-         min: 2,
-         max: 20,
-         value: 20,
-         oninput: (slider: Slider) => {
-            this.dirty = true;
-            if (slider.value === slider.max) {
-               this.canvas.numLevels = NaN;
-            }
-            else {
-               this.canvas.numLevels = slider.value;
-            }
-         },
-         onGetText: (slider) => {
-            if (slider.value === slider.max) {
-               return '∞';
-            }
-            else {
-               return slider.value.toFixed(0)
-            }
-         }
-      });
-      */
-
-      let blurCheckbox = viewMenu.addSlider({
+      let blurSlider = viewMenu.addSlider({
          label: 'Blur',
          min: 0,
          max: 10,
@@ -582,7 +520,7 @@ export class SquintApp implements IApp {
       // thank you Safari
       try {
          if (!CanvasRenderingContext2D.prototype.filter) {
-            blurCheckbox.enabled = false;
+            blurSlider.enabled = false;
          }
       }
       catch (err) {
@@ -735,17 +673,6 @@ export class SquintApp implements IApp {
       this.levelsPanel.onVisible = (visible) => {
          levelsImg.style.backgroundColor = visible ? transparentWhite : 'transparent';
       }
-
-
-      let grayscaleImg = menubar.addImage(baseUrl() + '/img/color.svg',
-         () => {
-            this.canvas.grayScale = !this.canvas.grayScale;
-            grayscaleImg.src = baseUrl() + (this.canvas.grayScale ? '/img/grayscale.svg' : '/img/color.svg');
-         }
-      );
-
-
-
 
       this.userNameMenuItemDiv = menubar.addItem(
          'Hi ' + (this.storage.has(StorageItem.UserName) ? this.storage.get(StorageItem.UserName) : ''),

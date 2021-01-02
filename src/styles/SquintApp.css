@@ -153,11 +153,11 @@ body {
 }
 
 #SquintApp #LevelsPanelDiv #SliderLabel {
-  flex: 0 0 0;
+  flex: 0 0 4.5em;
 }
 
 #SquintApp #LevelsPanelDiv #SliderValueSpan {
-  flex: 0 0 1.3em;
+  flex: 0 0 2.5em;
 }
 
 /********************************************************************
