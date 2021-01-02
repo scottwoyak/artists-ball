@@ -28,13 +28,6 @@
       {
          "type": "chrome",
          "request": "launch",
-         "name": "cs:dell",
-         "url": "https://192.168.86.132",
-         "webRoot": "${workspaceFolder}"
-      },
-      {
-         "type": "chrome",
-         "request": "launch",
          "name": "cs:localhost",
          "url": "http://localhost",
          "webRoot": "${workspaceFolder}"

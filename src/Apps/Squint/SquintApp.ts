@@ -28,6 +28,7 @@ import { ImageCanvas } from './ImageCanvas';
 import { ImageCanvas2D } from './ImageCanvas2D';
 import { LevelsPanel } from './LevelsPanel';
 import { ModelTimerPanel } from './ModelTimerPanel';
+import { Sounds } from './Sounds';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -70,7 +71,7 @@ export class SquintApp implements IApp {
    private jpegQuality: Slider | undefined;
    private megaPixels: Slider | undefined;
    private cameraCtrls: ICtrl[] = [];
-   private modelTimerPanel: ModelTimerPanel;
+   private timerPanel: ModelTimerPanel;
 
 
    private advancedConstraints: IAdvancedConstraint[] = [];
@@ -295,7 +296,7 @@ export class SquintApp implements IApp {
          }
       });
 
-      this.modelTimerPanel = new ModelTimerPanel(this.squint.modelTimer, this.div);
+      this.timerPanel = new ModelTimerPanel(this.squint.modelTimer, this.div);
 
       this.chatPanel = new ChatPanel(this.squint, this.div);
       if (this.chatPanel.hasSavedSettings) {
@@ -500,7 +501,9 @@ export class SquintApp implements IApp {
 
    public buildMenu(menubar: Menubar): void {
 
-      const viewMenu = menubar.addSubMenu('View');
+      const optionsMenu = menubar.addSubMenu('Options');
+
+      const viewMenu = optionsMenu.addSubMenu('View');
 
       viewMenu.addSlider({
          label: 'Brightness',
@@ -599,7 +602,7 @@ export class SquintApp implements IApp {
 
 
 
-      this.cameraMenu = menubar.addSubMenu('Camera');
+      this.cameraMenu = optionsMenu.addSubMenu('Camera');
 
       // TODO just fully disable all the menu items instead of the menu itself.
       this.cameraMenu.enabled = false;
@@ -660,7 +663,7 @@ export class SquintApp implements IApp {
 
       const sessionMenu = menubar.addSubMenu('Session');
 
-      sessionMenu.addItem('End', () => {
+      sessionMenu.addItem('Exit', () => {
          this.closeConnection();
       });
 
@@ -674,6 +677,19 @@ export class SquintApp implements IApp {
          checked: () => { return this.console.visible; }
       });
 
+      const soundMenu = optionsMenu.addSubMenu('Sounds');
+      for (let soundStr in Sounds) {
+         const sound: Sounds = Sounds[soundStr as keyof typeof Sounds];
+         soundMenu.addRadiobutton({
+            label: soundStr.replace('_', ' '),
+            group: 'Sounds',
+            checked: this.timerPanel.sound === sound,
+            oncheck: () => {
+               this.timerPanel.sound = sound;
+               this.timerPanel.playSound();
+            }
+         });
+      }
 
 
 

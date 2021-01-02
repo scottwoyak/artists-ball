@@ -1,6 +1,5 @@
-/* prevent scaling on Apple */
-body {
-  touch-action: none;
+#ModelTimerApp .Menubar {
+  background-color: rgb(110, 110, 110);
 }
 
 #ModelTimerApp #ModelTimerCanvas {

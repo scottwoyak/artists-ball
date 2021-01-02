@@ -5,6 +5,7 @@ import { Vec2 } from '../../Util3D/Vec';
 import { ITimerInfo } from './ITimerInfo';
 import { ModelTimer } from './ModelTimer';
 import { Rect } from './Rect';
+import { StorageItem, StorageWithEvents } from './StorageWithEvents';
 
 enum HitArea {
    TimerText,
@@ -17,7 +18,10 @@ export class ModelTimerPanel {
    private canvas: HTMLCanvasElement;
    private alarm: HTMLAudioElement = null;
    private box: Rect;
-   private soundFile = 'sounds/gong.mp3';
+   private storage = new StorageWithEvents
+   private soundFile = 'sounds/chime.mp3';
+
+   public goFullScreenOnStart = false;
 
    private readonly leftMarginRatio = 0.25;
    private get leftMarginWidth(): number {
@@ -53,6 +57,7 @@ export class ModelTimerPanel {
 
    public set sound(sound: string) {
       this.soundFile = sound;
+      this.storage.set(StorageItem.Sound, sound);
       if (this.alarm) {
          this.alarm.src = baseUrl() + sound;
       }
@@ -86,6 +91,17 @@ export class ModelTimerPanel {
       let handler = new PointerEventHandler(this.canvas);
 
       handler.onMove = (pos: Vec2, delta: Vec2) => {
+         let hit = this.hitTest(pos);
+         if (hit === HitArea.TimerText) {
+            this.canvas.style.cursor = 'ns-resize';
+         }
+         else if (hit === HitArea.StartStop) {
+            this.canvas.style.cursor = 'pointer';
+         }
+         else {
+            this.canvas.style.cursor = 'default';
+         }
+
          this.stopAlarm();
       }
 
@@ -98,9 +114,12 @@ export class ModelTimerPanel {
                this.modelTimer.stop();
             }
             else {
-               // go fullscreen
-               this.canvas.requestFullscreen()
-                  .catch((err) => { console.log('Cannot go fullscreen: ' + err) });
+               if (this.goFullScreenOnStart) {
+                  // go fullscreen
+                  document.documentElement.requestFullscreen()
+                     //this.canvas.requestFullscreen()
+                     .catch((err) => { console.log('Cannot go fullscreen: ' + err) });
+               }
 
                this.modelTimer.start();
             }
@@ -161,6 +180,10 @@ export class ModelTimerPanel {
          this.stopAlarm();
          this.initAudio();
       });
+
+      if (this.storage.has(StorageItem.Sound)) {
+         this.sound = this.storage.get(StorageItem.Sound);
+      }
 
       this.draw();
    }

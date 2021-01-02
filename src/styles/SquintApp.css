@@ -589,6 +589,19 @@ body {
   margin-right: var(--margin);
 }
 
+/********************************************************************
+ *
+ * Timer Panel
+ *
+ ********************************************************************/
+#SquintApp #ModelTimerCanvas {
+  background-color: rgba(128, 128, 128, 0.7);
+  border-radius: 0.5em;
+  width: 13em;
+  height: 4em;
+  color: black;
+}
+
 /* cool animation from https://loading.io/css/ */
 .lds-ring {
   display: inline-block;
