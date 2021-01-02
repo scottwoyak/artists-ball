@@ -1,3 +1,4 @@
+import screenfull from 'screenfull';
 import { GUI } from '../../GUI/GUI';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
 import { baseUrl, getEmPixels, isMobile } from '../../Util/Globals';
@@ -116,9 +117,10 @@ export class ModelTimerPanel {
             else {
                if (this.goFullScreenOnStart) {
                   // go fullscreen
-                  document.documentElement.requestFullscreen()
-                     //this.canvas.requestFullscreen()
-                     .catch((err) => { console.log('Cannot go fullscreen: ' + err) });
+                  if (screenfull.isEnabled) {
+                     screenfull.request()
+                        .catch((err) => { console.log('Cannot go fullscreen: ' + err) });
+                  }
                }
 
                this.modelTimer.start();
