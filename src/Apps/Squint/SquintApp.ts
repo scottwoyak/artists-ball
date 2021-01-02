@@ -505,27 +505,6 @@ export class SquintApp implements IApp {
 
       const viewMenu = optionsMenu.addSubMenu('View');
 
-      let blurSlider = viewMenu.addSlider({
-         label: 'Blur',
-         min: 0,
-         max: 10,
-         value: this.canvas.blur,
-         oninput: (slider: Slider) => {
-            this.dirty = true;
-            this.canvas.blur = slider.value;
-         },
-         onGetText: (slider) => slider.value.toFixed(0),
-      });
-
-      // thank you Safari
-      try {
-         if (!CanvasRenderingContext2D.prototype.filter) {
-            blurSlider.enabled = false;
-         }
-      }
-      catch (err) {
-      }
-
       viewMenu.addSlider({
          label: 'Zoom',
          min: 1,
@@ -537,8 +516,6 @@ export class SquintApp implements IApp {
          },
          onGetText: (slider) => (100 * slider.value).toFixed(0) + '%',
       });
-
-
 
       this.cameraMenu = optionsMenu.addSubMenu('Camera');
 
@@ -563,18 +540,6 @@ export class SquintApp implements IApp {
          }
 
          this.cameraCtrls.push(radioButton);
-      })
-
-      this.cameraMenu.addItem('Capabilities...', () => {
-         const capabilities = this.camera.getCapabilities();
-         let msg = 'Camera Capabilities:\n';
-         for (const key in capabilities) {
-            if (key === 'deviceId' || key === 'groupId') {
-               continue;
-            }
-            msg += Camera.capabilityToString(capabilities, key) + '\n';
-         }
-         alert(msg);
       })
 
       this.jpegQuality = this.cameraMenu.addSlider({
@@ -716,6 +681,21 @@ export class SquintApp implements IApp {
 
    private buildAdvancedSubMenu(track: MediaStreamTrack) {
       this.advancedSubMenu.clear();
+
+      this.advancedSubMenu.addItem('Capabilities...', () => {
+         const capabilities = this.camera.getCapabilities();
+         let msg = 'Camera Capabilities:\n';
+         for (const key in capabilities) {
+            if (key === 'deviceId' || key === 'groupId') {
+               continue;
+            }
+            msg += Camera.capabilityToString(capabilities, key) + '\n';
+         }
+         alert(msg);
+      })
+
+
+
       this.advancedConstraints = [];
 
       // getCapabilities() not supported on Firefox
