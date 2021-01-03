@@ -352,67 +352,9 @@ export class SquintApp implements IApp {
          if (this.squint.connected && event.target instanceof HTMLInputElement === false) {
             switch (event.key) {
 
-               case 'r':
-                  switch (this.camera.rotation) {
-                     case CameraRotation.DEG_0:
-                        this.camera.rotation = CameraRotation.DEG_90;
-                        break;
-
-                     case CameraRotation.DEG_90:
-                        this.camera.rotation = CameraRotation.DEG_180;
-                        break;
-
-                     case CameraRotation.DEG_180:
-                        this.camera.rotation = CameraRotation.DEG_270;
-                        break;
-
-                     case CameraRotation.DEG_270:
-                        this.camera.rotation = CameraRotation.DEG_0;
-                        break;
-                  }
-                  break;
-
                case 'x':
                   // simulate killing the connection
                   this.squint.ws.close(3000);
-                  break;
-
-               case 'i': {
-                  Squint.inspect(Squint.url)
-                     .then((info: ISquintInfo) => {
-                        let msg = '';
-                        msg += 'Connections (' + info.connections.length + '):\n';
-                        for (let connection of info.connections) {
-                           msg += '   ' + connection.userName + ' ' + connection.state + '\n';
-                        }
-                        msg += 'Sessions (' + info.sessions.length + '):\n';
-                        for (let session of info.sessions) {
-                           msg += '   ' + session.title + ' host=' + session.host.userName + ' ' + session.host.state + '\n';
-
-                           msg += '   Viewers (' + session.viewers.length + '):\n';
-                           for (let connection of session.viewers) {
-                              msg += '      ' + connection.userName + ' ' + connection.state;
-                           }
-                        }
-
-                        alert(msg);
-                     })
-                     .catch((err) => {
-                        debug('Squint.inspect() failed: ' + err);
-                     });
-               }
-                  break;
-
-               case 'd': {
-                  Squint.dump(Squint.url)
-                     .then((msg: string) => {
-                        alert(msg);
-                        console.log(msg);
-                     })
-                     .catch((err) => {
-                        debug('Squint.dump() failed: ' + err);
-                     });
-               }
                   break;
 
                case '1':
@@ -556,6 +498,41 @@ export class SquintApp implements IApp {
       });
       this.cameraCtrls.push(this.megaPixels);
 
+      let rotationSubMenu = this.cameraMenu.addSubMenu('Rotation');
+      rotationSubMenu.addRadiobutton({
+         label: '0°',
+         group: 'rotation',
+         checked: true,
+         oncheck: () => {
+            this.camera.rotation = CameraRotation.DEG_0;
+         }
+      });
+      rotationSubMenu.addRadiobutton({
+         label: '90°',
+         group: 'rotation',
+         checked: false,
+         oncheck: () => {
+            this.camera.rotation = CameraRotation.DEG_90;
+         }
+      });
+      rotationSubMenu.addRadiobutton({
+         label: '180°',
+         group: 'rotation',
+         checked: false,
+         oncheck: () => {
+            this.camera.rotation = CameraRotation.DEG_180;
+         }
+      });
+      rotationSubMenu.addRadiobutton({
+         label: '270°',
+         group: 'rotation',
+         checked: false,
+         oncheck: () => {
+            this.camera.rotation = CameraRotation.DEG_270;
+         }
+      });
+
+
       this.advancedSubMenu = this.cameraMenu.addSubMenu('Advanced');
 
       this.enableCameraCtrls(false);
@@ -678,7 +655,7 @@ export class SquintApp implements IApp {
    private buildAdvancedSubMenu(track: MediaStreamTrack) {
       this.advancedSubMenu.clear();
 
-      this.advancedSubMenu.addItem('Capabilities...', () => {
+      this.advancedSubMenu.addItem('Camera Capabilities...', () => {
          const capabilities = this.camera.getCapabilities();
          let msg = 'Camera Capabilities:\n';
          for (const key in capabilities) {
