@@ -46,6 +46,17 @@ export class ZoomPanel {
          }
       }
 
+      handler.onMove = (pos: Vec2) => {
+         let center = new Vec2([this.canvas.width / 2, this.zoomToY(this._zoom)]);
+         let radius = this.canvas.width / 2;
+         if (pos.distance(center) < radius) {
+            this.canvas.style.cursor = 'ns-resize';
+         }
+         else {
+            this.canvas.style.cursor = 'default';
+         }
+      }
+
       handler.onDrag = (pos: Vec2, delta: Vec2) => {
 
          if (dragging) {
@@ -90,21 +101,28 @@ export class ZoomPanel {
       this.canvas.width = this.canvas.clientWidth;
       this.canvas.height = this.canvas.clientHeight;
       let width = this.canvas.width;
-      let height = this.canvas.height;
-      let radius = width / 2;
 
       // clear everything
       let ctx = this.canvas.getContext('2d');
       ctx.fillStyle = style.backgroundColor ?? 'lightgray';
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-      // draw the handle
+      // draw magnifying glass
       let x = width / 2;
       let y = this.zoomToY(this._zoom);
+      let radius = width / 2;
 
-      ctx.fillStyle = 'orange';
       ctx.beginPath();
-      ctx.arc(x, y, radius, 0, 2 * Math.PI);
+      ctx.strokeStyle = 'black';
+      ctx.fillStyle = 'white';
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 0.45 * radius, y + 0.45 * radius);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(x - 0.2 * radius, y - 0.2 * radius, 0.4 * radius, 0, 2 * Math.PI);
+      ctx.stroke();
       ctx.fill();
+
    }
 }

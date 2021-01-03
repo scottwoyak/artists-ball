@@ -26,5 +26,19 @@ export class GUI {
       parent.appendChild(div);
       return div;
    }
+
+   public static drawHandle(ctx: CanvasRenderingContext2D, x: number, y: number, outerRadius: number): void {
+
+      ctx.fillStyle = 'lightgreen';
+      ctx.strokeStyle = 'darkgreen'
+
+      ctx.beginPath();
+      let lineWidth = outerRadius / 10;
+      ctx.lineWidth = lineWidth;
+      ctx.arc(x, y, outerRadius - lineWidth / 2, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+
+   }
 }
 

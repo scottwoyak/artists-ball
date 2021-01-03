@@ -19,24 +19,22 @@
   margin-top: 0.2em;
   margin-left: 0.3em;
   margin-right: 0.3em;
-  box-shadow: 0 0.1em 0.1em rgba(0, 0, 0, 0.3) inset;
   border: gray;
   border-style: solid;
-  border-width: 0.5px;
+  border-width: 0.075em;
   vertical-align: bottom;
 }
 
 .SliderRange::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
   width: 1.3em;
   height: 1.3em;
   border-radius: 50%;
-  border-width: 0.5px;
+  border-width: 0.1em;
   border-style: solid;
-  border-color: black;
-  background: linear-gradient(135deg, lightgreen, darkgreen);
+  border-color: darkgreen;
+  background: lightgreen;
 }
 
 .SliderRange::-moz-range-thumb {
@@ -44,10 +42,10 @@
   width: 1.3em;
   height: 1.3em;
   border-radius: 50%;
-  border-width: 0.5px;
+  border-width: 0.1em;
   border-style: solid;
-  border-color: black;
-  background: linear-gradient(135deg, lightgreen, darkgreen);
+  border-color: darkgreen;
+  background: lightgreen;
   cursor: pointer;
 }
 
@@ -75,11 +73,11 @@
 }
 
 #Slider .disabled::-webkit-slider-thumb {
-  background: linear-gradient(135deg, lightgray, darkgray);
+  background: lightgray;
   border-color: gray;
 }
 
 #Slider .disabled::-moz-range-thumb {
-  background: linear-gradient(135deg, lightgray, darkgray);
+  background: lightgray;
   border-color: gray;
 }

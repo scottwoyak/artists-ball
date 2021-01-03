@@ -241,24 +241,9 @@ export class LevelsPanel extends ResizeablePanel {
       ctx.stroke();
 
       // handles
-      ctx.fillStyle = 'lightgreen';
-      ctx.strokeStyle = 'darkgreen'
-      ctx.lineWidth = this.lineWidth;
-
-      ctx.beginPath();
-      ctx.arc(pts.black.x, pts.black.y, this.radius, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(pts.white.x, pts.white.y, this.radius, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(pts.mid.x, pts.mid.y, this.radius, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.stroke();
+      GUI.drawHandle(ctx, pts.black.x, pts.black.y, this.radius);
+      GUI.drawHandle(ctx, pts.white.x, pts.white.y, this.radius);
+      GUI.drawHandle(ctx, pts.mid.x, pts.mid.y, this.radius);
    }
 
    private computePoints(): IPoints {
