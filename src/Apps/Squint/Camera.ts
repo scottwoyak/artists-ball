@@ -510,8 +510,8 @@ export class Camera {
       if (desired.deviceId && desired.deviceId.toString().trim().length > 0) {
          constraints = {
             video: {
-               width: { ideal: desired.width? desired.width as number: 10*1000 },
-               height: { ideal: desired.height? desired.height as number: 10*1000 },
+               width: { ideal: desired.width ? desired.width as number : 10 * 1000 },
+               height: { ideal: desired.height ? desired.height as number : 10 * 1000 },
                facingMode: desired.facingMode,
                deviceId: desired.deviceId,
             },
@@ -697,11 +697,11 @@ export class Camera {
                         const actual = {
                            label: 'INOGENI 4K',
                            deviceId: device.deviceId,
-                           width: 2*1920,
-                           height: 2*1080,
+                           width: 2 * 1920,
+                           height: 2 * 1080,
                         }
 
-                        onFound(actual, index++, numCameras);   
+                        onFound(actual, index++, numCameras);
                      }
                      else {
                         const actual = {
@@ -709,7 +709,7 @@ export class Camera {
                            deviceId: device.deviceId,
                         }
 
-                        onFound(actual, index++, numCameras);   
+                        onFound(actual, index++, numCameras);
                      }
                   }
                }

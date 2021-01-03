@@ -108,6 +108,7 @@ body::-webkit-scrollbar {
   }
 }
 
+@import "ArtSeeApp.css";
 @import "PathTracerApp.css";
 @import "ViewerApp.css";
 @import "SquintApp.css";

@@ -1,0 +1,15 @@
+#ArtSeeApp #Video {
+  position: absolute;
+  left: -100em;
+  top: 2em;
+  width: 2em;
+  border: solid 0.1em;
+  border-color: white;
+  margin: 0.9em;
+}
+
+#ArtSeeApp #VideoOverlay {
+  position: absolute;
+  left: -100em;
+  top: 2em;
+}

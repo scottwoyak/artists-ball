@@ -62,7 +62,6 @@ export class SeeApp implements IApp {
 
 
       this.camera = new Camera(this.div);
-      this.camera.visible = false;
 
       Camera.getCameras((constraint: IVideoConstraint, cameraIndex: number, numCameras: number) => {
          if (cameraIndex === (numCameras - 1)) {
@@ -75,17 +74,6 @@ export class SeeApp implements IApp {
 
       window.addEventListener('resize', () => this.updateSizes());
       this.updateSizes();
-
-      document.onkeydown = (event: KeyboardEvent) => {
-         if (event.target instanceof HTMLInputElement === false) {
-            switch (event.key) {
-
-
-               case 'x':
-                  break;
-            }
-         }
-      }
 
       // kick off the rendering loop
       this.drawImg();
@@ -126,11 +114,16 @@ export class SeeApp implements IApp {
    }
 
 
+   private busy = false;
 
    private drawImg() {
 
       requestAnimationFrame(() => this.drawImg());
+      if (this.busy) {
+         return;
+      }
 
+      this.busy = true;
       const canvasWidth = this.canvas.width;
       const canvasHeight = this.canvas.height;
       const canvasAR = canvasWidth / canvasHeight;
@@ -185,55 +178,6 @@ export class SeeApp implements IApp {
             ImageFilter.levels(imageData, white, black, midPt, midValue, numLevels);
          }
 
-         /*
-            if (this.showAsTemperature) {
-               // first compute min and max temp
-               let minTemp = 255;
-               let maxTemp = -255;
-               let hsv = new hsvColor([0, 0, 0]);
-               for (let i = 0; i < data.length; i += 4) {
-                  let r = data[i + 0];
-                  let g = data[i + 1];
-                  let b = data[i + 2];
-                  hsv.fromHtmlValues(r, g, b);
-   
-                  let temp = this.temperature(r, g, b);
-                  minTemp = Math.min(minTemp, temp);
-                  maxTemp = Math.max(maxTemp, temp);
-               }
-               //console.log(minTemp + '   ' + maxTemp);
-               let avgTemp = (maxTemp + minTemp) / 2;
-   
-               for (let i = 0; i < data.length; i += 4) {
-                  let r = data[i + 0];
-                  let g = data[i + 1];
-                  let b = data[i + 2];
-                  let temp = this.temperature(r, g, b);
-   
-                  if (temp < avgTemp) {
-                     r = 0;
-                     g = 0;
-                     b = 255 * (avgTemp - temp) / (avgTemp - minTemp);
-                     r = 255 - b;
-                     g = 255 - b;
-                     b = 255;
-                  }
-                  else {
-                     r = 255 * (temp - avgTemp) / (maxTemp - avgTemp);
-                     g = 0;
-                     b = 0;
-                     g = 255 - r;
-                     b = 255 - r;
-                     r = 255;
-                  }
-   
-                  data[i + 0] = r;
-                  data[i + 1] = g;
-                  data[i + 2] = b;
-               }
-            }
-            */
-
          let tempCanvas = document.createElement('canvas');
          tempCanvas.width = width;
          tempCanvas.height = height;
@@ -242,7 +186,9 @@ export class SeeApp implements IApp {
 
          width /= scale;
          height /= scale;
-         ctx.drawImage(tempCanvas, (canvasWidth - width) / 2, (canvasHeight - height) / 2, width, height)
+         ctx.drawImage(tempCanvas, (canvasWidth - width) / 2, (canvasHeight - height) / 2, width, height);
       }
+
+      this.busy = false;
    }
 }

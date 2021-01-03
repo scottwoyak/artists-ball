@@ -37,13 +37,8 @@ export class ZoomPanel {
       let dragging = false;
       let offset = -1;
       handler.onDown = (pos: Vec2) => {
-
-         let center = new Vec2([this.canvas.width / 2, this.zoomToY(this._zoom)]);
-         let radius = 3 * (this.canvas.width / 2);
-         if (pos.distance(center) < radius) {
-            dragging = true;
-            offset = pos.y - center.y;
-         }
+         dragging = true;
+         offset = pos.y - this.zoomToY(this._zoom);
       }
 
       handler.onMove = (pos: Vec2) => {

@@ -589,7 +589,7 @@ body {
   top: 3em;
   border-radius: var(--corner-radius-small);
   background-color: lightgray;
-  border-radius: 0.5em;
+  border-radius: 0.6em;
   width: 10em;
   height: 3em;
   color: black;
@@ -604,7 +604,7 @@ body {
   position: absolute;
   right: 0.5em;
   top: 25%;
-  opacity: 0.5;
+  opacity: 0.6;
   background-color: lightgray;
   border-radius: 1em;
   width: 2em;

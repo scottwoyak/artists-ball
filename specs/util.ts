@@ -7,11 +7,11 @@ import NodeWebSocket from 'ws';
 import { WebSocket as MockWebSocket } from 'mock-socket';
 import { IConnectionInfoFull, ConnectionState } from '../src/Apps/Squint/SquintMessage';
 
-export function sleep(delay: number): Promise<void> {
+export function sleep(delayMs: number): Promise<void> {
    return new Promise((resolve, reject) => {
       setTimeout(() => {
          resolve();
-      }, delay);
+      }, delayMs);
    });
 }
 
