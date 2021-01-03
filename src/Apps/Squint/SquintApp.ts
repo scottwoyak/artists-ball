@@ -28,6 +28,7 @@ import { ImageCanvas } from './ImageCanvas';
 import { LevelsPanel } from './LevelsPanel';
 import { ModelTimerPanel } from './ModelTimerPanel';
 import { Sounds } from './Sounds';
+import { ZoomPanel } from './ZoomPanel';
 
 WebSocketFactory.create = (url: string) => new WebSocket(url);
 
@@ -71,6 +72,7 @@ export class SquintApp implements IApp {
    private megaPixels: Slider | undefined;
    private cameraCtrls: ICtrl[] = [];
    private timerPanel: ModelTimerPanel;
+   private zoomPanel: ZoomPanel;
 
 
    private advancedConstraints: IAdvancedConstraint[] = [];
@@ -296,6 +298,14 @@ export class SquintApp implements IApp {
       });
 
       this.timerPanel = new ModelTimerPanel(this.squint.modelTimer, this.div);
+      this.zoomPanel = new ZoomPanel(this.div);
+
+      this.zoomPanel.onChange = () => {
+         let change = this.zoomPanel.zoom / this.canvas.zoom
+         this.canvas.zoom *= change;
+         this.canvas.xOffset *= change;
+         this.canvas.yOffset *= change;
+      }
 
       this.chatPanel = new ChatPanel(this.squint, this.div);
       if (this.chatPanel.hasSavedSettings) {
@@ -502,20 +512,6 @@ export class SquintApp implements IApp {
    public buildMenu(menubar: Menubar): void {
 
       const optionsMenu = menubar.addSubMenu('Options');
-
-      const viewMenu = optionsMenu.addSubMenu('View');
-
-      viewMenu.addSlider({
-         label: 'Zoom',
-         min: 1,
-         max: 5,
-         value: this.canvas.zoom,
-         oninput: (slider: Slider) => {
-            this.dirty = true;
-            this.canvas.zoom = slider.value;
-         },
-         onGetText: (slider) => (100 * slider.value).toFixed(0) + '%',
-      });
 
       this.cameraMenu = optionsMenu.addSubMenu('Camera');
 
@@ -1063,6 +1059,7 @@ export class SquintApp implements IApp {
       this.canvas.zoom *= change;
       this.canvas.xOffset *= change;
       this.canvas.yOffset *= change;
+      this.zoomPanel.zoom = this.canvas.zoom;
 
       this.dirty = true;
    }

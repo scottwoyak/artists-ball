@@ -24,6 +24,7 @@ interface IPoints {
    white: Vec2,
    mid: Vec2,
 }
+
 export type ChangeHandler = () => void;
 
 export class LevelsPanel extends ResizeablePanel {
