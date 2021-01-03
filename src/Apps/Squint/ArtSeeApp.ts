@@ -6,16 +6,15 @@ import { Menubar } from '../../GUI/Menu';
 import { Version } from './Version';
 import { GUI } from '../../GUI/GUI';
 import NoSleep from 'nosleep.js';
-import { StorageWithEvents } from './StorageWithEvents';
-import { clamp, pxToNumber } from '../../Util/Globals';
+import { pxToNumber } from '../../Util/Globals';
+import { ImageFilter } from './ImageFilter';
 
 export class SeeApp implements IApp {
    private div: HTMLDivElement;
-   private storage = new StorageWithEvents();
 
    private camera: Camera | undefined;
    private canvas: HTMLCanvasElement;
-   private saturate: Slider;
+   private chroma: Slider;
    private numLevels: Slider;
 
    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
@@ -38,7 +37,7 @@ export class SeeApp implements IApp {
 
       this.canvas = GUI.create('canvas', 'Canvas', this.div);
 
-      this.saturate = new Slider(this.div, {
+      this.chroma = new Slider(this.div, {
          label: 'Chroma',
          min: 0,
          max: 200,
@@ -116,8 +115,8 @@ export class SeeApp implements IApp {
       let menuBar = document.getElementById('Menubar');
       const menubarHeight = menuBar.getBoundingClientRect().height;
 
-      let style = getComputedStyle(this.saturate.div);
-      const sliderHeight = this.saturate.div.getBoundingClientRect().height + pxToNumber(style.marginTop) + pxToNumber(style.marginBottom);
+      let style = getComputedStyle(this.chroma.div);
+      const sliderHeight = this.chroma.div.getBoundingClientRect().height + pxToNumber(style.marginTop) + pxToNumber(style.marginBottom);
 
       const viewWidth = window.innerWidth;
       const viewHeight = window.innerHeight - 5; // TODO, don't know what this 5 is, but without it the window can scroll up/down by a few pixels
@@ -167,66 +166,23 @@ export class SeeApp implements IApp {
 
          const ctx = this.canvas.getContext('2d');
 
-         let data = imageData.data;
-
-         let saturate = this.saturate.value;
-         let black = 0;
-         let white = 1;
-         let midPt = 0.5;
-         let midValue = 0.5;
          let numLevels = this.numLevels.value < this.numLevels.max ? this.numLevels.value : NaN;
 
-         if (saturate !== 100) {
-            let amount = saturate / 100;
-            const lumR = (1 - amount) * .3086;
-            const lumG = (1 - amount) * .6094;
-            const lumB = (1 - amount) * .0820;
-            const shiftW = width << 2;
-            for (let j = 0; j < height; j++) {
-               const offset = j * shiftW;
-               for (let i = 0; i < width; i++) {
-                  const pos = offset + (i << 2);
-                  const r = data[pos + 0];
-                  const g = data[pos + 1];
-                  const b = data[pos + 2];
-
-                  data[pos + 0] = ((lumR + amount) * r) + (lumG * g) + (lumB * b);
-                  data[pos + 1] = (lumR * r) + ((lumG + amount) * g) + (lumB * b);
-                  data[pos + 2] = (lumR * r) + (lumG * g) + ((lumB + amount) * b);
-               }
-            }
+         if (isNaN(numLevels) === false) {
+            let blurSize = 3;
+            ImageFilter.blur(imageData, blurSize);
          }
 
-         let realMidPt = black + midPt * (white - black);
-         for (let i = 0; i < data.length; i += 4) {
+         if (this.chroma.value !== 100) {
+            ImageFilter.chroma(imageData, this.chroma.value);
+         }
 
-            let oldLum = (0.3086 * data[i + 0] + 0.6094 * data[i + 1] + 0.0820 * data[i + 2]) / 255.0;
-            let newLum = NaN;
-
-            if (oldLum <= black) {
-               newLum = 0;
-            }
-            else if (oldLum >= white) {
-               newLum = 1;
-            }
-            else {
-               if (oldLum < realMidPt) {
-                  newLum = 0 + midValue * ((oldLum - black) / (realMidPt - black));
-               }
-               else {
-                  newLum = midValue + (1 - midValue) * (oldLum - realMidPt) / (white - realMidPt);
-               }
-            }
-
-            if (isNaN(numLevels) === false) {
-               let val = newLum;
-               newLum = (Math.floor(numLevels * (val - 0.0001)) + 0.5) / numLevels;
-            }
-
-            let ratio = newLum / oldLum;
-            data[i + 0] = clamp(data[i + 0] * ratio, 0, 255);
-            data[i + 1] = clamp(data[i + 1] * ratio, 0, 255);
-            data[i + 2] = clamp(data[i + 2] * ratio, 0, 255);
+         let white = 1;
+         let black = 0;
+         let midPt = 0.5;
+         let midValue = 0.5;
+         if (isNaN(numLevels) === false) {
+            ImageFilter.levels(imageData, white, black, midPt, midValue, numLevels);
          }
 
          /*
