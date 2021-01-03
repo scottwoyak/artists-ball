@@ -136,7 +136,7 @@ export class ImageCanvas {
       blur = new Uint8ClampedArray(4 * height);
       for (let col = 0; col < width; col++) {
          // average the data
-         for (let row = 0; row < width; row++) {
+         for (let row = 0; row < height; row++) {
             let sumR = 0;
             let sumG = 0;
             let sumB = 0;
