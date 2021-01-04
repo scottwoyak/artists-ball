@@ -251,10 +251,9 @@ export class ModelTimer {
    }
 
    public subtractOne(): void {
-      if (this.countdownTimer.durationMs > 0) {
+      if (this.countdownTimer.durationMs > 1 * TimeMs.Min) {
          this.countdownTimer.subtractOne();
          this.synchronizeToServer();
       }
    }
-
 }

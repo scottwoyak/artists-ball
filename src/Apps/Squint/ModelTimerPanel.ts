@@ -6,6 +6,7 @@ import { Vec2 } from '../../Util3D/Vec';
 import { ITimerInfo } from './ITimerInfo';
 import { ModelTimer } from './ModelTimer';
 import { Rect } from './Rect';
+import { Sounds } from './Sounds';
 import { StorageItem, StorageWithEvents } from './StorageWithEvents';
 
 enum HitArea {
@@ -20,7 +21,7 @@ export class ModelTimerPanel {
    private alarm: HTMLAudioElement = null;
    private box: Rect;
    private storage = new StorageWithEvents
-   private soundFile = 'sounds/chime.mp3';
+   private soundFile: string = Sounds.Chime;
 
    public goFullScreenOnStart = false;
 
@@ -106,35 +107,39 @@ export class ModelTimerPanel {
          this.stopAlarm();
       }
 
-      let wasDragging = false;
+      let dragging = false;
       handler.onUp = (pos: Vec2) => {
          document.body.style.cursor = 'default';
-         let hit = this.hitTest(pos);
-         if (wasDragging === false && hit === HitArea.StartStop) {
-            if (this.modelTimer.running) {
-               this.modelTimer.stop();
-            }
-            else {
-               if (this.goFullScreenOnStart) {
-                  // go fullscreen
-                  if (screenfull.isEnabled) {
-                     screenfull.request()
-                        .catch((err) => { console.log('Cannot go fullscreen: ' + err) });
-                  }
-               }
 
-               this.modelTimer.start();
-            }
-         }
-
-         wasDragging = false;
+         dragging = false;
       }
 
       handler.onDown = (pos: Vec2) => {
 
-         let hit = this.hitTest(pos);
-         if (hit === HitArea.TimerText) {
-            wasDragging = true;
+         if (this.modelTimer.alarmSounding) {
+            this.stopAlarm();
+         }
+         else {
+            let hit = this.hitTest(pos);
+            if (hit === HitArea.TimerText) {
+               dragging = true;
+            }
+            else if (hit === HitArea.StartStop) {
+               if (this.modelTimer.running) {
+                  this.modelTimer.stop();
+               }
+               else {
+                  if (this.goFullScreenOnStart) {
+                     // go fullscreen
+                     if (screenfull.isEnabled) {
+                        screenfull.request()
+                           .catch((err) => { console.log('Cannot go fullscreen: ' + err) });
+                     }
+                  }
+
+                  this.modelTimer.start();
+               }
+            }
          }
       }
 
@@ -146,9 +151,9 @@ export class ModelTimerPanel {
       }
 
       handler.onDrag = (pos: Vec2, delta: Vec2) => {
-         if (wasDragging === true) {
+         if (dragging === true) {
             document.body.style.cursor = 'ns-resize';
-            accumulatedDelta += delta.y;
+            accumulatedDelta -= delta.y;
             while (accumulatedDelta > step) {
                this.modelTimer.subtractOne();
                accumulatedDelta -= step;
