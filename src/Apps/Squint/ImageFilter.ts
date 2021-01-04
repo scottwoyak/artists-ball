@@ -69,9 +69,19 @@ export class ImageFilter {
          }
 
          let ratio = newLum / oldLum;
-         data[i + 0] = clamp(data[i + 0] * ratio, 0, 255);
-         data[i + 1] = clamp(data[i + 1] * ratio, 0, 255);
-         data[i + 2] = clamp(data[i + 2] * ratio, 0, 255);
+         if (oldLum < 10 / 255) {
+            // for really dark values, scale up as black and white
+            // rather than the actual color which erroneously turns
+            // blue or sometimes red
+            data[i + 0] = clamp(255 * newLum, 0, 255);
+            data[i + 1] = clamp(255 * newLum, 0, 255);
+            data[i + 2] = clamp(255 * newLum, 0, 255);
+         }
+         else {
+            data[i + 0] = clamp(data[i + 0] * ratio, 0, 255);
+            data[i + 1] = clamp(data[i + 1] * ratio, 0, 255);
+            data[i + 2] = clamp(data[i + 2] * ratio, 0, 255);
+         }
       }
    }
 
