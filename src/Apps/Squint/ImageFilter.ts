@@ -75,6 +75,7 @@ export class ImageFilter {
       }
    }
 
+   /*
    public static blur(img: ImageData, blurSize: number): void {
 
       let data = img.data;
@@ -143,4 +144,5 @@ export class ImageFilter {
          }
       }
    }
+   */
 }

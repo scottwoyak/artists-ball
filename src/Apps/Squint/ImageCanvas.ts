@@ -74,6 +74,11 @@ export class ImageCanvas {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
+      if (isNaN(this.numLevels) === false) {
+         let blurSize = Math.min(3, 30 / this.numLevels);
+         ctx.filter = 'blur(' + blurSize + 'px)';
+      }
+
       ctx.drawImage(img, x, y, width, height);
 
       // adjust dimensions so we're now only editing what is visible
@@ -86,11 +91,6 @@ export class ImageCanvas {
 
       let imageData = ctx.getImageData(x, y, width, height);
       let data = imageData.data;
-
-      if (isNaN(this.numLevels) === false) {
-         let blurSize = 3;
-         ImageFilter.blur(imageData, blurSize);
-      }
 
       if (this.chroma !== 100) {
          ImageFilter.chroma(imageData, this.chroma);

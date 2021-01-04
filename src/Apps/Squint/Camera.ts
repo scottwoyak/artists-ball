@@ -458,7 +458,8 @@ export class Camera {
    }
 
    public takePicture2(
-      megaPixels: number
+      megaPixels: number,
+      blur: number
    ): ImageData {
 
       if (this.video.readyState != 4) {
@@ -489,6 +490,10 @@ export class Camera {
          return null;
          //return Promise.reject(SquintStrings.CAMERA_NOT_READY);
       }
+      context.filter = 'blur(' + blur + 'px)';
+
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = 'high';
 
       context.drawImage(
          this.video,

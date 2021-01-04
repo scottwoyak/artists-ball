@@ -37,14 +37,6 @@ export class SeeApp implements IApp {
 
       this.canvas = GUI.create('canvas', 'Canvas', this.div);
 
-      this.chroma = new Slider(this.div, {
-         label: 'Chroma',
-         min: 0,
-         max: 200,
-         value: 100,
-         onGetText: (slider) => slider.value.toFixed(0) + '%',
-      });
-
       this.numLevels = new Slider(this.div, {
          label: 'Levels',
          min: 2,
@@ -60,6 +52,13 @@ export class SeeApp implements IApp {
          }
       });
 
+      this.chroma = new Slider(this.div, {
+         label: 'Chroma',
+         min: 0,
+         max: 200,
+         value: 100,
+         onGetText: (slider) => slider.value.toFixed(0) + '%',
+      });
 
       this.camera = new Camera(this.div);
 
@@ -107,7 +106,7 @@ export class SeeApp implements IApp {
       const sliderHeight = this.chroma.div.getBoundingClientRect().height + pxToNumber(style.marginTop) + pxToNumber(style.marginBottom);
 
       const viewWidth = window.innerWidth;
-      const viewHeight = window.innerHeight - 5; // TODO, don't know what this 5 is, but without it the window can scroll up/down by a few pixels
+      const viewHeight = window.innerHeight;
 
       this.canvas.width = viewWidth;
       this.canvas.height = viewHeight - menubarHeight - 2 * sliderHeight;
@@ -153,18 +152,19 @@ export class SeeApp implements IApp {
          scale /= 2;
       }
 
-      let imageData = this.camera.takePicture2(megaPixels);
+      let numLevels = this.numLevels.value < this.numLevels.max ? this.numLevels.value : NaN;
+
+      let blurSize = 0;
+      if (isNaN(numLevels) === false) {
+         blurSize = Math.min(3, 30 / numLevels);
+      }
+
+      let imageData = this.camera.takePicture2(megaPixels, blurSize);
 
       if (imageData !== null) {
 
          const ctx = this.canvas.getContext('2d');
 
-         let numLevels = this.numLevels.value < this.numLevels.max ? this.numLevels.value : NaN;
-
-         if (isNaN(numLevels) === false) {
-            let blurSize = 3;
-            ImageFilter.blur(imageData, blurSize);
-         }
 
          if (this.chroma.value !== 100) {
             ImageFilter.chroma(imageData, this.chroma.value);
