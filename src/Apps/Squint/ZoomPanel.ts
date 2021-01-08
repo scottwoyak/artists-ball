@@ -65,6 +65,10 @@ export class ZoomPanel {
          offset = 0;
       }
 
+      window.addEventListener('resize', () => {
+         this.draw();
+      });
+
       this.draw();
    }
 
@@ -91,11 +95,11 @@ export class ZoomPanel {
 
    private draw(): void {
 
-      let style = getComputedStyle(this.canvas);
-
       this.canvas.width = this.canvas.clientWidth;
       this.canvas.height = this.canvas.clientHeight;
       let width = this.canvas.width;
+
+      let style = getComputedStyle(this.canvas);
 
       // clear everything
       let ctx = this.canvas.getContext('2d');
@@ -118,6 +122,5 @@ export class ZoomPanel {
       ctx.arc(x - 0.2 * radius, y - 0.2 * radius, 0.4 * radius, 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fill();
-
    }
 }
