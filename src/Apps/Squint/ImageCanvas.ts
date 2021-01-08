@@ -45,6 +45,10 @@ export class ImageCanvas {
    }
 
    public draw(img: HTMLImageElement): void {
+
+      this.canvas.width = this.canvas.clientWidth;
+      this.canvas.height = this.canvas.clientHeight;
+
       const canvasWidth = this.canvas.width;
       const canvasHeight = this.canvas.height;
       const canvasAR = canvasWidth / canvasHeight;

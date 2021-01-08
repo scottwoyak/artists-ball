@@ -6,6 +6,7 @@
   background-color: rgba(var(--main-color), 0.25);
   border: none;
   cursor: pointer;
+  height: 2.1em;
 }
 
 .Menubar > .MenuItem {

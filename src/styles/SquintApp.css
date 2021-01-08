@@ -48,6 +48,15 @@ body {
   touch-action: none;
 }
 
+#SquintApp #BodyDiv {
+  position: absolute;
+  /* matches the size of the menubar hight */
+  top: 2.1em;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+}
+
 #SquintApp #Panel {
   flex: 0 0 300px;
   display: block;
@@ -88,7 +97,9 @@ body {
 
 #SquintApp #Canvas {
   font-size: 1em;
-  flex-grow: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 /********************************************************************

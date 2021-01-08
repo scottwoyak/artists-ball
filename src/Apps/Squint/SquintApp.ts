@@ -82,7 +82,7 @@ export class SquintApp implements IApp {
 
    private startDialog: StartDialog | undefined;
 
-   private console = new ConsoleCapture();
+   private console: ConsoleCapture;
 
    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
    private noSleep = new NoSleep();
@@ -165,10 +165,6 @@ export class SquintApp implements IApp {
             }
          }
       })
-
-      this.console.onMessage = (msg: string) => {
-         this.squint.log(msg);
-      }
 
       this.storage.on(StorageItem.UserName, (userName) => {
 
@@ -281,6 +277,11 @@ export class SquintApp implements IApp {
 
       this.div = GUI.create('div', 'BodyDiv', div);
 
+      this.console = new ConsoleCapture(this.div);
+      this.console.onMessage = (msg: string) => {
+         this.squint.log(msg);
+      }
+
       this.canvas = new ImageCanvas(this.div, 'Canvas');
       this.overlayCanvas = GUI.create('canvas', 'OverlayCanvas', this.div, 'Overlay');
 
@@ -338,7 +339,7 @@ export class SquintApp implements IApp {
       handler.onTranslate = (delta: Vec2) => this.onTranslate(delta);
       handler.onDrag = (pos: Vec2, delta: Vec2) => this.onDrag(pos, delta);
 
-      window.addEventListener('resize', () => this.onResize());
+      window.addEventListener('resize', () => this.updateSizes());
       this.updateSizes();
 
       if (this.storage.has(StorageItem.UserName) === false) {
@@ -856,10 +857,6 @@ export class SquintApp implements IApp {
          });
    }
 
-   private onResize() {
-      this.updateSizes();
-   }
-
    private updateVideoSize(videoWidth: number, videoHeight: number) {
       if (this.camera.visible) {
          const videoSize = Math.max(this.camera.clientWidth, this.camera.clientHeight);
@@ -875,19 +872,6 @@ export class SquintApp implements IApp {
    }
 
    private updateSizes() {
-      let menuBar = document.getElementById('Menubar');
-      const menubarHeight = menuBar.getBoundingClientRect().height;
-
-      this.console.setEdges(0, 0, menubarHeight, 0);
-      const viewWidth = window.innerWidth;
-      const viewHeight = window.innerHeight - 5; // TODO, don't know what this 5 is, but without it the window can scroll up/down by a few pixels
-
-      this.canvas.width = viewWidth;
-      this.canvas.height = viewHeight - menubarHeight;
-      this.overlayCanvas.width = this.canvas.width;
-      this.overlayCanvas.height = this.canvas.height;
-      this.overlayCanvas.style.top = menubarHeight + 'px';
-
       this.dirty = true;
    }
 

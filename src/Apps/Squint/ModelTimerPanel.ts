@@ -268,7 +268,7 @@ export class ModelTimerPanel {
       }
    }
 
-   private draw(): void {
+   public draw(): void {
 
       let style = getComputedStyle(this.canvas);
 

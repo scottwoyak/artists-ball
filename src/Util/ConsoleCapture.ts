@@ -18,11 +18,11 @@ export class ConsoleCapture {
       this.textArea.style.display = flag ? 'block' : 'none';
    }
 
-   public constructor(id = 'Console', numCols = NUM_COLS) {
+   public constructor(parent: HTMLElement, id = 'Console', numCols = NUM_COLS) {
       this.textArea = document.createElement('textarea');
       this.textArea.id = id;
       this.textArea.cols = numCols;
-      document.body.appendChild(this.textArea);
+      parent.appendChild(this.textArea);
 
       // TODO update these all to take the correct arguments for console functions
       const oldLog = console.log;
@@ -89,12 +89,5 @@ export class ConsoleCapture {
       if (this.onMessage) {
          this.onMessage(msg);
       }
-   }
-
-   public setEdges(left: number, right: number, top: number, bottom: number): void {
-      this.textArea.style.left = left + 'px';
-      this.textArea.style.right = right + 'px';
-      this.textArea.style.top = top + 'px';
-      this.textArea.style.bottom = bottom + 'px';
    }
 }

@@ -1,12 +1,13 @@
 import 'webrtc-adapter';
 import { IApp } from '../../IApp';
-import { Menubar, SubMenu } from '../../GUI/Menu';
+import { Menubar } from '../../GUI/Menu';
 import { Version } from './Version';
 import NoSleep from 'nosleep.js';
 import { ModelTimer } from './ModelTimer';
 import { ModelTimerPanel } from './ModelTimerPanel';
 import { Sounds } from './Sounds';
 import { isMobile } from '../../Util/Globals';
+import { GUI } from '../../GUI/GUI';
 
 export class ModelTimerApp implements IApp {
 
@@ -28,12 +29,14 @@ export class ModelTimerApp implements IApp {
 
       div.id = 'ModelTimerApp';
 
+      let bodyDiv = GUI.create('div', 'BodyDiv', div);
+
       let timer = new ModelTimer();
-      this.timerPanel = new ModelTimerPanel(timer, div)
+      this.timerPanel = new ModelTimerPanel(timer, bodyDiv)
       this.timerPanel.goFullScreenOnStart = isMobile;
 
-      window.addEventListener('resize', () => this.updateSizes());
-      this.updateSizes();
+      window.addEventListener('resize', () => this.timerPanel.draw());
+      this.timerPanel.draw();
    }
 
    public buildMenu(menubar: Menubar): void {
@@ -79,16 +82,5 @@ export class ModelTimerApp implements IApp {
          checked: true,
       });
       */
-   }
-
-   private updateSizes() {
-      let menuBar = document.getElementById('Menubar');
-      const menubarHeight = menuBar.getBoundingClientRect().height;
-
-      const viewWidth = window.innerWidth;
-      const viewHeight = window.innerHeight;
-
-      this.timerPanel.width = viewWidth;
-      this.timerPanel.height = viewHeight - menubarHeight;
    }
 }

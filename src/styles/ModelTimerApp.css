@@ -2,7 +2,19 @@
   background-color: rgb(110, 110, 110);
 }
 
+#ModelTimerApp #BodyDiv {
+  position: absolute;
+  /* matches the size of the menubar hight */
+  top: 2.1em;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+}
+
 #ModelTimerApp #ModelTimerCanvas {
   background-color: black;
   color: lightgray;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
