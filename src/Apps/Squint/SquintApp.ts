@@ -306,6 +306,7 @@ export class SquintApp implements IApp {
          this.canvas.zoom *= change;
          this.canvas.xOffset *= change;
          this.canvas.yOffset *= change;
+         this.dirty = true;
       }
 
       this.chatPanel = new ChatPanel(this.squint, this.div);
