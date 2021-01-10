@@ -103,6 +103,12 @@ export class Camera {
    // the area of the camera that we capture in a photo
    public capture = new Rect();
 
+   // id for the active camera
+   private _deviceId = '';
+   public get deviceId(): string {
+      return this._deviceId;
+   }
+
    public onPaused: CameraPauseResumeHandler | null = null;
    public onResume: CameraPauseResumeHandler | null = null;
 
@@ -556,6 +562,7 @@ export class Camera {
                         this.capture.y = 0;
                         this.capture.width = this.video.videoWidth;
                         this.capture.height = this.video.videoHeight;
+                        this._deviceId = desired.deviceId.toString();
                         resolve(track);
                      })
                      .catch((err) => {

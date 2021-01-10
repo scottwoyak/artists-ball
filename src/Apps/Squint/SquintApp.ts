@@ -20,7 +20,7 @@ import { BandwidthTracker } from './BandwidthTracker';
 import { SquintEvent } from './SquintEvents';
 import NoSleep from 'nosleep.js';
 import { WebSocketFactory } from './WebSocketFactory';
-import { IConnectionInfoBasic, ISquintInfo } from './SquintMessage';
+import { IConnectionInfoBasic } from './SquintMessage';
 import { StorageWithEvents, StorageItem } from './StorageWithEvents';
 import { SquintStrings } from './SquintStrings';
 import { PasswordDialog } from './PasswordDialog';
@@ -40,6 +40,14 @@ export function debug(msg: string): void {
 interface IConstraintItem {
    constraint: AdvancedConstraintName,
    label: string,
+}
+
+interface IPreferredCamera {
+   deviceId: string,
+   // capture area
+   // rotation
+   // megapixels
+   // jpeg
 }
 
 export class SquintApp implements IApp {
@@ -462,9 +470,29 @@ export class SquintApp implements IApp {
       // TODO just fully disable all the menu items instead of the menu itself.
       this.cameraMenu.enabled = false;
 
+      let preferredCamera: IPreferredCamera = {
+         deviceId: undefined,
+      }
+      if (this.storage.has(StorageItem.Camera)) {
+         preferredCamera = JSON.parse(this.storage.get(StorageItem.Camera));
+      }
+
+      let preferredFound = false;
       Camera.getCameras((constraint, cameraIndex, numCameras) => {
 
-         let selected = (cameraIndex === (numCameras - 1));
+         let selected = preferredCamera.deviceId && constraint.deviceId === preferredCamera.deviceId;
+
+         if (preferredFound === false) {
+            if (selected) {
+               preferredFound = true;
+            }
+            else if (cameraIndex === (numCameras - 1)) {
+               // if a preferred camera was not found and this is the last entry, make it the preferred one
+               preferredFound = true;
+               selected = true;
+            }
+         }
+
          const radioButton = this.cameraMenu.addRadiobutton(
             {
                label: constraint.label,
@@ -828,6 +856,12 @@ export class SquintApp implements IApp {
 
                this.buildAdvancedSubMenu(track);
                this.updateVideoSize(this.camera.videoWidth, this.camera.videoHeight);
+
+               // save the selected camera
+               let obj: IPreferredCamera = {
+                  deviceId: this.camera.deviceId,
+               }
+               this.storage.set(StorageItem.Camera, JSON.stringify(obj));
 
                if (!this.uploader) {
                   this.startSession();
