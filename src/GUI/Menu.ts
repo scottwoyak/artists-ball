@@ -183,7 +183,8 @@ class Menu {
       subMenu.show();
 
       // position the new menu
-      const bodyRect = document.body.getBoundingClientRect();
+      const browserWidth = document.documentElement.clientWidth;
+      const browserHeight = document.documentElement.clientHeight;
       const menuItemRect = menuItem.getBoundingClientRect();
       const subMenuRect = subMenu.div.getBoundingClientRect();
       if (location === MenuLocation.Below) {
@@ -193,14 +194,14 @@ class Menu {
       else if (location === MenuLocation.Right) {
 
          let left = menuItemRect.left + 0.5 * menuItemRect.width;
-         if (left + subMenuRect.width > bodyRect.width) {
+         if (left + subMenuRect.width > browserWidth) {
             left = menuItemRect.left - subMenuRect.width;
          }
          subMenu.div.style.left = left + 'px';
 
          let top = menuItemRect.top;
-         if (top + subMenuRect.height > bodyRect.height) {
-            top = bodyRect.height - subMenuRect.height;
+         if (top + subMenuRect.height > browserHeight) {
+            top = browserHeight - subMenuRect.height;
          }
          subMenu.div.style.top = top + 'px'
       }
