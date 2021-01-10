@@ -927,6 +927,8 @@ export class SquintApp implements IApp {
       this.canvas.draw(this.img);
 
 
+      this.overlayCanvas.width = this.canvas.width;
+      this.overlayCanvas.height = this.canvas.height;
       const ctx = this.overlayCanvas.getContext('2d');
 
       let msg: string;
