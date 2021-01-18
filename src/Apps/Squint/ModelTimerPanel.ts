@@ -1,7 +1,8 @@
 import screenfull from 'screenfull';
 import { GUI } from '../../GUI/GUI';
 import { PointerEventHandler } from '../../GUI/PointerEventHandler';
-import { baseUrl, getEmPixels, isMobile } from '../../Util/Globals';
+import { CountdownTimer } from '../../Util/CountdownTimer';
+import { baseUrl, getEmPixels, getTimeStr, isMobile } from '../../Util/Globals';
 import { Vec2 } from '../../Util3D/Vec';
 import { ITimerInfo } from './ITimerInfo';
 import { ModelTimer } from './ModelTimer';
@@ -12,6 +13,7 @@ import { StorageItem, StorageWithEvents } from './StorageWithEvents';
 enum HitArea {
    TimerText,
    StartStop,
+   AutoStartCancel,
    None,
 }
 
@@ -19,20 +21,22 @@ export class ModelTimerPanel {
    private modelTimer: ModelTimer;
    private canvas: HTMLCanvasElement;
    private alarm: HTMLAudioElement = null;
-   private box: Rect;
+   private timerTextBox: Rect;
+   private cancelBox: Rect;
    private storage = new StorageWithEvents
    private soundFile: string = Sounds.Chime;
+   private autoStartTimer: CountdownTimer = null;
 
    public goFullScreenOnStart = false;
 
    private readonly leftMarginRatio = 0.25;
    private get leftMarginWidth(): number {
-      return this.box.height * this.leftMarginRatio;
+      return this.timerTextBox.height * this.leftMarginRatio;
    }
 
    private readonly startStopWidthRatio = 1.0;
    private get startStopWidth(): number {
-      return this.box.height * this.startStopWidthRatio;
+      return this.timerTextBox.height * this.startStopWidthRatio;
    }
 
    public get info(): ITimerInfo {
@@ -55,6 +59,21 @@ export class ModelTimerPanel {
       this.canvas.style.height = height + 'px'
       this.canvas.height = height;
       this.draw();
+   }
+
+   public get autoStart(): boolean {
+      return this.autoStartTimer !== null;
+   }
+   public set autoStart(value: boolean) {
+      if (value !== this.autoStart) {
+         if (this.autoStartTimer) {
+            this.autoStartTimer = null;
+         }
+         else {
+            this.autoStartTimer = new CountdownTimer(30 * 1000);
+            this.autoStartTimer.onTick = () => this.onCountdownTick();
+         }
+      }
    }
 
    public set sound(sound: string) {
@@ -93,18 +112,24 @@ export class ModelTimerPanel {
       let handler = new PointerEventHandler(this.canvas);
 
       handler.onMove = (pos: Vec2, delta: Vec2) => {
-         let hit = this.hitTest(pos);
-         if (hit === HitArea.TimerText) {
-            this.canvas.style.cursor = 'ns-resize';
-         }
-         else if (hit === HitArea.StartStop) {
-            this.canvas.style.cursor = 'pointer';
-         }
-         else {
-            this.canvas.style.cursor = 'default';
+         switch (this.hitTest(pos)) {
+            case HitArea.TimerText:
+               this.canvas.style.cursor = 'ns-resize';
+               break;
+
+            case HitArea.StartStop:
+            case HitArea.AutoStartCancel:
+               this.canvas.style.cursor = 'pointer';
+               break;
+
+            default:
+               this.canvas.style.cursor = 'default';
+               break;
          }
 
-         this.stopAlarm();
+         if (modelTimer.alarmSounding) {
+            this.stopAlarm();
+         }
       }
 
       let dragging = false;
@@ -114,30 +139,54 @@ export class ModelTimerPanel {
          dragging = false;
       }
 
+      let starting = false;
       handler.onDown = (pos: Vec2) => {
 
          if (this.modelTimer.alarmSounding) {
             this.stopAlarm();
          }
          else {
-            let hit = this.hitTest(pos);
-            if (hit === HitArea.TimerText) {
-               dragging = true;
-            }
-            else if (hit === HitArea.StartStop) {
-               if (this.modelTimer.running) {
-                  this.modelTimer.stop();
-               }
-               else {
-                  if (this.goFullScreenOnStart) {
-                     // go fullscreen
-                     if (screenfull.isEnabled) {
-                        screenfull.request()
-                           .catch((err) => { console.log('Cannot go fullscreen: ' + err) });
+            switch (this.hitTest(pos)) {
+               case HitArea.StartStop:
+                  {
+                     if (this.modelTimer.running) {
+                        this.modelTimer.stop();
+                        starting = false;
+                     }
+                     else {
+                        this.modelTimer.start();
+                        if (this.autoStart) {
+                           this.autoStartTimer.stop();
+                        }
+                        starting = true;
                      }
                   }
+                  dragging = false;
+                  break;
 
-                  this.modelTimer.start();
+               case HitArea.AutoStartCancel:
+                  if (this.autoStart) {
+                     this.autoStartTimer.reset();
+                  }
+                  dragging = false;
+                  break;
+
+               default:
+                  dragging = true;
+                  break;
+
+            }
+         }
+         this.draw();
+      }
+
+      handler.onUp = (pos: Vec2) => {
+         if (starting) {
+            if (this.goFullScreenOnStart) {
+               // go fullscreen
+               if (screenfull.isEnabled) {
+                  screenfull.request()
+                     .catch((err) => { console.log('Cannot go fullscreen: ' + err) });
                }
             }
          }
@@ -204,11 +253,15 @@ export class ModelTimerPanel {
 
    private hitTest(pos: Vec2): HitArea {
 
-      if (pos.x < this.box.left || pos.x > this.box.right || pos.y < this.box.top || pos.y > this.box.bottom) {
+      if (this.cancelBox && this.cancelBox.inside(pos)) {
+         return HitArea.AutoStartCancel;
+      }
+
+      if (pos.x < this.timerTextBox.left || pos.x > this.timerTextBox.right || pos.y < this.timerTextBox.top || pos.y > this.timerTextBox.bottom) {
          return HitArea.None;
       }
 
-      if (pos.x < this.box.right - this.startStopWidth) {
+      if (pos.x < this.timerTextBox.right - this.startStopWidth) {
          return HitArea.TimerText;
       }
       else {
@@ -265,6 +318,11 @@ export class ModelTimerPanel {
    private stopAlarm() {
       if (this.modelTimer.alarmSounding) {
          this.modelTimer.reset();
+
+         if (this.autoStart) {
+            this.autoStartTimer.reset();
+            this.autoStartTimer.start();
+         }
       }
    }
 
@@ -272,12 +330,14 @@ export class ModelTimerPanel {
 
       let style = getComputedStyle(this.canvas);
 
-      this.canvas.width = this.canvas.clientWidth;
-      this.canvas.height = this.canvas.clientHeight;
-      this.box = this.getOptimalSize();
+      let width = this.canvas.clientWidth;
+      let height = this.canvas.clientHeight;
+      this.canvas.width = width;
+      this.canvas.height = height;
+      this.timerTextBox = this.getOptimalSize();
 
-      let x = this.box.x;
-      let y = this.box.y;
+      let x = this.timerTextBox.x;
+      let y = this.timerTextBox.y;
 
       let ctx = this.canvas.getContext('2d');
       ctx.fillStyle = this.modelTimer.alarmSounding ? 'orange' : style.backgroundColor ?? 'lightgray';
@@ -285,20 +345,20 @@ export class ModelTimerPanel {
 
       // draw the time text
       let em = getEmPixels();
-      let fontSize = (this.box.height - 0.5 * em);
+      let fontSize = (this.timerTextBox.height - 0.5 * em);
       ctx.font = fontSize + 'px Arial';
-      ctx.fillStyle = style.color ?? 'black';
+      ctx.fillStyle = this.modelTimer.alarmSounding ? 'rgba(255, 255, 255, 0.8)' : style.color ?? 'black';
       let size = ctx.measureText('00:00');
 
       x += this.leftMarginWidth;
-      this.drawText(ctx, this.modelTimer.timeRemainingStr, x, y, size.width, this.box.height);
+      this.drawText(ctx, this.modelTimer.timeRemainingStr, x, y, size.width, this.timerTextBox.height);
       x += size.width;
 
       // draw the start/stop symbols
-      let boxSize = this.box.height;
+      let boxSize = this.timerTextBox.height;
       ctx.beginPath();
-      if (this.modelTimer.running) {
-         // square
+      if (this.modelTimer.alarmSounding || this.modelTimer.running) {
+         // red square
          let size = 0.25;
          ctx.fillStyle = 'rgba(255,128,128,0.3)';
          ctx.strokeStyle = 'rgba(255,0,0,0.8)';
@@ -309,8 +369,7 @@ export class ModelTimerPanel {
          ctx.lineTo(x + size * boxSize, y + size * boxSize);
       }
       else {
-         // triangle
-         //ctx.fillStyle = 'lightgreen';
+         // green triangle
          ctx.fillStyle = 'rgba(128,255,128,0.4)';
          ctx.strokeStyle = 'rgba(0,200,0,0.9)';
          ctx.moveTo(x + 0.2 * boxSize, y + 0.2 * boxSize);
@@ -321,6 +380,36 @@ export class ModelTimerPanel {
       //ctx.strokeStyle = 'black';
       ctx.fill();
       ctx.stroke();
+
+      // if there is room above the text, draw the current time
+      if (height > fontSize + 6 * em) {
+         // display the current time
+         ctx.font = '2em Arial';
+         ctx.fillStyle = this.modelTimer.alarmSounding ? 'rgba(255,255,255, 0.8)' : 'rgba(255,255,255,0.5)';
+         ctx.textAlign = 'center';
+         ctx.textBaseline = 'top';
+         ctx.fillText(getTimeStr(), width / 2, 1 * em);
+
+         // display a message
+         if (this.autoStart && this.autoStartTimer.running) {
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.fillRect(0, height - 4 * em, width, 4 * em);
+
+            ctx.fillStyle = 'gray';
+            ctx.textBaseline = 'bottom';
+            ctx.textAlign = 'left';
+            ctx.fillText('Start in ' + this.autoStartTimer.timeRemainingStr, 1 * em, height - 1 * em);
+
+            ctx.textAlign = 'right';
+            ctx.fillText('Cancel', width - 1 * em, height - 1 * em);
+            let size = ctx.measureText('Cancel');
+            this.cancelBox = new Rect(width - (size.width + 2 * em), height - 4 * em, size.width + 2 * em, 4 * em);
+         }
+         else {
+            this.cancelBox = null;
+         }
+      }
    }
 
    private drawText(ctx: CanvasRenderingContext2D, str: string, x: number, y: number, width: number, height: number) {
@@ -331,5 +420,15 @@ export class ModelTimerPanel {
       ctx.textBaseline = 'middle';
       ctx.fillText(str, x + width / 2, y + height / 2 + 0.5 * size.actualBoundingBoxDescent / 2);
 
+   }
+
+   private onCountdownTick() {
+      if (this.autoStartTimer.expired) {
+         // TODO if the model is posing, subtract the time we forgot to start the timer.
+         this.modelTimer.start();
+      }
+      else {
+         this.draw();
+      }
    }
 }

@@ -3,9 +3,14 @@ import { Stopwatch } from './Stopwatch';
 const SEC = 1000;
 const MIN = 60 * SEC;
 
+export type OnTickHandler = (timer: CountdownTimer) => void;
+
 export class CountdownTimer {
    private sw = new Stopwatch(false);
-   public _durationMs = 20 * MIN;
+   private _durationMs: number;
+   private tickTimeoutHandle = NaN;
+
+   public onTick: OnTickHandler = null;
 
    public get durationMs(): number {
       return this._durationMs;
@@ -46,14 +51,25 @@ export class CountdownTimer {
       return (this.sw.elapsedMs >= this.durationMs);
    }
 
+   public constructor(durationMs = 20 * MIN) {
+      this._durationMs = durationMs;
+   }
+
    public start(): void {
       if (this.sw.running === false && this.expired === false) {
          this.sw.start();
+         this.tick();
       }
    }
 
    public stop(): void {
       this.sw.stop();
+
+      if (isNaN(this.tickTimeoutHandle) === false) {
+         window.clearTimeout(this.tickTimeoutHandle);
+         this.tickTimeoutHandle = NaN;
+      }
+
 
       if (this.sw.elapsedMs > this._durationMs) {
          this.sw.elapsedMs = this._durationMs;
@@ -96,6 +112,30 @@ export class CountdownTimer {
 
       if (durationMs >= 0 && remainingMs >= 0 && durationMs > remainingMs && running) {
          this.sw.start();
+         this.tick();
       }
+   }
+
+   private tick(): void {
+      if (this.onTick) {
+         this.onTick(this);
+      }
+
+      // if the timer is running request the next timeout
+      if (this.running) {
+         this.registerNextTick();
+      }
+   }
+
+   private registerNextTick(): void {
+      this.tickTimeoutHandle = window.setTimeout(() => {
+
+         // reset the timeout handle
+         this.tickTimeoutHandle = NaN;
+
+         // call the callback
+         this.tick();
+
+      }, this.remainingMs % 1000 + 1);
    }
 }

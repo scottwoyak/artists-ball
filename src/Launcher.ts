@@ -32,6 +32,7 @@ export class Launcher {
 
       this.setFontSize();
       window.addEventListener('orientationchange', () => this.setFontSize());
+      document.addEventListener('fullscreenchange', () => this.setFontSize());
 
       // default app type if one isn't specified via a URL parameter
       let type = AppType.Squint;
@@ -185,7 +186,13 @@ export class Launcher {
          }
       }
 
+      if (document.fullscreenElement && device.isPortrait && device.isMobile && device.isSafari === false) {
+         fontSize /= 2;
+      }
+
       // set the variable into the CSS code
       document.documentElement.style.setProperty('--fontSize', fontSize + 'pt');
+
+      //alert('setting font size to ' + fontSize + 'pt');
    }
 }

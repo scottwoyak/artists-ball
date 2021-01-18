@@ -27,11 +27,16 @@ describe.only('ModelTimer', function () {
          let promise = new Promise<void>((resolve, reject) => {
 
             let tickCount = 0;
+
+            setTimeout(() => {
+               expect(tickCount).to.equal(3);
+               resolve();
+            }, 3100);
+
             timer.onTick = (info: ITimerInfo) => {
                tickCount++;
 
                try {
-
                   if (tickCount === 1) {
                      expect(info.running).to.be.true;
                      expect(sw.elapsedS).to.be.greaterThan(0);
@@ -41,20 +46,11 @@ describe.only('ModelTimer', function () {
                      expect(info.running).to.be.true;
                      expect(sw.elapsedS).to.be.greaterThan(1);
                      expect(sw.elapsedS).to.be.lessThan(1.1);
+                     timer.stop();
                   }
                   else if (tickCount === 3) {
-                     expect(info.running).to.be.true;
-                     expect(sw.elapsedS).to.be.greaterThan(2);
-                     expect(sw.elapsedS).to.be.lessThan(2.1);
-                     timer.stop();
-                     resolve();
-                  }
-                  else if (tickCount === 4) {
-                     // happens after resolve when we close Squint
+                     // happens after we call stop()
                      expect(info.running).to.be.false;
-                  }
-                  else {
-                     reject('tick #5 encountered');
                   }
                }
                catch (err) {
@@ -65,7 +61,6 @@ describe.only('ModelTimer', function () {
 
          sw.start();
          timer.start();
-         expect(timer.ticking).to.be.true;
 
          return promise;
       });
@@ -249,7 +244,6 @@ describe.only('ModelTimer', function () {
             timer.onAlarm = (sound: boolean) => {
                try {
                   expect(timer.running).to.be.false;
-                  expect(timer.ticking).to.be.false;
                   expect(sound).to.be.true;
                   expect(sw.elapsedMs).to.be.greaterThan(100);
                   expect(sw.elapsedMs).to.be.lessThan(120);
@@ -287,14 +281,12 @@ describe.only('ModelTimer', function () {
 
                   if (alarmCount === 1) {
                      expect(timer.running).to.be.false;
-                     expect(timer.ticking).to.be.false;
                      expect(sound).to.be.true;
                      expect(sw.elapsedMs).to.be.greaterThan(100);
                      expect(sw.elapsedMs).to.be.lessThan(120);
                   }
                   else if (alarmCount === 2) {
                      expect(timer.running).to.be.false;
-                     expect(timer.ticking).to.be.false;
                      expect(sound).to.be.false;
                      expect(sw.elapsedMs).to.be.greaterThan(300);
                      expect(sw.elapsedMs).to.be.lessThan(350);
@@ -399,10 +391,6 @@ describe.only('ModelTimer', function () {
             expect(squintViewers[0].modelTimer.running).to.be.true;
             expect(squintViewers[1].modelTimer.running).to.be.true;
 
-            expect(squintHost.modelTimer.ticking).to.be.true;
-            expect(squintViewers[0].modelTimer.ticking).to.be.true;
-            expect(squintViewers[1].modelTimer.ticking).to.be.true;
-
             switch (startStop[1]) {
                case Source.Host:
                   squintHost.modelTimer.stop();
@@ -420,10 +408,6 @@ describe.only('ModelTimer', function () {
             expect(squintHost.modelTimer.running).to.be.false;
             expect(squintViewers[0].modelTimer.running).to.be.false;
             expect(squintViewers[1].modelTimer.running).to.be.false;
-
-            expect(squintHost.modelTimer.ticking).to.be.false;
-            expect(squintViewers[0].modelTimer.ticking).to.be.false;
-            expect(squintViewers[1].modelTimer.ticking).to.be.false;
          });
       });
 
@@ -458,10 +442,6 @@ describe.only('ModelTimer', function () {
             expect(squintHost.modelTimer.running).to.be.false;
             expect(squintViewers[0].modelTimer.running).to.be.false;
             expect(squintViewers[1].modelTimer.running).to.be.false;
-
-            expect(squintHost.modelTimer.ticking).to.be.false;
-            expect(squintViewers[0].modelTimer.ticking).to.be.false;
-            expect(squintViewers[1].modelTimer.ticking).to.be.false;
 
             expect(squintHost.modelTimer.remainingMs).to.equal(durationMs);
             expect(squintViewers[0].modelTimer.remainingMs).to.equal(durationMs);
@@ -559,9 +539,6 @@ describe.only('ModelTimer', function () {
             expect(squintHost.modelTimer.alarmSounding).to.be.true;
             expect(squintViewers[0].modelTimer.alarmSounding).to.be.true;
             expect(squintViewers[1].modelTimer.alarmSounding).to.be.true;
-            expect(squintHost.modelTimer.ticking).to.be.false;
-            expect(squintViewers[0].modelTimer.ticking).to.be.false;
-            expect(squintViewers[1].modelTimer.ticking).to.be.false;
 
             switch (startStop[1]) {
                case Source.Host:
@@ -580,9 +557,6 @@ describe.only('ModelTimer', function () {
             expect(squintHost.modelTimer.alarmSounding).to.be.false;
             expect(squintViewers[0].modelTimer.alarmSounding).to.be.false;
             expect(squintViewers[1].modelTimer.alarmSounding).to.be.false;
-            expect(squintHost.modelTimer.ticking).to.be.false;
-            expect(squintViewers[0].modelTimer.ticking).to.be.false;
-            expect(squintViewers[1].modelTimer.ticking).to.be.false;
          });
       });
 
@@ -623,9 +597,6 @@ describe.only('ModelTimer', function () {
             expect(squintHost.modelTimer.alarmSounding).to.be.true;
             expect(squintViewers[0].modelTimer.alarmSounding).to.be.true;
             expect(squintViewers[1].modelTimer.alarmSounding).to.be.true;
-            expect(squintHost.modelTimer.ticking).to.be.false;
-            expect(squintViewers[0].modelTimer.ticking).to.be.false;
-            expect(squintViewers[1].modelTimer.ticking).to.be.false;
 
             switch (startStop[1]) {
                case Source.Host:
@@ -644,9 +615,6 @@ describe.only('ModelTimer', function () {
             expect(squintHost.modelTimer.alarmSounding).to.be.false;
             expect(squintViewers[0].modelTimer.alarmSounding).to.be.false;
             expect(squintViewers[1].modelTimer.alarmSounding).to.be.false;
-            expect(squintHost.modelTimer.ticking).to.be.false;
-            expect(squintViewers[0].modelTimer.ticking).to.be.false;
-            expect(squintViewers[1].modelTimer.ticking).to.be.false;
          });
       });
 
@@ -685,9 +653,6 @@ describe.only('ModelTimer', function () {
             expect(squintHost.modelTimer.alarmSounding).to.be.false;
             expect(squintViewers[0].modelTimer.alarmSounding).to.be.false;
             expect(squintViewers[1].modelTimer.alarmSounding).to.be.false;
-            expect(squintHost.modelTimer.ticking).to.be.false;
-            expect(squintViewers[0].modelTimer.ticking).to.be.false;
-            expect(squintViewers[1].modelTimer.ticking).to.be.false;
 
             switch (source[1]) {
                case Source.Host:
@@ -706,9 +671,6 @@ describe.only('ModelTimer', function () {
             expect(squintHost.modelTimer.alarmSounding).to.be.true;
             expect(squintViewers[0].modelTimer.alarmSounding).to.be.true;
             expect(squintViewers[1].modelTimer.alarmSounding).to.be.true;
-            expect(squintHost.modelTimer.ticking).to.be.false;
-            expect(squintViewers[0].modelTimer.ticking).to.be.false;
-            expect(squintViewers[1].modelTimer.ticking).to.be.false;
 
             switch (source[0]) {
                case Source.Host:
@@ -722,10 +684,6 @@ describe.only('ModelTimer', function () {
                   break;
             }
             await sleep(TimeMs.Buffer);
-
-            expect(squintHost.modelTimer.ticking).to.be.false;
-            expect(squintViewers[0].modelTimer.ticking).to.be.false;
-            expect(squintViewers[1].modelTimer.ticking).to.be.false;
 
             expect(squintHost.modelTimer.alarmSounding).to.be.false;
             expect(squintViewers[0].modelTimer.alarmSounding).to.be.false;

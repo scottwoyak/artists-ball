@@ -18,7 +18,33 @@ export function baseUrl(): string {
    return url;
 }
 
+export function getTimeStr(): string {
 
+   let d = new Date();
+
+   let hours = d.getHours();
+   let hoursStr = '';
+   if (hours === 0) {
+      hoursStr = '12';
+   }
+   else if (hours > 12) {
+      hoursStr = (hours - 12).toString();
+   }
+   else {
+      hoursStr = hours.toString();
+   }
+
+   let mins = d.getMinutes();
+   let minsStr = '';
+   if (mins < 10) {
+      minsStr = '0' + mins;
+   }
+   else {
+      minsStr = mins.toString();
+   }
+
+   return hoursStr + ':' + minsStr + ' ' + (hours > 12 ? 'PM' : 'AM');
+}
 
 export function getEmPixels(): number {
    let style = getComputedStyle(document.body);

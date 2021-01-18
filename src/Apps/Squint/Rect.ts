@@ -42,6 +42,15 @@ export class Rect {
       return new Rect(factor * this.x, factor * this.y, factor * this.width, factor * this.height);
    }
 
+   public inside(pos: Vec2): boolean {
+      if (pos.x > this.x && pos.x < this.right && pos.y > this.y && pos.y < this.bottom) {
+         return true;
+      }
+      else {
+         return false;
+      }
+   }
+
    public hit(pos: Vec2, epsilon: number): RectHit {
       let ul = new Vec2([this.x, this.y]);
       let ur = new Vec2([this.right, this.y]);

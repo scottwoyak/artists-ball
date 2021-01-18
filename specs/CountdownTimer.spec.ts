@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import { CountdownTimer } from '../src/Util/CountdownTimer';
+import { Stopwatch } from '../src/Util/Stopwatch';
 import { sleep } from './util';
 
 describe.only('CountdownTimer', function () {
@@ -27,6 +28,96 @@ describe.only('CountdownTimer', function () {
       expect(timer.remainingMs).to.equal(0);
       expect(timer.running).to.be.false;
       expect(timer.durationMs).to.equal(durationMs);
+   });
+
+   it('should tick', async function () {
+
+      let timer = new CountdownTimer();
+      let sw = new Stopwatch(false);
+
+      let promise = new Promise<void>((resolve, reject) => {
+
+         let tickCount = 0;
+
+         setTimeout(() => {
+            expect(tickCount).to.equal(3);
+            resolve();
+         }, 3100);
+
+         timer.onTick = () => {
+            tickCount++;
+
+            try {
+
+               if (tickCount === 1) {
+                  expect(sw.elapsedS).to.be.greaterThan(0);
+                  expect(sw.elapsedS).to.be.lessThan(0.1);
+               }
+               else if (tickCount === 2) {
+                  expect(sw.elapsedS).to.be.greaterThan(1);
+                  expect(sw.elapsedS).to.be.lessThan(1.1);
+               }
+               else if (tickCount === 3) {
+                  expect(sw.elapsedS).to.be.greaterThan(2);
+                  expect(sw.elapsedS).to.be.lessThan(2.1);
+                  timer.stop();
+               }
+            }
+            catch (err) {
+               reject(err);
+            }
+         }
+      });
+
+      sw.start();
+      timer.start();
+
+      return promise;
+   });
+
+   it('should stop ticking when time expires', async function () {
+
+      let timer = new CountdownTimer();
+      timer.durationMs = 1.5 * 1000;
+      let sw = new Stopwatch(false);
+
+      let promise = new Promise<void>((resolve, reject) => {
+
+         let tickCount = 0;
+
+         setTimeout(() => {
+            expect(tickCount).to.equal(3);
+            resolve();
+         }, 2600);
+
+         timer.onTick = () => {
+            tickCount++;
+
+            try {
+               if (tickCount === 1) {
+                  expect(sw.elapsedS).to.be.greaterThan(0);
+                  expect(sw.elapsedS).to.be.lessThan(0.1);
+               }
+               else if (tickCount === 2) {
+                  expect(sw.elapsedS).to.be.greaterThan(0.5);
+                  expect(sw.elapsedS).to.be.lessThan(0.6);
+               }
+               else if (tickCount === 3) {
+                  expect(sw.elapsedS).to.be.greaterThan(1.5);
+                  expect(sw.elapsedS).to.be.lessThan(1.6);
+                  expect(timer.expired).to.be.true;
+               }
+            }
+            catch (err) {
+               reject(err);
+            }
+         }
+      });
+
+      sw.start();
+      timer.start();
+
+      return promise;
    });
 
    it('should not be running until started', function () {

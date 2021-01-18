@@ -21,7 +21,6 @@ export class ModelTimer {
    public alarmDurationMs = 15 * TimeMs.Sec;
 
    private alarmTimeoutHandle = NaN;
-   private tickTimeoutHandle = NaN;
 
    public onTick: OnTickHandler = null;
    public onAlarm: OnAlarmHandler = null;
@@ -29,13 +28,6 @@ export class ModelTimer {
 
    public get running(): boolean {
       return this.countdownTimer.running;
-   }
-
-   /**
-    * This value is only for testing
-    */
-   public get ticking(): boolean {
-      return !isNaN(this.tickTimeoutHandle);
    }
 
    public get durationMs(): number {
@@ -77,6 +69,14 @@ export class ModelTimer {
    public constructor(squint?: Squint) {
       this.squint = squint;
       this.countdownTimer.durationMs = TimeMs.StdPose;
+
+      this.countdownTimer.onTick = () => {
+         if (this.countdownTimer.expired && !this.alarmSounding) {
+            this.startAlarm();
+         }
+
+         this.tick();
+      }
 
       if (this.squint) {
          squint.on({
@@ -123,28 +123,6 @@ export class ModelTimer {
       if (this.onTick) {
          this.onTick(this.info);
       }
-
-      if (this.ticking) {
-         window.clearTimeout(this.tickTimeoutHandle);
-         this.tickTimeoutHandle = NaN;
-      }
-
-      // if the timer is running request the next timeout
-      if (this.countdownTimer.running) {
-         this.registerNextTick();
-      }
-   }
-
-   private registerNextTick(): void {
-      this.tickTimeoutHandle = window.setTimeout(() => {
-         this.tickTimeoutHandle = NaN;
-
-         if (this.countdownTimer.expired && !this.alarmSounding) {
-            this.startAlarm();
-         }
-
-         this.tick();
-      }, this.countdownTimer.remainingMs % 1000 + 1);
    }
 
    public start(): void {
@@ -155,11 +133,7 @@ export class ModelTimer {
             this.startAlarm();
          }
 
-         this.tick();
-
-         if (this.squint) {
-            this.squint.synchronizeTimer(this.info);
-         }
+         this.synchronizeToServer();
       }
    }
 
