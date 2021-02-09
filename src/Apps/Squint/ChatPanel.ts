@@ -4,6 +4,7 @@ import { GUI } from '../../GUI/GUI';
 import { IConnectionInfoBasic, ISessionInfoFull } from './SquintMessage';
 import { ResizeablePanel } from './ResizeablePanel';
 import { SquintEvent } from './SquintEvents';
+import { isTemplateSpan } from 'typescript';
 
 export class ChatPanel extends ResizeablePanel {
 
@@ -15,6 +16,14 @@ export class ChatPanel extends ResizeablePanel {
 
    public get numViewers(): number {
       return this.viewersListBox.items.length - 1;
+   }
+
+   public get viewers(): string[] {
+      let items: string[] = [];
+      this.viewersListBox.items.forEach((item) => {
+         items.push(item.div.innerText);
+      });
+      return items;
    }
 
    public constructor(squint: Squint, parent: HTMLElement) {

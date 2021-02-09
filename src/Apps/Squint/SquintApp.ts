@@ -970,16 +970,25 @@ export class SquintApp implements IApp {
 
 
       // listeners
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(this.chatPanel.numViewers + ' viewers', canvasWidth - 5, canvasHeight - 5);
-
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
+      let lineHeight = fontSize + 5;
+
+      let y = canvasHeight - 5;
+      this.chatPanel.viewers.forEach((viewer: string) => {
+         ctx.fillText(viewer, 5, y);
+         y -= lineHeight;
+      })
+      ctx.fillText(this.chatPanel.viewers.length + ' viewer(s)', 5, y);
+
+      // stats
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+
 
       // image size
       msg = imgWidth + 'x' + imgHeight;
-      ctx.fillText(msg, 5, canvasHeight - (4 * fontSize + 5));
+      ctx.fillText(msg, canvasWidth - 5, canvasHeight - (4 * fontSize + 5));
 
       // image size
       const mp = (imgWidth * imgHeight / 1000000);
@@ -989,7 +998,7 @@ export class SquintApp implements IApp {
       else {
          msg = mp.toFixed(1) + 'MP';
       }
-      ctx.fillText(msg, 5, canvasHeight - (3 * fontSize + 5));
+      ctx.fillText(msg, canvasWidth - 5, canvasHeight - (3 * fontSize + 5));
 
       let fps: number;
       let bandwidth: number;
@@ -1004,7 +1013,7 @@ export class SquintApp implements IApp {
 
       // FPS
       msg = fps.toFixed(1) + ' fps';
-      ctx.fillText(msg, 5, canvasHeight - (2 * fontSize + 5));
+      ctx.fillText(msg, canvasWidth - 5, canvasHeight - (2 * fontSize + 5));
 
       // bandwidth
       if (bandwidth < 5) {
@@ -1013,11 +1022,11 @@ export class SquintApp implements IApp {
       else {
          msg = bandwidth.toFixed(1) + ' Mbsp';
       }
-      ctx.fillText(msg, 5, canvasHeight - (fontSize + 5));
+      ctx.fillText(msg, canvasWidth - 5, canvasHeight - (fontSize + 5));
 
       // bytes
       msg = toSizeStr(this.downloadTracker.lastTransferBytes);
-      ctx.fillText(msg, 5, canvasHeight - 5);
+      ctx.fillText(msg, canvasWidth - 5, canvasHeight - 5);
 
       // messages
       msg = '';

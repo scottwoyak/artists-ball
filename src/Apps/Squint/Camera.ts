@@ -562,7 +562,12 @@ export class Camera {
                         this.capture.y = 0;
                         this.capture.width = this.video.videoWidth;
                         this.capture.height = this.video.videoHeight;
-                        this._deviceId = desired.deviceId.toString();
+                        if (desired.deviceId) {
+                           this._deviceId = desired.deviceId.toString();
+                        }
+                        else {
+                           this._deviceId = '';
+                        }
                         resolve(track);
                      })
                      .catch((err) => {
