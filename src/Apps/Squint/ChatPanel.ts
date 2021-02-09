@@ -13,6 +13,10 @@ export class ChatPanel extends ResizeablePanel {
 
    private squint: Squint;
 
+   public get numViewers(): number {
+      return this.viewersListBox.items.length - 1;
+   }
+
    public constructor(squint: Squint, parent: HTMLElement) {
       super(parent, 'ChatPanelDiv', 'Flex', 'ChatPanel');
       this.squint = squint;

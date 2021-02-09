@@ -957,16 +957,22 @@ export class SquintApp implements IApp {
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
 
-      const fontSize = isMobile ? 20 : 10;
+      const fontSize = isMobile ? 30 : 15;
       ctx.fillStyle = 'black';
       ctx.font = fontSize + 'px sans-serif';
 
+      /*
       // squint server url
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       ctx.fillText(Squint.url, 5, 5);
+      */
 
 
+      // listeners
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(this.chatPanel.numViewers + ' viewers', canvasWidth - 5, canvasHeight - 5);
 
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
