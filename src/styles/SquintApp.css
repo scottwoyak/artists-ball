@@ -265,8 +265,6 @@ body {
   height: 25em;
   background-color: white;
   border-radius: var(--corner-radius-medium);
-  display: flex;
-  flex-direction: column;
 }
 
 #SquintApp #WelcomeDialogBackgroundDiv {
@@ -288,10 +286,12 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 
 #SquintApp #WelcomeDialogDiv #SquintImg {
-  width: 100%;
+  width: 25em;
 }
 
 #SquintApp #WelcomeDialogDiv #UserNameGroupDiv {

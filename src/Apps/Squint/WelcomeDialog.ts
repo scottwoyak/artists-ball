@@ -16,11 +16,11 @@ export class WelcomeDialog extends Dialog {
       titleDiv.className = 'DialogTitleClass';
       titleDiv.innerText = 'Welcome to Squint!';
 
-      const bodyDiv = GUI.create('div', 'BodyDiv', this.dialogDiv);
-      const img = GUI.create('img', 'SquintImg', bodyDiv);
+      //const bodyDiv = GUI.create('div', 'BodyDiv', this.dialogDiv);
+      const img = GUI.create('img', 'SquintImg', this.dialogDiv);
       img.src = baseUrl() + 'img/squint.jpg';
 
-      const userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', bodyDiv);
+      const userNameGroupDiv = GUI.create('div', 'UserNameGroupDiv', this.dialogDiv);
       const userNameTextInput = GUI.create('input', 'UserNameTextInput', userNameGroupDiv);
       userNameTextInput.type = 'text';
       userNameTextInput.placeholder = 'Your Name';
