@@ -51,13 +51,6 @@ export class StartDialog extends Dialog {
          }
       });
 
-      this.squint.on({
-         event: SquintEvent.ConnectionInfoUpdate,
-         handler: (info: IConnectionInfoBasic) => {
-            this.onConnectionInfoUpdate(info);
-         }
-      });
-
       let timeout: number;
       this.squint.on({
          event: SquintEvent.Reconnecting,
@@ -217,14 +210,6 @@ export class StartDialog extends Dialog {
       this.viewListBox.clear();
       for (let i = 0; i < sessions.length; i++) {
          this.viewListBox.addItem(sessions[i].title, sessions[i].sessionId);
-      }
-   }
-
-   private onConnectionInfoUpdate(info: IConnectionInfoBasic) {
-      for (const item of this.viewListBox.items) {
-         if (item.userData === info.connectionId) {
-            item.div.innerText = info.userName;
-         }
       }
    }
 }

@@ -265,7 +265,7 @@ export class SquintApp implements IApp {
       };
 
       let onStartSession = (password: string) => {
-         this.squint.createSession(undefined, password)
+         this.squint.createSession(password)
             .then(() => {
                this.enableVideo(true);
             })

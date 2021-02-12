@@ -4,7 +4,6 @@
 
 import { ITimerInfo } from './ITimerInfo';
 
-
 export enum ConnectionState {
    Zombie = 'ZOMBIE',
    Open = 'OPEN',
@@ -153,7 +152,6 @@ export interface ISquintReconnectedMessage {
 export interface ISquintSessionCreateMessage {
    subject: SquintMessageSubject.CreateSession,
    requestId: string,
-   sessionTitle: string,
    password?: string,
 }
 

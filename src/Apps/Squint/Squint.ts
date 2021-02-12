@@ -384,11 +384,7 @@ export class Squint {
       });
    }
 
-   public createSession(sessionTitle?: string, password?: string, timeoutMs = 5000): Promise<string> {
-
-      if (sessionTitle === undefined) {
-         sessionTitle = this.userName;
-      }
+   public createSession(password?: string, timeoutMs = 5000): Promise<string> {
 
       if (password && password.trim().length === 0) {
          password = undefined;
@@ -400,7 +396,6 @@ export class Squint {
       this.send({
          subject: SquintMessageSubject.CreateSession,
          requestId: id,
-         sessionTitle,
          password
       });
 

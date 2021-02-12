@@ -2352,7 +2352,7 @@ xxx
 
             // create the session
             let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
-            let sessionId = await squintHost.createSession('MySession', password);
+            let sessionId = await squintHost.createSession(password);
 
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
 
@@ -2389,7 +2389,7 @@ xxx
 
             // create the session
             let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
-            let sessionId = await squintHost.createSession('MySession', password);
+            let sessionId = await squintHost.createSession(password);
 
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
 
@@ -2426,7 +2426,7 @@ xxx
 
             // create the session
             let squintHost = await createSquint(TestUrlLocalhost, userNameHost);
-            let sessionId = await squintHost.createSession('MySession', password);
+            let sessionId = await squintHost.createSession(password);
 
             let squintViewer = await createSquint(TestUrlLocalhost, userNameViewer);
 
