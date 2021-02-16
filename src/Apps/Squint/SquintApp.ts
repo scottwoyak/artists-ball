@@ -615,9 +615,9 @@ export class SquintApp implements IApp {
 
       const remoteMegaPixels = this.remoteCameraMenu.addSlider({
          label: 'Camera Mega Pixels',
-         min: 0.25,
-         max: 5,
-         value: 1.25,
+         min: this.megaPixels.min,
+         max: this.megaPixels.max,
+         value: this.megaPixels.value,
          onGetText: (slider) => slider.value.toFixed(2),
          oninput: () => {
             this.squint.sendCameraRequest(remoteMegaPixels.value, remoteJpegQuality.value);
@@ -851,6 +851,13 @@ export class SquintApp implements IApp {
                const settings = track.getSettings();
                const maxMP = settings.width * settings.height / 1000000;
                this.megaPixels.max = maxMP;
+
+               if (this.desired.label.includes('INOGENI 4K')) {
+                  this.megaPixels.value = 4;
+               }
+               else {
+                  this.megaPixels.value = 1.25;
+               }
 
                this.updateVideoSize(settings.width, settings.height);
 
