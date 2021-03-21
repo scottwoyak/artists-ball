@@ -852,13 +852,6 @@ export class SquintApp implements IApp {
                const maxMP = settings.width * settings.height / 1000000;
                this.megaPixels.max = maxMP;
 
-               if (this.desired.label.includes('INOGENI 4K')) {
-                  this.megaPixels.value = 4;
-               }
-               else {
-                  this.megaPixels.value = 1.25;
-               }
-
                this.updateVideoSize(settings.width, settings.height);
 
                this.buildAdvancedSubMenu(track);
